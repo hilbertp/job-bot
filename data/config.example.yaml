@@ -1,0 +1,74 @@
+# jobbot configuration. Copy to data/config.yaml and edit.
+
+score_threshold: 70           # 0-100; only jobs at/above this trigger doc generation
+max_jobs_per_run: 50          # safety cap on LLM spend
+output_dir: output            # relative to repo root
+
+# Per-source settings. Each can be enabled/disabled, given specific search queries,
+# and (separately) opted into auto-submit.
+sources:
+  weworkremotely:
+    enabled: true
+    auto_submit: false
+    queries:
+      - category: remote-programming-jobs
+      - category: remote-devops-sysadmin-jobs
+
+  freelancermap:
+    enabled: true
+    auto_submit: false
+    queries:
+      - keywords: [python, data, ml]
+        remote: true
+
+  freelance_de:
+    enabled: true
+    auto_submit: false
+    queries:
+      - keywords: [python, backend]
+
+  indeed:
+    enabled: true
+    auto_submit: false        # Indeed Apply is risky to automate; keep off
+    queries:
+      - q: "python developer"
+        l: "Berlin"
+      - q: "data engineer"
+        l: "remote"
+
+  stepstone:
+    enabled: true
+    auto_submit: false
+    queries:
+      - q: "python"
+        l: "Deutschland"
+
+  xing:
+    enabled: true
+    auto_submit: false
+    queries:
+      - q: "python developer"
+
+  linkedin:
+    enabled: true
+    auto_submit: false        # LinkedIn ToS — keep off; assist only
+    queries:
+      - keywords: "python developer"
+        location: "Germany"
+
+# Auto-apply behavior (used only for sources where auto_submit: true)
+apply:
+  dry_run: true               # take screenshot of filled form, don't click submit
+  confirm_each: false         # if true, pause and wait for human OK before submit
+  per_run_limit: 5            # max submissions per scheduled run
+  screener_min_confidence: 0.8  # below this, queue for manual review
+
+# OTP fetcher
+otp:
+  poll_interval_s: 5
+  timeout_s: 120
+
+# Captcha solver
+captcha:
+  timeout_s: 90
+  max_retries: 2

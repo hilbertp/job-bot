@@ -1,0 +1,78 @@
+# Philipp Hilbert — profile for jobbot
+
+personal:
+  full_name: "Philipp Hilbert"
+  email: "philipp@projuncta.com"
+  phone: "+357 94101644"
+  location:
+    city: "Berlin"
+    country: "Germany"
+    timezone: "Europe/Berlin"
+  links:
+    linkedin: "https://www.linkedin.com/in/philipphilbert"
+    website: "https://projuncta.com"
+
+preferences:
+  remote: true
+  on_site_ok: false          # open to hybrid if role is strong
+  willing_to_relocate: false
+  desired_salary_eur:
+    min: 80000
+    max: 110000
+  notice_period_weeks: 4
+  work_authorization: "EU citizen (German)"
+  languages: [de_native, en_c2]
+  target_roles:
+    - Senior Product Manager
+    - Senior Product Owner
+    - Head of Product
+    - Principal Product Manager
+
+# Hard filters — job dropped before LLM scoring if any match
+deal_breakers:
+  industries: ["defense", "weapons", "gambling", "tobacco"]
+  keywords: ["unpaid", "commission only", "intern", "junior", "entry level"]
+  on_site_only: true   # dropped if remote is required and job is on-site only
+
+# Required in job description to pass heuristic filter
+must_have_skills:
+  - product
+  - product manager
+  - product owner
+  - product management
+
+# Increases score but not required
+nice_to_have_skills:
+  - fintech
+  - payments
+  - regulated
+  - data
+  - platform
+  - saas
+  - b2b
+  - agile
+  - scrum
+  - ai
+  - machine learning
+  - kubernetes
+  - python
+  - web3
+  - crypto
+  - defi
+  - insurance
+  - healthtech
+
+# Default screener answers used by auto-applier before falling back to LLM
+screener_defaults:
+  "Are you authorized to work in this country?": "Yes"
+  "Are you authorized to work in Germany?": "Yes"
+  "Are you authorized to work in the EU?": "Yes"
+  "Do you require visa sponsorship?": "No"
+  "Notice period?": "4 weeks"
+  "Earliest start date?": "4 weeks from offer"
+  "Years of product management experience?": "10+"
+  "Years of experience?": "10+"
+  "Are you open to remote work?": "Yes"
+  "Current location?": "Berlin, Germany"
+  "Desired salary (EUR)?": "95000"
+  "LinkedIn profile?": "https://www.linkedin.com/in/philipphilbert"

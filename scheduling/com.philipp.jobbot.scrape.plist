@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.philipp.jobbot.scrape</string>
+
+  <!-- Replace REPO_PATH with the absolute path to this repo, e.g.
+       /Users/philipp/code/job-bot -->
+  <key>WorkingDirectory</key>
+  <string>REPO_PATH</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>REPO_PATH/.venv/bin/python</string>
+    <string>-m</string>
+    <string>jobbot</string>
+    <string>run</string>
+  </array>
+
+  <key>StandardOutPath</key>
+  <string>REPO_PATH/logs/scrape.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>REPO_PATH/logs/scrape.err.log</string>
+
+  <!-- Every 4 hours, 08:00–20:00 -->
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>12</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>16</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>20</integer><key>Minute</key><integer>0</integer></dict>
+  </array>
+
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>

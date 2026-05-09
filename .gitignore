@@ -1,0 +1,21 @@
+# venv & caches
+.venv/
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# secrets
+.env
+
+# state & generated artifacts (keep out of git)
+data/jobbot.db
+data/jobbot.db-*
+output/
+logs/
+
+# editor
+.vscode/
+.idea/
+.DS_Store

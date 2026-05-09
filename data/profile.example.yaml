@@ -1,0 +1,53 @@
+# Your structured profile. Used for matching and to fill application forms.
+# Replace with your real data and save as data/profile.yaml.
+
+personal:
+  full_name: "Philipp Hilbert"
+  email: "hilbertp@gmail.com"
+  phone: "+49 ..."
+  location:
+    city: "Berlin"
+    country: "Germany"
+    timezone: "Europe/Berlin"
+  links:
+    linkedin: "https://www.linkedin.com/in/..."
+    github: "https://github.com/..."
+    website: "https://..."
+
+# Used by both the scorer and the auto-applier's standard fields.
+preferences:
+  remote: true
+  on_site_ok: false
+  willing_to_relocate: false
+  desired_salary_eur:
+    min: 70000
+    max: 95000
+  notice_period_weeks: 8
+  work_authorization: "EU citizen"
+  languages: [de_native, en_fluent]
+
+# Hard filters — any match here drops the job before scoring.
+deal_breakers:
+  industries: ["defense", "gambling"]
+  keywords: ["unpaid", "commission only"]
+  on_site_only: true   # if a job is on-site only and remote: true above, drop it
+
+# Used by the matcher.
+must_have_skills:
+  - python
+  - sql
+  - aws
+
+nice_to_have_skills:
+  - kubernetes
+  - terraform
+  - rust
+
+# Default answers for common screener questions. The auto-applier looks here
+# first; falls back to LLM only for questions not in this list.
+screener_defaults:
+  "Are you authorized to work in this country?": "Yes"
+  "Do you require visa sponsorship?": "No"
+  "Notice period?": "8 weeks"
+  "Earliest start date?": "8 weeks from offer"
+  "Years of Python experience?": "8"
