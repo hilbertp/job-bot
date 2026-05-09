@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from anthropic import Anthropic
@@ -13,18 +14,30 @@ from .profile import Profile
 PROMPT_PATH = REPO_ROOT / "prompts" / "match_score.md"
 
 
+def _contains_keyword(text: str, keyword: str) -> bool:
+    """Match standalone keywords to avoid false positives like 'intern' in 'internal'."""
+    needle = (keyword or "").strip().lower()
+    if not needle:
+        return False
+    if " " in needle:
+        return needle in text
+    if needle.isalnum():
+        return re.search(rf"\b{re.escape(needle)}\b", text) is not None
+    return needle in text
+
+
 def passes_heuristic(job: JobPosting, profile: Profile) -> tuple[bool, str]:
     """Cheap, no-LLM filter. Returns (passes, reason_if_not)."""
     text = (job.description + " " + job.title).lower()
 
     # Deal-breaker keywords
     for kw in profile.deal_breakers.get("keywords", []):
-        if kw.lower() in text:
+        if _contains_keyword(text, kw):
             return False, f"deal-breaker keyword: {kw}"
 
     # Industry deal-breakers (tag-based)
     for ind in profile.deal_breakers.get("industries", []):
-        if ind.lower() in text:
+        if _contains_keyword(text, ind):
             return False, f"deal-breaker industry: {ind}"
 
     # Remote requirement
@@ -34,7 +47,7 @@ def passes_heuristic(job: JobPosting, profile: Profile) -> tuple[bool, str]:
 
     # At least one must-have skill mentioned
     must = [s.lower() for s in profile.must_have_skills]
-    if must and not any(s in text for s in must):
+    if must and not any(_contains_keyword(text, s) for s in must):
         return False, "no must-have skill mentioned"
 
     return True, ""

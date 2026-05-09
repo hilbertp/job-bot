@@ -1,0 +1,69 @@
+# jobbot configuration for Philipp Hilbert
+score_threshold: 70           # 0-100; only jobs at/above this trigger doc generation
+max_jobs_per_run: 50          # safety cap on LLM spend
+output_dir: output            # relative to repo root
+
+sources:
+  weworkremotely:
+    enabled: true
+    auto_submit: false
+    queries:
+      - category: remote-programming-jobs
+      - category: remote-devops-sysadmin-jobs
+
+  freelancermap:
+    enabled: true
+    auto_submit: false
+    queries:
+      - keywords: [python, product, management, backend]
+        remote: true
+
+  freelance_de:
+    enabled: true
+    auto_submit: false
+    queries:
+      - keywords: [product, management, python, data]
+
+  indeed:
+    enabled: true
+    auto_submit: false        # Indeed Apply is risky to automate; keep off
+    queries:
+      - q: "product manager"
+        l: "Berlin"
+      - q: "product manager"
+        l: "remote"
+
+  stepstone:
+    enabled: true
+    auto_submit: false
+    queries:
+      - q: "product manager"
+        l: "Deutschland"
+
+  xing:
+    enabled: true
+    auto_submit: false
+    queries:
+      - q: "product manager"
+      - q: "product management"
+
+  linkedin:
+    enabled: true
+    auto_submit: false        # LinkedIn ToS — keep off; assist only
+    queries:
+      - keywords: "product manager"
+        location: "Germany"
+
+apply:
+  dry_run: true               # take screenshot of filled form, don't click submit
+  confirm_each: false         # if true, pause and wait for human OK before submit
+  per_run_limit: 5            # max submissions per scheduled run
+  screener_min_confidence: 0.8  # below this, queue for manual review
+
+otp:
+  poll_interval_s: 5
+  timeout_s: 120
+
+captcha:
+  timeout_s: 90
+  max_retries: 2

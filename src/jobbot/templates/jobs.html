@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="bg-white/10 rounded-2xl p-6 border border-white/20">
+    <div class="flex flex-wrap gap-2 mb-4">
+        <button onclick="loadJobs('all')" class="px-3 py-1 rounded bg-white/20">All</button>
+        <button onclick="loadJobs('scraped')" class="px-3 py-1 rounded bg-white/20">Scraped</button>
+        <button onclick="loadJobs('scored')" class="px-3 py-1 rounded bg-white/20">Scored</button>
+        <button onclick="loadJobs('generated')" class="px-3 py-1 rounded bg-white/20">Tailored</button>
+        <button onclick="loadJobs('applied')" class="px-3 py-1 rounded bg-white/20">Applied</button>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="text-purple-200 border-b border-white/10">
+                    <th class="pb-4">Title</th>
+                    <th class="pb-4">Company</th>
+                    <th class="pb-4">Source</th>
+                    <th class="pb-4">Score</th>
+                    <th class="pb-4">Status</th>
+                    <th class="pb-4">Link</th>
+                </tr>
+            </thead>
+            <tbody id="jobs-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+async function loadJobs(status) {
+    const endpoint = status === 'all' ? '/api/jobs' : `/api/jobs/by-status/${status}`;
+    const res = await fetch(endpoint);
+    const rows = await res.json();
+    const tbody = document.getElementById('jobs-body');
+    tbody.innerHTML = '';
+    if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-4">No jobs found.</td></tr>';
+        return;
+    }
+    for (const job of rows) {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-white/5';
+        tr.innerHTML = `
+            <td class="py-3">${job.title || ''}</td>
+            <td class="py-3">${job.company || ''}</td>
+            <td class="py-3">${job.location || ''}</td>
+            <td class="py-3">${job.score ?? '-'}</td>
+            <td class="py-3">${job.status || ''}</td>
+            <td class="py-3"><a class="underline" target="_blank" href="${job.url}">open</a></td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+loadJobs('all');
+</script>
+{% endblock %}

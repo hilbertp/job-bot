@@ -57,8 +57,19 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                     errors.append({"source": name, "error": f"{type(e).__name__}: {e}"})
 
         # 2) Score (heuristic → LLM)
+        # Retry pending scraped jobs from previous runs as well, so transient
+        # LLM/network failures do not leave jobs stuck in "scraped" forever.
+        to_score: dict[str, JobPosting] = {j.id: j for j in all_new}
+        for row in jobs_by_status(conn, JobStatus.SCRAPED):
+            if row["id"] in to_score:
+                continue
+            try:
+                to_score[row["id"]] = JobPosting.model_validate_json(row["raw_json"])
+            except Exception as e:
+                errors.append({"source": row["source"], "error": f"decode: {e}"})
+
         to_generate: list[tuple[JobPosting, int, str]] = []
-        for job in all_new[: config.max_jobs_per_run]:
+        for job in list(to_score.values())[: config.max_jobs_per_run]:
             ok, reason = passes_heuristic(job, profile)
             if not ok:
                 update_status(conn, job.id, JobStatus.FILTERED, reason=reason)

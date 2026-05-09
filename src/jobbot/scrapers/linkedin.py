@@ -1,18 +1,19 @@
 """LinkedIn — public guest jobs endpoint (HTML).
 
 Approach: httpx GET on the public /jobs/search page, which renders SSR HTML
-containing structured job data. We parse the embedded JSON-LD and/or the
-`<ul class="jobs-search__results-list">` cards.
+containing structured job data. Requires LinkedIn session cookie (li_at) for auth.
+We parse the embedded JSON-LD and/or the `<ul class="jobs-search__results-list">` cards.
 
 Important limitations:
 - LinkedIn rate-limits aggressively; keep queries sparse.
 - NEVER enable auto_submit on this source — LinkedIn ToS explicitly forbids
   automated Easy Apply.
-- If blocked, options: Official Jobs API (paid), Proxycurl, or manual review.
+- Session cookie must be refreshed periodically if LinkedIn invalidates it.
 """
 from __future__ import annotations
 
 import json
+import os
 import random
 import time
 from urllib.parse import urlencode
@@ -44,6 +45,11 @@ class LinkedInScraper(BaseScraper):
 
     def fetch(self, query: SearchQuery) -> list[JobPosting]:
         """query example: {"keywords": "python developer", "location": "Germany"}"""
+        session_cookie = os.getenv("LINKEDIN_SESSION_COOKIE")
+        if not session_cookie:
+            log.warning("linkedin_no_session_cookie")
+            return []
+
         params = {
             "keywords": query.get("keywords", ""),
             "location": query.get("location", ""),
@@ -53,8 +59,11 @@ class LinkedInScraper(BaseScraper):
         }
         url = f"{BASE}/jobs/search/?{urlencode(params)}"
 
+        headers = _HEADERS.copy()
+        headers["Cookie"] = f"li_at={session_cookie}"
+
         try:
-            with httpx.Client(headers=_HEADERS, timeout=20.0, follow_redirects=True) as c:
+            with httpx.Client(headers=headers, timeout=20.0, follow_redirects=True) as c:
                 r = c.get(url)
                 if r.status_code != 200:
                     log.warning("linkedin_http_error", status=r.status_code)

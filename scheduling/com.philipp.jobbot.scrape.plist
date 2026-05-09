@@ -6,23 +6,23 @@
   <key>Label</key>
   <string>com.philipp.jobbot.scrape</string>
 
-  <!-- Replace REPO_PATH with the absolute path to this repo, e.g.
+  <!-- Replace /Users/phillyvanilly/Library/Application Support/Claude/local-agent-mode-sessions/111a669f-c216-411d-91c3-917f2e319ff5/cff23f1b-5c33-4c40-8e81-453be39aed7d/local_689a4dfe-aec0-4bc0-9d4e-e487822539fe/outputs/job-bot with the absolute path to this repo, e.g.
        /Users/philipp/code/job-bot -->
   <key>WorkingDirectory</key>
-  <string>REPO_PATH</string>
+  <string>/Users/phillyvanilly/Library/Application Support/Claude/local-agent-mode-sessions/111a669f-c216-411d-91c3-917f2e319ff5/cff23f1b-5c33-4c40-8e81-453be39aed7d/local_689a4dfe-aec0-4bc0-9d4e-e487822539fe/outputs/job-bot</string>
 
   <key>ProgramArguments</key>
   <array>
-    <string>REPO_PATH/.venv/bin/python</string>
+    <string>/Users/phillyvanilly/Library/Application Support/Claude/local-agent-mode-sessions/111a669f-c216-411d-91c3-917f2e319ff5/cff23f1b-5c33-4c40-8e81-453be39aed7d/local_689a4dfe-aec0-4bc0-9d4e-e487822539fe/outputs/job-bot/.venv/bin/python</string>
     <string>-m</string>
     <string>jobbot</string>
     <string>run</string>
   </array>
 
   <key>StandardOutPath</key>
-  <string>REPO_PATH/logs/scrape.out.log</string>
+  <string>/Users/phillyvanilly/Library/Application Support/Claude/local-agent-mode-sessions/111a669f-c216-411d-91c3-917f2e319ff5/cff23f1b-5c33-4c40-8e81-453be39aed7d/local_689a4dfe-aec0-4bc0-9d4e-e487822539fe/outputs/job-bot/logs/scrape.out.log</string>
   <key>StandardErrorPath</key>
-  <string>REPO_PATH/logs/scrape.err.log</string>
+  <string>/Users/phillyvanilly/Library/Application Support/Claude/local-agent-mode-sessions/111a669f-c216-411d-91c3-917f2e319ff5/cff23f1b-5c33-4c40-8e81-453be39aed7d/local_689a4dfe-aec0-4bc0-9d4e-e487822539fe/outputs/job-bot/logs/scrape.err.log</string>
 
   <!-- Every 4 hours, 08:00–20:00 -->
   <key>StartCalendarInterval</key>

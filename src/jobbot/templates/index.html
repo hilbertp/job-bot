@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+    <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30">
+        <h3 class="text-xs uppercase font-semibold text-purple-200">Total Jobs</h3>
+        <p class="text-3xl font-bold">{{ total_jobs }}</p>
+    </div>
+    <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30">
+        <h3 class="text-xs uppercase font-semibold text-purple-200">Scraped</h3>
+        <p class="text-3xl font-bold">{{ status_counts.get('scraped', 0) }}</p>
+    </div>
+    <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30">
+        <h3 class="text-xs uppercase font-semibold text-purple-200">Scored</h3>
+        <p class="text-3xl font-bold">{{ status_counts.get('scored', 0) }}</p>
+    </div>
+    <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30">
+        <h3 class="text-xs uppercase font-semibold text-purple-200">Tailored</h3>
+        <p class="text-3xl font-bold">{{ status_counts.get('generated', 0) }}</p>
+    </div>
+    <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30">
+        <h3 class="text-xs uppercase font-semibold text-purple-200">Applied</h3>
+        <p class="text-3xl font-bold">{{ status_counts.get('applied', 0) }}</p>
+    </div>
+    <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30">
+        <h3 class="text-xs uppercase font-semibold text-purple-200">Last 24h</h3>
+        <p class="text-3xl font-bold">{{ applied_24h }}</p>
+    </div>
+</div>
+
+<div class="bg-white/10 rounded-2xl p-6 border border-white/20">
+    <h2 class="text-xl font-bold mb-4">Recent Runs</h2>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="text-purple-200 border-b border-white/10">
+                    <th class="pb-2">Started</th>
+                    <th class="pb-2">Fetched</th>
+                    <th class="pb-2">New</th>
+                    <th class="pb-2">Tailored</th>
+                    <th class="pb-2">Applied</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for run in runs %}
+                <tr class="border-b border-white/5 last:border-0">
+                    <td class="py-3">{{ run.timestamp }}</td>
+                    <td class="py-3">{{ run.n_fetched }}</td>
+                    <td class="py-3">{{ run.n_new }}</td>
+                    <td class="py-3">{{ run.n_generated }}</td>
+                    <td class="py-3">{{ run.n_applied }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

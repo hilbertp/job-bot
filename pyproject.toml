@@ -19,6 +19,7 @@ dependencies = [
   "rich>=13.7",
   "weasyprint>=62.3",         # md→pdf for upload only
   "markdown-it-py>=3.0",
+  "flask>=3.0",               # web dashboard
 ]
 
 [project.optional-dependencies]
