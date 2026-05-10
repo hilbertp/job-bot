@@ -31,15 +31,11 @@ preferences:
 # Hard filters — job dropped before LLM scoring if any match
 deal_breakers:
   industries: ["defense", "weapons", "gambling", "tobacco"]
-  keywords: ["unpaid", "commission only", "intern", "junior", "entry level"]
+  keywords: ["unpaid", "commission only", "junior", "entry level"]
   on_site_only: true   # dropped if remote is required and job is on-site only
 
 # Required in job description to pass heuristic filter
-must_have_skills:
-  - product
-  - product manager
-  - product owner
-  - product management
+must_have_skills: []
 
 # Increases score but not required
 nice_to_have_skills:

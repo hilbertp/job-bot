@@ -26,6 +26,26 @@ def _contains_keyword(text: str, keyword: str) -> bool:
     return needle in text
 
 
+def _parse_score_json(text: str) -> dict:
+    """Parse model output that may include markdown fences around JSON."""
+    cleaned = (text or "").strip()
+    if cleaned.startswith("```"):
+        lines = cleaned.splitlines()
+        if len(lines) >= 3 and lines[-1].strip().startswith("```"):
+            cleaned = "\n".join(lines[1:-1]).strip()
+    try:
+        data = json.loads(cleaned)
+    except json.JSONDecodeError:
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start == -1 or end == -1 or end <= start:
+            raise
+        data = json.loads(cleaned[start : end + 1])
+    if not isinstance(data, dict):
+        raise ValueError("model response is not a JSON object")
+    return data
+
+
 def passes_heuristic(job: JobPosting, profile: Profile) -> tuple[bool, str]:
     """Cheap, no-LLM filter. Returns (passes, reason_if_not)."""
     text = (job.description + " " + job.title).lower()
@@ -53,11 +73,21 @@ def passes_heuristic(job: JobPosting, profile: Profile) -> tuple[bool, str]:
     return True, ""
 
 
-def llm_score(job: JobPosting, profile: Profile, secrets: Secrets) -> ScoreResult:
-    """Ask Haiku for a 0-100 fit score. Returns a ScoreResult."""
+def llm_score(
+    job: JobPosting,
+    profile: Profile,
+    secrets: Secrets,
+    cv_markdown: str | None = None,
+) -> ScoreResult:
+    """Ask Haiku for a 0-100 fit score. Returns a ScoreResult.
+
+    If `cv_markdown` is provided (the full base CV), include it in the payload
+    so the model can score against actual experience and tooling, not just the
+    thin profile_summary.
+    """
     client = Anthropic(api_key=secrets.anthropic_api_key)
     prompt = PROMPT_PATH.read_text()
-    payload = {
+    payload: dict = {
         "job_title": job.title,
         "company": job.company,
         "job_description": job.description[:8000],  # cap input
@@ -67,6 +97,8 @@ def llm_score(job: JobPosting, profile: Profile, secrets: Secrets) -> ScoreResul
             "preferences": profile.preferences,
         },
     }
+    if cv_markdown:
+        payload["cv_markdown"] = cv_markdown[:12000]
     msg = client.messages.create(
         model="claude-haiku-4-5",
         max_tokens=300,
@@ -74,6 +106,28 @@ def llm_score(job: JobPosting, profile: Profile, secrets: Secrets) -> ScoreResul
         messages=[{"role": "user", "content": json.dumps(payload)}],
     )
     text = "".join(b.text for b in msg.content if b.type == "text")
-    # The prompt instructs the model to return JSON.
-    data = json.loads(text)
-    return ScoreResult(score=int(data["score"]), reason=str(data["reason"]))
+    data = _parse_score_json(text)
+    score = int(data["score"])
+    reason = str(data.get("reason", ""))
+
+    # Prefer a transparent breakdown string when the model provides criterion scores.
+    breakdown = data.get("breakdown")
+    if isinstance(breakdown, dict):
+        def _to_int(key: str) -> int | None:
+            val = breakdown.get(key)
+            try:
+                return int(val)
+            except (TypeError, ValueError):
+                return None
+
+        role = _to_int("role_match")
+        skills = _to_int("skills_match")
+        loc = _to_int("location_remote_fit")
+        seniority = _to_int("seniority_fit")
+        if all(v is not None for v in (role, skills, loc, seniority)):
+            reason = (
+                f"role={role}, skills={skills}, location={loc}, seniority={seniority}; "
+                f"{reason}"
+            )
+
+    return ScoreResult(score=score, reason=reason)

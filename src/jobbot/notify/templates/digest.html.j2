@@ -6,9 +6,10 @@
   h1 { font-size: 1.4rem; }
   h2 { font-size: 1.1rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.2rem; margin-top: 2rem; }
   .job { border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 1rem; }
+  .job-head { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; }
   .meta { color: #6b7280; font-size: 0.9rem; }
-  .score { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.8rem;
-           background: #ecfdf5; color: #047857; font-weight: 600; }
+  .score { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.95rem;
+           background: #ecfdf5; color: #047857; font-weight: 700; white-space: nowrap; }
   .status-submitted { color: #047857; font-weight: 600; }
   .status-needs_review { color: #b45309; font-weight: 600; }
   .status-failed { color: #b91c1c; font-weight: 600; }
@@ -22,12 +23,18 @@
 <p class="meta">Run started {{ run_started.strftime('%Y-%m-%d %H:%M %Z') }}</p>
 
 {% if matches %}
-<h2>Matches</h2>
-{% for m in matches %}
+{% set generated = matches | selectattr('output_dir') | list %}
+{% set manual = matches | rejectattr('output_dir') | list %}
+
+<h2>Top matches (CV + cover letter generated)</h2>
+{% if generated %}
+{% for m in generated %}
 <div class="job">
-  <div><strong>{{ m.job.title }}</strong> — {{ m.job.company }}
-       {% if m.job.location %}· {{ m.job.location }}{% endif %}
-       <span class="score">{{ m.score }}</span></div>
+  <div class="job-head">
+    <div><strong>{{ m.job.title }}</strong> — {{ m.job.company }}
+         {% if m.job.location %}· {{ m.job.location }}{% endif %}</div>
+    <span class="score">Score {{ m.score }}</span>
+  </div>
   <div class="meta">{{ m.job.source }} · <a href="{{ m.job.url }}">view posting</a>
        {% if m.apply_status %} · status:
          <span class="status-{{ m.apply_status }}">{{ m.apply_status }}</span>
@@ -45,7 +52,27 @@
 </div>
 {% endfor %}
 {% else %}
-<p>No new matches above threshold.</p>
+<p>No postings reached the document generation score cutoff.</p>
+{% endif %}
+
+<h2>Other postings (manual review)</h2>
+{% if manual %}
+{% for m in manual %}
+<div class="job">
+  <div class="job-head">
+    <div><strong>{{ m.job.title }}</strong> — {{ m.job.company }}
+         {% if m.job.location %}· {{ m.job.location }}{% endif %}</div>
+    <span class="score">Score {{ m.score }}</span>
+  </div>
+  <div class="meta">{{ m.job.source }} · <a href="{{ m.job.url }}">view posting</a></div>
+  <div style="margin-top: 0.4rem">{{ m.reason }}</div>
+</div>
+{% endfor %}
+{% else %}
+<p>No additional postings for manual review.</p>
+{% endif %}
+{% else %}
+<p>No matches found for this run.</p>
 {% endif %}
 
 {% if errors %}

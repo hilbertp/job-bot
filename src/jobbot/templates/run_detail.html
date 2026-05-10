@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="mb-6">
+    <a class="underline" href="/runs">← Back to runs</a>
+</div>
+
+<div class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-6">
+    <h2 class="text-2xl font-bold mb-4">Run #{{ run.id }}</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div><span class="text-purple-200">Started:</span> {{ run.started_at }}</div>
+        <div><span class="text-purple-200">Finished:</span> {{ run.finished_at or '-' }}</div>
+        <div><span class="text-purple-200">Errors:</span> {{ run.n_errors }}</div>
+    </div>
+</div>
+
+<div class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-6">
+    <h3 class="text-xl font-bold mb-4">Pipeline Stages</h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div>Fetched: <strong>{{ stages.get('fetched', run.n_fetched) }}</strong></div>
+        <div>New: <strong>{{ stages.get('new', run.n_new) }}</strong></div>
+        <div>Duplicates/Seen: <strong>{{ stages.get('duplicates_or_seen_before', 0) }}</strong></div>
+        <div>Filtered: <strong>{{ stages.get('filtered', 0) }}</strong></div>
+        <div>Scored: <strong>{{ stages.get('scored', 0) }}</strong></div>
+        <div>Below Threshold: <strong>{{ stages.get('below_threshold', 0) }}</strong></div>
+        <div>Score Failed: <strong>{{ stages.get('score_failed', 0) }}</strong></div>
+        <div>Generated: <strong>{{ stages.get('generated', run.n_generated) }}</strong></div>
+        <div>Applied: <strong>{{ stages.get('applied', run.n_applied) }}</strong></div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white/10 rounded-2xl p-6 border border-white/20">
+        <h3 class="text-xl font-bold mb-4">Score Stats</h3>
+        <div class="space-y-2 text-sm">
+            <div>Count: <strong>{{ score_stats.get('count', 0) }}</strong></div>
+            <div>Average: <strong>{{ score_stats.get('avg', 0) }}</strong></div>
+            <div>Min: <strong>{{ score_stats.get('min', '-') }}</strong></div>
+            <div>Max: <strong>{{ score_stats.get('max', '-') }}</strong></div>
+            <div>Threshold: <strong>{{ score_stats.get('threshold', '-') }}</strong></div>
+        </div>
+    </div>
+
+    <div class="bg-white/10 rounded-2xl p-6 border border-white/20">
+        <h3 class="text-xl font-bold mb-4">Top Blockers</h3>
+        {% if blockers %}
+        <ul class="space-y-2 text-sm">
+            {% for b in blockers %}
+            <li>{{ b.get('reason', 'unknown') }} <strong>({{ b.get('count', 0) }})</strong></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm">No blockers recorded for this run.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

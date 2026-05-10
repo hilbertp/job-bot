@@ -33,10 +33,7 @@ deal_breakers:
   on_site_only: true   # if a job is on-site only and remote: true above, drop it
 
 # Used by the matcher.
-must_have_skills:
-  - python
-  - sql
-  - aws
+must_have_skills: []
 
 nice_to_have_skills:
   - kubernetes

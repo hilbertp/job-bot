@@ -24,6 +24,15 @@ CREATE TABLE IF NOT EXISTS seen_jobs (
     status        TEXT NOT NULL DEFAULT 'scraped',
     score         INTEGER,
     score_reason  TEXT,
+    description_full TEXT,
+    description_scraped INTEGER,
+    description_word_count INTEGER,
+    seniority     TEXT,
+    salary_text   TEXT,
+    apply_email   TEXT,
+    score_breakdown_json TEXT,
+    enriched_at   TEXT,
+    scored_at     TEXT,
     output_dir    TEXT,
     raw_json      TEXT
 );
@@ -55,6 +64,30 @@ CREATE TABLE IF NOT EXISTS runs (
 );
 """
 
+SEEN_JOBS_ADD_COLUMNS: list[tuple[str, str]] = [
+    ("description_full", "TEXT"),
+    ("description_scraped", "INTEGER"),
+    ("description_word_count", "INTEGER"),
+    ("seniority", "TEXT"),
+    ("salary_text", "TEXT"),
+    ("apply_email", "TEXT"),
+    ("score_breakdown_json", "TEXT"),
+    ("enriched_at", "TEXT"),
+    ("scored_at", "TEXT"),
+]
+
+
+def _ensure_seen_jobs_columns(conn: sqlite3.Connection) -> None:
+    """PRD §7.2 FR-PER-01: additive, idempotent migration for enrichment columns."""
+    existing = {
+        row["name"]
+        for row in conn.execute("PRAGMA table_info(seen_jobs)")
+    }
+    for name, typ in SEEN_JOBS_ADD_COLUMNS:
+        if name in existing:
+            continue
+        conn.execute(f"ALTER TABLE seen_jobs ADD COLUMN {name} {typ}")
+
 
 def _now() -> str:
     return datetime.now(tz=timezone.utc).isoformat()
@@ -64,14 +97,35 @@ def _now() -> str:
 def connect(db_path: Path | None = None) -> Iterator[sqlite3.Connection]:
     p = db_path or DB_PATH
     p.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(p)
+    
+    # Clean up stale journal files
+    journal_path = p.with_suffix('.db-journal')
+    if journal_path.exists():
+        try:
+            journal_path.unlink()
+        except Exception:
+            pass
+    
+    # Connect with timeout and retry-friendly settings
+    conn = sqlite3.connect(p, timeout=30.0, check_same_thread=False)
     conn.row_factory = sqlite3.Row
+    
     try:
+        # Enable WAL mode for better concurrent access
+        # WAL allows reads while writes are in progress
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA synchronous = NORMAL")  # Faster but still safe
+        conn.execute("PRAGMA busy_timeout = 30000")  # 30 second timeout for locks
+        
         conn.executescript(SCHEMA)
+        _ensure_seen_jobs_columns(conn)
         yield conn
         conn.commit()
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 
 def upsert_new(conn: sqlite3.Connection, jobs: list[JobPosting]) -> list[JobPosting]:
@@ -79,8 +133,8 @@ def upsert_new(conn: sqlite3.Connection, jobs: list[JobPosting]) -> list[JobPost
     new_jobs: list[JobPosting] = []
     for j in jobs:
         cur = conn.execute(
-            "INSERT OR IGNORE INTO seen_jobs(id, source, url, title, company, first_seen_at, status, raw_json) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT OR IGNORE INTO seen_jobs(id, source, url, title, company, first_seen_at, status, score, score_reason, raw_json) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 j.id,
                 j.source,
@@ -89,6 +143,8 @@ def upsert_new(conn: sqlite3.Connection, jobs: list[JobPosting]) -> list[JobPost
                 j.company,
                 _now(),
                 JobStatus.SCRAPED.value,
+                0,
+                "awaiting scoring",
                 json.dumps(j.model_dump(mode="json")),
             ),
         )
@@ -113,6 +169,44 @@ def update_status(conn: sqlite3.Connection, job_id: str, status: JobStatus,
         args.append(output_dir)
     args.append(job_id)
     conn.execute(f"UPDATE seen_jobs SET {', '.join(sets)} WHERE id = ?", args)
+
+
+def update_enrichment(
+    conn: sqlite3.Connection,
+    job_id: str,
+    description_full: str,
+    description_scraped: bool,
+    description_word_count: int,
+    seniority: str | None,
+    salary_text: str | None,
+    apply_email: str | None,
+) -> None:
+    """Persist enrichment fields for a posting and keep raw_json description in sync."""
+    row = conn.execute("SELECT raw_json FROM seen_jobs WHERE id = ?", (job_id,)).fetchone()
+    raw_json = row["raw_json"] if row else "{}"
+    try:
+        payload = json.loads(raw_json) if raw_json else {}
+    except json.JSONDecodeError:
+        payload = {}
+    if isinstance(payload, dict):
+        payload["description"] = description_full or payload.get("description", "")
+
+    conn.execute(
+        "UPDATE seen_jobs SET description_full = ?, description_scraped = ?, "
+        "description_word_count = ?, seniority = ?, salary_text = ?, apply_email = ?, "
+        "enriched_at = ?, raw_json = ? WHERE id = ?",
+        (
+            description_full,
+            int(description_scraped),
+            description_word_count,
+            seniority,
+            salary_text,
+            apply_email,
+            _now(),
+            json.dumps(payload),
+            job_id,
+        ),
+    )
 
 
 def record_application(conn: sqlite3.Connection, job_id: str, result) -> None:

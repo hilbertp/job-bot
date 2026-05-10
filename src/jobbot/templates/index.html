@@ -19,11 +19,59 @@
     </div>
     <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30">
         <h3 class="text-xs uppercase font-semibold text-purple-200">Applied</h3>
-        <p class="text-3xl font-bold">{{ status_counts.get('applied', 0) }}</p>
+        <p class="text-3xl font-bold">{{ applied_total }}</p>
     </div>
     <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30">
         <h3 class="text-xs uppercase font-semibold text-purple-200">Last 24h</h3>
         <p class="text-3xl font-bold">{{ applied_24h }}</p>
+    </div>
+</div>
+
+<div class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8">
+    <h2 class="text-xl font-bold mb-2">Stage 1: Hits per Portal</h2>
+    <p class="text-sm text-purple-100 mb-4">Number of positions found per source portal in the latest run and share with description saved in DB.</p>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="text-purple-200 border-b border-white/10">
+                    <th class="pb-2">Portal</th>
+                    <th class="pb-2">Hits</th>
+                    <th class="pb-2">% With Description</th>
+                </tr>
+            </thead>
+            <tbody id="portal-counts-body">
+                <tr><td colspan="3" class="py-3">Loading...</td></tr>
+            </tbody>
+            <tfoot>
+                <tr id="portal-counts-total" class="border-t border-white/20 font-semibold">
+                    <td class="pt-3">Total</td>
+                    <td class="pt-3">—</td>
+                    <td class="pt-3">—</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<div class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8">
+    <h2 class="text-xl font-bold mb-2">Stage 2: PO / PM Shortlist</h2>
+    <p class="text-sm text-purple-100 mb-4">Filtered to Product Owner / Product Manager titles (incl. German variants). Score is the LLM fit score (0–100) against your profile; hover for the reason.</p>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="text-purple-200 border-b border-white/10">
+                    <th class="pb-2">Score</th>
+                    <th class="pb-2">Position Title</th>
+                    <th class="pb-2">Portal</th>
+                    <th class="pb-2">Expected Salary</th>
+                    <th class="pb-2">Seniority Required</th>
+                    <th class="pb-2">Link</th>
+                </tr>
+            </thead>
+            <tbody id="stage1-body">
+                <tr><td colspan="6" class="py-3">Loading...</td></tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -38,20 +86,103 @@
                     <th class="pb-2">New</th>
                     <th class="pb-2">Tailored</th>
                     <th class="pb-2">Applied</th>
+                    <th class="pb-2">Errors</th>
                 </tr>
             </thead>
             <tbody>
                 {% for run in runs %}
                 <tr class="border-b border-white/5 last:border-0">
-                    <td class="py-3">{{ run.timestamp }}</td>
+                    <td class="py-3"><a class="underline" href="/runs/{{ run.id }}">#{{ run.id }} · {{ run.timestamp }}</a></td>
                     <td class="py-3">{{ run.n_fetched }}</td>
                     <td class="py-3">{{ run.n_new }}</td>
                     <td class="py-3">{{ run.n_generated }}</td>
                     <td class="py-3">{{ run.n_applied }}</td>
+                    <td class="py-3">{{ run.n_errors }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<script>
+const PO_PM_RE = /\bproduct\s+(owner|manager|management|lead|head|director)\b|\bprodukt[\s-]*(manager|owner|management)/i;
+
+function isPoPm(title) {
+    return !!title && PO_PM_RE.test(title);
+}
+
+async function loadStage1Data() {
+    const [hitsRes, jobsRes] = await Promise.all([
+        fetch('/api/latest-run-portal-hits'),
+        fetch('/api/latest-run-jobs'),
+    ]);
+    const hits = await hitsRes.json();
+    const jobs = await jobsRes.json();
+
+    const portalBody = document.getElementById('portal-counts-body');
+    const portalTotal = document.getElementById('portal-counts-total');
+    portalBody.innerHTML = '';
+    const perPortal = (hits && hits.per_portal) || {};
+    const perPortalDesc = (hits && hits.per_portal_description) || {};
+    const sortedSources = Object.entries(perPortal).sort((a, b) => b[1] - a[1]);
+    if (!sortedSources.length) {
+        portalBody.innerHTML = '<tr><td colspan="3" class="py-3">No scraped positions in latest run.</td></tr>';
+        portalTotal.querySelectorAll('td')[1].textContent = '0';
+        portalTotal.querySelectorAll('td')[2].textContent = '0.0%';
+    } else {
+        for (const [source, count] of sortedSources) {
+            const descMeta = perPortalDesc[source] || {};
+            const pct = Number(descMeta.percent_with_description || 0);
+            const withDesc = Number(descMeta.with_description || 0);
+            const denom = Number(descMeta.total || 0);
+            const tr = document.createElement('tr');
+            tr.className = 'border-b border-white/5';
+            tr.innerHTML = `
+                <td class="py-3">${source}</td>
+                <td class="py-3 font-semibold">${count}</td>
+                <td class="py-3">${pct.toFixed(1)}% <span class="text-xs text-purple-200">(${withDesc}/${denom})</span></td>
+            `;
+            portalBody.appendChild(tr);
+        }
+        portalTotal.querySelectorAll('td')[1].textContent = hits.total || 0;
+        portalTotal.querySelectorAll('td')[2].textContent = `${Number(hits.percent_with_description || 0).toFixed(1)}%`;
+    }
+
+    const tbody = document.getElementById('stage1-body');
+    tbody.innerHTML = '';
+    const shortlist = jobs.filter(j => isPoPm(j.title));
+    if (!shortlist.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-3">No PO/PM titles in latest run.</td></tr>';
+        return;
+    }
+
+    function scoreCell(job) {
+        const s = job.score;
+        if (s === null || s === undefined) return '<span class="text-purple-200">—</span>';
+        const status = (job.status || '').toLowerCase();
+        if (status === 'scraped') return '<span class="text-purple-200" title="awaiting scoring">pending</span>';
+        if (status === 'filtered') return `<span class="text-red-300" title="${(job.reason || 'heuristic filter').replace(/"/g, '&quot;')}">filtered</span>`;
+        const reason = (job.reason || '').replace(/"/g, '&quot;');
+        const tone = s >= 70 ? 'text-green-300' : s >= 40 ? 'text-yellow-200' : 'text-purple-200';
+        return `<span class="${tone} font-semibold" title="${reason}">${s}</span>`;
+    }
+
+    for (const job of shortlist) {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-white/5';
+        tr.innerHTML = `
+            <td class="py-3">${scoreCell(job)}</td>
+            <td class="py-3">${job.title || ''}</td>
+            <td class="py-3">${job.source || ''}</td>
+            <td class="py-3">${job.expected_salary || 'not specified'}</td>
+            <td class="py-3">${job.seniority_required || 'not specified'}</td>
+            <td class="py-3"><a class="underline" target="_blank" href="${job.url || '#'}">open</a></td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+loadStage1Data();
+</script>
 {% endblock %}

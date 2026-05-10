@@ -1,8 +1,12 @@
 # jobbot configuration. Copy to data/config.yaml and edit.
 
-score_threshold: 70           # 0-100; only jobs at/above this trigger doc generation
-max_jobs_per_run: 50          # safety cap on LLM spend
+score_threshold: 0            # 0-100; minimum score to include in digest
+max_jobs_per_run: 200         # safety cap on LLM spend
 output_dir: output            # relative to repo root
+
+digest:
+  generate_docs_above_score: 70
+  max_per_email: 100
 
 # Per-source settings. Each can be enabled/disabled, given specific search queries,
 # and (separately) opted into auto-submit.
@@ -20,12 +24,15 @@ sources:
     queries:
       - keywords: [python, data, ml]
         remote: true
+      - keywords: [product, owner, agile, scrum]
+        remote: true
 
   freelance_de:
     enabled: true
     auto_submit: false
     queries:
       - keywords: [python, backend]
+      - keywords: [product, owner, agile, scrum]
 
   indeed:
     enabled: true
@@ -35,6 +42,10 @@ sources:
         l: "Berlin"
       - q: "data engineer"
         l: "remote"
+      - q: "product owner"
+        l: "Berlin"
+      - q: "product owner"
+        l: "remote"
 
   stepstone:
     enabled: true
@@ -42,18 +53,23 @@ sources:
     queries:
       - q: "python"
         l: "Deutschland"
+      - q: "product owner"
+        l: "Deutschland"
 
   xing:
     enabled: true
     auto_submit: false
     queries:
       - q: "python developer"
+      - q: "product owner"
 
   linkedin:
     enabled: true
     auto_submit: false        # LinkedIn ToS — keep off; assist only
     queries:
       - keywords: "python developer"
+        location: "Germany"
+      - keywords: "product owner"
         location: "Germany"
 
 # Auto-apply behavior (used only for sources where auto_submit: true)

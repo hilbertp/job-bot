@@ -1,12 +1,18 @@
 # jobbot configuration for Philipp Hilbert
-score_threshold: 70           # 0-100; only jobs at/above this trigger doc generation
-max_jobs_per_run: 50          # safety cap on LLM spend
+score_threshold: 0            # 0-100; minimum score to include in digest
+max_jobs_per_run: 200         # safety cap on LLM spend
 output_dir: output            # relative to repo root
+
+digest:
+  generate_docs_above_score: 70
+  max_per_email: 100
 
 sources:
   weworkremotely:
-    enabled: true
+    enabled: false
     auto_submit: false
+    # Disabled for this query profile: WWR is category-based (remote-only),
+    # while we want strict term-only queries ("product owner" / "product manager").
     queries:
       - category: remote-programming-jobs
       - category: remote-devops-sysadmin-jobs
@@ -15,44 +21,46 @@ sources:
     enabled: true
     auto_submit: false
     queries:
-      - keywords: [python, product, management, backend]
-        remote: true
+      - q: "product manager"
+      - q: "product owner"
 
   freelance_de:
-    enabled: true
+    # Disabled: freelance.de's robots.txt explicitly forbids automated crawling
+    # without written permission, and listings are JS-rendered (no SSR HTML).
+    # Re-enable only after obtaining permission from support@freelance.de.
+    enabled: false
     auto_submit: false
     queries:
       - keywords: [product, management, python, data]
+      - keywords: [product, owner, agile, scrum]
 
   indeed:
-    enabled: true
+    enabled: false
     auto_submit: false        # Indeed Apply is risky to automate; keep off
     queries:
       - q: "product manager"
-        l: "Berlin"
-      - q: "product manager"
-        l: "remote"
+      - q: "product owner"
 
   stepstone:
     enabled: true
     auto_submit: false
     queries:
       - q: "product manager"
-        l: "Deutschland"
+      - q: "product owner"
 
   xing:
     enabled: true
     auto_submit: false
     queries:
       - q: "product manager"
-      - q: "product management"
+      - q: "product owner"
 
   linkedin:
     enabled: true
     auto_submit: false        # LinkedIn ToS — keep off; assist only
     queries:
       - keywords: "product manager"
-        location: "Germany"
+      - keywords: "product owner"
 
 apply:
   dry_run: true               # take screenshot of filled form, don't click submit

@@ -18,6 +18,7 @@
                     <th class="pb-4">Source</th>
                     <th class="pb-4">Score</th>
                     <th class="pb-4">Status</th>
+                    <th class="pb-4">Why / Notes</th>
                     <th class="pb-4">Link</th>
                 </tr>
             </thead>
@@ -34,18 +35,20 @@ async function loadJobs(status) {
     const tbody = document.getElementById('jobs-body');
     tbody.innerHTML = '';
     if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="py-4">No jobs found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="py-4">No jobs found.</td></tr>';
         return;
     }
     for (const job of rows) {
         const tr = document.createElement('tr');
         tr.className = 'border-b border-white/5';
+        const scoreText = (job.score === null || job.score === undefined) ? 'pending' : String(job.score);
         tr.innerHTML = `
-            <td class="py-3">${job.title || ''}</td>
+            <td class="py-3"><a class="underline" target="_blank" href="${job.url}">${job.title || ''}</a></td>
             <td class="py-3">${job.company || ''}</td>
             <td class="py-3">${job.location || ''}</td>
-            <td class="py-3">${job.score ?? '-'}</td>
+            <td class="py-3">${scoreText}</td>
             <td class="py-3">${job.status || ''}</td>
+            <td class="py-3 text-sm text-purple-100">${job.score_reason || '-'}</td>
             <td class="py-3"><a class="underline" target="_blank" href="${job.url}">open</a></td>
         `;
         tbody.appendChild(tr);

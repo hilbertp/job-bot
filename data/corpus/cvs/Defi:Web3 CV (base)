@@ -1,0 +1,114 @@
+# Philipp Hilbert
+
+**Head of Product and UX | High ambiguity 0 to 1 | Security and usability tradeoffs**
+
+---
+
+## Profile
+
+Senior Product Manager with over a decade of experience building and scaling complex software products in high-stakes environments. My strength lies in system-level thinking: understanding how technical, economic, and organizational constraints interact and translating that into clear priorities, defensible decisions, and measurable outcomes.
+
+I focus on what actually decides whether teams succeed under uncertainty: clarity, correct sequencing, and choosing the right tradeoffs in a world that doesn’t offer perfect solutions. I’m comfortable making decisions with incomplete information, setting assumptions openly, invalidating them fast, and adjusting course without drama. I don’t chase certainty; I build systems that surface reality early.
+
+---
+
+## Web3 / DeFi Focus
+
+I have a deep understanding of how decentralized systems work and where they fail under real-world pressure.
+
+My knowledge includes:
+
+- **How CEXes and Perp DEXes work**
+  - how futures, options, and perpetuals work and how they differ  
+  - how leverage, margin, liquidation mechanics, and funding rates operate  
+  - how low-latency execution, reliability, and KYC during onboarding directly affect user trust and conversion  
+  - how order books and matching engines are modeled after traditional financial markets  
+
+- **How DEXes work and how they differ from TradFi market making**
+  - how automated market makers and liquidity pools behave  
+  - how a transaction itself creates price impact, especially in smaller pools using the static x*y=k formula  
+  - how MEV worsens this effect when using the public mempool through front-running and sandwiching  
+  - how this can be mitigated with solutions such as intents, private order flow, or simple RFQ models  
+  - how aggregators add value through split routing and path optimization  
+
+- **How bridges work and how they introduce risk**
+  - how they differ from swaps  
+  - how different mechanisms work: messaging, lock/mint, capital fronting, solver/resolver models, and auctions  
+  - how attacking collateral or abusing faulty messaging can cause large-scale losses  
+
+- **How oracles work**
+  - how they connect systems regardless of type  
+  - how they mitigate risk through fallback pricing and clear danger signaling  
+  - how they guarantee predictability to integrators through bounding rather than absolute truth  
+
+I approach these topics with a risk-first lens, focusing on trust assumptions, explicit failure domains, and what happens when incentives weaken or monitoring decays.
+
+Additionally, I have more than eight years of hands-on experience as a retail crypto user: managing hot and cold wallets, interacting with CEXes, DEXes, and aggregators, providing liquidity, and seeing first-hand where products hold up and where they suffer from poor user experience.
+
+---
+
+## System-Level Reasoning & Incentive Awareness
+
+I don’t assume I know a system’s real problems upfront. My value lies in identifying where issues *might* emerge when incentives, verification mechanisms, and real-world behavior interact.  
+(“Which drivers are critical, and what happens when they approach their extreme edges?”)
+
+Claiming certainty ahead of time is hubris. What works is building clarity around possible future scenarios and preparing for the moment they materialize. Surfacing risks early, even if they later turn out to be benign, is part of responsible product leadership.
+
+As a PM, my role is not to dictate solutions, but to structure team communication, keep teams aligned across engineering, operations, and support (full DevOps chain), and ensure decisions and assumptions can be audited, revised, and reversed.
+
+---
+
+## Professional Experience
+
+### Rohde & Schwarz — Product Owner, AI Data Transformation
+
+Improve data quality while maintaining full control over versioning and provenance.
+
+- deterministic, highly customizable data pipelines with correctness guarantees  
+- strong provenance and audit requirements in a high-stakes environment  
+- highly regulated customers in risk-dense industries  
+- full infrastructure and DevOps ownership  
+- autonomous feature delivery with tight dependency management  
+
+---
+
+### Federal Employment Agency — Product Owner, Public Data Analytics  
+Labor market statistics, trends, and regional differences.
+
+- led large-scale distributed ETL systems (gathering unstructured data, aggregating it, and building user-friendly views)  
+- strict data lineage, governance, and compliance requirements  
+- modernization of the tech stack toward cloud-first architectures  
+- standardized CI/CD with full test integration at build time  
+
+---
+
+### Emil Group — Product Owner, InsurTech SaaS
+
+B2B InsurTech platform reducing insurance product time-to-market from over one year to under one week.
+
+- built and maintained complex claims management modules  
+- restructured a dysfunctional 17-person team into smaller, effective Scrum units  
+- reintroduced velocity tracking and structured refinement practices lost under delivery pressure  
+- managed demanding pilot customers in an early-stage, prototype-driven environment  
+
+---
+
+### Earlier Roles (Product Owner & Management)
+
+- **CLINET Platforms** — Mobile healthcare app digitizing medical history, diagnoses, therapy, meal plans, logistics, and patient-specific healthcare offers while respecting privacy  
+- **Enercon** — Full IT modernization of a specialist manufacturing site (software, databases, servers, networking, end devices)  
+- **Hospital Chain WiFi Installation** — Supervised IT rollout equipping 9 hospitals with full WiFi coverage  
+- **AOK Health Insurance** — Migration of an internal webshop for IT and software procurement, including complex catalog and API integrations and customizable approval workflows  
+- **Smart Soil Technologies** (Co-Founder, Chief Digital, Head of HR, CFO) — Digital foundation, financial planning, and tooling for intelligent fertilizer and substrate systems for vertical farming  
+- **Qcrypt AG** — Quantum-secure encryption product based on OTP with minimal hardware requirements for SMEs  
+- **Kvitt Payment Solutions** (Co-Founder) — Group-based P2P payment solution, PSP integration, full UX/UI design, mobile prototype; later acquired and operated by Sparkasse  
+
+---
+
+## Strengths
+
+- clear thinking under uncertainty; no pretense of perfect foresight  
+- ability to guide teams through ambiguity with structure and calm decision-making  
+- strong communication without politics, emotional framing, or ideological bias  
+- translating complex system behavior into actionable product decisions  
+- focus on resilience, risk containment, and long-term credibility over short-term metrics

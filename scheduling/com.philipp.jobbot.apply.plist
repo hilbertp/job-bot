@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.philipp.jobbot.apply</string>
+
+  <!-- Replace REPO_PATH below with the absolute path to this repo. -->
+  <key>WorkingDirectory</key>
+  <string>REPO_PATH</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>REPO_PATH/.venv/bin/python</string>
+    <string>-m</string>
+    <string>jobbot</string>
+    <string>apply</string>
+  </array>
+
+  <key>StandardOutPath</key>
+  <string>REPO_PATH/logs/apply.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>REPO_PATH/logs/apply.err.log</string>
+
+  <!-- Daily at 09:00, after the 08:30 digest has gone out. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>9</integer>
+    <key>Minute</key><integer>0</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>

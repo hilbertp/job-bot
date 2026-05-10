@@ -52,3 +52,18 @@ class FreelanceDeScraper(BaseScraper):
                 tags=["freelance"],
             ))
         return out
+
+    def fetch_detail(self, job: "JobPosting"):
+        """Fetch the detail page and return a JobPosting with description populated.
+
+        PRD §7.3 FR-ENR-01.
+
+        Returns None on failure or if the body is too short to be useful
+        (< 100 words). The pipeline's enrichment runner treats None as
+        "no body available, do not score this posting".
+
+        Implementation note: prefer the same httpx + selectolax stack as
+        ``fetch``; reuse _HEADERS and respect a per-call rate limit (≥1s sleep
+        after the request). On 429/999, log and return None — do not retry.
+        """
+        raise NotImplementedError("Copilot to implement per PRD §7.3 FR-ENR-01")

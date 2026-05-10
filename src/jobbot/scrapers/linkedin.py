@@ -1,20 +1,25 @@
 """LinkedIn — public guest jobs endpoint (HTML).
 
-Approach: httpx GET on the public /jobs/search page, which renders SSR HTML
-containing structured job data. Requires LinkedIn session cookie (li_at) for auth.
-We parse the embedded JSON-LD and/or the `<ul class="jobs-search__results-list">` cards.
+The /jobs-guest/jobs/api/seeMoreJobPostings/search endpoint returns ~10 clean
+SSR job cards per page without authentication. We page through it to collect
+more results. Optional LINKEDIN_LI_AT cookie unlocks the richer authenticated
+search page.
 
-Important limitations:
-- LinkedIn rate-limits aggressively; keep queries sparse.
-- NEVER enable auto_submit on this source — LinkedIn ToS explicitly forbids
-  automated Easy Apply.
-- Session cookie must be refreshed periodically if LinkedIn invalidates it.
+Card descriptions are tiny (~150 chars). For meaningful match scoring we also
+expose `fetch_detail(job)`, which hits /jobs-guest/jobs/api/jobPosting/<id> and
+returns the full description plus criteria (seniority, employment type) — also
+unauthenticated.
+
+Limits:
+- LinkedIn rate-limits aggressively. Keep queries sparse (≥3s between calls).
+- NEVER enable auto_submit on this source — Easy Apply automation is forbidden
+  by LinkedIn's User Agreement.
 """
 from __future__ import annotations
 
-import json
 import os
 import random
+import re
 import time
 from urllib.parse import urlencode
 
@@ -36,108 +41,133 @@ _HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 }
-
 BASE = "https://www.linkedin.com"
+
+# How many guest-API pages to fetch per query (each returns ~10 cards).
+# Keep this conservative — LinkedIn issues 429/999 above ~5 pages/min.
+_PAGES_PER_QUERY = 3
 
 
 class LinkedInScraper(BaseScraper):
     source = "linkedin"
 
     def fetch(self, query: SearchQuery) -> list[JobPosting]:
-        """query example: {"keywords": "python developer", "location": "Germany"}"""
-        session_cookie = os.getenv("LINKEDIN_SESSION_COOKIE")
-        if not session_cookie:
-            log.warning("linkedin_no_session_cookie")
-            return []
-
-        params = {
-            "keywords": query.get("keywords", ""),
-            "location": query.get("location", ""),
-            "f_TPR": "r86400",  # last 24 h
-            "position": 1,
-            "pageNum": 0,
-        }
-        url = f"{BASE}/jobs/search/?{urlencode(params)}"
-
+        """query example: {"keywords": "product owner", "location": "Germany"}"""
+        cookie = os.getenv("LINKEDIN_LI_AT") or os.getenv("LINKEDIN_SESSION_COOKIE")
         headers = _HEADERS.copy()
-        headers["Cookie"] = f"li_at={session_cookie}"
-
-        try:
-            with httpx.Client(headers=headers, timeout=20.0, follow_redirects=True) as c:
-                r = c.get(url)
-                if r.status_code != 200:
-                    log.warning("linkedin_http_error", status=r.status_code)
-                    return []
-                html = r.text
-        except Exception as exc:
-            log.warning("linkedin_fetch_failed", error=str(exc))
-            return []
+        if cookie:
+            headers["Cookie"] = f"li_at={cookie}"
 
         out: list[JobPosting] = []
+        seen_ids: set[str] = set()
 
-        # 1) Try JSON-LD embedded in <script type="application/ld+json">
-        tree = HTMLParser(html)
-        for script in tree.css("script[type='application/ld+json']"):
+        for page in range(_PAGES_PER_QUERY):
+            params = {
+                "keywords": query.get("keywords", ""),
+                "location": query.get("location", ""),
+                "f_TPR": query.get("time_range", "r604800"),  # default: last 7 days
+                "start": page * 10,
+            }
+            url = f"{BASE}/jobs-guest/jobs/api/seeMoreJobPostings/search?{urlencode(params)}"
+
             try:
-                data = json.loads(script.text() or "{}")
-                items = data if isinstance(data, list) else data.get("@graph", [data])
-                for item in items:
-                    if item.get("@type") not in ("JobPosting", "ListItem"):
-                        continue
-                    posting = item if item.get("@type") == "JobPosting" else item.get("item", {})
-                    job_url = posting.get("url") or posting.get("@id") or ""
-                    if not job_url:
-                        continue
-                    title = posting.get("title") or posting.get("name") or ""
-                    org = posting.get("hiringOrganization", {})
-                    company = org.get("name") or "Unknown"
-                    loc_obj = posting.get("jobLocation", {})
-                    location = (
-                        loc_obj.get("address", {}).get("addressLocality")
-                        if isinstance(loc_obj, dict) else None
-                    )
-                    out.append(JobPosting(
-                        id=stable_id(self.source, job_url),
-                        source=self.source,
-                        title=title,
-                        company=company,
-                        location=location,
-                        url=job_url,
-                        apply_url=job_url,
-                        description=posting.get("description", "")[:3000],
-                    ))
-            except (json.JSONDecodeError, AttributeError, TypeError):
-                continue
+                r = httpx.get(url, headers=headers, timeout=20.0, follow_redirects=True)
+            except Exception as exc:
+                log.warning("linkedin_fetch_failed", error=str(exc), page=page)
+                break
 
-        # 2) Fallback: parse SSR HTML cards
-        if not out:
-            for card in tree.css("li.result-card, li[class*='job-result-card']"):
-                title_el = card.css_first(
-                    "h3.base-search-card__title, "
-                    "span[class*='title'], a[class*='title']"
+            if r.status_code == 429 or r.status_code == 999:
+                log.warning("linkedin_rate_limited", status=r.status_code, page=page)
+                break
+            if r.status_code != 200:
+                log.warning("linkedin_http_error", status=r.status_code, page=page)
+                break
+
+            tree = HTMLParser(r.text)
+            cards = tree.css("div.base-card")
+            if not cards:
+                # No more results, stop paging.
+                break
+
+            for card in cards:
+                title_el = card.css_first("h3.base-search-card__title")
+                company_el = (
+                    card.css_first("h4.base-search-card__subtitle a")
+                    or card.css_first("h4.base-search-card__subtitle")
                 )
-                company_el = card.css_first(
-                    "h4.base-search-card__subtitle, [class*='company-name']"
-                )
-                location_el = card.css_first(
-                    "span.job-search-card__location, [class*='location']"
-                )
-                link_el = card.css_first("a.base-card__full-link, a[class*='full-link']")
+                loc_el = card.css_first("span.job-search-card__location")
+                link_el = card.css_first("a.base-card__full-link")
                 if not (title_el and link_el):
                     continue
-                href = link_el.attributes.get("href", "")
+                href = link_el.attributes.get("href", "") or ""
                 if not href:
                     continue
+                # Strip tracking query params for stable dedup.
+                href = href.split("?")[0]
+                jid = stable_id(self.source, href)
+                if jid in seen_ids:
+                    continue
+                seen_ids.add(jid)
                 out.append(JobPosting(
-                    id=stable_id(self.source, href),
+                    id=jid,
                     source=self.source,
                     title=title_el.text(strip=True),
                     company=company_el.text(strip=True) if company_el else "Unknown",
-                    location=location_el.text(strip=True) if location_el else None,
+                    location=loc_el.text(strip=True) if loc_el else None,
                     url=href,
                     apply_url=href,
                     description=card.text(strip=True)[:2000],
                 ))
 
-        time.sleep(random.uniform(3.0, 6.0))
+            time.sleep(random.uniform(3.0, 5.0))
+
         return out
+
+    def fetch_detail(self, job: JobPosting) -> JobPosting | None:
+        """Fetch the full job posting and return a JobPosting with enriched description.
+
+        Uses /jobs-guest/jobs/api/jobPosting/<id> — same unauth endpoint as the
+        card listing. Returns None if the detail page can't be parsed.
+        """
+        m = re.search(r"/jobs/view/[^/]*?(\d{6,})", str(job.url)) or re.search(
+            r"-(\d{6,})(?:[/?].*)?$", str(job.url)
+        )
+        if not m:
+            return None
+        job_id = m.group(1)
+        cookie = os.getenv("LINKEDIN_LI_AT") or os.getenv("LINKEDIN_SESSION_COOKIE")
+        headers = _HEADERS.copy()
+        if cookie:
+            headers["Cookie"] = f"li_at={cookie}"
+        url = f"{BASE}/jobs-guest/jobs/api/jobPosting/{job_id}"
+        try:
+            r = httpx.get(url, headers=headers, timeout=20.0, follow_redirects=True)
+        except Exception as exc:
+            log.warning("linkedin_detail_fetch_failed", error=str(exc), job_id=job_id)
+            return None
+        if r.status_code in (429, 999):
+            log.warning("linkedin_detail_rate_limited", status=r.status_code, job_id=job_id)
+            return None
+        if r.status_code != 200:
+            log.warning("linkedin_detail_http_error", status=r.status_code, job_id=job_id)
+            return None
+        tree = HTMLParser(r.text)
+        body = tree.css_first("div.show-more-less-html__markup") or tree.css_first(
+            "div.description__text"
+        )
+        description = body.text(strip=True) if body else ""
+
+        # Append the criteria block (Seniority level, Employment type, etc.) so
+        # the LLM can use it for seniority/role-fit scoring.
+        crit_lines = []
+        for k_el, v_el in zip(
+            tree.css("h3.description__job-criteria-subheader"),
+            tree.css("span.description__job-criteria-text"),
+        ):
+            crit_lines.append(f"{k_el.text(strip=True)}: {v_el.text(strip=True)}")
+        if crit_lines:
+            description = (description + "\n\nCriteria:\n" + "\n".join(crit_lines)).strip()
+
+        if not description:
+            return None
+        return job.model_copy(update={"description": description[:8000]})

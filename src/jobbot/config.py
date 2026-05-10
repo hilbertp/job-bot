@@ -39,6 +39,11 @@ class CaptchaConfig(BaseModel):
     max_retries: int = 2
 
 
+class DigestConfig(BaseModel):
+    generate_docs_above_score: int = 70
+    max_per_email: int = 100
+
+
 class SourceConfig(BaseModel):
     enabled: bool = True
     auto_submit: bool = False
@@ -49,6 +54,7 @@ class Config(BaseModel):
     score_threshold: int = 70
     max_jobs_per_run: int = 50
     output_dir: str = "output"
+    digest: DigestConfig = Field(default_factory=DigestConfig)
     sources: dict[str, SourceConfig] = Field(default_factory=dict)
     apply: ApplyConfig = Field(default_factory=ApplyConfig)
     otp: OtpConfig = Field(default_factory=OtpConfig)

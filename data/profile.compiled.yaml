@@ -1,0 +1,31 @@
+voice:
+  tone_descriptors: []
+  sample_phrases: []
+  avoid_phrases: []
+capabilities:
+- skill: ''
+  years: 0
+  sources: []
+- skill: ''
+  years: 0
+  sources: []
+- skill: ''
+  years: 0
+  sources: []
+domains: []
+achievements:
+- text: ''
+  company: ''
+  metric: null
+- text: ''
+  company: ''
+  metric: null
+seniority_signals:
+  title_progression: []
+  team_size_managed: null
+  scope_keywords: []
+languages:
+- '{''German'': ''native''}'
+- '{''English'': ''C2''}'
+compiled_at: '2026-05-10T09:09:32.853630+00:00'
+corpus_fingerprint: 42c00aa3c7e79ce3b514dfa756fcf0d74bdbe77552c64c8f3e43b3eefdeb068a
