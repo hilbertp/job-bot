@@ -312,6 +312,197 @@ def test_api_pipeline_funnel_returns_expected_keys(tmp_path: Path, monkeypatch) 
     assert data["fetched"] == 1
 
 
+def test_api_positions_returns_scores_statuses_and_filter_reasons(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    """/api/positions is the Stage-2 table contract: every row carries enough
+    context to answer score, filter/cannot-score status, and why."""
+    import jobbot.pipeline as pipeline
+    from jobbot.dashboard.server import _load_legacy_dashboard_module
+
+    db = tmp_path / "jobbot.db"
+    monkeypatch.setattr("jobbot.state.DB_PATH", db)
+
+    _stub_pipeline(
+        monkeypatch, pipeline,
+        fake_scraper=FakeScraper(job_id="pos_1"),
+        llm_score_result=ScoreResult(score=41, reason="missing B2B SaaS context"),
+    )
+    pipeline.run_once(_make_config(), _make_secrets())
+
+    client = _load_legacy_dashboard_module().app.test_client()
+    resp = client.get("/api/positions")
+    assert resp.status_code == 200
+    rows = resp.get_json()
+    target = next(row for row in rows if row["id"] == "pos_1")
+    expected_keys = {
+        "id", "title", "company", "source", "status", "score",
+        "score_reason", "url", "first_seen_at",
+    }
+    assert expected_keys.issubset(target.keys())
+    assert target["status"] == JobStatus.BELOW_THRESHOLD.value
+    assert target["score"] == 41
+    assert target["score_reason"] == "missing B2B SaaS context"
+
+
+def test_latest_run_portal_hits_exposes_description_coverage_by_source(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    """/api/latest-run-portal-hits exposes per-source body coverage for the
+    latest run, using fetched_ids from summary_json rather than all DB rows."""
+    from jobbot.dashboard.server import _load_legacy_dashboard_module
+    from jobbot.models import JobPosting
+    from jobbot.state import connect, finish_run, start_run, update_enrichment, upsert_new
+
+    db = tmp_path / "jobbot.db"
+    monkeypatch.setattr("jobbot.state.DB_PATH", db)
+
+    jobs = [
+        JobPosting(
+            id="body_full",
+            source="fake",
+            title="Senior PM",
+            company="Acme",
+            url="https://example.com/jobs/body_full",  # type: ignore
+            apply_url="https://example.com/jobs/body_full",  # type: ignore
+            description="snippet",
+        ),
+        JobPosting(
+            id="body_missing",
+            source="fake",
+            title="Senior PM",
+            company="Acme",
+            url="https://example.com/jobs/body_missing",  # type: ignore
+            apply_url="https://example.com/jobs/body_missing",  # type: ignore
+            description="snippet",
+        ),
+    ]
+    with connect(db) as conn:
+        run_id = start_run(conn)
+        upsert_new(conn, jobs)
+        update_enrichment(
+            conn,
+            "body_full",
+            description_full=" ".join(["responsibility"] * 240),
+            description_scraped=True,
+            description_word_count=240,
+            seniority="Senior",
+            salary_text=None,
+            apply_email=None,
+        )
+        finish_run(
+            conn,
+            run_id,
+            n_fetched=2,
+            n_new=2,
+            summary={
+                "per_source_fetched": {"fake": 2},
+                "per_source_new": {"fake": 2},
+                "fetched_ids": ["body_full", "body_missing"],
+            },
+        )
+
+    client = _load_legacy_dashboard_module().app.test_client()
+    resp = client.get("/api/latest-run-portal-hits")
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert payload["run_id"] == run_id
+    assert payload["per_portal"] == {"fake": 2}
+    assert payload["total"] == 2
+    assert payload["total_with_description"] == 1
+    assert payload["percent_with_description"] == 50.0
+    assert payload["per_portal_description"]["fake"] == {
+        "total": 2,
+        "with_description": 1,
+        "percent_with_description": 50.0,
+    }
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Body coverage should require description_word_count >= 200, not just non-empty text",
+)
+def test_latest_run_portal_hits_body_coverage_uses_minimum_word_count(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    """User-facing body coverage means usable job-body coverage: postings with
+    description_word_count >= 200 by source."""
+    from jobbot.dashboard.server import _load_legacy_dashboard_module
+    from jobbot.models import JobPosting
+    from jobbot.state import connect, finish_run, start_run, update_enrichment, upsert_new
+
+    db = tmp_path / "jobbot.db"
+    monkeypatch.setattr("jobbot.state.DB_PATH", db)
+
+    jobs = [
+        JobPosting(
+            id="body_usable",
+            source="fake",
+            title="Senior PM",
+            company="Acme",
+            url="https://example.com/jobs/body_usable",  # type: ignore
+            apply_url="https://example.com/jobs/body_usable",  # type: ignore
+            description="snippet",
+        ),
+        JobPosting(
+            id="body_too_short",
+            source="fake",
+            title="Senior PM",
+            company="Acme",
+            url="https://example.com/jobs/body_too_short",  # type: ignore
+            apply_url="https://example.com/jobs/body_too_short",  # type: ignore
+            description="snippet",
+        ),
+    ]
+    with connect(db) as conn:
+        run_id = start_run(conn)
+        upsert_new(conn, jobs)
+        update_enrichment(
+            conn,
+            "body_usable",
+            description_full=" ".join(["responsibility"] * 240),
+            description_scraped=True,
+            description_word_count=240,
+            seniority="Senior",
+            salary_text=None,
+            apply_email=None,
+        )
+        update_enrichment(
+            conn,
+            "body_too_short",
+            description_full=" ".join(["thin"] * 24),
+            description_scraped=True,
+            description_word_count=24,
+            seniority="Senior",
+            salary_text=None,
+            apply_email=None,
+        )
+        finish_run(
+            conn,
+            run_id,
+            n_fetched=2,
+            n_new=2,
+            summary={
+                "per_source_fetched": {"fake": 2},
+                "per_source_new": {"fake": 2},
+                "fetched_ids": ["body_usable", "body_too_short"],
+            },
+        )
+
+    client = _load_legacy_dashboard_module().app.test_client()
+    resp = client.get("/api/latest-run-portal-hits")
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert payload["run_id"] == run_id
+    assert payload["total_with_description"] == 1
+    assert payload["percent_with_description"] == 50.0
+    assert payload["per_portal_description"]["fake"] == {
+        "total": 2,
+        "with_description": 1,
+        "percent_with_description": 50.0,
+    }
+
+
 def test_digest_template_renders_cannot_score_section_when_provided() -> None:
     """The digest Jinja template must render a 'Cannot score' section
     separately from numeric matches when cannot_score entries are passed."""
