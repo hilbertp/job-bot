@@ -6,31 +6,34 @@
         Export JSON
     </button>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-    <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30">
-        <h3 class="text-xs uppercase font-semibold text-purple-200">Total Jobs</h3>
-        <p class="text-3xl font-bold">{{ total_jobs }}</p>
+<div id="funnel-strip" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+    {% for stage in funnel %}
+    <div class="funnel-card bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30"
+         data-funnel-stage="{{ stage.label|lower }}">
+        <div class="flex items-center justify-between gap-2 mb-1">
+            <h3 class="text-xs uppercase font-semibold text-purple-200">{{ stage.label }}</h3>
+            {% if stage.pending_milestone %}
+            <span class="text-[10px] uppercase font-semibold tracking-wide bg-purple-400/30 border border-purple-200/40 text-purple-100 px-1.5 py-0.5 rounded"
+                  title="Pending Milestone — count will stay 0 until {{ stage.pending_milestone }} ships."
+                  data-funnel-pending-milestone="{{ stage.pending_milestone }}">{{ stage.pending_milestone }}</span>
+            {% endif %}
+        </div>
+        <p class="text-3xl font-bold" data-funnel-count>{{ stage.count }}</p>
+        {% if stage.retention_pct is not none %}
+        <span class="inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full
+                     {% if stage.retention_color == 'red' %}bg-red-500/30 text-red-100 border border-red-300/40
+                     {% elif stage.retention_color == 'amber' %}bg-amber-400/30 text-amber-100 border border-amber-300/40
+                     {% elif stage.retention_color == 'green' %}bg-emerald-400/30 text-emerald-100 border border-emerald-300/40
+                     {% else %}bg-white/10 text-purple-100 border border-white/20{% endif %}"
+              data-funnel-retention="{{ stage.retention_color }}"
+              title="{{ stage.retention_pct }}% retained from the previous stage">{{ stage.retention_pct }}%</span>
+        {% elif loop.index0 > 0 %}
+        <span class="inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-white/10 text-purple-200 border border-white/20"
+              data-funnel-retention="neutral"
+              title="No predecessor count available">—</span>
+        {% endif %}
     </div>
-    <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30">
-        <h3 class="text-xs uppercase font-semibold text-purple-200">Scraped</h3>
-        <p class="text-3xl font-bold">{{ status_counts.get('scraped', 0) }}</p>
-    </div>
-    <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30">
-        <h3 class="text-xs uppercase font-semibold text-purple-200">Scored</h3>
-        <p class="text-3xl font-bold">{{ status_counts.get('scored', 0) }}</p>
-    </div>
-    <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30">
-        <h3 class="text-xs uppercase font-semibold text-purple-200">Tailored</h3>
-        <p class="text-3xl font-bold">{{ status_counts.get('generated', 0) }}</p>
-    </div>
-    <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30">
-        <h3 class="text-xs uppercase font-semibold text-purple-200">Applied</h3>
-        <p class="text-3xl font-bold">{{ applied_total }}</p>
-    </div>
-    <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30">
-        <h3 class="text-xs uppercase font-semibold text-purple-200">Last 24h</h3>
-        <p class="text-3xl font-bold">{{ applied_24h }}</p>
-    </div>
+    {% endfor %}
 </div>
 
 <div id="run-banner" class="hidden mb-4 bg-amber-400/20 border border-amber-300/40 text-amber-100 rounded-xl px-4 py-3 text-sm flex flex-wrap items-center gap-3">
@@ -145,6 +148,13 @@
                 {% if runs %}
                 <span>Last started <span id="recent-runs-last-started" class="text-purple-100 font-semibold" data-iso="{{ runs[0].timestamp }}">{{ runs[0].timestamp }}</span></span>
                 {% endif %}
+                <span id="activity-today" class="flex flex-wrap gap-3"
+                      title="Activity in the last 24 hours">
+                    <span class="text-purple-300">Activity today</span>
+                    <span><span class="text-purple-100 font-semibold" data-activity="posted">{{ activity_today.posted }}</span> posted</span>
+                    <span><span class="text-purple-100 font-semibold" data-activity="scored">{{ activity_today.scored }}</span> scored</span>
+                    <span><span class="text-purple-100 font-semibold" data-activity="applied">{{ activity_today.applied }}</span> applied</span>
+                </span>
             </div>
         </div>
         <span class="text-base text-purple-100 select-none" data-panel-toggle aria-controls="recent-runs-panel-body" aria-expanded="true" aria-hidden="true">

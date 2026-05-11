@@ -59,20 +59,132 @@ def _extract_seniority_required(title: str, description: str) -> str:
     return "not specified"
 
 
+# Funnel retention thresholds. The user's brief: red < 20%, amber 20-50%,
+# green 50%+ — applied to the % retained from the PREVIOUS stage.
+_RETENTION_AMBER_MIN = 20
+_RETENTION_GREEN_MIN = 50
+
+
+def _retention_color(pct: float | None) -> str:
+    """Bucket retention % into red / amber / green per the brief."""
+    if pct is None:
+        return "neutral"
+    if pct < _RETENTION_AMBER_MIN:
+        return "red"
+    if pct < _RETENTION_GREEN_MIN:
+        return "amber"
+    return "green"
+
+
+def _count_interviewed(conn) -> int:
+    """Applications that reached proof_level >= 4 (employer interview).
+
+    The column ships in Milestone 5 (proof ladder); until then the query
+    raises OperationalError on the missing column and we report 0. The
+    template flags this card with an `M5` pill so the zero is read as
+    expected, not a bug.
+    """
+    try:
+        cur = conn.execute(
+            "SELECT COUNT(*) FROM applications WHERE proof_level >= 4"
+        )
+        return cur.fetchone()[0]
+    except Exception:
+        return 0
+
+
+def compute_funnel(conn) -> list[dict]:
+    """Return the 5-stage outcome funnel for the top dashboard strip.
+
+    Each stage carries the absolute count and the percent retained from
+    the previous stage (None for `total`, which has no predecessor).
+    Stages and their SQL — the user's brief, with schema-mapped columns:
+
+      Total        seen_jobs                            COUNT(*)
+      Suitable     seen_jobs.score >= 70                COUNT(*)
+      Tailored     seen_jobs.output_dir IS NOT NULL     COUNT(*)
+      Applied      applications.submitted = 1           COUNT(*)
+      Interviewed  applications.proof_level >= 4        COUNT(*) — M5
+
+    `cannot_score:*` rows count toward Total but not toward Suitable,
+    because `score IS NULL` for them — exactly what the user wants.
+    """
+    total = conn.execute("SELECT COUNT(*) FROM seen_jobs").fetchone()[0]
+    suitable = conn.execute(
+        "SELECT COUNT(*) FROM seen_jobs WHERE score >= 70"
+    ).fetchone()[0]
+    tailored = conn.execute(
+        "SELECT COUNT(*) FROM seen_jobs WHERE output_dir IS NOT NULL"
+    ).fetchone()[0]
+    applied = conn.execute(
+        "SELECT COUNT(*) FROM applications WHERE submitted = 1"
+    ).fetchone()[0]
+    interviewed = _count_interviewed(conn)
+
+    stages: list[tuple[str, int, str | None]] = [
+        ("Total", total, None),
+        ("Suitable", suitable, None),
+        ("Tailored", tailored, None),
+        ("Applied", applied, None),
+        ("Interviewed", interviewed, "M5"),
+    ]
+
+    out: list[dict] = []
+    prev_count: int | None = None
+    for label, count, badge in stages:
+        if prev_count is None:
+            retention_pct: float | None = None
+        elif prev_count == 0:
+            retention_pct = None
+        else:
+            retention_pct = round(100.0 * count / prev_count, 1)
+        out.append({
+            "label": label,
+            "count": count,
+            "retention_pct": retention_pct,
+            "retention_color": _retention_color(retention_pct),
+            "pending_milestone": badge,
+        })
+        prev_count = count
+    return out
+
+
+def compute_activity_today(conn, *, now: datetime | None = None) -> dict:
+    """Counts for the Recent Runs 'Activity today' subline.
+
+    24-hour rolling window (consistent with the prior 'Last 24h' tile).
+    `now` is injectable for deterministic tests.
+    """
+    now = now or datetime.now(tz=timezone.utc)
+    since = (now - timedelta(hours=24)).isoformat()
+
+    posted = conn.execute(
+        "SELECT COUNT(*) FROM seen_jobs WHERE first_seen_at >= ?", (since,),
+    ).fetchone()[0]
+    scored = conn.execute(
+        "SELECT COUNT(*) FROM seen_jobs WHERE scored_at >= ?", (since,),
+    ).fetchone()[0]
+    applied = conn.execute(
+        "SELECT COUNT(*) FROM applications "
+        "WHERE submitted = 1 AND attempted_at >= ?", (since,),
+    ).fetchone()[0]
+    return {"posted": posted, "scored": scored, "applied": applied}
+
+
 @app.route("/")
 def index():
     """Dashboard home page."""
     with connect() as conn:
-        # Get status counts
+        # Get status counts (kept for downstream consumers / per-stage panels)
         status_counts = {}
         for st in JobStatus:
             cur = conn.execute("SELECT COUNT(*) FROM seen_jobs WHERE status = ?", (st.value,))
             status_counts[st.value] = cur.fetchone()[0]
-        
+
         # Get total jobs
         cur = conn.execute("SELECT COUNT(*) FROM seen_jobs")
         total_jobs = cur.fetchone()[0]
-        
+
         # Total run count for the panel-header badge.
         total_runs = conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
 
@@ -97,26 +209,19 @@ def index():
             }
             for r in cur.fetchall()
         ]
-        
-        # Get last 24h applications
-        since = datetime.now(tz=timezone.utc) - timedelta(hours=24)
-        cur = conn.execute(
-            """
-            SELECT COUNT(*) FROM applications
-            WHERE attempted_at >= ?
-            """,
-            (since.isoformat(),),
-        )
-        applied_24h = cur.fetchone()[0]
+
+        funnel = compute_funnel(conn)
+        activity_today = compute_activity_today(conn)
 
     applied_total = status_counts.get(JobStatus.APPLY_SUBMITTED.value, 0)
-    
+
     return render_template("index.html",
                           status_counts=status_counts,
                           total_jobs=total_jobs,
                           total_runs=total_runs,
                           applied_total=applied_total,
-                          applied_24h=applied_24h,
+                          funnel=funnel,
+                          activity_today=activity_today,
                           runs=runs)
 
 
