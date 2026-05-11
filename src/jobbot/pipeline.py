@@ -15,11 +15,11 @@ from .generators import generate_documents
 from .models import JobPosting, JobStatus
 from .notify import send_digest, send_failure_alert
 from .profile import Profile, load_base_cv, load_profile
-from .scoring import CannotScore, llm_score, passes_heuristic
+from .scoring import CannotScore, llm_score, llm_score_tailored, passes_heuristic
 from .scrapers import REGISTRY
 from .state import (
     connect, finish_run, jobs_by_status, jobs_needing_enrichment,
-    record_application, start_run, update_status, upsert_new,
+    record_application, start_run, update_score_tailored, update_status, upsert_new,
 )
 
 log = structlog.get_logger()
@@ -178,6 +178,24 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 "output_dir": docs.output_dir,
                 "cover_letter_html": docs.cover_letter_html,
             })
+
+            # 4b) Rescore the posting using the tailored CV + cover letter
+            # so the dashboard can show "did tailoring lift the fit?" — a
+            # measurement-only call. Persisted to a parallel column;
+            # the original `score` is unchanged. A failure here is logged
+            # but does NOT abort the application step that follows.
+            try:
+                tailored = llm_score_tailored(
+                    job, profile, secrets,
+                    tailored_cv_md=docs.cv_md,
+                    tailored_cover_letter_md=docs.cover_letter_md,
+                )
+                update_score_tailored(conn, job.id, tailored.score, tailored.reason)
+                entry["score_tailored"] = tailored.score
+                entry["tailored_reason"] = tailored.reason
+                entry["score_delta"] = tailored.score - score
+            except Exception as e:
+                log.warning("score_tailored_failed", job_id=job.id, error=str(e))
 
             # 5) Auto-apply (opt-in per source)
             src_cfg = config.sources.get(job.source)

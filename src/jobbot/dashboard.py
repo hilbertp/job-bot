@@ -453,7 +453,8 @@ def api_shortlist():
             SELECT id, title, company, source, status, score, score_reason,
                    url, output_dir, raw_json,
                    description_full, description_word_count,
-                   seniority, salary_text, apply_email
+                   seniority, salary_text, apply_email,
+                   score_tailored, score_tailored_reason
             FROM seen_jobs
             WHERE score IS NOT NULL AND score >= ?
             ORDER BY score DESC, first_seen_at DESC
@@ -494,13 +495,20 @@ def api_shortlist():
             if (out / "cover_letter.html").exists():
                 cl_html_path = str(out / "cover_letter.html")
 
+        score_base = r[5]
+        score_tailored = r[15]
+        score_delta = (
+            (score_tailored - score_base)
+            if (score_base is not None and score_tailored is not None)
+            else None
+        )
         jobs.append({
             "id": r[0],
             "title": r[1],
             "company": r[2],
             "source": r[3],
             "status": r[4],
-            "score": r[5],
+            "score": score_base,
             "reason": r[6] or "",
             "url": r[7],
             "output_dir": r[8],
@@ -513,6 +521,11 @@ def api_shortlist():
             "cover_letter_md": cover_letter_md,
             "cv_html_url": f"/shortlist/{r[0]}/cv.html" if cv_html_path else None,
             "cover_letter_html_url": f"/shortlist/{r[0]}/cover_letter.html" if cl_html_path else None,
+            # Stage-3 rescore (tailored CV + CL substituted into the scoring prompt).
+            # `score_tailored` is None until the rescore runs against this job.
+            "score_tailored": score_tailored,
+            "tailored_reason": r[16] or "",
+            "score_delta": score_delta,
         })
 
     return jsonify({"min_score": min_score, "count": len(jobs), "jobs": jobs})

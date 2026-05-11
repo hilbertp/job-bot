@@ -77,6 +77,12 @@ SEEN_JOBS_ADD_COLUMNS: list[tuple[str, str]] = [
     ("score_breakdown_json", "TEXT"),
     ("enriched_at", "TEXT"),
     ("scored_at", "TEXT"),
+    # Stage-3 rescore: the same scorer run AFTER tailored CV + CL are
+    # produced, so the dashboard can show "did tailoring lift the fit?"
+    ("score_tailored", "INTEGER"),
+    ("score_tailored_reason", "TEXT"),
+    ("score_tailored_breakdown_json", "TEXT"),
+    ("scored_tailored_at", "TEXT"),
 ]
 
 
@@ -278,6 +284,29 @@ def update_enrichment(
             apply_email,
             _now(),
             json.dumps(payload),
+            job_id,
+        ),
+    )
+
+
+def update_score_tailored(
+    conn: sqlite3.Connection,
+    job_id: str,
+    score: int,
+    reason: str,
+    breakdown: dict | None = None,
+) -> None:
+    """Persist the Stage-3 rescore (tailored CV + CL substituted into the
+    scoring prompt). Leaves the original `score` column untouched so the
+    dashboard can render a true before/after pair."""
+    conn.execute(
+        "UPDATE seen_jobs SET score_tailored = ?, score_tailored_reason = ?, "
+        "score_tailored_breakdown_json = ?, scored_tailored_at = ? WHERE id = ?",
+        (
+            score,
+            reason,
+            json.dumps(breakdown) if breakdown else None,
+            _now(),
             job_id,
         ),
     )

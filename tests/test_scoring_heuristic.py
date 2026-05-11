@@ -6,7 +6,8 @@ from jobbot.config import Secrets
 from jobbot.models import JobPosting
 from jobbot.profile import Profile
 from jobbot.scoring import (
-    CannotScore, MIN_BODY_WORDS, _build_user_message, llm_score, passes_heuristic,
+    CannotScore, MIN_BODY_WORDS, _build_user_message,
+    llm_score, llm_score_tailored, passes_heuristic,
 )
 
 
@@ -183,3 +184,55 @@ def test_user_message_has_five_sections_in_order() -> None:
     positions = [msg.find(h) for h in headers]
     assert all(p != -1 for p in positions), f"missing section header(s): {positions}"
     assert positions == sorted(positions), f"sections out of order: {positions}"
+
+
+def test_user_message_tailored_variant_swaps_cv_and_injects_cover_letter() -> None:
+    """Stage-3 rescore: tailored CV replaces section 1's label, and a cover-
+    letter section sits between hard preferences and the job description."""
+    job = JobPosting(
+        id="tailored-msg",
+        source="linkedin",
+        title="Senior PM",
+        company="Acme",
+        url="https://example.com/jobs/tailored-msg",  # type: ignore
+        description="Job body " * 100,
+    )
+    tailored_cv = "# Tailored CV for Acme\n\nReordered bullets for this role."
+    tailored_cl = "Dear Acme team,\n\nI'm excited..."
+
+    msg = _build_user_message(
+        job, _profile(), primary_cv=tailored_cv,
+        cv_section_label="Tailored CV (this application's CV)",
+        extra_section=("Cover letter (tailored)", tailored_cl),
+    )
+
+    assert "# Tailored CV (this application's CV)" in msg
+    assert "# Primary CV (source of truth)" not in msg
+    assert "# Cover letter (tailored)" in msg
+
+    # Cover letter sits between hard preferences and job description
+    hp = msg.find("# Hard preferences (yaml)")
+    cl = msg.find("# Cover letter (tailored)")
+    jd = msg.find("# Job description")
+    assert hp < cl < jd, f"cover letter section misplaced: hp={hp}, cl={cl}, jd={jd}"
+
+
+def test_llm_score_tailored_refuses_empty_inputs() -> None:
+    """The rescore is meaningless without both tailored artifacts — refuse."""
+    job = JobPosting(
+        id="empty-tailored",
+        source="test",
+        title="Senior Product Manager",
+        company="Acme",
+        url="https://example.com/jobs/empty",  # type: ignore
+        description="x " * 250,
+    )
+    with pytest.raises(CannotScore) as exc:
+        llm_score_tailored(job, _profile(), _secrets(),
+                           tailored_cv_md="", tailored_cover_letter_md="cl")
+    assert exc.value.reason.startswith("no_tailored_cv")
+
+    with pytest.raises(CannotScore) as exc:
+        llm_score_tailored(job, _profile(), _secrets(),
+                           tailored_cv_md="cv", tailored_cover_letter_md="   ")
+    assert exc.value.reason.startswith("no_tailored_cl")

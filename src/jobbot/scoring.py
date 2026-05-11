@@ -135,14 +135,21 @@ def _build_user_message(
     job: JobPosting,
     profile: Profile,
     primary_cv: str,
+    *,
+    cv_section_label: str = "Primary CV (source of truth)",
+    extra_section: tuple[str, str] | None = None,
 ) -> str:
     """PRD §7.5 FR-SCO-01: assemble the scoring prompt's user message in the
     exact ordering the rubric expects:
-      1. Primary CV (source of truth)
+      1. Primary CV (source of truth)   ← labelled per `cv_section_label`
       2. Compiled profile (yaml)
       3. Hard preferences (from data/profile.yaml)
       4. Job description
       5. Job metadata
+
+    For the Stage-3 rescore, callers substitute the tailored CV markdown for
+    `primary_cv` (with a different label) and pass `extra_section` to inject
+    a "Cover letter (tailored)" block between profile and job description.
     """
     compiled = {
         "must_have_skills": profile.must_have_skills,
@@ -174,8 +181,13 @@ def _build_user_message(
     body = (job.description or "").strip()[:_JOB_BODY_CAP]
     cv = primary_cv.strip()[:_PRIMARY_CV_CAP]
 
+    extra_block = ""
+    if extra_section:
+        title, text = extra_section
+        extra_block = f"# {title}\n\n{text.strip()}\n\n"
+
     return (
-        "# Primary CV (source of truth)\n\n"
+        f"# {cv_section_label}\n\n"
         f"{cv}\n\n"
         "# Compiled profile (yaml)\n\n"
         "```yaml\n"
@@ -185,6 +197,7 @@ def _build_user_message(
         "```yaml\n"
         f"{hard_prefs_yaml}\n"
         "```\n\n"
+        f"{extra_block}"
         "# Job description\n\n"
         f"{body}\n\n"
         "# Job metadata\n\n"
@@ -192,6 +205,79 @@ def _build_user_message(
         f"{metadata_yaml}\n"
         "```\n"
     )
+
+
+def _invoke_scorer(
+    secrets: Secrets,
+    user_message: str,
+) -> ScoreResult:
+    """Shared LLM call + response parsing for both base and tailored scoring."""
+    client = Anthropic(api_key=secrets.anthropic_api_key)
+    prompt = PROMPT_PATH.read_text()
+    msg = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=800,
+        system=prompt,
+        messages=[{"role": "user", "content": user_message}],
+    )
+    text = "".join(b.text for b in msg.content if b.type == "text")
+    data = _parse_score_json(text)
+    score = int(data["score"])
+    reason = str(data.get("reason", ""))
+
+    breakdown = data.get("breakdown")
+    if isinstance(breakdown, dict):
+        def _to_int(key: str) -> int | None:
+            val = breakdown.get(key)
+            try:
+                return int(val)
+            except (TypeError, ValueError):
+                return None
+
+        role = _to_int("role_match")
+        skills = _to_int("skills_match")
+        loc = _to_int("location_remote_fit")
+        seniority = _to_int("seniority_fit")
+        if all(v is not None for v in (role, skills, loc, seniority)):
+            reason = (
+                f"role={role}, skills={skills}, location={loc}, seniority={seniority}; "
+                f"{reason}"
+            )
+
+    return ScoreResult(score=score, reason=reason)
+
+
+def llm_score_tailored(
+    job: JobPosting,
+    profile: Profile,
+    secrets: Secrets,
+    tailored_cv_md: str,
+    tailored_cover_letter_md: str,
+) -> ScoreResult:
+    """Score the posting AGAIN using the tailored CV + cover letter the
+    generator produced for it. Returns a ScoreResult — does not touch the
+    DB. Caller persists via `update_score_tailored`.
+
+    The tailored CV replaces the primary-CV slot (section 1 of the prompt),
+    and the tailored cover letter is injected as a new section between the
+    hard preferences and the job description. Both are explicitly labelled
+    "(tailored)" so the model knows it's evaluating an actual submission
+    rather than the candidate's background.
+
+    No body-length precondition here — by definition the caller is invoking
+    this after Stage-3 generation succeeded, so the body must already pass.
+    """
+    if not (tailored_cv_md or "").strip():
+        raise CannotScore("no_tailored_cv: empty tailored CV markdown")
+    if not (tailored_cover_letter_md or "").strip():
+        raise CannotScore("no_tailored_cl: empty tailored cover letter markdown")
+
+    user_message = _build_user_message(
+        job, profile, tailored_cv_md,
+        cv_section_label="Tailored CV (this application's CV)",
+        extra_section=("Cover letter (tailored)", tailored_cover_letter_md),
+    )
+    return _invoke_scorer(secrets, user_message)
 
 
 def llm_score(
@@ -214,38 +300,5 @@ def llm_score(
     except FileNotFoundError as e:
         raise CannotScore(f"no_primary_cv: {e}") from e
 
-    client = Anthropic(api_key=secrets.anthropic_api_key)
-    prompt = PROMPT_PATH.read_text()
     user_message = _build_user_message(job, profile, primary_cv)
-    msg = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=800,
-        system=prompt,
-        messages=[{"role": "user", "content": user_message}],
-    )
-    text = "".join(b.text for b in msg.content if b.type == "text")
-    data = _parse_score_json(text)
-    score = int(data["score"])
-    reason = str(data.get("reason", ""))
-
-    # Prefer a transparent breakdown string when the model provides criterion scores.
-    breakdown = data.get("breakdown")
-    if isinstance(breakdown, dict):
-        def _to_int(key: str) -> int | None:
-            val = breakdown.get(key)
-            try:
-                return int(val)
-            except (TypeError, ValueError):
-                return None
-
-        role = _to_int("role_match")
-        skills = _to_int("skills_match")
-        loc = _to_int("location_remote_fit")
-        seniority = _to_int("seniority_fit")
-        if all(v is not None for v in (role, skills, loc, seniority)):
-            reason = (
-                f"role={role}, skills={skills}, location={loc}, seniority={seniority}; "
-                f"{reason}"
-            )
-
-    return ScoreResult(score=score, reason=reason)
+    return _invoke_scorer(secrets, user_message)
