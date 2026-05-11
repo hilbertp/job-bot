@@ -75,6 +75,22 @@
 <p>No matches found for this run.</p>
 {% endif %}
 
+{% if cannot_score %}
+<h2>Cannot score ({{ cannot_score|length }})</h2>
+<p class="meta">These postings could not be scored — a hard precondition for scoring was not met. Reason shown verbatim; no numeric score is implied.</p>
+{% for c in cannot_score %}
+<div class="job">
+  <div class="job-head">
+    <div><strong>{{ c.job.title }}</strong> — {{ c.job.company }}
+         {% if c.job.location %}· {{ c.job.location }}{% endif %}</div>
+    <span class="score" style="background:#fef2f2;color:#b91c1c;">{{ c.status }}</span>
+  </div>
+  <div class="meta">{{ c.job.source }} · <a href="{{ c.job.url }}">view posting</a></div>
+  <div style="margin-top: 0.4rem"><code>{{ c.reason }}</code></div>
+</div>
+{% endfor %}
+{% endif %}
+
 {% if errors %}
 <h2>Errors</h2>
 <div class="errors">

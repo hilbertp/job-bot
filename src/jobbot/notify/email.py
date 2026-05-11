@@ -40,14 +40,19 @@ def _send(secrets: Secrets, subject: str, html: str, attachments: list[Path] | N
 
 
 def send_digest(secrets: Secrets, matches: list[dict], errors: list[dict],
-                run_started: datetime) -> None:
-    """matches: [{job, score, reason, output_dir, apply_status, apply_screenshot, cover_letter_html}]
-    errors:  [{source, error}]"""
+                run_started: datetime,
+                cannot_score: list[dict] | None = None) -> None:
+    """matches:      [{job, score, reason, output_dir, apply_status, apply_screenshot, cover_letter_html}]
+    errors:        [{source, error}]
+    cannot_score:  [{job, status, reason}] — PRD §7.5 FR-SCO-01 refusal rows."""
     tmpl = _env.get_template("digest.html.j2")
     html = tmpl.render(
         matches=matches, errors=errors, run_started=run_started, n=len(matches),
+        cannot_score=cannot_score or [],
     )
     subject = f"jobbot · {len(matches)} new match{'es' if len(matches) != 1 else ''}"
+    if cannot_score:
+        subject += f" · {len(cannot_score)} cannot_score"
     if errors:
         subject += f" · {len(errors)} error{'s' if len(errors) != 1 else ''}"
     _send(secrets, subject, html)

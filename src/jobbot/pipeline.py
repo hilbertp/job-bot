@@ -32,6 +32,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
     started = datetime.now(tz=timezone.utc)
 
     matches: list[dict] = []
+    cannot_score_entries: list[dict] = []
     errors: list[dict] = []
     n_fetched = n_new = n_generated = n_applied = 0
     n_enriched = n_enrichment_failed = 0
@@ -123,6 +124,11 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 update_status(conn, job.id, new_status, score=None, reason=reason)
                 n_cannot_score += 1
                 blocker_counts[f"cannot_score: {reason}"] += 1
+                cannot_score_entries.append({
+                    "job": job.model_dump(mode="json"),
+                    "status": new_status.value,
+                    "reason": reason,
+                })
                 continue
             except Exception as e:
                 log.exception("score_failed", job_id=job.id)
@@ -199,7 +205,8 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
         matches = sorted(matches, key=lambda entry: entry["score"], reverse=True)
         matches = matches[: config.digest.max_per_email]
         try:
-            send_digest(secrets, matches, errors, started)
+            send_digest(secrets, matches, errors, started,
+                        cannot_score=cannot_score_entries)
         except Exception as e:
             log.exception("digest_send_failed")
             errors.append({"source": "notify", "error": str(e)})
