@@ -24,6 +24,9 @@
 
 <div class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-6">
     <h3 class="text-xl font-bold mb-4">Pipeline Stages</h3>
+    {% if in_progress and current_stage %}
+    <p class="text-sm text-amber-200 mb-4">Currently: <strong>{{ current_stage }}</strong></p>
+    {% endif %}
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
         <div>Fetched: <strong>{{ stages.get('fetched', run.n_fetched) }}</strong></div>
         <div>New: <strong>{{ stages.get('new', run.n_new) }}</strong></div>
@@ -35,6 +38,43 @@
         <div>Score Failed: <strong>{{ stages.get('score_failed', 0) }}</strong></div>
         <div>Generated: <strong>{{ stages.get('generated', run.n_generated) }}</strong></div>
         <div>Applied: <strong>{{ stages.get('applied', run.n_applied) }}</strong></div>
+    </div>
+</div>
+
+<div class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-6">
+    <h3 class="text-xl font-bold mb-2">Hits per Portal</h3>
+    <p class="text-sm text-purple-100 mb-4">Positions found per source in this run.{% if in_progress %} Updates as the scrapers stream in.{% endif %}</p>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="text-purple-200 border-b border-white/10">
+                    <th class="pb-2">Portal</th>
+                    <th class="pb-2">Hits</th>
+                    <th class="pb-2">% With Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in portal_rows %}
+                <tr class="border-b border-white/5">
+                    <td class="py-3">{{ row.source }}</td>
+                    <td class="py-3 font-semibold">{{ row.hits }}</td>
+                    <td class="py-3">
+                        {{ "%.1f"|format(row.percent_with_description) }}%
+                        <span class="text-xs text-purple-200">({{ row.with_description }}/{{ row.total }})</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="3" class="py-3 text-purple-200">No portals reporting yet.</td></tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="border-t border-white/20 font-semibold">
+                    <td class="pt-3">Total</td>
+                    <td class="pt-3">{{ portal_total }}</td>
+                    <td class="pt-3">{{ "%.1f"|format(portal_pct_with_description) }}%</td>
+                </tr>
+            </tfoot>
+        </table>
     </div>
 </div>
 

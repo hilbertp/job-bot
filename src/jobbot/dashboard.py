@@ -292,6 +292,24 @@ def run_detail_page(run_id: int):
                 diagnostics.setdefault("below_threshold", int(live_counts[5] or 0))
                 diagnostics.setdefault("generated", int(live_counts[6] or 0))
 
+        portal_payload = _portal_payload_for_run(conn, (row[0], row[1], row[2], row[8]))
+
+    portal_rows = sorted(
+        (
+            {
+                "source": source,
+                "hits": hits,
+                **(portal_payload["per_portal_description"].get(source) or {
+                    "total": 0, "with_description": 0, "percent_with_description": 0.0,
+                }),
+            }
+            for source, hits in portal_payload["per_portal"].items()
+        ),
+        key=lambda r: r["hits"],
+        reverse=True,
+    )
+    current_stage = _infer_current_stage(portal_payload["total"], diagnostics) if in_progress else None
+
     run_data = {
         "id": row[0],
         "started_at": row[1],
@@ -301,12 +319,17 @@ def run_detail_page(run_id: int):
         "n_generated": row[5],
         "n_applied": row[6],
         "n_errors": row[7],
+        "elapsed_sec": portal_payload["elapsed_sec"],
     }
     return render_template(
         "run_detail.html",
         run=run_data,
         in_progress=in_progress,
+        current_stage=current_stage,
         stages=diagnostics,
+        portal_rows=portal_rows,
+        portal_total=portal_payload["total"],
+        portal_pct_with_description=portal_payload["percent_with_description"],
         score_stats=score_stats,
         blockers=blockers,
     )
@@ -421,67 +444,55 @@ def _description_counts_by_source(conn, *, ids: list[str] | None = None,
     return out
 
 
-@app.route("/api/latest-run-portal-hits")
-def api_latest_run_portal_hits():
-    """Per-portal hit counts for the latest run.
+def _empty_portal_payload() -> dict:
+    return {
+        "run_id": None,
+        "started_at": None,
+        "finished_at": None,
+        "in_progress": False,
+        "elapsed_sec": 0,
+        "per_portal": {},
+        "per_portal_description": {},
+        "total": 0,
+        "total_with_description": 0,
+        "percent_with_description": 0.0,
+    }
 
-    Reads `per_source_fetched` from the run's summary_json when the run has
-    finished and recorded its summary. For in-progress runs (or older rows
-    that predate per_source_fetched), falls back to counting `seen_jobs`
-    inserted since the run's `started_at` — keeping the table populated as
-    the pipeline streams rows in. The response carries `in_progress` and
-    `elapsed_sec` so the client can decide whether to keep polling.
+
+def _portal_payload_for_run(conn, run_row) -> dict:
+    """Build the portal-hits payload for a runs-table row.
+
+    Single source of truth shared by /api/latest-run-portal-hits and the
+    server-rendered run-detail page. `run_row` is the tuple
+    (id, started_at, finished_at, summary_json).
     """
-    with connect() as conn:
-        cur = conn.execute(
+    run_id, started_at, finished_at, summary_json = run_row
+    in_progress = finished_at is None
+
+    try:
+        summary = json.loads(summary_json or "{}")
+    except json.JSONDecodeError:
+        summary = {}
+
+    per_portal: dict[str, int] = {}
+    if isinstance(summary, dict) and isinstance(summary.get("per_source_fetched"), dict):
+        per_portal = {k: int(v) for k, v in summary["per_source_fetched"].items()}
+    else:
+        rows = conn.execute(
             """
-            SELECT id, started_at, finished_at, summary_json
-            FROM runs
-            ORDER BY id DESC
-            LIMIT 1
-            """
-        )
-        row = cur.fetchone()
-        if not row:
-            return jsonify({
-                "run_id": None,
-                "started_at": None,
-                "finished_at": None,
-                "in_progress": False,
-                "elapsed_sec": 0,
-                "per_portal": {},
-                "per_portal_description": {},
-                "total": 0,
-                "total_with_description": 0,
-                "percent_with_description": 0.0,
-            })
-        run_id, started_at, finished_at, summary_json = row[0], row[1], row[2], row[3]
-        in_progress = finished_at is None
+            SELECT source, COUNT(*) FROM seen_jobs
+            WHERE first_seen_at >= ?
+            GROUP BY source
+            """,
+            (started_at,),
+        ).fetchall()
+        per_portal = {r[0]: r[1] for r in rows}
 
-        try:
-            summary = json.loads(summary_json or "{}")
-        except json.JSONDecodeError:
-            summary = {}
-
-        per_portal: dict[str, int] = {}
-        if isinstance(summary, dict) and isinstance(summary.get("per_source_fetched"), dict):
-            per_portal = {k: int(v) for k, v in summary["per_source_fetched"].items()}
-        else:
-            cur = conn.execute(
-                """
-                SELECT source, COUNT(*) FROM seen_jobs
-                WHERE first_seen_at >= ?
-                GROUP BY source
-                """,
-                (started_at,),
-            )
-            per_portal = {r[0]: r[1] for r in cur.fetchall()}
-
-        fetched_ids = summary.get("fetched_ids") if isinstance(summary, dict) else None
-        if isinstance(fetched_ids, list) and fetched_ids:
-            per_portal_desc = _description_counts_by_source(conn, ids=fetched_ids)
-        else:
-            per_portal_desc = _description_counts_by_source(conn, since=started_at)
+    fetched_ids = summary.get("fetched_ids") if isinstance(summary, dict) else None
+    if isinstance(fetched_ids, list) and fetched_ids:
+        per_portal_desc = _description_counts_by_source(conn, ids=fetched_ids)
+    else:
+        per_portal_desc = _description_counts_by_source(conn, since=started_at)
 
     started_dt = _parse_iso(started_at)
     finished_dt = _parse_iso(finished_at)
@@ -503,7 +514,7 @@ def api_latest_run_portal_hits():
     )
     pct_with_desc = round(total_with_desc / total_desc_denom * 100.0, 1) if total_desc_denom else 0.0
 
-    return jsonify({
+    return {
         "run_id": run_id,
         "started_at": started_at,
         "finished_at": finished_at,
@@ -514,7 +525,83 @@ def api_latest_run_portal_hits():
         "total": sum(per_portal.values()),
         "total_with_description": total_with_desc,
         "percent_with_description": pct_with_desc,
-    })
+    }
+
+
+def _infer_current_stage(per_portal_total: int, stages: dict) -> str:
+    """Best-effort label for the user: which pipeline step is the live run
+    sitting in right now? Uses the same stage-count signals the
+    pipeline writes to its summary, derived from seen_jobs when the
+    summary hasn't been persisted yet.
+
+    Order matters — pipeline.py runs them in this sequence and each step
+    is gated by the previous one completing.
+    """
+    fetched = int(stages.get("fetched", per_portal_total) or 0)
+    enriched = int(stages.get("enriched", 0) or 0)
+    enrichment_failed = int(stages.get("enrichment_failed", 0) or 0)
+    scored = int(stages.get("scored", 0) or 0)
+    below = int(stages.get("below_threshold", 0) or 0)
+    score_failed = int(stages.get("score_failed", 0) or 0)
+    generated = int(stages.get("generated", 0) or 0)
+    applied = int(stages.get("applied", 0) or 0)
+
+    if fetched == 0:
+        return "scraping"
+    if enriched + enrichment_failed < fetched:
+        return "enriching"
+    if scored + below + score_failed < enriched:
+        return "scoring"
+    if generated == 0 and scored > 0:
+        return "generating"
+    if applied < generated:
+        return "applying"
+    return "finalising"
+
+
+@app.route("/api/latest-run-portal-hits")
+def api_latest_run_portal_hits():
+    """Per-portal hit counts for one run.
+
+    Defaults to the latest run; pass `?run_id=N` to scope to a specific run
+    (used by the run-detail page so its live portal table reflects the run
+    being viewed rather than whatever happens to be latest).
+
+    Reads `per_source_fetched` from the run's summary_json when the run has
+    finished and recorded its summary. For in-progress runs (or older rows
+    that predate per_source_fetched), falls back to counting `seen_jobs`
+    inserted since the run's `started_at` — keeping the table populated as
+    the pipeline streams rows in. The response carries `in_progress` and
+    `elapsed_sec` so the client can decide whether to keep polling.
+    """
+    from flask import request
+
+    requested_id = request.args.get("run_id", type=int)
+    with connect() as conn:
+        if requested_id is not None:
+            cur = conn.execute(
+                """
+                SELECT id, started_at, finished_at, summary_json
+                FROM runs
+                WHERE id = ?
+                """,
+                (requested_id,),
+            )
+        else:
+            cur = conn.execute(
+                """
+                SELECT id, started_at, finished_at, summary_json
+                FROM runs
+                ORDER BY id DESC
+                LIMIT 1
+                """
+            )
+        row = cur.fetchone()
+        if not row:
+            return jsonify(_empty_portal_payload())
+        payload = _portal_payload_for_run(conn, row)
+
+    return jsonify(payload)
 
 
 @app.route("/api/shortlist")
