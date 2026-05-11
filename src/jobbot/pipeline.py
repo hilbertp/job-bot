@@ -18,8 +18,9 @@ from .profile import Profile, load_base_cv, load_profile
 from .scoring import CannotScore, llm_score, llm_score_tailored, passes_heuristic
 from .scrapers import REGISTRY
 from .state import (
-    connect, finish_run, jobs_by_status, jobs_needing_enrichment,
-    record_application, start_run, update_score_tailored, update_status, upsert_new,
+    apply_channel, apply_channel_ats_name, connect, finish_run, jobs_by_status,
+    jobs_needing_enrichment, record_application, start_run, update_score_tailored,
+    update_status, upsert_new,
 )
 
 log = structlog.get_logger()
@@ -152,6 +153,19 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
 
         # 4) Generate
         for job, score, reason in to_generate:
+            # PRD §7.7 FR-APP-01: derive the application channel per match so
+            # the digest + dashboard can show '📧 email / 🔗 Greenhouse / etc.'
+            # apply_email lives only in seen_jobs (enrichment column), so we
+            # do one tiny SELECT per match — cheap and avoids threading the
+            # enrichment result through the pipeline.
+            apply_email_row = conn.execute(
+                "SELECT apply_email FROM seen_jobs WHERE id = ?", (job.id,),
+            ).fetchone()
+            apply_email = apply_email_row["apply_email"] if apply_email_row else None
+            apply_url = str(job.apply_url) if job.apply_url else (str(job.url) if job.url else None)
+            channel = apply_channel(apply_email=apply_email, apply_url=apply_url)
+            ats_name = apply_channel_ats_name(apply_url) if channel == "form" else None
+
             entry: dict[str, Any] = {
                 "job": job.model_dump(mode="json"),
                 "score": score,
@@ -159,6 +173,10 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 "output_dir": None,
                 "cover_letter_html": "",
                 "apply_status": None,
+                "apply_email": apply_email,
+                "apply_url": apply_url,
+                "apply_channel": channel,
+                "apply_channel_ats_name": ats_name,
             }
 
             if score < config.digest.generate_docs_above_score:
@@ -291,11 +309,19 @@ def daily_digest(config: Config, secrets: Secrets) -> None:
     with connect() as conn:
         rows = jobs_by_status(conn, JobStatus.GENERATED, since=since)
 
-    matches = [{
-        "job": {"title": r["title"], "company": r["company"],
-                "location": None, "url": r["url"], "source": r["source"]},
-        "score": r["score"], "reason": r["score_reason"] or "",
-        "output_dir": r["output_dir"], "cover_letter_html": "",
-        "apply_status": None,
-    } for r in rows]
+    matches = []
+    for r in rows:
+        channel = apply_channel(r)
+        ats_name = apply_channel_ats_name(r["url"] if "url" in r.keys() else None) if channel == "form" else None
+        matches.append({
+            "job": {"title": r["title"], "company": r["company"],
+                    "location": None, "url": r["url"], "source": r["source"]},
+            "score": r["score"], "reason": r["score_reason"] or "",
+            "output_dir": r["output_dir"], "cover_letter_html": "",
+            "apply_status": None,
+            "apply_email": r["apply_email"] if "apply_email" in r.keys() else None,
+            "apply_url": r["url"],
+            "apply_channel": channel,
+            "apply_channel_ats_name": ats_name,
+        })
     send_digest(secrets, matches, [], datetime.now(tz=timezone.utc))

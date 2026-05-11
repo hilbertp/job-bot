@@ -39,97 +39,139 @@
     <a id="run-banner-link" class="underline ml-auto text-amber-100/90" href="#">view details</a>
 </div>
 
-<div class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8">
-    <div class="flex flex-wrap items-baseline justify-between gap-3 mb-2">
-        <h2 class="text-xl font-bold">Stage 1: Hits per Portal</h2>
-        <div class="text-xs text-purple-200 flex flex-wrap gap-4">
-            <span>Last run <span id="stage1-last-run-finished-at" class="text-purple-100 font-semibold">—</span></span>
-            <span>Duration <span id="stage1-last-run-duration" class="text-purple-100 font-semibold">—</span></span>
+<section id="stage1-panel" class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8" data-collapsible-panel>
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
+        <div class="flex flex-wrap items-baseline gap-3">
+            <h2 class="text-xl font-bold">Stage 1: Hits per Portal</h2>
+            <div class="text-xs text-purple-200 flex flex-wrap gap-4">
+                <span>Last run <span id="stage1-last-run-finished-at" class="text-purple-100 font-semibold">—</span></span>
+                <span>Duration <span id="stage1-last-run-duration" class="text-purple-100 font-semibold">—</span></span>
+            </div>
+        </div>
+        <button type="button" class="px-2 py-1 rounded border border-white/20 bg-white/10 hover:bg-white/20 text-sm" data-panel-toggle aria-controls="stage1-panel-body" aria-expanded="true" aria-label="Toggle Stage 1 panel" title="Collapse panel">
+            <span data-panel-toggle-icon aria-hidden="true">▾</span>
+        </button>
+    </div>
+    <div id="stage1-panel-body" data-panel-body>
+        <p class="text-sm text-purple-100 mb-4">Number of positions found per source portal in the latest run and share with description saved in DB.</p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="text-purple-200 border-b border-white/10">
+                        <th class="pb-2">Portal</th>
+                        <th class="pb-2">Hits</th>
+                        <th class="pb-2">% With Description</th>
+                    </tr>
+                </thead>
+                <tbody id="portal-counts-body">
+                    <tr><td colspan="3" class="py-3">Loading...</td></tr>
+                </tbody>
+                <tfoot>
+                    <tr id="portal-counts-total" class="border-t border-white/20 font-semibold">
+                        <td class="pt-3">Total</td>
+                        <td class="pt-3">—</td>
+                        <td class="pt-3">—</td>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
     </div>
-    <p class="text-sm text-purple-100 mb-4">Number of positions found per source portal in the latest run and share with description saved in DB.</p>
-    <div class="overflow-x-auto">
-        <table class="w-full text-left">
-            <thead>
-                <tr class="text-purple-200 border-b border-white/10">
-                    <th class="pb-2">Portal</th>
-                    <th class="pb-2">Hits</th>
-                    <th class="pb-2">% With Description</th>
-                </tr>
-            </thead>
-            <tbody id="portal-counts-body">
-                <tr><td colspan="3" class="py-3">Loading...</td></tr>
-            </tbody>
-            <tfoot>
-                <tr id="portal-counts-total" class="border-t border-white/20 font-semibold">
-                    <td class="pt-3">Total</td>
-                    <td class="pt-3">—</td>
-                    <td class="pt-3">—</td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-</div>
+</section>
 
-<div class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8">
-    <h2 class="text-xl font-bold mb-2">Stage 2: PO / PM Shortlist</h2>
-    <p class="text-sm text-purple-100 mb-4">Filtered to Product Owner / Product Manager titles (incl. German variants). Score is the LLM fit score (0–100) against your profile; hover for the reason.</p>
-    <div class="overflow-x-auto">
-        <table class="w-full text-left">
-            <thead>
-                <tr class="text-purple-200 border-b border-white/10">
-                    <th class="pb-2">Score</th>
-                    <th class="pb-2">Position Title</th>
-                    <th class="pb-2">Portal</th>
-                    <th class="pb-2">Description Scraped</th>
-                    <th class="pb-2">Expected Salary</th>
-                    <th class="pb-2">Seniority Required</th>
-                    <th class="pb-2">Link</th>
-                </tr>
-            </thead>
-            <tbody id="stage1-body">
-                <tr><td colspan="7" class="py-3">Loading...</td></tr>
-            </tbody>
-        </table>
+<section id="stage2-panel" class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8" data-collapsible-panel>
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
+        <div class="flex flex-wrap items-baseline gap-3">
+            <h2 class="text-xl font-bold">Stage 2: PO / PM Shortlist</h2>
+            <div class="text-xs text-purple-200 flex flex-wrap gap-4">
+                <span><span id="stage2-row-count" class="text-purple-100 font-semibold">—</span> rows</span>
+                <span>Top score <span id="stage2-top-score" class="text-purple-100 font-semibold">—</span></span>
+            </div>
+        </div>
+        <button type="button" class="px-2 py-1 rounded border border-white/20 bg-white/10 hover:bg-white/20 text-sm" data-panel-toggle aria-controls="stage2-panel-body" aria-expanded="true" aria-label="Toggle Stage 2 panel" title="Collapse panel">
+            <span data-panel-toggle-icon aria-hidden="true">▾</span>
+        </button>
     </div>
-</div>
-
-<div class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8">
-    <h2 class="text-xl font-bold mb-2">Stage 3: Tailored Shortlist (score ≥ 70)</h2>
-    <p class="text-sm text-purple-100 mb-4">High-fit jobs with their tailored CV and cover letter generated by the pipeline. Click a row to expand the documents.</p>
-    <div id="shortlist-empty" class="hidden py-3 text-purple-200">No jobs at score ≥ 70 yet — re-run the pipeline.</div>
-    <div id="shortlist-body" class="space-y-3"></div>
-</div>
-
-<div class="bg-white/10 rounded-2xl p-6 border border-white/20">
-    <h2 class="text-xl font-bold mb-4">Recent Runs</h2>
-    <div class="overflow-x-auto">
-        <table class="w-full text-left">
-            <thead>
-                <tr class="text-purple-200 border-b border-white/10">
-                    <th class="pb-2">Started</th>
-                    <th class="pb-2">Fetched</th>
-                    <th class="pb-2">New</th>
-                    <th class="pb-2">Tailored</th>
-                    <th class="pb-2">Applied</th>
-                    <th class="pb-2">Errors</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for run in runs %}
-                <tr class="border-b border-white/5 last:border-0">
-                    <td class="py-3"><a class="underline" href="/runs/{{ run.id }}">#{{ run.id }} · {{ run.timestamp }}</a></td>
-                    <td class="py-3">{{ run.n_fetched }}</td>
-                    <td class="py-3">{{ run.n_new }}</td>
-                    <td class="py-3">{{ run.n_generated }}</td>
-                    <td class="py-3">{{ run.n_applied }}</td>
-                    <td class="py-3">{{ run.n_errors }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div id="stage2-panel-body" data-panel-body>
+        <p class="text-sm text-purple-100 mb-4">Filtered to Product Owner / Product Manager titles (incl. German variants). Score is the LLM fit score (0–100) against your profile; hover for the reason.</p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="text-purple-200 border-b border-white/10">
+                        <th class="pb-2" data-stage1-sort="score">Score</th>
+                        <th class="pb-2" data-stage1-sort="title">Position Title</th>
+                        <th class="pb-2" data-stage1-sort="source">Portal</th>
+                        <th class="pb-2" data-stage1-sort="apply_channel">Apply via</th>
+                        <th class="pb-2" data-stage1-sort="description_scraped">Description Scraped</th>
+                        <th class="pb-2" data-stage1-sort="expected_salary">Expected Salary</th>
+                        <th class="pb-2" data-stage1-sort="seniority_required">Seniority Required</th>
+                        <th class="pb-2">Link</th>
+                    </tr>
+                </thead>
+                <tbody id="stage1-body">
+                    <tr><td colspan="8" class="py-3">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
+</section>
+
+<section id="stage3-panel" class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8" data-collapsible-panel>
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
+        <div class="flex flex-wrap items-baseline gap-3">
+            <h2 class="text-xl font-bold">Stage 3: Tailored Shortlist (score ≥ 70)</h2>
+            <div class="text-xs text-purple-200 flex flex-wrap gap-4">
+                <span><span id="stage3-job-count" class="text-purple-100 font-semibold">—</span> jobs</span>
+                <span><span id="stage3-rescored-count" class="text-purple-100 font-semibold">—</span> rescored</span>
+                <span>Avg Δ <span id="stage3-avg-delta" class="text-purple-100 font-semibold">—</span></span>
+            </div>
+        </div>
+        <button type="button" class="px-2 py-1 rounded border border-white/20 bg-white/10 hover:bg-white/20 text-sm" data-panel-toggle aria-controls="stage3-panel-body" aria-expanded="true" aria-label="Toggle Stage 3 panel" title="Collapse panel">
+            <span data-panel-toggle-icon aria-hidden="true">▾</span>
+        </button>
+    </div>
+    <div id="stage3-panel-body" data-panel-body>
+        <p class="text-sm text-purple-100 mb-4">High-fit jobs with their tailored CV and cover letter generated by the pipeline. Click a row to expand the documents.</p>
+        <div id="shortlist-empty" class="hidden py-3 text-purple-200">No jobs at score ≥ 70 yet — re-run the pipeline.</div>
+        <div id="shortlist-body" class="space-y-3"></div>
+    </div>
+</section>
+
+<section id="recent-runs-panel" class="bg-white/10 rounded-2xl p-6 border border-white/20" data-collapsible-panel>
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+        <h2 class="text-xl font-bold">Recent Runs</h2>
+        <button type="button" class="px-2 py-1 rounded border border-white/20 bg-white/10 hover:bg-white/20 text-sm" data-panel-toggle aria-controls="recent-runs-panel-body" aria-expanded="true" aria-label="Toggle Recent Runs panel" title="Collapse panel">
+            <span data-panel-toggle-icon aria-hidden="true">▾</span>
+        </button>
+    </div>
+    <div id="recent-runs-panel-body" data-panel-body>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="text-purple-200 border-b border-white/10">
+                        <th class="pb-2">Started</th>
+                        <th class="pb-2">Fetched</th>
+                        <th class="pb-2">New</th>
+                        <th class="pb-2">Tailored</th>
+                        <th class="pb-2">Applied</th>
+                        <th class="pb-2">Errors</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for run in runs %}
+                    <tr class="border-b border-white/5 last:border-0">
+                        <td class="py-3"><a class="underline" href="/runs/{{ run.id }}">#{{ run.id }} · {{ run.timestamp }}</a></td>
+                        <td class="py-3">{{ run.n_fetched }}</td>
+                        <td class="py-3">{{ run.n_new }}</td>
+                        <td class="py-3">{{ run.n_generated }}</td>
+                        <td class="py-3">{{ run.n_applied }}</td>
+                        <td class="py-3">{{ run.n_errors }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
 
 <script>
 const PO_PM_RE = /\bproduct\s+(owner|manager|management|lead|head|director)\b|\bprodukt[\s-]*(manager|owner|management)/i;
@@ -140,6 +182,41 @@ function isPoPm(title) {
 
 const LIVE_POLL_MS = 5000;
 let livePollTimer = null;
+
+function setPanelExpanded(button, body, expanded) {
+    const icon = button.querySelector('[data-panel-toggle-icon]');
+    body.classList.toggle('hidden', !expanded);
+    button.setAttribute('aria-expanded', String(expanded));
+    button.title = expanded ? 'Collapse panel' : 'Expand panel';
+    if (icon) icon.textContent = expanded ? '▾' : '▸';
+}
+
+function initCollapsiblePanels() {
+    document.querySelectorAll('[data-collapsible-panel]').forEach(panel => {
+        const button = panel.querySelector('[data-panel-toggle]');
+        const body = panel.querySelector('[data-panel-body]');
+        if (!button || !body) return;
+        const toggle = (e) => {
+            // Don't hijack clicks inside the body or on interactive elements
+            // (links/buttons inside the header keep working).
+            if (e.target.closest('[data-panel-body]')) return;
+            if (e.target.closest('a, button, input') && e.target !== button) return;
+            const expanded = button.getAttribute('aria-expanded') !== 'false';
+            setPanelExpanded(button, body, !expanded);
+            e.preventDefault();
+        };
+        // Whole header bar is the toggle target. The header is everything
+        // inside the panel that isn't the body — match the flex header div.
+        const header = button.closest('div');
+        const headerWrap = header && header.parentElement === panel ? header : null;
+        if (headerWrap) {
+            headerWrap.style.cursor = 'pointer';
+            headerWrap.addEventListener('click', toggle);
+        } else {
+            button.addEventListener('click', toggle);
+        }
+    });
+}
 
 function formatElapsed(sec) {
     sec = Math.max(0, Math.floor(sec || 0));
@@ -241,10 +318,20 @@ async function loadStage1Data() {
 
     const tbody = document.getElementById('stage1-body');
     tbody.innerHTML = '';
-    const shortlist = jobs.filter(j => isPoPm(j.title));
+    let shortlist = jobs.filter(j => isPoPm(j.title));
+    const rowCountEl = document.getElementById('stage2-row-count');
+    const topScoreEl = document.getElementById('stage2-top-score');
+    if (rowCountEl) rowCountEl.textContent = shortlist.length;
+    if (topScoreEl) {
+        const scored = shortlist.map(j => j.score).filter(s => typeof s === 'number');
+        topScoreEl.textContent = scored.length ? Math.max(...scored) : '—';
+    }
     if (!shortlist.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="py-3">No PO/PM titles in latest run.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="py-3">No PO/PM titles in latest run.</td></tr>';
         return;
+    }
+    if (stage1SortKey) {
+        shortlist = stage1SortRows(shortlist);
     }
 
     function descriptionScrapedCell(job) {
@@ -256,6 +343,28 @@ async function loadStage1Data() {
             return '<span class="text-amber-300" title="detail page fetch produced no usable body — see logs">✗ no</span>';
         }
         return '<span class="text-purple-200" title="row predates enrichment phase">—</span>';
+    }
+
+    function applyChannelCell(job) {
+        // PRD §7.7 FR-APP-01: derived channel, no schema column.
+        const ch = job.apply_channel || 'manual';
+        if (ch === 'email') {
+            const href = job.apply_email ? `mailto:${job.apply_email}` : '';
+            const title = (job.apply_email || '').replace(/"/g, '&quot;');
+            return href
+                ? `<a class="text-blue-300" href="${href}" title="${title}">📧 email</a>`
+                : `<span class="text-blue-300" title="${title}">📧 email</span>`;
+        }
+        if (ch === 'form') {
+            const ats = (job.apply_channel_ats_name || 'form').replace(/"/g, '&quot;');
+            const url = (job.apply_url || '').replace(/"/g, '&quot;');
+            return `<span class="text-green-300" title="${url}">🔗 ${ats}</span>`;
+        }
+        if (ch === 'external') {
+            const url = (job.apply_url || '').replace(/"/g, '&quot;');
+            return `<span class="text-purple-300" title="${url}">🌐 external</span>`;
+        }
+        return '<span class="text-purple-200">✋ manual</span>';
     }
 
     function scoreCell(job) {
@@ -276,6 +385,7 @@ async function loadStage1Data() {
             <td class="py-3">${scoreCell(job)}</td>
             <td class="py-3">${job.title || ''}</td>
             <td class="py-3">${job.source || ''}</td>
+            <td class="py-3">${applyChannelCell(job)}</td>
             <td class="py-3">${descriptionScrapedCell(job)}</td>
             <td class="py-3">${job.expected_salary || 'not specified'}</td>
             <td class="py-3">${job.seniority_required || 'not specified'}</td>
@@ -285,6 +395,57 @@ async function loadStage1Data() {
     }
 }
 
+// Stage 2 column sort: any th with data-stage1-sort toggles between asc/desc
+// on that key. Channel sort orders by automatability (email→form→external→manual).
+let stage1SortKey = null;
+let stage1SortDir = 1; // 1 = ascending, -1 = descending
+const APPLY_CHANNEL_ORDER = { email: 0, form: 1, external: 2, manual: 3 };
+
+function stage1SortRows(rows) {
+    const key = stage1SortKey;
+    const dir = stage1SortDir;
+    return rows.slice().sort((a, b) => {
+        let va, vb;
+        if (key === 'apply_channel') {
+            va = APPLY_CHANNEL_ORDER[a.apply_channel] ?? 99;
+            vb = APPLY_CHANNEL_ORDER[b.apply_channel] ?? 99;
+        } else if (key === 'description_scraped') {
+            // True > False > null, with word count as a tiebreaker
+            const rank = (j) => (j.description_scraped === true ? 2
+                : j.description_scraped === false ? 1 : 0);
+            va = rank(a); vb = rank(b);
+        } else {
+            va = a[key]; vb = b[key];
+        }
+        if (va === vb) return 0;
+        if (va === null || va === undefined) return 1;
+        if (vb === null || vb === undefined) return -1;
+        if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+        return String(va).localeCompare(String(vb)) * dir;
+    });
+}
+
+document.querySelectorAll('th[data-stage1-sort]').forEach(th => {
+    th.style.cursor = 'pointer';
+    th.title = 'click to sort';
+    th.addEventListener('click', () => {
+        const key = th.getAttribute('data-stage1-sort');
+        if (stage1SortKey === key) {
+            stage1SortDir = -stage1SortDir;
+        } else {
+            stage1SortKey = key;
+            stage1SortDir = key === 'score' ? -1 : 1;  // scores default desc
+        }
+        document.querySelectorAll('th[data-stage1-sort]').forEach(other => {
+            other.textContent = other.textContent.replace(/[▲▼]$/, '').trim();
+        });
+        const arrow = stage1SortDir === 1 ? ' ▲' : ' ▼';
+        th.textContent = th.textContent.trim() + arrow;
+        loadStage1Data();
+    });
+});
+
+initCollapsiblePanels();
 loadStage1Data();
 
 function escapeHtml(s) {
@@ -298,12 +459,29 @@ async function loadShortlist() {
     const body = document.getElementById('shortlist-body');
     const empty = document.getElementById('shortlist-empty');
     body.innerHTML = '';
-    if (!payload.jobs || !payload.jobs.length) {
+    const jobs = payload.jobs || [];
+    const countEl = document.getElementById('stage3-job-count');
+    const rescoredEl = document.getElementById('stage3-rescored-count');
+    const avgDeltaEl = document.getElementById('stage3-avg-delta');
+    if (countEl) countEl.textContent = jobs.length;
+    const rescored = jobs.filter(j => j.score_tailored !== null && j.score_tailored !== undefined);
+    if (rescoredEl) rescoredEl.textContent = rescored.length;
+    if (avgDeltaEl) {
+        if (rescored.length) {
+            const sum = rescored.reduce((acc, j) => acc + (Number(j.score_delta) || 0), 0);
+            const avg = sum / rescored.length;
+            const sign = avg > 0 ? '+' : '';
+            avgDeltaEl.textContent = `${sign}${avg.toFixed(1)}`;
+        } else {
+            avgDeltaEl.textContent = '—';
+        }
+    }
+    if (!jobs.length) {
         empty.classList.remove('hidden');
         return;
     }
     empty.classList.add('hidden');
-    for (const job of payload.jobs) {
+    for (const job of jobs) {
         const card = document.createElement('div');
         card.className = 'bg-white/5 rounded-xl border border-white/10';
         const cvLink = job.cv_html_url

@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from bs4 import BeautifulSoup
+
 from jobbot.dashboard.server import _load_legacy_dashboard_module
 from jobbot.models import JobPosting
 from jobbot.state import (
@@ -264,3 +266,48 @@ def test_dashboard_stage1_panel_shows_latest_run_finished_time_and_duration(
     assert "stage1-last-run-finished-at" in html
     assert "stage1-last-run-duration" in html
     assert "formatElapsed(hits.elapsed_sec)" in html
+
+
+def test_dashboard_panels_have_chevrons_and_expand_collapse_function(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    """User journey: each dashboard panel can be collapsed and expanded from
+    its header via a chevron button."""
+    monkeypatch.setattr("jobbot.state.DB_PATH", tmp_path / "jobbot.db")
+
+    client = _load_legacy_dashboard_module().app.test_client()
+    resp = client.get("/")
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+    soup = BeautifulSoup(html, "html.parser")
+
+    expected_panels = {
+        "stage1-panel": "stage1-panel-body",
+        "stage2-panel": "stage2-panel-body",
+        "stage3-panel": "stage3-panel-body",
+        "recent-runs-panel": "recent-runs-panel-body",
+    }
+    for panel_id, body_id in expected_panels.items():
+        panel = soup.find(id=panel_id)
+        assert panel is not None, f"missing dashboard panel: {panel_id}"
+        assert panel.has_attr("data-collapsible-panel")
+
+        body = panel.find(id=body_id)
+        assert body is not None, f"{panel_id} missing collapsible body"
+        assert body.has_attr("data-panel-body")
+
+        toggle = panel.find(attrs={"data-panel-toggle": True})
+        assert toggle is not None, f"{panel_id} missing expand/collapse button"
+        assert toggle.get("aria-controls") == body_id
+        assert toggle.get("aria-expanded") == "true"
+
+        icon = toggle.find(attrs={"data-panel-toggle-icon": True})
+        assert icon is not None, f"{panel_id} missing chevron icon"
+        assert icon.get_text(strip=True) == "▾"
+
+    assert "function initCollapsiblePanels()" in html
+    assert "function setPanelExpanded(button, body, expanded)" in html
+    assert "button.addEventListener('click'" in html
+    assert "body.classList.toggle('hidden', !expanded)" in html
+    assert "button.setAttribute('aria-expanded', String(expanded))" in html
+    assert "icon.textContent = expanded ? '▾' : '▸'" in html

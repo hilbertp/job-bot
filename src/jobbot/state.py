@@ -428,6 +428,71 @@ def jobs_needing_tailored_rescore(
     return out
 
 
+_APPLY_CHANNEL_ATS = {
+    "greenhouse.io":      "Greenhouse",
+    "lever.co":           "Lever",
+    "myworkdayjobs.com":  "Workday",
+    "smartrecruiters.com": "SmartRecruiters",
+    "personio":           "Personio",
+}
+
+
+def apply_channel(
+    row: sqlite3.Row | None = None,
+    *,
+    apply_email: str | None = None,
+    apply_url: str | None = None,
+) -> str:
+    """Derive the application channel for a posting per PRD §7.7 FR-APP-01.
+
+    Returns one of: 'email', 'form', 'external', 'manual'.
+
+    - email:    `apply_email` is present.
+    - form:     `apply_url` matches a known ATS (greenhouse / lever /
+                workday / smartrecruiters / personio).
+    - external: `apply_url` is present but isn't a known ATS.
+    - manual:   neither email nor URL — needs human handling.
+
+    Accepts a sqlite3.Row (or any mapping with 'apply_email'/'apply_url'
+    keys) OR kwargs. The row form is convenient for digest/dashboard
+    builders that iterate seen_jobs; the kwargs form is convenient inside
+    the pipeline where the JobPosting and the enrichment columns aren't
+    always in the same object.
+    """
+    if row is not None:
+        try:
+            apply_email = row["apply_email"]
+        except (KeyError, IndexError):
+            pass
+        try:
+            apply_url = row["apply_url"]
+        except (KeyError, IndexError):
+            pass
+    if apply_email and str(apply_email).strip():
+        return "email"
+    if apply_url and str(apply_url).strip():
+        url_lower = str(apply_url).lower()
+        for needle in _APPLY_CHANNEL_ATS:
+            if needle in url_lower:
+                return "form"
+        return "external"
+    return "manual"
+
+
+def apply_channel_ats_name(apply_url: str | None) -> str | None:
+    """If apply_url points at a known ATS, return its human name
+    ('Greenhouse', 'Lever', 'Workday', 'SmartRecruiters', 'Personio').
+    Returns None for non-ATS URLs or empty input.
+    """
+    if not apply_url:
+        return None
+    url_lower = str(apply_url).lower()
+    for needle, name in _APPLY_CHANNEL_ATS.items():
+        if needle in url_lower:
+            return name
+    return None
+
+
 def jobs_by_status(conn: sqlite3.Connection, status: JobStatus, since: datetime | None = None) -> list[sqlite3.Row]:
     if since:
         return list(conn.execute(
