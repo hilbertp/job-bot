@@ -22,6 +22,31 @@ sources:
       - category: remote-programming-jobs
       - category: remote-devops-sysadmin-jobs
 
+  working_nomads:
+    enabled: true
+    auto_submit: false
+    # Public JSON API returns the full exposed-jobs list (~30-100 entries) per
+    # call. Empty q returns everything; LLM scorer filters off-target hits.
+    queries:
+      - q: ""
+
+  nodesk:
+    enabled: true
+    auto_submit: false
+    # Official RSS at /remote-jobs/index.xml; ~10-50 fresh entries per fetch.
+    # Empty q returns the full feed.
+    queries:
+      - q: ""
+
+  dailyremote:
+    enabled: true
+    auto_submit: false
+    # ~198k-listing aggregator — MUST filter by query term, since each call
+    # only returns ~20 results from the /remote-jobs?search= endpoint.
+    queries:
+      - q: "product manager"
+      - q: "product owner"
+
   freelancermap:
     enabled: true
     auto_submit: false
