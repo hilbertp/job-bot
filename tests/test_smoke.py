@@ -24,9 +24,9 @@ def test_imports():
     from jobbot.otp.imap import OtpFetcher  # noqa: F401
 
     assert jobbot.__version__
-    # All 7 sources registered
     assert set(REGISTRY) == {
-        "weworkremotely", "freelancermap", "freelance_de",
+        "weworkremotely", "working_nomads", "nodesk", "dailyremote",
+        "freelancermap", "freelance_de",
         "indeed", "stepstone", "xing", "linkedin",
     }
 
