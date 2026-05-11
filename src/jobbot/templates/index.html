@@ -40,7 +40,13 @@
 </div>
 
 <div class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8">
-    <h2 class="text-xl font-bold mb-2">Stage 1: Hits per Portal</h2>
+    <div class="flex flex-wrap items-baseline justify-between gap-3 mb-2">
+        <h2 class="text-xl font-bold">Stage 1: Hits per Portal</h2>
+        <div class="text-xs text-purple-200 flex flex-wrap gap-4">
+            <span>Last run <span id="stage1-last-run-finished-at" class="text-purple-100 font-semibold">—</span></span>
+            <span>Duration <span id="stage1-last-run-duration" class="text-purple-100 font-semibold">—</span></span>
+        </div>
+    </div>
     <p class="text-sm text-purple-100 mb-4">Number of positions found per source portal in the latest run and share with description saved in DB.</p>
     <div class="overflow-x-auto">
         <table class="w-full text-left">
@@ -141,6 +147,17 @@ function formatElapsed(sec) {
     return `${m}m ${s.toString().padStart(2, '0')}s`;
 }
 
+function formatAgo(ts) {
+    if (!ts) return '—';
+    const finishedMs = Date.parse(ts);
+    if (Number.isNaN(finishedMs)) return '—';
+    const ageSec = Math.max(0, Math.floor((Date.now() - finishedMs) / 1000));
+    if (ageSec < 60) return 'just now';
+    if (ageSec < 3600) return `${Math.floor(ageSec / 60)}m ago`;
+    if (ageSec < 86400) return `${Math.floor(ageSec / 3600)}h ago`;
+    return `${Math.floor(ageSec / 86400)}d ago`;
+}
+
 function updateRunBanner(hits) {
     const banner = document.getElementById('run-banner');
     const text = document.getElementById('run-banner-text');
@@ -155,6 +172,24 @@ function updateRunBanner(hits) {
     }
 }
 
+function updateStage1LastRunBadges(hits) {
+    const finishedEl = document.getElementById('stage1-last-run-finished-at');
+    const durationEl = document.getElementById('stage1-last-run-duration');
+    if (!finishedEl || !durationEl) return;
+    if (!hits || !hits.run_id) {
+        finishedEl.textContent = '—';
+        durationEl.textContent = '—';
+        return;
+    }
+    if (hits.in_progress) {
+        finishedEl.textContent = 'in progress';
+        durationEl.textContent = `${formatElapsed(hits.elapsed_sec)} so far`;
+    } else {
+        finishedEl.textContent = formatAgo(hits.finished_at);
+        durationEl.textContent = formatElapsed(hits.elapsed_sec);
+    }
+}
+
 async function loadStage1Data() {
     const [hitsRes, jobsRes] = await Promise.all([
         fetch('/api/latest-run-portal-hits'),
@@ -164,6 +199,7 @@ async function loadStage1Data() {
     const jobs = await jobsRes.json();
 
     updateRunBanner(hits);
+    updateStage1LastRunBadges(hits);
     if (hits && hits.in_progress) {
         if (livePollTimer === null) {
             livePollTimer = setInterval(loadStage1Data, LIVE_POLL_MS);
