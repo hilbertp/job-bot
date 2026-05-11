@@ -181,15 +181,29 @@ def cmd_rescore_backfill(args) -> int:
     For each candidate row, reads cv.md + cover_letter.md from its output
     directory, calls `llm_score_tailored`, and persists the result via
     `update_score_tailored`. Costs ~1 LLM call per backfilled job.
+
+    With `--base`, this instead enforces PRD §7.5 FR-SCO-01..05: scrub any
+    row whose existing `score` was set in violation of the description-
+    scraped + 200-word precondition, then re-score every eligible row
+    (status in scraped / cannot_score:* with body now backfilled) against
+    Sonnet + the PRIMARY_* CV. Costs ~1 LLM call per backfilled job.
     """
     from pathlib import Path
 
     from .profile import load_profile
-    from .scoring import CannotScore, llm_score_tailored
-    from .state import jobs_needing_tailored_rescore, update_score_tailored
+    from .scoring import CannotScore, llm_score, llm_score_tailored
+    from .state import (
+        jobs_needing_base_rescore, jobs_needing_tailored_rescore,
+        scrub_stale_scores, update_score_tailored, update_status,
+    )
+    from .models import JobStatus
+
+    if getattr(args, "base", False):
+        return _cmd_rescore_base(args)
 
     if not getattr(args, "backfill", False):
         console.print("[red]Usage:[/red] jobbot rescore --backfill [--limit N]")
+        console.print("[red]   or:[/red] jobbot rescore --base [--limit N]")
         return 2
 
     cap = int(getattr(args, "limit", 50) or 50)
@@ -262,6 +276,90 @@ def cmd_rescore_backfill(args) -> int:
     return 0 if n_failed == 0 else 1
 
 
+def _cmd_rescore_base(args) -> int:
+    """PRD §7.5 FR-SCO-01..05: scrub legacy scores that violate the
+    description-scraped + 200-word precondition, then re-score every row
+    that now passes it (status in scraped / cannot_score:*, with a real
+    body of >= 200 words) against Sonnet + the PRIMARY_* CV.
+
+    Invoked via `jobbot rescore --base`. Bounded by --limit so a single
+    invocation doesn't blow through the API budget on long-tail backlogs.
+    """
+    from .profile import load_profile
+    from .scoring import CannotScore, llm_score
+    from .state import (
+        jobs_needing_base_rescore, scrub_stale_scores, update_status,
+    )
+    from .models import JobStatus
+
+    cap = int(getattr(args, "limit", 100) or 100)
+    secrets = load_secrets()
+    profile = load_profile()
+
+    with connect() as conn:
+        n_scrubbed = scrub_stale_scores(conn)
+        if n_scrubbed:
+            console.print(
+                f"[yellow]scrubbed[/yellow] {n_scrubbed} legacy score(s) "
+                "that violated the description_scraped/word-count precondition"
+            )
+        else:
+            console.print("no stale scores to scrub")
+
+        candidates = jobs_needing_base_rescore(conn, limit=cap)
+        if not candidates:
+            console.print(
+                "nothing to rescore — every eligible row already has a base score."
+            )
+            return 0
+
+        console.print(
+            f"rescoring {len(candidates)} row(s) with Sonnet + PRIMARY_* CV "
+            f"— ~1 LLM call each (cap {cap})..."
+        )
+
+        table = Table(title="base rescore — Sonnet + PRIMARY CV")
+        table.add_column("source"); table.add_column("title")
+        table.add_column("score", justify="right")
+        table.add_column("status", justify="right")
+
+        n_ok = n_cannot = n_failed = 0
+        for job in candidates:
+            try:
+                result = llm_score(job, profile, secrets, description_scraped=True)
+            except CannotScore as e:
+                reason = e.reason
+                if reason.startswith("no_primary_cv"):
+                    new_status = JobStatus.CANNOT_SCORE_NO_PRIMARY_CV
+                else:
+                    new_status = JobStatus.CANNOT_SCORE_NO_BODY
+                update_status(conn, job.id, new_status, score=None, reason=reason)
+                n_cannot += 1
+                table.add_row(job.source, (job.title or "")[:50], "—", new_status.value)
+                continue
+            except Exception as e:
+                console.print(f"[red]fail[/red] {job.id}: {type(e).__name__}: {e}")
+                n_failed += 1
+                continue
+
+            new_status = (
+                JobStatus.SCORED if result.score >= 70 else JobStatus.BELOW_THRESHOLD
+            )
+            update_status(conn, job.id, new_status,
+                          score=result.score, reason=result.reason)
+            n_ok += 1
+            table.add_row(
+                job.source, (job.title or "")[:50],
+                str(result.score), new_status.value,
+            )
+
+        console.print(table)
+        console.print(
+            f"done: {n_ok} scored, {n_cannot} cannot_score, {n_failed} failed"
+        )
+    return 0 if n_failed == 0 else 1
+
+
 def cmd_profile_rebuild(_args) -> int:
     """PRD §7.4 FR-PRO-02: rebuild data/profile.compiled.yaml from corpus."""
     output = rebuild_compiled_profile()
@@ -299,13 +397,20 @@ def main(argv: list[str] | None = None) -> int:
 
     rescore = sub.add_parser(
         "rescore",
-        help="Re-score generated jobs using their tailored CV + cover letter. "
-             "Requires --backfill.",
+        help="Re-score jobs. With --backfill, tailored rescore for "
+             "generated rows. With --base, scrub bogus legacy scores and "
+             "rescore every row that now passes the precondition gate.",
     )
     rescore.add_argument(
         "--backfill", action="store_true",
-        help="Run the rescore against rows that are generated but missing "
-             "score_tailored (jobs from before the rescorer was wired in).",
+        help="Run the tailored rescore against rows that are generated but "
+             "missing score_tailored (jobs from before the rescorer was wired in).",
+    )
+    rescore.add_argument(
+        "--base", action="store_true",
+        help="Scrub legacy scores that violate the description_scraped/word-"
+             "count precondition, then base-rescore every eligible row "
+             "(PRD §7.5 FR-SCO-01..05).",
     )
     rescore.add_argument(
         "--limit", type=int, default=50,

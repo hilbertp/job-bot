@@ -3,7 +3,11 @@
 PRD §7.5 FR-SCO-01..05. The scorer enforces three hard preconditions before
 calling the LLM. If any fail, it raises `CannotScore` with the reason —
 callers persist this as a `cannot_score:*` status instead of a numeric score:
-  1. job body length >= MIN_BODY_WORDS (200)
+  1. enrichment ran AND the body it stored is >= MIN_BODY_WORDS (200).
+     A long *listing-card* description is not enough — a posting can carry
+     a 250-word teaser on the search page while its detail body was never
+     fetched. The caller must therefore pass `description_scraped=True`
+     explicitly, and word_count is recomputed against `job.description`.
   2. primary CV loaded successfully from data/corpus/cvs/PRIMARY_*
   3. (caller-provided) Anthropic API key present
 
@@ -284,12 +288,26 @@ def llm_score(
     job: JobPosting,
     profile: Profile,
     secrets: Secrets,
+    *,
+    description_scraped: bool,
 ) -> ScoreResult:
     """Ask the LLM for a 0-100 fit score. Returns a ScoreResult.
 
     Raises `CannotScore` if a hard precondition fails (see module docstring).
     The caller must translate that into the matching `cannot_score:*` status.
+
+    `description_scraped` is required and reflects the row's enrichment
+    state: True only when the scraper's `fetch_detail` returned a real
+    body. A listing-card snippet that happens to be 200+ words still
+    fails the gate when this flag is False — the scorer must never trust
+    a body the enrichment phase did not vouch for.
     """
+    if not description_scraped:
+        raise CannotScore(
+            "no_body: description_scraped flag is false — enrichment "
+            "never returned a real body for this posting"
+        )
+
     body = (job.description or "").strip()
     word_count = len(body.split())
     if word_count < MIN_BODY_WORDS:
