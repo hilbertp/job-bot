@@ -829,10 +829,25 @@ def api_latest_run_jobs():
     return jsonify(jobs)
 
 
+def _export_destination_dir() -> Path:
+    """Where the Export JSON button writes its dump.
+
+    Default is the user's macOS Downloads folder (~/Downloads) so exports
+    don't pollute the repo and are immediately reachable from Finder /
+    Quick Look. Override with the JOBBOT_EXPORT_DIR env var for tests or
+    headless setups where ~/Downloads doesn't exist.
+    """
+    import os
+    override = os.environ.get("JOBBOT_EXPORT_DIR")
+    if override:
+        return Path(override).expanduser()
+    return Path.home() / "Downloads"
+
+
 @app.route("/api/export/jobs", methods=["POST"])
 def api_export_jobs():
-    """Dump all jobs (with full descriptions) to data/exports/ as JSON.
-    Returns the relative path written and a per-status breakdown."""
+    """Dump all jobs (with full descriptions) to ~/Downloads as JSON.
+    Returns the absolute path written and a per-status breakdown."""
     placeholders = ",".join("?" * len(EXPORT_STATUSES))
     with connect() as conn:
         cur = conn.execute(
@@ -879,14 +894,14 @@ def api_export_jobs():
         "jobs": jobs,
     }
 
-    out_dir = REPO_ROOT / "data" / "exports"
+    out_dir = _export_destination_dir()
     out_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(tz=timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out_path = out_dir / f"jobs_export_{ts}.json"
     out_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False))
     return jsonify({
         "ok": True,
-        "path": str(out_path.relative_to(REPO_ROOT)),
+        "path": str(out_path),
         "n_jobs": len(jobs),
         "by_status": payload["by_status"],
     })
