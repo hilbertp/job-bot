@@ -23,6 +23,16 @@ env/
 .env.*
 !.env.example
 
+# --- Personal data (real CV / profile / search config; templates are *.example.*) ---
+data/profile.yaml
+data/profile.compiled.yaml
+data/base_cv.md
+data/config.yaml
+data/general CV.pdf
+data/general*.pdf
+data/corpus/cvs/
+data/corpus/website/
+
 # --- State, runtime, and generated artifacts (never commit) ---
 data/jobbot.db
 data/jobbot.db-*
