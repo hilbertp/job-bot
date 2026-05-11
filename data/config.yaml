@@ -13,10 +13,11 @@ digest:
 
 sources:
   weworkremotely:
-    enabled: false
+    enabled: true
     auto_submit: false
-    # Disabled for this query profile: WWR is category-based (remote-only),
-    # while we want strict term-only queries ("product owner" / "product manager").
+    # WWR is category-based (remote-only). Listings get scored by the
+    # downstream LLM against the PO/PM profile, so off-target hits surface
+    # as below_threshold rather than swamping the digest.
     queries:
       - category: remote-programming-jobs
       - category: remote-devops-sysadmin-jobs
