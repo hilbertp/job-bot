@@ -73,6 +73,9 @@ def index():
         cur = conn.execute("SELECT COUNT(*) FROM seen_jobs")
         total_jobs = cur.fetchone()[0]
         
+        # Total run count for the panel-header badge.
+        total_runs = conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
+
         # Get recent runs
         cur = conn.execute(
             """
@@ -108,9 +111,10 @@ def index():
 
     applied_total = status_counts.get(JobStatus.APPLY_SUBMITTED.value, 0)
     
-    return render_template("index.html", 
+    return render_template("index.html",
                           status_counts=status_counts,
                           total_jobs=total_jobs,
+                          total_runs=total_runs,
                           applied_total=applied_total,
                           applied_24h=applied_24h,
                           runs=runs)
