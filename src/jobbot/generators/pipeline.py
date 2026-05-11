@@ -28,17 +28,150 @@ def _slug(s: str) -> str:
 
 
 def _render_html(md: str) -> str:
+    """Markdown → HTML for both browser preview and WeasyPrint PDF output.
+
+    Styling notes — this is the editorial template, scoped per user feedback:
+    keep the H1 (name) typography untouched (system sans), but lift the rest
+    of the document with warm color tokens, hairline section dividers,
+    small-caps section markers, and an accent color on italics. The headline
+    foundry serif from the opus reference PDF is deliberately NOT attempted
+    here — it's a paid typeface and free substitutes don't carry the feel.
+    """
     body = MarkdownIt().render(md)
     return f"""<!doctype html>
-<html><head><meta charset="utf-8">
+<html lang="en"><head><meta charset="utf-8">
 <style>
-  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-         max-width: 760px; margin: 2rem auto; padding: 0 1rem; color: #111; line-height: 1.5; }}
-  h1, h2, h3 {{ line-height: 1.2; }}
-  h1 {{ font-size: 1.7rem; margin-bottom: 0.2rem; }}
-  h2 {{ font-size: 1.2rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.2rem; margin-top: 1.5rem; }}
-  ul {{ padding-left: 1.2rem; }}
-  em {{ color: #6b7280; }}
+  /* --- design tokens (warm editorial palette) --- */
+  :root {{
+    --ink:        #1a1814;  /* primary text */
+    --ink-soft:   #58544b;  /* secondary text, tech notes */
+    --ink-mute:   #8c877d;  /* section markers, contact line */
+    --accent:     #8d2b1c;  /* rust — used on italics for emphasis */
+    --rule:       #d8d4cb;  /* hairline dividers */
+    --paper:      #fdfcfa;  /* off-white background */
+  }}
+
+  /* --- page setup (WeasyPrint reads @page; harmless in browsers) --- */
+  @page {{
+    size: A4;
+    margin: 20mm 22mm;
+  }}
+
+  body {{
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                 Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 1.55;
+    font-size: 10.5pt;
+    /* Browser-only outer frame; WeasyPrint uses @page margins instead. */
+    max-width: 780px;
+    margin: 2.2rem auto;
+    padding: 0 1rem;
+  }}
+
+  /* --- name (left untouched per design scope: system sans, heavy weight) --- */
+  h1 {{
+    font-size: 1.9rem;
+    line-height: 1.15;
+    margin: 0 0 0.15rem 0;
+    color: var(--ink);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }}
+
+  /* --- "Senior Product Owner" line that sits right under the name --- */
+  h1 + p strong:only-child {{
+    font-weight: 500;
+    color: var(--ink-soft);
+  }}
+
+  /* --- contact line (third paragraph, plain text) --- */
+  h1 + p + p {{
+    color: var(--ink-mute);
+    font-size: 0.92em;
+    margin-bottom: 0;
+  }}
+
+  /* --- section markers: § SECTION, small-caps, warm gray, hairline above --- */
+  h2 {{
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ink-mute);
+    border-top: 1px solid var(--rule);
+    padding-top: 1.4rem;
+    margin: 2rem 0 0.9rem 0;
+  }}
+  h2::before {{
+    content: "§ ";
+    color: var(--ink-mute);
+  }}
+
+  /* --- subsection title (company — role) --- */
+  h3 {{
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 1.3rem 0 0.1rem 0;
+    line-height: 1.3;
+  }}
+
+  /* --- date range / tech note: italic in accent rust --- */
+  em {{
+    font-style: italic;
+    color: var(--accent);
+  }}
+  /* A standalone italic paragraph (date range or tech note) gets reduced
+     leading so it pairs tightly with the H3 above it. */
+  p > em:only-child {{
+    font-size: 0.9em;
+  }}
+
+  /* --- body paragraphs --- */
+  p {{
+    margin: 0.45rem 0;
+  }}
+
+  /* --- bullets: square-ish marker in soft warm gray --- */
+  ul {{
+    padding-left: 1.1rem;
+    margin: 0.4rem 0 0.6rem 0;
+  }}
+  li {{
+    margin: 0.18rem 0;
+  }}
+  li::marker {{
+    color: var(--ink-mute);
+  }}
+
+  /* --- horizontal rules from `---` in markdown --- */
+  hr {{
+    border: 0;
+    border-top: 1px solid var(--rule);
+    margin: 1.8rem 0;
+  }}
+  /* When an hr immediately precedes a section heading, the heading's own
+     border-top would create a double-line. Suppress one. */
+  hr + h2 {{
+    border-top: 0;
+    padding-top: 0;
+    margin-top: 0.6rem;
+  }}
+
+  /* --- inline strong: same color, just weight --- */
+  strong {{
+    font-weight: 600;
+    color: var(--ink);
+  }}
+
+  /* --- inline code, just in case --- */
+  code {{
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.88em;
+    color: var(--ink-soft);
+  }}
 </style></head>
 <body>
 {body}
