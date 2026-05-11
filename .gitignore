@@ -1,21 +1,43 @@
-# venv & caches
-.venv/
+# --- Python ---
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.egg-info/
+build/
+dist/
+.tox/
 
-# secrets
+# --- Virtualenvs (covers .venv, .venv-1, .venv-py3.11, venv, etc.) ---
+.venv*/
+venv/
+env/
+
+# --- Secrets / env ---
 .env
+.env.*
+!.env.example
 
-# state & generated artifacts (keep out of git)
+# --- State, runtime, and generated artifacts (never commit) ---
 data/jobbot.db
 data/jobbot.db-*
+data/debug_*.db
+data/debug_*.db-*
+data/exports/
+data/jobs_export.json
 output/
 logs/
+*.log
 
-# editor
+# --- Editor / OS noise ---
 .vscode/
 .idea/
 .DS_Store
+Thumbs.db
+*.swp
+*.swo
