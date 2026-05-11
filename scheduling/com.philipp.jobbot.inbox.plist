@@ -12,7 +12,7 @@
 
   <key>ProgramArguments</key>
   <array>
-    <string>REPO_PATH/.venv/bin/python</string>
+    <string>REPO_PATH/.venv-1/bin/python</string>
     <string>-m</string>
     <string>jobbot</string>
     <string>inbox-scan</string>
