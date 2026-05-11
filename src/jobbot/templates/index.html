@@ -40,7 +40,7 @@
 </div>
 
 <section id="stage1-panel" class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8" data-collapsible-panel>
-    <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-2 cursor-pointer select-none rounded-lg px-2 -mx-2 py-1 -my-1 transition hover:bg-white/5" data-panel-header>
         <div class="flex flex-wrap items-baseline gap-3">
             <h2 class="text-xl font-bold">Stage 1: Hits per Portal</h2>
             <div class="text-xs text-purple-200 flex flex-wrap gap-4">
@@ -79,7 +79,7 @@
 </section>
 
 <section id="stage2-panel" class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8" data-collapsible-panel>
-    <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-2 cursor-pointer select-none rounded-lg px-2 -mx-2 py-1 -my-1 transition hover:bg-white/5" data-panel-header>
         <div class="flex flex-wrap items-baseline gap-3">
             <h2 class="text-xl font-bold">Stage 2: PO / PM Shortlist</h2>
             <div class="text-xs text-purple-200 flex flex-wrap gap-4">
@@ -116,7 +116,7 @@
 </section>
 
 <section id="stage3-panel" class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8" data-collapsible-panel>
-    <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-2 cursor-pointer select-none rounded-lg px-2 -mx-2 py-1 -my-1 transition hover:bg-white/5" data-panel-header>
         <div class="flex flex-wrap items-baseline gap-3">
             <h2 class="text-xl font-bold">Stage 3: Tailored Shortlist (score ≥ 70)</h2>
             <div class="text-xs text-purple-200 flex flex-wrap gap-4">
@@ -137,8 +137,16 @@
 </section>
 
 <section id="recent-runs-panel" class="bg-white/10 rounded-2xl p-6 border border-white/20" data-collapsible-panel>
-    <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
-        <h2 class="text-xl font-bold">Recent Runs</h2>
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-4 cursor-pointer select-none rounded-lg px-2 -mx-2 py-1 -my-1 transition hover:bg-white/5" data-panel-header>
+        <div class="flex flex-wrap items-baseline gap-3">
+            <h2 class="text-xl font-bold">Recent Runs</h2>
+            <div class="text-xs text-purple-200 flex flex-wrap gap-4">
+                <span><span class="text-purple-100 font-semibold">{{ total_runs }}</span> total</span>
+                {% if runs %}
+                <span>Last started <span id="recent-runs-last-started" class="text-purple-100 font-semibold" data-iso="{{ runs[0].timestamp }}">{{ runs[0].timestamp }}</span></span>
+                {% endif %}
+            </div>
+        </div>
         <button type="button" class="px-2 py-1 rounded border border-white/20 bg-white/10 hover:bg-white/20 text-sm" data-panel-toggle aria-controls="recent-runs-panel-body" aria-expanded="true" aria-label="Toggle Recent Runs panel" title="Collapse panel">
             <span data-panel-toggle-icon aria-hidden="true">▾</span>
         </button>
@@ -195,27 +203,33 @@ function initCollapsiblePanels() {
     document.querySelectorAll('[data-collapsible-panel]').forEach(panel => {
         const button = panel.querySelector('[data-panel-toggle]');
         const body = panel.querySelector('[data-panel-body]');
+        const header = panel.querySelector('[data-panel-header]');
         if (!button || !body) return;
         const toggle = (e) => {
-            // Don't hijack clicks inside the body or on interactive elements
-            // (links/buttons inside the header keep working).
+            // Links inside the header (e.g. run numbers in Recent Runs) and
+            // sort-headers keep their normal click behaviour.
+            if (e.target.closest('a')) return;
             if (e.target.closest('[data-panel-body]')) return;
-            if (e.target.closest('a, button, input') && e.target !== button) return;
             const expanded = button.getAttribute('aria-expanded') !== 'false';
             setPanelExpanded(button, body, !expanded);
             e.preventDefault();
         };
-        // Whole header bar is the toggle target. The header is everything
-        // inside the panel that isn't the body — match the flex header div.
-        const header = button.closest('div');
-        const headerWrap = header && header.parentElement === panel ? header : null;
-        if (headerWrap) {
-            headerWrap.style.cursor = 'pointer';
-            headerWrap.addEventListener('click', toggle);
+        if (header) {
+            header.addEventListener('click', toggle);
         } else {
             button.addEventListener('click', toggle);
         }
     });
+}
+
+// Recent Runs: convert the server-rendered last-started ISO timestamp to a
+// human 'Xm ago' once the page loads, so the badge matches the Stage 1 style.
+function hydrateRecentRunsLastStarted() {
+    const el = document.getElementById('recent-runs-last-started');
+    if (!el) return;
+    const iso = el.getAttribute('data-iso');
+    if (!iso) return;
+    el.textContent = formatAgo(iso) || iso;
 }
 
 function formatElapsed(sec) {
@@ -446,6 +460,7 @@ document.querySelectorAll('th[data-stage1-sort]').forEach(th => {
 });
 
 initCollapsiblePanels();
+hydrateRecentRunsLastStarted();
 loadStage1Data();
 
 function escapeHtml(s) {
