@@ -1,4 +1,4 @@
-"""Two-stage matcher: cheap heuristic prefilter, then Claude for the survivors.
+"""Two-stage matcher: cheap heuristic prefilter, then Claude Sonnet for the survivors.
 
 PRD §7.5 FR-SCO-01..05. The scorer enforces three hard preconditions before
 calling the LLM. If any fail, it raises `CannotScore` with the reason —
@@ -7,9 +7,12 @@ callers persist this as a `cannot_score:*` status instead of a numeric score:
   2. primary CV loaded successfully from data/corpus/cvs/PRIMARY_*
   3. (caller-provided) Anthropic API key present
 
-Cost note: Sonnet pricing at expected ~120 postings/day puts monthly LLM
-spend in the ~€150-200 range (versus ~€40 on Haiku). The user has approved
-this trade-off in exchange for substantially more accurate scoring.
+Cost note: this routes to claude-sonnet-4-6 (max_tokens=800). At expected
+volume (~120 postings/day) that's ~€150-200/mo of LLM spend versus ~€40/mo
+on the prior Haiku setup — roughly 5x per call. The user explicitly
+approved this trade-off in exchange for substantially more accurate
+scoring, since Haiku was clustering most matches in a narrow 60-80 band
+and missing real signal in the top tier.
 """
 from __future__ import annotations
 
@@ -150,8 +153,8 @@ def llm_score(
     if cv_markdown:
         payload["cv_markdown"] = cv_markdown[:12000]
     msg = client.messages.create(
-        model="claude-haiku-4-5",
-        max_tokens=300,
+        model="claude-sonnet-4-6",
+        max_tokens=800,
         system=prompt,
         messages=[{"role": "user", "content": json.dumps(payload)}],
     )
