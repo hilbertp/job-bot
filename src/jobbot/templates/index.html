@@ -40,7 +40,7 @@
 </div>
 
 <section id="stage1-panel" class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8" data-collapsible-panel>
-    <div class="flex flex-wrap items-start justify-between gap-3 mb-2 cursor-pointer select-none rounded-lg px-2 -mx-2 py-1 -my-1 transition hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="stage1-panel-body" aria-expanded="true" aria-label="Toggle Stage 1: Hits per Portal" title="Collapse panel">
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-2 cursor-pointer select-none rounded-lg px-2 -mx-2 py-1 -my-1 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="stage1-panel-body" aria-expanded="true" aria-label="Toggle Stage 1: Hits per Portal" title="Collapse panel">
         <div class="flex flex-wrap items-baseline gap-3">
             <h2 class="text-xl font-bold">Stage 1: Hits per Portal</h2>
             <div class="text-xs text-purple-200 flex flex-wrap gap-4">
@@ -48,9 +48,9 @@
                 <span>Portals <span id="stage1-portals-count" class="text-purple-100 font-semibold">—</span></span>
             </div>
         </div>
-        <button type="button" class="px-2 py-1 rounded border border-white/20 bg-white/10 hover:bg-white/20 text-sm" data-panel-toggle aria-controls="stage1-panel-body" aria-expanded="true" aria-label="Toggle Stage 1 panel" title="Collapse panel">
+        <span class="text-base text-purple-100 select-none" data-panel-toggle aria-controls="stage1-panel-body" aria-expanded="true" aria-hidden="true">
             <span data-panel-toggle-icon aria-hidden="true">▾</span>
-        </button>
+        </span>
     </div>
     <div id="stage1-panel-body" data-panel-body>
         <p class="text-sm text-purple-100 mb-4">Number of positions found per source portal in the latest run and share with description saved in DB.</p>
@@ -79,7 +79,7 @@
 </section>
 
 <section id="stage2-panel" class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8" data-collapsible-panel>
-    <div class="flex flex-wrap items-start justify-between gap-3 mb-2 cursor-pointer select-none rounded-lg px-2 -mx-2 py-1 -my-1 transition hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="stage2-panel-body" aria-expanded="true" aria-label="Toggle Stage 2: PO / PM Shortlist" title="Collapse panel">
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-2 cursor-pointer select-none rounded-lg px-2 -mx-2 py-1 -my-1 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="stage2-panel-body" aria-expanded="true" aria-label="Toggle Stage 2: PO / PM Shortlist" title="Collapse panel">
         <div class="flex flex-wrap items-baseline gap-3">
             <h2 class="text-xl font-bold">Stage 2: PO / PM Shortlist</h2>
             <div class="text-xs text-purple-200 flex flex-wrap gap-4">
@@ -87,9 +87,9 @@
                 <span>Top score <span id="stage2-top-score" class="text-purple-100 font-semibold">—</span></span>
             </div>
         </div>
-        <button type="button" class="px-2 py-1 rounded border border-white/20 bg-white/10 hover:bg-white/20 text-sm" data-panel-toggle aria-controls="stage2-panel-body" aria-expanded="true" aria-label="Toggle Stage 2 panel" title="Collapse panel">
+        <span class="text-base text-purple-100 select-none" data-panel-toggle aria-controls="stage2-panel-body" aria-expanded="true" aria-hidden="true">
             <span data-panel-toggle-icon aria-hidden="true">▾</span>
-        </button>
+        </span>
     </div>
     <div id="stage2-panel-body" data-panel-body>
         <p class="text-sm text-purple-100 mb-4">Filtered to Product Owner / Product Manager titles (incl. German variants). Score is the LLM fit score (0–100) against your profile; hover for the reason.</p>
@@ -116,7 +116,7 @@
 </section>
 
 <section id="stage3-panel" class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8" data-collapsible-panel>
-    <div class="flex flex-wrap items-start justify-between gap-3 mb-2 cursor-pointer select-none rounded-lg px-2 -mx-2 py-1 -my-1 transition hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="stage3-panel-body" aria-expanded="true" aria-label="Toggle Stage 3: Tailored Shortlist" title="Collapse panel">
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-2 cursor-pointer select-none rounded-lg px-2 -mx-2 py-1 -my-1 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="stage3-panel-body" aria-expanded="true" aria-label="Toggle Stage 3: Tailored Shortlist" title="Collapse panel">
         <div class="flex flex-wrap items-baseline gap-3">
             <h2 class="text-xl font-bold">Stage 3: Tailored Shortlist (score ≥ 70)</h2>
             <div class="text-xs text-purple-200 flex flex-wrap gap-4">
@@ -125,9 +125,9 @@
                 <span>Avg Δ <span id="stage3-avg-delta" class="text-purple-100 font-semibold">—</span></span>
             </div>
         </div>
-        <button type="button" class="px-2 py-1 rounded border border-white/20 bg-white/10 hover:bg-white/20 text-sm" data-panel-toggle aria-controls="stage3-panel-body" aria-expanded="true" aria-label="Toggle Stage 3 panel" title="Collapse panel">
+        <span class="text-base text-purple-100 select-none" data-panel-toggle aria-controls="stage3-panel-body" aria-expanded="true" aria-hidden="true">
             <span data-panel-toggle-icon aria-hidden="true">▾</span>
-        </button>
+        </span>
     </div>
     <div id="stage3-panel-body" data-panel-body>
         <p class="text-sm text-purple-100 mb-4">High-fit jobs with their tailored CV and cover letter generated by the pipeline. Click a row to expand the documents.</p>
@@ -137,7 +137,7 @@
 </section>
 
 <section id="recent-runs-panel" class="bg-white/10 rounded-2xl p-6 border border-white/20" data-collapsible-panel>
-    <div class="flex flex-wrap items-start justify-between gap-3 mb-4 cursor-pointer select-none rounded-lg px-2 -mx-2 py-1 -my-1 transition hover:bg-white/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="recent-runs-panel-body" aria-expanded="true" aria-label="Toggle Recent Runs" title="Collapse panel">
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-4 cursor-pointer select-none rounded-lg px-2 -mx-2 py-1 -my-1 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="recent-runs-panel-body" aria-expanded="true" aria-label="Toggle Recent Runs" title="Collapse panel">
         <div class="flex flex-wrap items-baseline gap-3">
             <h2 class="text-xl font-bold">Recent Runs</h2>
             <div class="text-xs text-purple-200 flex flex-wrap gap-4">
@@ -147,9 +147,9 @@
                 {% endif %}
             </div>
         </div>
-        <button type="button" class="px-2 py-1 rounded border border-white/20 bg-white/10 hover:bg-white/20 text-sm" data-panel-toggle aria-controls="recent-runs-panel-body" aria-expanded="true" aria-label="Toggle Recent Runs panel" title="Collapse panel">
+        <span class="text-base text-purple-100 select-none" data-panel-toggle aria-controls="recent-runs-panel-body" aria-expanded="true" aria-hidden="true">
             <span data-panel-toggle-icon aria-hidden="true">▾</span>
-        </button>
+        </span>
     </div>
     <div id="recent-runs-panel-body" data-panel-body>
         <div class="overflow-x-auto">
