@@ -173,6 +173,95 @@ def cmd_enrich_backfill(args) -> int:
     return 0
 
 
+def cmd_rescore_backfill(args) -> int:
+    """Re-score historical Stage-3 jobs whose tailored CV + cover letter are
+    on disk but never went through the tailored rescore — usually rows that
+    were generated before the rescorer was wired into the pipeline.
+
+    For each candidate row, reads cv.md + cover_letter.md from its output
+    directory, calls `llm_score_tailored`, and persists the result via
+    `update_score_tailored`. Costs ~1 LLM call per backfilled job.
+    """
+    from pathlib import Path
+
+    from .profile import load_profile
+    from .scoring import CannotScore, llm_score_tailored
+    from .state import jobs_needing_tailored_rescore, update_score_tailored
+
+    if not getattr(args, "backfill", False):
+        console.print("[red]Usage:[/red] jobbot rescore --backfill [--limit N]")
+        return 2
+
+    cap = int(getattr(args, "limit", 50) or 50)
+    secrets = load_secrets()
+    profile = load_profile()
+
+    with connect() as conn:
+        candidates = jobs_needing_tailored_rescore(conn, limit=cap)
+        if not candidates:
+            console.print(
+                "nothing to backfill — every generated row already has a "
+                "tailored score."
+            )
+            return 0
+
+        console.print(
+            f"rescoring {len(candidates)} generated row(s) — "
+            f"~1 LLM call each (cap {cap})..."
+        )
+
+        table = Table(title="tailored rescore — backfill")
+        table.add_column("source"); table.add_column("title")
+        table.add_column("base", justify="right")
+        table.add_column("tailored", justify="right")
+        table.add_column("Δ", justify="right")
+
+        n_ok = n_skipped = n_failed = 0
+        for job, output_dir in candidates:
+            cv_path = Path(output_dir) / "cv.md"
+            cl_path = Path(output_dir) / "cover_letter.md"
+            if not (cv_path.exists() and cl_path.exists()):
+                console.print(
+                    f"[yellow]skip[/yellow] {job.id}: missing cv.md or "
+                    f"cover_letter.md under {output_dir}"
+                )
+                n_skipped += 1
+                continue
+            try:
+                result = llm_score_tailored(
+                    job, profile, secrets,
+                    tailored_cv_md=cv_path.read_text(),
+                    tailored_cover_letter_md=cl_path.read_text(),
+                )
+            except CannotScore as e:
+                console.print(f"[yellow]skip[/yellow] {job.id}: {e}")
+                n_skipped += 1
+                continue
+            except Exception as e:
+                console.print(f"[red]fail[/red] {job.id}: {type(e).__name__}: {e}")
+                n_failed += 1
+                continue
+
+            update_score_tailored(conn, job.id, result.score, result.reason)
+            base_row = conn.execute(
+                "SELECT score FROM seen_jobs WHERE id = ?", (job.id,)
+            ).fetchone()
+            base = int(base_row["score"]) if base_row and base_row["score"] is not None else 0
+            delta = result.score - base
+            delta_str = f"+{delta}" if delta > 0 else str(delta)
+            table.add_row(
+                job.source, (job.title or "")[:50],
+                str(base), str(result.score), delta_str,
+            )
+            n_ok += 1
+
+        console.print(table)
+        console.print(
+            f"done: {n_ok} rescored, {n_skipped} skipped, {n_failed} failed"
+        )
+    return 0 if n_failed == 0 else 1
+
+
 def cmd_profile_rebuild(_args) -> int:
     """PRD §7.4 FR-PRO-02: rebuild data/profile.compiled.yaml from corpus."""
     output = rebuild_compiled_profile()
@@ -207,6 +296,22 @@ def main(argv: list[str] | None = None) -> int:
     enrich.add_argument("--limit", type=int, default=100,
                         help="Max rows to backfill in this invocation (default 100).")
     enrich.set_defaults(fn=cmd_enrich_backfill)
+
+    rescore = sub.add_parser(
+        "rescore",
+        help="Re-score generated jobs using their tailored CV + cover letter. "
+             "Requires --backfill.",
+    )
+    rescore.add_argument(
+        "--backfill", action="store_true",
+        help="Run the rescore against rows that are generated but missing "
+             "score_tailored (jobs from before the rescorer was wired in).",
+    )
+    rescore.add_argument(
+        "--limit", type=int, default=50,
+        help="Max rows to rescore in this invocation (default 50).",
+    )
+    rescore.set_defaults(fn=cmd_rescore_backfill)
 
     profile = sub.add_parser("profile", help="Profile corpus + distillation commands.")
     profile_sub = profile.add_subparsers(dest="profile_cmd", required=True)
