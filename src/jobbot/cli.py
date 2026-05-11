@@ -134,25 +134,45 @@ def cmd_enrich_backfill(args) -> int:
     """PRD §7.3 FR-ENR-04 + §7.5 FR-SCO-01: backfill body text for rows that
     were scraped before enrichment was wired in, or that came back below the
     200-word scoring floor. Capped per invocation so repeated runs steadily
-    drain the queue without long-running pulls."""
-    from .enrichment.runner import enrich_new_postings
+    drain the queue without long-running pulls.
+
+    Unlike `enrich_new_postings`, this leaves rows untouched on transient
+    fetch failures so a future run can retry. freelance_de rows are
+    terminal-marked `cannot_score:source_unsupported` (no fetch_detail
+    exists). Use `--source <name>` to restrict to one scraper for
+    debugging, and `--dry-run` to log intent without writing.
+    """
+    from .enrichment.backfill import run_backfill
     from .scoring import MIN_BODY_WORDS
     from .state import jobs_needing_backfill
 
     if not getattr(args, "backfill", False):
-        console.print("[red]Usage:[/red] jobbot enrich --backfill [--limit N]")
+        console.print(
+            "[red]Usage:[/red] jobbot enrich --backfill "
+            "[--limit N] [--dry-run] [--source NAME]"
+        )
         return 2
 
     cap = int(getattr(args, "limit", 100) or 100)
+    dry_run = bool(getattr(args, "dry_run", False))
+    source_filter = getattr(args, "source", None)
+
     with connect() as conn:
         candidates = jobs_needing_backfill(conn, min_words=MIN_BODY_WORDS, limit=cap)
         if not candidates:
             console.print("nothing to backfill — every row has body >= "
                           f"{MIN_BODY_WORDS} words.")
             return 0
-        console.print(f"backfilling {len(candidates)} rows (cap {cap}, "
-                      f"floor {MIN_BODY_WORDS} words)...")
-        report = enrich_new_postings(candidates, conn, registry=REGISTRY)
+        prefix = "DRY-RUN: " if dry_run else ""
+        scope = f" (source={source_filter})" if source_filter else ""
+        console.print(
+            f"{prefix}backfilling up to {len(candidates)} rows{scope} "
+            f"(cap {cap}, floor {MIN_BODY_WORDS} words)..."
+        )
+        report = run_backfill(
+            candidates, conn, registry=REGISTRY,
+            dry_run=dry_run, source=source_filter,
+        )
 
     table = Table(title="enrichment backfill — per-source success rate")
     table.add_column("source")
@@ -168,8 +188,12 @@ def cmd_enrich_backfill(args) -> int:
         rate = f"{(100 * s / attempted):.0f}%" if attempted else "—"
         table.add_row(source, str(attempted), str(s), str(f), rate)
     console.print(table)
-    console.print(f"total: attempted={report.n_attempted}, "
-                  f"succeeded={report.n_succeeded}, failed={report.n_failed}")
+    console.print(
+        f"total: attempted={report.n_attempted}, "
+        f"enriched={report.n_enriched}, failed={report.n_failed}, "
+        f"unsupported={report.n_unsupported}, "
+        f"skipped_by_filter={report.n_skipped_filter}"
+    )
     return 0
 
 
@@ -393,6 +417,15 @@ def main(argv: list[str] | None = None) -> int:
                         help="Backfill body text for rows below the scoring floor.")
     enrich.add_argument("--limit", type=int, default=100,
                         help="Max rows to backfill in this invocation (default 100).")
+    enrich.add_argument(
+        "--dry-run", action="store_true", dest="dry_run",
+        help="Log intent and rate-limit pacing but do not write to the DB.",
+    )
+    enrich.add_argument(
+        "--source", type=str, default=None,
+        help="Restrict to one scraper (e.g. linkedin, stepstone, xing). "
+             "Rows from other sources are skipped and counted separately.",
+    )
     enrich.set_defaults(fn=cmd_enrich_backfill)
 
     rescore = sub.add_parser(

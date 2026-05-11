@@ -18,3 +18,8 @@ Failure of one detail-fetch does not abort the rest.
 """
 from .runner import enrich_new_postings  # noqa: F401
 from .email_extractor import extract_apply_email  # noqa: F401
+from .backfill import (  # noqa: F401
+    BackfillReport,
+    UNSUPPORTED_SOURCES,
+    run_backfill,
+)
