@@ -769,6 +769,55 @@ def test_api_shortlist_exposes_tailored_score_fields(tmp_path: Path, monkeypatch
     assert target["cover_letter_html_url"] == "/shortlist/sl_1/cover_letter.html"
 
 
+def test_dashboard_does_not_present_base_score_as_tailored_rescore(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    """If Stage-3 generation succeeds but the tailored rescore has not run,
+    the dashboard must say so. Showing only the base-CV score makes it look
+    like the tailored CV+CL was rescored when it was not."""
+    import jobbot.pipeline as pipeline
+    from jobbot.dashboard.server import _load_legacy_dashboard_module
+
+    db = tmp_path / "jobbot.db"
+    monkeypatch.setattr("jobbot.state.DB_PATH", db)
+
+    monkeypatch.setattr(pipeline, "REGISTRY", {"fake": FakeScraper(job_id="rescore_pending")})
+    monkeypatch.setattr(pipeline, "load_profile", lambda: _make_profile())
+    monkeypatch.setattr(pipeline, "load_base_cv", lambda: "")
+    monkeypatch.setattr(pipeline, "passes_heuristic", lambda *_a: (True, ""))
+    monkeypatch.setattr(pipeline, "send_digest", lambda *_a, **_kw: None)
+    monkeypatch.setattr(
+        pipeline,
+        "llm_score",
+        lambda *_a, **_kw: ScoreResult(score=85, reason="base CV says strong fit"),
+    )
+
+    def _tailored_rescore_not_live(*_args, **_kwargs):
+        raise RuntimeError("tailored rescorer unavailable")
+
+    monkeypatch.setattr(pipeline, "llm_score_tailored", _tailored_rescore_not_live)
+    config = _make_config(generate_above=80)
+    config.output_dir = str(tmp_path / "out")
+    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)
+
+    pipeline.run_once(config, _make_secrets())
+
+    client = _load_legacy_dashboard_module().app.test_client()
+    payload = client.get("/api/shortlist?min_score=70").get_json()
+    target = next(j for j in payload["jobs"] if j["id"] == "rescore_pending")
+    assert target["score"] == 85
+    assert target["score_tailored"] is None
+    assert target["score_delta"] is None
+    assert target["tailored_reason"] == ""
+
+    html = client.get("/").get_data(as_text=True)
+    assert "score_tailored" in html
+    assert "score_delta" in html
+    assert "base score (primary CV)" in html
+    assert "tailored rescore pending" in html.lower()
+    assert "Reason (tailored CV + CL)" in html
+
+
 def test_shortlist_doc_route_serves_existing_html(tmp_path: Path, monkeypatch) -> None:
     """GET /shortlist/<id>/cv.html returns 200 with the HTML body when the
     job has an output_dir and the file exists on disk."""

@@ -317,6 +317,14 @@ async function loadShortlist() {
                 <span class="text-2xl font-bold text-blue-300" title="${tailoredTitle}">${tailoredScore}</span>
                 <span class="text-sm font-semibold ${deltaColor}" title="delta vs base">${deltaSign}${delta}</span>
             `;
+        } else {
+            // Stage-3 generation produced docs but the tailored rescore never
+            // ran (or failed). Surface that explicitly so the base score isn't
+            // mistaken for the post-tailoring fit.
+            scorePillsHtml += `
+                <span class="text-purple-200" aria-hidden="true">→</span>
+                <span class="text-sm italic text-purple-200" title="run \`jobbot rescore --backfill\` to rescore against the tailored CV + cover letter">tailored rescore pending</span>
+            `;
         }
         card.innerHTML = `
             <button class="w-full text-left p-4 flex flex-wrap gap-4 items-baseline hover:bg-white/10" data-id="${job.id}">
@@ -332,11 +340,14 @@ async function loadShortlist() {
                     <div class="text-purple-200 mb-1">Reason (base CV)</div>
                     <div>${escapeHtml(job.reason || '—')}</div>
                 </div>
-                ${tailoredScore !== null && tailoredScore !== undefined ? `
                 <div class="text-sm">
                     <div class="text-purple-200 mb-1">Reason (tailored CV + CL)</div>
-                    <div>${escapeHtml(job.tailored_reason || '—')}</div>
-                </div>` : ''}
+                    <div>${
+                        tailoredScore !== null && tailoredScore !== undefined
+                            ? escapeHtml(job.tailored_reason || '—')
+                            : '<span class="italic text-purple-200">tailored rescore pending — run `jobbot rescore --backfill`</span>'
+                    }</div>
+                </div>
                 <div class="text-sm">
                     <div class="text-purple-200 mb-1">Posting</div>
                     <div class="flex flex-wrap gap-3">

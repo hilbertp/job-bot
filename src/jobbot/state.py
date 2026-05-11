@@ -393,6 +393,41 @@ def jobs_needing_backfill(conn: sqlite3.Connection, min_words: int, limit: int) 
     return out
 
 
+def jobs_needing_tailored_rescore(
+    conn: sqlite3.Connection, limit: int = 100,
+) -> list[tuple[JobPosting, str]]:
+    """Rows that already went through Stage 3 generation but never got their
+    Stage 3 rescore. Returns (job, output_dir) tuples so the caller can read
+    the tailored CV + cover letter from disk and pass them to
+    `llm_score_tailored`. The job's `description` is filled from
+    `description_full` (the post-enrichment body) rather than the original
+    scrape snippet, since the rescore prompt needs the full body.
+
+    Ordered oldest-generated first so repeated backfill calls drain the
+    queue deterministically.
+    """
+    rows = conn.execute(
+        "SELECT raw_json, description_full, output_dir FROM seen_jobs "
+        "WHERE status = 'generated' "
+        "  AND score_tailored IS NULL "
+        "  AND output_dir IS NOT NULL "
+        "  AND raw_json IS NOT NULL "
+        "ORDER BY first_seen_at ASC "
+        "LIMIT ?",
+        (limit,),
+    ).fetchall()
+    out: list[tuple[JobPosting, str]] = []
+    for row in rows:
+        try:
+            job = JobPosting.model_validate_json(row["raw_json"])
+        except Exception:
+            continue
+        if row["description_full"]:
+            job = job.model_copy(update={"description": row["description_full"]})
+        out.append((job, row["output_dir"]))
+    return out
+
+
 def jobs_by_status(conn: sqlite3.Connection, status: JobStatus, since: datetime | None = None) -> list[sqlite3.Row]:
     if since:
         return list(conn.execute(
