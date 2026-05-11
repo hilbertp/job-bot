@@ -3,11 +3,23 @@
 Deterministic git workflow for this repo. Applies to every non-trivial change.
 If you (human or agent) think you're about to deviate, stop and re-read.
 
+Claude Code entrypoint: repo-root [CLAUDE.md](CLAUDE.md) points agents here.
+That file exists so Claude Code loads these rules automatically when running in
+VS Code.
+
 ## The cycle, at a glance
 
 ```mermaid
 flowchart TD
-    start([new task]) --> pull["git pull --ff-only on main"]
+    start([new task]) --> status["git status --short --branch"]
+    status --> dirty{"uncommitted changes?"}
+    dirty -- yes --> pause["stop: report exact status"]
+    dirty -- no --> checkout["git checkout main"]
+    checkout --> mainstatus["git status --short --branch"]
+    mainstatus --> ahead{"local main ahead of origin/main?"}
+    ahead -- yes --> recover["stop: report exact status
+use recovery section"]
+    ahead -- no --> pull["git pull --ff-only"]
     pull --> branch["git checkout -b feat-/fix-/chore-..."]
     branch --> edit["edit + commit on branch
 (any number of commits)"]
@@ -20,35 +32,31 @@ all green?"}
 wait for user word"]
     ask --> pushbranch
     stop -- no --> pushbranch["git push origin branch"]
-    pushbranch --> merge["git checkout main
-git merge --no-ff branch"]
-    merge --> pushmain["git push origin main"]
-    pushmain --> blocked{"safety classifier
-blocked the push?"}
-    blocked -- yes --> wait["report once,
-wait for user word"]
-    wait --> pushmain
-    blocked -- no --> repull["git pull --ff-only"]
-    repull --> cleanup["optional:
-git branch -d feature
-git push origin --delete feature"]
+    pushbranch --> pr["create PR to main"]
+    pr --> prmerge["merge PR on GitHub"]
+    prmerge --> repull["git checkout main
+git pull --ff-only"]
+    repull --> cleanup["optional local cleanup:
+git branch -d feature"]
     cleanup --> start
 ```
 
-Mental model: the only thing that moves `main` is a `--no-ff` merge from a
-green feature branch. Everything else happens on a branch.
+Mental model: local `main` only fast-forwards from `origin/main`. Integration
+happens on GitHub by merging a tested feature branch PR. Everything else happens
+on a branch.
 
-## The rule, in seven steps
+## The rule, in order
 
 ```
-1. git checkout main && git pull --ff-only          # fresh main
+0. git status --short --branch                       # verify clean state
+1. git checkout main && git pull --ff-only           # fresh main
 2. git checkout -b <feature-branch>                  # off fresh main
 3. <edit + commit on the branch, as many commits as needed>
 4. python -m pytest -q                               # must pass
-5. git push origin <feature-branch>                  # publish the branch
-6. git checkout main && git merge --no-ff <feature-branch>
-   git push origin main                              # integrate + share
-7. git pull --ff-only                                # fresh main again
+5. git push -u origin <feature-branch>                # publish the branch
+6. gh pr create --base main --head <feature-branch> --fill
+   gh pr merge --merge --delete-branch                # integrate on GitHub
+7. git checkout main && git pull --ff-only            # local main catches up
 ```
 
 Then loop: step 2 for the next task.
@@ -57,14 +65,15 @@ Then loop: step 2 for the next task.
 
 | Allowed on `main` | NOT allowed on `main` |
 |---|---|
-| `--no-ff` merge commits | direct work commits |
-| `git pull --ff-only` | `git commit -m "<work>"` |
-| no edits between merge and next branch creation | `git push --force` |
+| `git pull --ff-only` | direct work commits |
+| `git status --short --branch` | local merge commits |
+| no edits between pull and next branch creation | `git push origin main` by default |
+|  | `git push --force` |
 |  | `git reset --hard` to "fix" main |
 
-The merge into main is always **`--no-ff`** so the feature branch's lineage stays
-visible in `git log --first-parent main`. We can read the integration history
-by feature, not by individual commits.
+The merge into main happens on GitHub using a normal merge commit. That keeps the
+feature branch's lineage visible in `git log --first-parent main` without
+leaving local `main` ahead of `origin/main`.
 
 ## Branch naming
 
@@ -89,37 +98,57 @@ five files for one feature is still `feat-<name>`.
 3. Re-run the suite
 4. Only then proceed to step 5
 
-Never merge a red branch into main. There is no "I'll fix it after the merge."
+Never integrate a red branch into main. There is no "I'll fix it after the merge."
 
 ## Pushing to a remote
 
 - Pushing to `origin/<feature-branch>` is fine at any point after step 5 logic
   is satisfied (tests green).
-- Pushing to `origin/main` happens **only** as part of step 6, after a `--no-ff`
-  merge from a tested feature branch.
+- Pushing to `origin/main` is **not** part of the default workflow. GitHub moves
+  `origin/main` when the PR is merged, then local `main` catches up with
+  `git pull --ff-only`.
+- A direct `git push origin main` requires explicit user authorization in the
+  current conversation.
 - **Never `git push --force` to `main`** under any circumstance. Never skip
   hooks (`--no-verify`). Never bypass signing.
 
+## Source Control panel ground truth
+
+VS Code's Source Control panel can lag or show several states next to each
+other: uncommitted edits, committed-but-unpushed work, and ahead/behind counts.
+Do not infer repository state from that panel alone.
+
+Agents must run `git status --short --branch`:
+
+1. Before starting non-trivial work
+2. Before committing
+3. After pushing a feature branch
+4. After merging a PR and pulling `main`
+
+If the panel looks surprising, report the exact git status and explain which
+category the panel is showing: uncommitted changes, outgoing commits, incoming
+commits, or stale UI.
+
 ## Agent autonomy
 
-**Default: the agent runs the full 7-step cycle without asking.** The user
-should not have to approve "can I branch?", "can I merge?", or "can I push
-main?" on routine work. Those steps are deterministic given a green test run.
+**Default: the agent runs the full workflow without asking.** The user
+should not have to approve "can I branch?", "can I push the feature branch?", or
+"can I create and merge the PR?" on routine work. Those steps are deterministic
+given a green test run.
 
 The agent **does not pause for approval** when ALL of these hold:
 
 - All tests pass on the branch
 - Diff stays within: `src/`, `tests/`, `prompts/`, `data/profile.yaml`,
   `data/config.yaml`, `data/config.example.yaml`, `WORKFLOW.md`,
-  `PRD.md`, `.gitignore`, top-level docs
+  `CLAUDE.md`, `PRD.md`, `.gitignore`, top-level docs
 - No file was deleted that contains anyone else's authored content
 - No new top-level dependency is being added
 - Diff is under ~600 lines total OR the work is a single coherent feature
   the user previously briefed
 - Nothing in the diff handles secrets, credentials, or auth tokens
 
-The agent **stops and asks** before merging or pushing main when ANY of these
-apply:
+The agent **stops and asks** before merging the PR when ANY of these apply:
 
 - A test is failing or skipped that wasn't skipped before
 - The diff touches `pyproject.toml`, `requirements.txt`, `uv.lock`,
@@ -138,52 +167,68 @@ If a stop rule fires, the agent surfaces a one-sentence diff summary, names
 the rule that fired, and waits for an in-message authorization word
 (`push`, `merge`, `ship`, `go`) before proceeding.
 
-If the auto-mode safety classifier blocks `git push origin main` despite all
-the above being satisfied, the agent reports the block once and waits — it
-does not retry, work around the classifier, or escalate.
+If the PR merge or feature-branch push is blocked by tooling or permissions, the
+agent reports the block once and waits. It does not retry blindly, work around
+the classifier, or change strategy without user direction.
 
-## When `git push origin main` is blocked — recovery
+## If local `main` is ahead of `origin/main`
 
-The classifier may gate the push of main even after a clean local cycle. That
-leaves you in this state:
+This should not happen in the default PR-based workflow. It usually means
+someone made a local commit or local merge commit on `main`, then did not push
+it. VS Code will show this as `Sync Changes N ↑`.
 
-- Feature branch is on origin (safe, reviewable at the PR URL git printed)
-- Local `main` has the `--no-ff` merge commit
-- `origin/main` is behind local by N commits
-- VS Code shows `Sync Changes N ↑`
+That is **not a steady state**. Do not start new edits while local `main` is
+ahead of `origin/main`.
 
-This is **not a steady state**. Resolve it with exactly one of:
+First, identify the state:
 
-### Option A — Authorize the push (one command, fastest)
+```
+git status --short --branch
+git log --oneline --decorate origin/main..main
+```
 
-User runs in their own terminal:
+Common causes:
+
+- Local `main` has a merge commit that was never pushed
+- A direct commit landed on `main`
+- VS Code is stale and git no longer agrees with the badge
+
+Resolve it with exactly one of:
+
+### Option A - Authorized main push
+
+Use only when the ahead commits are correct and the user explicitly authorizes
+publishing them.
 
 ```
 git push origin main
 ```
 
-Or types `push` / `go` to the agent. Agent retries `git push origin main`.
-On success: `git pull --ff-only` and the cycle is complete.
-
-### Option B — Standing authorization (eliminates the gate)
-
-User adds a Bash permission rule to their Claude Code settings allowing
-`git push origin main`. After that the agent's autonomous cycle runs to
-completion without prompting per merge.
-
-### Option C — Switch to GitHub PR merge (recommended if the gate fires repeatedly)
-
-Skip the local merge. Use GitHub's merge button via `gh`:
+On success, run:
 
 ```
-git push origin <feature-branch>          # branch is already pushed by step 5
-gh pr create --base main --head <branch> --fill
-gh pr merge --merge --delete-branch        # creates the --no-ff merge on GitHub
-git checkout main && git pull --ff-only    # bring local up to remote
+git pull --ff-only
 ```
 
-This route never has local main ahead of origin, so the classifier never sees
-an unpushed merge commit to gate. The trade-off: requires `gh` CLI auth.
+### Option B - Preserve work on a branch and recover main
+
+Use when the ahead work should be reviewed through the normal PR path instead of
+being pushed directly to `main`.
+
+```
+git branch <recovery-branch>
+git checkout <recovery-branch>
+git branch -f main origin/main
+git checkout main
+git pull --ff-only
+git checkout <recovery-branch>
+git push -u origin <recovery-branch>
+gh pr create --base main --head <recovery-branch> --fill
+```
+
+This is non-destructive because the ahead commits are preserved on
+`<recovery-branch>` before `main` is moved back to `origin/main`. If there is any
+uncertainty about the ahead commits, stop and ask before moving `main`.
 
 ### What NOT to do
 
@@ -197,8 +242,8 @@ an unpushed merge commit to gate. The trade-off: requires `gh` CLI auth.
 
 ## After the cycle: don't linger on main
 
-Once `git pull --ff-only` returns "Already up to date", create the next
-feature branch right away if more work is queued:
+Once the PR is merged and `git pull --ff-only` returns "Already up to date",
+create the next feature branch right away if more work is queued:
 
 ```
 git checkout -b <next-feature-branch>
@@ -215,9 +260,11 @@ If commits already exist directly on `main` that should have been on a branch:
 1. Don't reset main or do anything destructive yet.
 2. Create a feature branch *at the current main tip*:
    `git branch <feature-branch>`
-3. Move main back to the last legitimate commit:
+3. Check out the feature branch:
+   `git checkout <feature-branch>`
+4. Move main back to the last legitimate commit:
    `git branch -f main <last-legit-sha>`
-4. The work is preserved on the new branch. Resume the workflow from step 4
+5. The work is preserved on the new branch. Resume the workflow from step 4
    (tests) on that branch.
 
 This is non-destructive: no commits are lost, no working-tree changes are
@@ -225,11 +272,11 @@ discarded.
 
 ## Cleanup
 
-After a branch has been merged into main and pushed:
+After a branch has been merged into main through GitHub:
 
 ```
 git branch -d <feature-branch>                   # local
-git push origin --delete <feature-branch>        # remote
+git push origin --delete <feature-branch>        # remote, only if PR merge did not delete it
 ```
 
 Only delete branches you've confirmed are merged. `git branch --merged main`
@@ -238,19 +285,17 @@ lists the safe ones.
 ## Special cases
 
 - **Hotfix on main**: still a branch (`fix-<name>` off the affected sha), still
-  `--no-ff` back into main. The branch may be short-lived but it exists.
+  merged back through GitHub PR. The branch may be short-lived but it exists.
 - **Doc-only change** (this file, README typos): same workflow. The friction
   is the point — we want one path for everything.
-- **Agent-driven work (e.g. Claude Code)**: the agent must follow the same
-  seven steps. The agent's memory in
-  `~/.claude/projects/.../memory/feedback_branching_strategy.md` mirrors this
-  file; if they disagree, this file wins.
+- **Agent-driven work (e.g. Claude Code in VS Code)**: the agent must follow the
+  same ordered workflow. Repo-root `CLAUDE.md` exists to make Claude Code load this
+  workflow. If Claude memory, chat instructions, and this file disagree, this
+  file wins for repo git policy.
 
-## Auto-mode caveat for agents
+## Local-main push fallback
 
-When an agent is operating in auto mode, pushing to `origin/main` may still
-trigger a safety classifier confirmation even if the user approved the push in
-a structured question. The agent should treat that block as expected, surface
-it once, and wait for an in-message authorization word ("push", "go", "ship")
-before retrying. Pushing feature branches is generally unblocked; pushing
-`main` is the gated step.
+`git push origin main` is a fallback, not the default route. Use it only when the
+user explicitly chooses to publish local `main` directly. If a safety classifier
+or permission layer blocks that push, the agent reports the block once and waits
+for an in-message authorization word ("push", "go", "ship") before retrying.
