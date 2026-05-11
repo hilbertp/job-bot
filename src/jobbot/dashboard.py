@@ -232,7 +232,13 @@ def api_runs():
 
 @app.route("/runs/<int:run_id>")
 def run_detail_page(run_id: int):
-    """Run detail page with diagnostics and blockers."""
+    """Run detail page with diagnostics and blockers.
+
+    For an in-progress run (finished_at IS NULL) the summary_json doesn't
+    exist yet, so the page falls back to counts derived live from `seen_jobs`
+    rows whose first_seen_at falls inside the run window. The template
+    auto-refreshes every 5s while the run is still active.
+    """
     with connect() as conn:
         cur = conn.execute(
             """
@@ -243,19 +249,48 @@ def run_detail_page(run_id: int):
             (run_id,),
         )
         row = cur.fetchone()
-    if row is None:
-        abort(404)
+        if row is None:
+            abort(404)
 
-    summary = {}
-    if row[8]:
-        try:
-            summary = json.loads(row[8])
-        except json.JSONDecodeError:
-            summary = {}
+        summary: dict = {}
+        if row[8]:
+            try:
+                parsed = json.loads(row[8])
+                summary = parsed if isinstance(parsed, dict) else {}
+            except json.JSONDecodeError:
+                summary = {}
 
-    diagnostics = summary.get("stages", {}) if isinstance(summary, dict) else {}
-    score_stats = summary.get("score_stats", {}) if isinstance(summary, dict) else {}
-    blockers = summary.get("top_blockers", []) if isinstance(summary, dict) else []
+        diagnostics = dict(summary.get("stages", {})) if isinstance(summary.get("stages"), dict) else {}
+        score_stats = summary.get("score_stats", {}) if isinstance(summary.get("score_stats"), dict) else {}
+        blockers = summary.get("top_blockers", []) if isinstance(summary.get("top_blockers"), list) else []
+
+        in_progress = row[2] is None
+        if in_progress:
+            started_at = row[1]
+            live_counts = conn.execute(
+                """
+                SELECT
+                    COUNT(*) AS fetched,
+                    SUM(CASE WHEN description_full IS NOT NULL
+                              AND LENGTH(TRIM(description_full)) > 0
+                             THEN 1 ELSE 0 END) AS with_desc,
+                    SUM(CASE WHEN status = 'scraped'         THEN 1 ELSE 0 END) AS scraped,
+                    SUM(CASE WHEN status = 'filtered'        THEN 1 ELSE 0 END) AS filtered,
+                    SUM(CASE WHEN status = 'scored'          THEN 1 ELSE 0 END) AS scored,
+                    SUM(CASE WHEN status = 'below_threshold' THEN 1 ELSE 0 END) AS below,
+                    SUM(CASE WHEN status = 'generated'       THEN 1 ELSE 0 END) AS generated
+                FROM seen_jobs
+                WHERE first_seen_at >= ?
+                """,
+                (started_at,),
+            ).fetchone()
+            if live_counts:
+                diagnostics.setdefault("fetched", int(live_counts[0] or 0))
+                diagnostics.setdefault("enriched", int(live_counts[1] or 0))
+                diagnostics.setdefault("filtered", int(live_counts[3] or 0))
+                diagnostics.setdefault("scored", int(live_counts[4] or 0))
+                diagnostics.setdefault("below_threshold", int(live_counts[5] or 0))
+                diagnostics.setdefault("generated", int(live_counts[6] or 0))
 
     run_data = {
         "id": row[0],
@@ -270,6 +305,7 @@ def run_detail_page(run_id: int):
     return render_template(
         "run_detail.html",
         run=run_data,
+        in_progress=in_progress,
         stages=diagnostics,
         score_stats=score_stats,
         blockers=blockers,
@@ -324,37 +360,110 @@ def api_pipeline_funnel():
     })
 
 
+def _parse_iso(ts: str | None) -> datetime | None:
+    if not ts:
+        return None
+    try:
+        return datetime.fromisoformat(ts)
+    except ValueError:
+        return None
+
+
+def _description_counts_by_source(conn, *, ids: list[str] | None = None,
+                                  since: str | None = None) -> dict[str, dict[str, float | int]]:
+    """Group seen_jobs by source and count rows with non-empty descriptions.
+
+    Either `ids` (an explicit id list — used when the run summary recorded
+    fetched_ids) or `since` (a started_at timestamp — used for in-progress
+    runs) must be provided. Returns the per-source breakdown shape the
+    portal-hits API ships to the dashboard.
+    """
+    if ids:
+        placeholders = ",".join("?" * len(ids))
+        query = f"""
+            SELECT source,
+                   COUNT(*) AS total,
+                   SUM(CASE WHEN description_full IS NOT NULL
+                             AND LENGTH(TRIM(description_full)) > 0
+                            THEN 1 ELSE 0 END) AS with_description
+            FROM seen_jobs
+            WHERE id IN ({placeholders})
+            GROUP BY source
+        """
+        rows = conn.execute(query, tuple(ids)).fetchall()
+    elif since:
+        rows = conn.execute(
+            """
+            SELECT source,
+                   COUNT(*) AS total,
+                   SUM(CASE WHEN description_full IS NOT NULL
+                             AND LENGTH(TRIM(description_full)) > 0
+                            THEN 1 ELSE 0 END) AS with_description
+            FROM seen_jobs
+            WHERE first_seen_at >= ?
+            GROUP BY source
+            """,
+            (since,),
+        ).fetchall()
+    else:
+        return {}
+
+    out: dict[str, dict[str, float | int]] = {}
+    for source, total, with_description in rows:
+        total_i = int(total or 0)
+        with_desc_i = int(with_description or 0)
+        pct = (with_desc_i / total_i * 100.0) if total_i else 0.0
+        out[source] = {
+            "total": total_i,
+            "with_description": with_desc_i,
+            "percent_with_description": round(pct, 1),
+        }
+    return out
+
+
 @app.route("/api/latest-run-portal-hits")
 def api_latest_run_portal_hits():
     """Per-portal hit counts for the latest run.
 
-    Reads `per_source_fetched` from the run's summary_json (gross fetch count
-    per portal — pre-dedup). Falls back to aggregating jobs whose
-    first_seen_at >= run.started_at if the summary is missing the field
-    (older runs predating the per-source tracking change).
+    Reads `per_source_fetched` from the run's summary_json when the run has
+    finished and recorded its summary. For in-progress runs (or older rows
+    that predate per_source_fetched), falls back to counting `seen_jobs`
+    inserted since the run's `started_at` — keeping the table populated as
+    the pipeline streams rows in. The response carries `in_progress` and
+    `elapsed_sec` so the client can decide whether to keep polling.
     """
     with connect() as conn:
         cur = conn.execute(
-            "SELECT id, started_at, summary_json FROM runs ORDER BY id DESC LIMIT 1"
+            """
+            SELECT id, started_at, finished_at, summary_json
+            FROM runs
+            ORDER BY id DESC
+            LIMIT 1
+            """
         )
         row = cur.fetchone()
         if not row:
             return jsonify({
                 "run_id": None,
                 "started_at": None,
+                "finished_at": None,
+                "in_progress": False,
+                "elapsed_sec": 0,
                 "per_portal": {},
                 "per_portal_description": {},
                 "total": 0,
                 "total_with_description": 0,
                 "percent_with_description": 0.0,
             })
-        run_id, started_at, summary_json = row[0], row[1], row[2]
+        run_id, started_at, finished_at, summary_json = row[0], row[1], row[2], row[3]
+        in_progress = finished_at is None
 
-        per_portal: dict[str, int] = {}
         try:
             summary = json.loads(summary_json or "{}")
         except json.JSONDecodeError:
             summary = {}
+
+        per_portal: dict[str, int] = {}
         if isinstance(summary, dict) and isinstance(summary.get("per_source_fetched"), dict):
             per_portal = {k: int(v) for k, v in summary["per_source_fetched"].items()}
         else:
@@ -369,67 +478,42 @@ def api_latest_run_portal_hits():
             per_portal = {r[0]: r[1] for r in cur.fetchall()}
 
         fetched_ids = summary.get("fetched_ids") if isinstance(summary, dict) else None
-        per_portal_desc: dict[str, dict[str, float | int]] = {}
-
         if isinstance(fetched_ids, list) and fetched_ids:
-            placeholders = ",".join("?" * len(fetched_ids))
-            cur = conn.execute(
-                f"""
-                SELECT source,
-                       COUNT(*) AS total,
-                       SUM(CASE
-                               WHEN description_full IS NOT NULL
-                                AND LENGTH(TRIM(description_full)) > 0
-                               THEN 1
-                               ELSE 0
-                           END) AS with_description
-                FROM seen_jobs
-                WHERE id IN ({placeholders})
-                GROUP BY source
-                """,
-                tuple(fetched_ids),
-            )
-            for source, total, with_description in cur.fetchall():
-                total_i = int(total or 0)
-                with_desc_i = int(with_description or 0)
-                pct = (with_desc_i / total_i * 100.0) if total_i else 0.0
-                per_portal_desc[source] = {
-                    "total": total_i,
-                    "with_description": with_desc_i,
-                    "percent_with_description": round(pct, 1),
-                }
+            per_portal_desc = _description_counts_by_source(conn, ids=fetched_ids)
+        else:
+            per_portal_desc = _description_counts_by_source(conn, since=started_at)
+
+    started_dt = _parse_iso(started_at)
+    finished_dt = _parse_iso(finished_at)
+    if started_dt is not None:
+        end_dt = finished_dt or datetime.now(started_dt.tzinfo)
+        elapsed_sec = max(0, int((end_dt - started_dt).total_seconds()))
+    else:
+        elapsed_sec = 0
+
+    total_with_desc = sum(
+        int(v.get("with_description", 0))
+        for v in per_portal_desc.values()
+        if isinstance(v, dict)
+    )
+    total_desc_denom = sum(
+        int(v.get("total", 0))
+        for v in per_portal_desc.values()
+        if isinstance(v, dict)
+    )
+    pct_with_desc = round(total_with_desc / total_desc_denom * 100.0, 1) if total_desc_denom else 0.0
 
     return jsonify({
         "run_id": run_id,
         "started_at": started_at,
+        "finished_at": finished_at,
+        "in_progress": in_progress,
+        "elapsed_sec": elapsed_sec,
         "per_portal": per_portal,
         "per_portal_description": per_portal_desc,
         "total": sum(per_portal.values()),
-        "total_with_description": sum(
-            int(v.get("with_description", 0))
-            for v in per_portal_desc.values()
-            if isinstance(v, dict)
-        ),
-        "percent_with_description": round(
-            (
-                sum(
-                    int(v.get("with_description", 0))
-                    for v in per_portal_desc.values()
-                    if isinstance(v, dict)
-                )
-                /
-                max(
-                    1,
-                    sum(
-                        int(v.get("total", 0))
-                        for v in per_portal_desc.values()
-                        if isinstance(v, dict)
-                    ),
-                )
-            )
-            * 100.0,
-            1,
-        ) if per_portal_desc else 0.0,
+        "total_with_description": total_with_desc,
+        "percent_with_description": pct_with_desc,
     })
 
 

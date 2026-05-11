@@ -33,6 +33,12 @@
     </div>
 </div>
 
+<div id="run-banner" class="hidden mb-4 bg-amber-400/20 border border-amber-300/40 text-amber-100 rounded-xl px-4 py-3 text-sm flex flex-wrap items-center gap-3">
+    <span class="w-2 h-2 rounded-full bg-amber-300 animate-pulse"></span>
+    <span id="run-banner-text">Run in progress…</span>
+    <a id="run-banner-link" class="underline ml-auto text-amber-100/90" href="#">view details</a>
+</div>
+
 <div class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8">
     <h2 class="text-xl font-bold mb-2">Stage 1: Hits per Portal</h2>
     <p class="text-sm text-purple-100 mb-4">Number of positions found per source portal in the latest run and share with description saved in DB.</p>
@@ -125,6 +131,30 @@ function isPoPm(title) {
     return !!title && PO_PM_RE.test(title);
 }
 
+const LIVE_POLL_MS = 5000;
+let livePollTimer = null;
+
+function formatElapsed(sec) {
+    sec = Math.max(0, Math.floor(sec || 0));
+    if (sec < 60) return `${sec}s`;
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return `${m}m ${s.toString().padStart(2, '0')}s`;
+}
+
+function updateRunBanner(hits) {
+    const banner = document.getElementById('run-banner');
+    const text = document.getElementById('run-banner-text');
+    const link = document.getElementById('run-banner-link');
+    if (!banner) return;
+    if (hits && hits.in_progress && hits.run_id) {
+        banner.classList.remove('hidden');
+        text.textContent = `Run #${hits.run_id} in progress · ${formatElapsed(hits.elapsed_sec)} elapsed · refreshing every ${LIVE_POLL_MS / 1000}s`;
+        link.href = `/runs/${hits.run_id}`;
+    } else {
+        banner.classList.add('hidden');
+    }
+}
+
 async function loadStage1Data() {
     const [hitsRes, jobsRes] = await Promise.all([
         fetch('/api/latest-run-portal-hits'),
@@ -132,6 +162,16 @@ async function loadStage1Data() {
     ]);
     const hits = await hitsRes.json();
     const jobs = await jobsRes.json();
+
+    updateRunBanner(hits);
+    if (hits && hits.in_progress) {
+        if (livePollTimer === null) {
+            livePollTimer = setInterval(loadStage1Data, LIVE_POLL_MS);
+        }
+    } else if (livePollTimer !== null) {
+        clearInterval(livePollTimer);
+        livePollTimer = null;
+    }
 
     const portalBody = document.getElementById('portal-counts-body');
     const portalTotal = document.getElementById('portal-counts-total');
