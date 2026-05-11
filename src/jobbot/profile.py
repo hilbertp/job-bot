@@ -65,3 +65,47 @@ def load_base_cv(path: Path | None = None) -> str:
     if not p.exists():
         p = REPO_ROOT / "data" / "base_cv.example.md"
     return p.read_text()
+
+
+def load_primary_cv(corpus_root: Path | None = None) -> str:
+    """PRD §7.5 FR-SCO-01 (FR-SCO-CV gate): return the plaintext of the single
+    file under `data/corpus/cvs/` whose name starts with `PRIMARY_`.
+
+    Supports .pdf / .docx / .md / .txt via the same readers as corpus_loader.
+    Raises FileNotFoundError if zero or multiple PRIMARY_ files exist, or if
+    the file is unreadable. The scorer catches this and refuses to score —
+    callers must never see a silent fallback to a thinner profile.
+    """
+    from .profile_distiller.corpus_loader import (
+        CorpusError, SUPPORTED_SUFFIXES, _read_doc,
+    )
+
+    cvs_dir = (corpus_root or REPO_ROOT / "data" / "corpus") / "cvs"
+    if not cvs_dir.exists():
+        raise FileNotFoundError(f"corpus CV directory missing: {cvs_dir}")
+
+    candidates = [
+        p for p in cvs_dir.iterdir()
+        if p.is_file()
+        and p.name.startswith("PRIMARY_")
+        and p.suffix.lower() in SUPPORTED_SUFFIXES
+    ]
+    if not candidates:
+        raise FileNotFoundError(
+            f"no PRIMARY_ CV in {cvs_dir} — add exactly one PRIMARY_* file "
+            f"(.pdf/.docx/.md/.txt)"
+        )
+    if len(candidates) > 1:
+        names = ", ".join(sorted(p.name for p in candidates))
+        raise FileNotFoundError(
+            f"multiple PRIMARY_ CV files in {cvs_dir}: {names}. Keep exactly one."
+        )
+
+    try:
+        text = _read_doc(candidates[0])
+    except CorpusError as exc:
+        raise FileNotFoundError(f"could not extract text from {candidates[0]}: {exc}") from exc
+    text = (text or "").strip()
+    if not text:
+        raise FileNotFoundError(f"primary CV {candidates[0]} extracted to empty text")
+    return text

@@ -20,18 +20,27 @@ import json
 import re
 from pathlib import Path
 
+import yaml
 from anthropic import Anthropic
 
 from .config import REPO_ROOT, Config, Secrets
 from .models import JobPosting, ScoreResult
-from .profile import Profile
+from .profile import Profile, load_primary_cv
 
 PROMPT_PATH = REPO_ROOT / "prompts" / "match_score.md"
+PROFILE_YAML_PATH = REPO_ROOT / "data" / "profile.yaml"
 
 # PRD §7.5 FR-SCO-01: a posting needs a substantive body before scoring.
 # Below this threshold the description is just a snippet (LinkedIn search
 # previews, Stepstone teaser cards) and the scorer would hallucinate.
 MIN_BODY_WORDS = 200
+
+# Cap the primary CV at 18k chars (~3-4k tokens). Sonnet handles much more,
+# but the marginal context past this point is mostly formatting noise.
+_PRIMARY_CV_CAP = 18000
+# Cap the job body at 12k chars (~2k tokens). Postings rarely exceed this
+# and trimming long company-boilerplate tails is a feature, not a bug.
+_JOB_BODY_CAP = 12000
 
 
 class CannotScore(Exception):
@@ -122,11 +131,73 @@ def passes_heuristic(job: JobPosting, profile: Profile) -> tuple[bool, str]:
     return True, ""
 
 
+def _build_user_message(
+    job: JobPosting,
+    profile: Profile,
+    primary_cv: str,
+) -> str:
+    """PRD §7.5 FR-SCO-01: assemble the scoring prompt's user message in the
+    exact ordering the rubric expects:
+      1. Primary CV (source of truth)
+      2. Compiled profile (yaml)
+      3. Hard preferences (from data/profile.yaml)
+      4. Job description
+      5. Job metadata
+    """
+    compiled = {
+        "must_have_skills": profile.must_have_skills,
+        "nice_to_have_skills": profile.nice_to_have_skills,
+        "capabilities": profile.capabilities,
+        "domains": profile.domains,
+        "achievements": profile.achievements,
+        "seniority_signals": profile.seniority_signals,
+        "languages": profile.languages,
+    }
+    hard_prefs = {
+        "preferences": profile.preferences,
+        "deal_breakers": profile.deal_breakers,
+    }
+    # Use yaml.safe_dump for sections 2/3 — model parses YAML reliably and it
+    # reads better in the prompt than escaped JSON.
+    compiled_yaml = yaml.safe_dump(compiled, sort_keys=False, allow_unicode=True).strip()
+    hard_prefs_yaml = yaml.safe_dump(hard_prefs, sort_keys=False, allow_unicode=True).strip()
+
+    metadata = {
+        "title": job.title,
+        "company": job.company,
+        "location": job.location,
+        "source": job.source,
+        "url": str(job.url),
+    }
+    metadata_yaml = yaml.safe_dump(metadata, sort_keys=False, allow_unicode=True).strip()
+
+    body = (job.description or "").strip()[:_JOB_BODY_CAP]
+    cv = primary_cv.strip()[:_PRIMARY_CV_CAP]
+
+    return (
+        "# Primary CV (source of truth)\n\n"
+        f"{cv}\n\n"
+        "# Compiled profile (yaml)\n\n"
+        "```yaml\n"
+        f"{compiled_yaml}\n"
+        "```\n\n"
+        "# Hard preferences (yaml)\n\n"
+        "```yaml\n"
+        f"{hard_prefs_yaml}\n"
+        "```\n\n"
+        "# Job description\n\n"
+        f"{body}\n\n"
+        "# Job metadata\n\n"
+        "```yaml\n"
+        f"{metadata_yaml}\n"
+        "```\n"
+    )
+
+
 def llm_score(
     job: JobPosting,
     profile: Profile,
     secrets: Secrets,
-    cv_markdown: str | None = None,
 ) -> ScoreResult:
     """Ask the LLM for a 0-100 fit score. Returns a ScoreResult.
 
@@ -138,25 +209,19 @@ def llm_score(
     if word_count < MIN_BODY_WORDS:
         raise CannotScore(f"no_body: description has {word_count} words, need >= {MIN_BODY_WORDS}")
 
+    try:
+        primary_cv = load_primary_cv()
+    except FileNotFoundError as e:
+        raise CannotScore(f"no_primary_cv: {e}") from e
+
     client = Anthropic(api_key=secrets.anthropic_api_key)
     prompt = PROMPT_PATH.read_text()
-    payload: dict = {
-        "job_title": job.title,
-        "company": job.company,
-        "job_description": job.description[:8000],  # cap input
-        "profile_summary": {
-            "must_have_skills": profile.must_have_skills,
-            "nice_to_have_skills": profile.nice_to_have_skills,
-            "preferences": profile.preferences,
-        },
-    }
-    if cv_markdown:
-        payload["cv_markdown"] = cv_markdown[:12000]
+    user_message = _build_user_message(job, profile, primary_cv)
     msg = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=800,
         system=prompt,
-        messages=[{"role": "user", "content": json.dumps(payload)}],
+        messages=[{"role": "user", "content": user_message}],
     )
     text = "".join(b.text for b in msg.content if b.type == "text")
     data = _parse_score_json(text)

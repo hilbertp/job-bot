@@ -109,7 +109,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 blocker_counts[reason or "filtered by heuristic"] += 1
                 continue
             try:
-                result = llm_score(job, profile, secrets, cv_markdown=base_cv)
+                result = llm_score(job, profile, secrets)
             except CannotScore as e:
                 # PRD §7.5 FR-SCO-01: refuse to score, persist the reason so
                 # the digest can surface it instead of a misleading number.

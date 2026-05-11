@@ -1,9 +1,13 @@
+from pathlib import Path
+
 import pytest
 
 from jobbot.config import Secrets
 from jobbot.models import JobPosting
 from jobbot.profile import Profile
-from jobbot.scoring import CannotScore, MIN_BODY_WORDS, llm_score, passes_heuristic
+from jobbot.scoring import (
+    CannotScore, MIN_BODY_WORDS, _build_user_message, llm_score, passes_heuristic,
+)
 
 
 def _profile(deal_breaker_keywords: list[str] | None = None) -> Profile:
@@ -132,3 +136,50 @@ def test_llm_score_refuses_short_body() -> None:
         llm_score(job, _profile(), _secrets())
     assert exc.value.reason.startswith("no_body")
     assert str(MIN_BODY_WORDS) in exc.value.reason
+
+
+def test_llm_score_refuses_when_primary_cv_missing(tmp_path: Path, monkeypatch) -> None:
+    """FR-SCO-01: if PRIMARY_* CV cannot be loaded, refuse — never silent fallback."""
+    # Point scoring.load_primary_cv at an empty corpus directory.
+    empty_corpus = tmp_path / "corpus"
+    (empty_corpus / "cvs").mkdir(parents=True)
+    monkeypatch.setattr("jobbot.scoring.load_primary_cv",
+                        lambda: (_ for _ in ()).throw(FileNotFoundError("no PRIMARY_")))
+
+    body = " ".join(["lead product"] * 250)  # comfortably above MIN_BODY_WORDS
+    job = JobPosting(
+        id="nocv",
+        source="test",
+        title="Senior Product Manager",
+        company="Acme",
+        url="https://example.com/jobs/nocv",  # type: ignore
+        description=body,
+    )
+    with pytest.raises(CannotScore) as exc:
+        llm_score(job, _profile(), _secrets())
+    assert exc.value.reason.startswith("no_primary_cv")
+
+
+def test_user_message_has_five_sections_in_order() -> None:
+    """FR-SCO-02: the user message ordering is part of the contract — assert it."""
+    job = JobPosting(
+        id="ordering",
+        source="linkedin",
+        title="Senior Product Manager",
+        company="Acme",
+        location="Berlin / Remote",
+        url="https://example.com/jobs/ordering",  # type: ignore
+        description="Job body text " * 100,
+    )
+    msg = _build_user_message(job, _profile(), primary_cv="# Philipp Hilbert CV\n\nExperience: ...")
+
+    headers = [
+        "# Primary CV (source of truth)",
+        "# Compiled profile (yaml)",
+        "# Hard preferences (yaml)",
+        "# Job description",
+        "# Job metadata",
+    ]
+    positions = [msg.find(h) for h in headers]
+    assert all(p != -1 for p in positions), f"missing section header(s): {positions}"
+    assert positions == sorted(positions), f"sections out of order: {positions}"

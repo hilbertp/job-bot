@@ -206,31 +206,45 @@ deal_breakers:
 
 ### 7.5 Scoring
 
-**FR-SCO-01.** A two-stage matcher:
-1. **Heuristic prefilter** — drops only on hard deal-breakers (deal-breaker keywords / industries / on-site-only-when-remote-required). Does NOT enforce skill-keyword presence.
-2. **LLM scorer** (Claude Haiku) — runs on every posting that has a body and passes the heuristic.
+The scorer enforces three **hard preconditions** before calling the LLM. If any precondition fails, the scorer refuses to score and the row's `status` is set to a `cannot_score:<reason>` value. A `cannot_score` row never produces a numeric `score` — the digest surfaces the reason verbatim so the user can see exactly why a posting was skipped instead of confusing it with a low-confidence match.
 
-**FR-SCO-02.** The LLM returns a JSON object:
+**FR-SCO-01.** Three-stage matcher. In order:
+
+1. **Heuristic prefilter** — drops only on hard deal-breakers (deal-breaker keywords / industries). Does NOT enforce skill-keyword presence and does NOT enforce remote/on-site (the LLM judges that with full text + CV context).
+2. **Precondition gate** — before the LLM is called, three preconditions must all hold:
+    - (a) `description_word_count >= 200`. If not, `status = cannot_score:no_body`. Backfill with `jobbot enrich --backfill`.
+    - (b) The single `data/corpus/cvs/PRIMARY_*` file loads and extracts to non-empty plaintext. If not, `status = cannot_score:no_primary_cv`. The scorer never falls back to a thinner profile.
+    - (c) Anthropic API key is present (Secrets validation). Otherwise the run aborts upstream.
+3. **LLM scorer** (Claude Sonnet, `claude-sonnet-4-6`) — runs on every posting whose preconditions all pass.
+
+**FR-SCO-02.** The user message sent to the LLM has five sections in this exact order:
+
+1. `# Primary CV (source of truth)` — plaintext extracted from `data/corpus/cvs/PRIMARY_*` (PDF/DOCX/MD/TXT). Authoritative for facts about the candidate.
+2. `# Compiled profile (yaml)` — distilled skills, capabilities, domains, achievements, seniority signals, and languages from `profile.compiled.yaml` merged with `profile.yaml`.
+3. `# Hard preferences (yaml)` — `preferences` and `deal_breakers` from `data/profile.yaml`.
+4. `# Job description` — the full `description_full` from the enrichment phase.
+5. `# Job metadata` — title, company, location, source, url.
+
+The LLM returns a JSON object:
+
 ```json
 {
   "score": 0-100,
   "reason": "one-sentence explanation",
   "breakdown": {
     "role_match": 0-100,
-    "domain_match": 0-100,
-    "seniority_match": 0-100,
-    "working_mode_match": 0-100,
-    "language_fit": 0-100,
-    "compensation_fit": 0-100
+    "skills_match": 0-100,
+    "location_remote_fit": 0-100,
+    "seniority_fit": 0-100
   }
 }
 ```
 
-**FR-SCO-03.** Combined `score` = equal-weight average of the six axes, rounded to integer. Weights are configurable in `config.yaml` (defaulted to equal in v1; user retunes after week 1 of real data).
+**FR-SCO-03.** `score` is returned holistically by the LLM (not computed from the axes here — it's the model's own combined judgment given the rubric), and `breakdown` is the per-axis transparency surface the dashboard and digest render alongside it.
 
-**FR-SCO-04.** If `compensation_fit` cannot be assessed (salary not stated), it is excluded from the average, not zeroed.
+**FR-SCO-04.** Cost note: Sonnet at the expected volume (~120 postings/day) costs roughly €150-200/month versus ~€40/month on the prior Haiku setup. The trade-off has been explicitly accepted in exchange for substantially more accurate scoring at the top of the distribution.
 
-**FR-SCO-05.** Single threshold: `apply_threshold: 70`. Postings ≥70 trigger CV+CL generation and an apply attempt. Postings below 70 are still shown in the digest, sorted by score.
+**FR-SCO-05.** Single threshold: `apply_threshold: 70`. Postings ≥70 trigger CV+CL generation and an apply attempt. Postings below 70 are still shown in the digest, sorted by score. `cannot_score:*` rows are listed in a separate "Cannot score" section of the digest, never mixed in with numeric matches.
 
 ### 7.6 Document generation
 
