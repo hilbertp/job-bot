@@ -10,7 +10,7 @@ from flask import Flask, abort, jsonify, render_template
 
 from .config import REPO_ROOT
 from .models import JobStatus
-from .state import connect
+from .state import apply_channel, apply_channel_ats_name, connect
 
 EXPORT_STATUSES = ("scored", "below_threshold", "filtered", "generated", "scraped")
 
@@ -673,6 +673,19 @@ def api_shortlist():
             if (score_base is not None and score_tailored is not None)
             else None
         )
+        # PRD §7.7 FR-APP-01 application channel — derived (no schema change).
+        # Only `apply_url` (from raw_json) is considered, not the listing url
+        # column — the spec is about how to *submit* an application, and the
+        # listing URL is just the display page.
+        apply_url_raw: str | None = None
+        try:
+            payload = json.loads(r[9] or "{}")
+            if isinstance(payload, dict):
+                apply_url_raw = payload.get("apply_url")
+        except (json.JSONDecodeError, TypeError):
+            apply_url_raw = None
+        channel = apply_channel(apply_email=r[14], apply_url=apply_url_raw)
+        ats_name = apply_channel_ats_name(apply_url_raw) if channel == "form" else None
         jobs.append({
             "id": r[0],
             "title": r[1],
@@ -688,6 +701,9 @@ def api_shortlist():
             "seniority": r[12] or _extract_seniority_required(r[1] or "", description),
             "salary_text": r[13] or _extract_expected_salary(r[1] or "", description),
             "apply_email": r[14],
+            "apply_url": apply_url_raw,
+            "apply_channel": channel,
+            "apply_channel_ats_name": ats_name,
             "cv_md": cv_md,
             "cover_letter_md": cover_letter_md,
             "cv_html_url": f"/shortlist/{r[0]}/cv.html" if cv_html_path else None,
@@ -760,7 +776,7 @@ def api_latest_run_jobs():
             cur = conn.execute(
                 f"""
                 SELECT title, company, source, status, score, score_reason, url, raw_json,
-                       description_scraped, description_word_count
+                       description_scraped, description_word_count, apply_email
                 FROM seen_jobs
                 WHERE id IN ({placeholders})
                 ORDER BY source ASC, title ASC
@@ -773,7 +789,7 @@ def api_latest_run_jobs():
             cur = conn.execute(
                 """
                 SELECT title, company, source, status, score, score_reason, url, raw_json,
-                       description_scraped, description_word_count
+                       description_scraped, description_word_count, apply_email
                 FROM seen_jobs
                 WHERE first_seen_at >= ?
                 ORDER BY source ASC, title ASC
@@ -786,7 +802,7 @@ def api_latest_run_jobs():
             cur = conn.execute(
                 """
                 SELECT title, company, source, status, score, score_reason, url, raw_json,
-                       description_scraped, description_word_count
+                       description_scraped, description_word_count, apply_email
                 FROM seen_jobs
                 ORDER BY source ASC, title ASC
                 LIMIT ?
@@ -812,6 +828,19 @@ def api_latest_run_jobs():
             else:
                 description_scraped = bool(description_scraped_raw)
 
+            # PRD §7.7 FR-APP-01 application channel — derived (no schema change).
+            # apply_url comes from raw_json only; the listing url column is for
+            # viewing, not submitting.
+            apply_url_raw: str | None = None
+            try:
+                payload_for_apply = json.loads(r[7] or "{}")
+                if isinstance(payload_for_apply, dict):
+                    apply_url_raw = payload_for_apply.get("apply_url")
+            except (json.JSONDecodeError, TypeError):
+                apply_url_raw = None
+            channel = apply_channel(apply_email=r[10], apply_url=apply_url_raw)
+            ats_name = apply_channel_ats_name(apply_url_raw) if channel == "form" else None
+
             jobs.append({
                 "title": r[0],
                 "company": r[1],
@@ -824,6 +853,10 @@ def api_latest_run_jobs():
                 "seniority_required": _extract_seniority_required(r[0] or "", description),
                 "description_scraped": description_scraped,
                 "description_word_count": r[9],
+                "apply_email": r[10],
+                "apply_url": apply_url_raw,
+                "apply_channel": channel,
+                "apply_channel_ats_name": ats_name,
             })
     
     return jsonify(jobs)

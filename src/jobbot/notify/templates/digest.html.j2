@@ -17,14 +17,69 @@
   details { margin-top: 0.5rem; }
   pre { background: #f9fafb; padding: 0.6rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; }
   .errors { background: #fef2f2; border: 1px solid #fecaca; padding: 0.8rem 1rem; border-radius: 8px; }
+  /* PRD §7.7 FR-APP-01 channel pills, right next to the match score. */
+  .channel { display: inline-block; padding: 3px 10px; border-radius: 999px;
+             font-size: 0.85rem; font-weight: 600; white-space: nowrap;
+             margin-left: 0.4rem; }
+  .channel-email    { background: #eff6ff; color: #1d4ed8; }
+  .channel-form     { background: #ecfdf5; color: #047857; }
+  .channel-external { background: #f5f3ff; color: #6d28d9; }
+  .channel-manual   { background: #f3f4f6; color: #6b7280; }
+  .source-summary { background: #f9fafb; border: 1px solid #e5e7eb;
+                    padding: 0.6rem 0.9rem; border-radius: 8px;
+                    font-size: 0.9rem; margin-bottom: 1rem; }
+  .source-summary ul { margin: 0.3rem 0 0; padding-left: 1.2rem; }
+  .source-summary li { color: #374151; }
 </style></head>
 <body>
 <h1>jobbot · {{ n }} new match{{ 'es' if n != 1 else '' }}</h1>
 <p class="meta">Run started {{ run_started.strftime('%Y-%m-%d %H:%M %Z') }}</p>
 
+{% macro channel_pill(m) -%}
+{%- set ch = m.apply_channel or 'manual' -%}
+{%- if ch == 'email' -%}
+  <span class="channel channel-email" title="{{ m.apply_email }}">📧 email</span>
+{%- elif ch == 'form' -%}
+  <span class="channel channel-form" title="{{ m.apply_url }}">🔗 {{ m.apply_channel_ats_name or 'form' }}</span>
+{%- elif ch == 'external' -%}
+  <span class="channel channel-external" title="{{ m.apply_url }}">🌐 external</span>
+{%- else -%}
+  <span class="channel channel-manual">✋ manual</span>
+{%- endif -%}
+{%- endmacro %}
+
 {% if matches %}
 {% set generated = matches | selectattr('output_dir') | list %}
 {% set manual = matches | rejectattr('output_dir') | list %}
+
+{# PRD §7.7 FR-APP-01: per-source breakdown of how applications would route, so
+   the user can see at a glance which sources have automatable channels. #}
+{% set source_breakdown = namespace(rows={}) %}
+{% for m in matches %}
+  {%- set src = m.job.source or 'unknown' -%}
+  {%- if src not in source_breakdown.rows -%}
+    {%- set _ = source_breakdown.rows.update({src: {'total': 0, 'email': 0, 'form': 0, 'external': 0, 'manual': 0}}) -%}
+  {%- endif -%}
+  {%- set bucket = source_breakdown.rows[src] -%}
+  {%- set _ = bucket.update({'total': bucket.total + 1}) -%}
+  {%- set ch = m.apply_channel or 'manual' -%}
+  {%- set _ = bucket.update({ch: bucket[ch] + 1}) -%}
+{% endfor %}
+{% if source_breakdown.rows %}
+<div class="source-summary">
+  <strong>Per-source apply channels</strong>
+  <ul>
+    {% for src, bucket in source_breakdown.rows.items() %}
+    <li>{{ src }}: {{ bucket.total }} scored
+        {%- if bucket.email %} · {{ bucket.email }} via email{% endif -%}
+        {%- if bucket.form %} · {{ bucket.form }} via form{% endif -%}
+        {%- if bucket.external %} · {{ bucket.external }} external{% endif -%}
+        {%- if bucket.manual %} · {{ bucket.manual }} manual{% endif -%}
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
 
 <h2>Top matches (CV + cover letter generated)</h2>
 {% if generated %}
@@ -33,7 +88,7 @@
   <div class="job-head">
     <div><strong>{{ m.job.title }}</strong> — {{ m.job.company }}
          {% if m.job.location %}· {{ m.job.location }}{% endif %}</div>
-    <span class="score">Score {{ m.score }}</span>
+    <span class="score">Score {{ m.score }}</span>{{ channel_pill(m) }}
   </div>
   <div class="meta">{{ m.job.source }} · <a href="{{ m.job.url }}">view posting</a>
        {% if m.apply_status %} · status:
@@ -62,7 +117,7 @@
   <div class="job-head">
     <div><strong>{{ m.job.title }}</strong> — {{ m.job.company }}
          {% if m.job.location %}· {{ m.job.location }}{% endif %}</div>
-    <span class="score">Score {{ m.score }}</span>
+    <span class="score">Score {{ m.score }}</span>{{ channel_pill(m) }}
   </div>
   <div class="meta">{{ m.job.source }} · <a href="{{ m.job.url }}">view posting</a></div>
   <div style="margin-top: 0.4rem">{{ m.reason }}</div>

@@ -103,5 +103,5 @@ def test_stage2_table_renders_description_scraped_column(
     # The renderer reads the two fields we just added to the API
     assert "job.description_scraped === true" in html
     assert "job.description_word_count" in html
-    # Stage 2 colspan bumped from 6 to 7 so loading + empty states still span the row
-    assert 'colspan="7"' in html
+    # Stage 2 has 8 columns once Apply via lands; loading/empty states span them.
+    assert 'colspan="8"' in html
