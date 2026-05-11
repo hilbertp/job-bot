@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 import json
+import shutil
 import sqlite3
+import subprocess
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator
@@ -93,6 +96,73 @@ def _now() -> str:
     return datetime.now(tz=timezone.utc).isoformat()
 
 
+@dataclass
+class LockStatus:
+    locked: bool
+    detail: str
+    holders: list[dict[str, str]]
+
+
+def _lock_holders(p: Path) -> list[dict[str, str]]:
+    """Best-effort: shell out to lsof to identify processes holding the DB."""
+    if not shutil.which("lsof"):
+        return []
+    try:
+        out = subprocess.run(
+            ["lsof", "-F", "pcn", str(p)],
+            capture_output=True, text=True, timeout=2.0,
+        ).stdout
+    except Exception:
+        return []
+    holders: list[dict[str, str]] = []
+    cur: dict[str, str] = {}
+    for line in out.splitlines():
+        tag, val = line[:1], line[1:]
+        if tag == "p":
+            if cur:
+                holders.append(cur)
+            cur = {"pid": val}
+        elif tag == "c":
+            cur["command"] = val
+    if cur:
+        holders.append(cur)
+    return holders
+
+
+def db_lock_status(db_path: Path | None = None) -> LockStatus:
+    """Quickly determine whether the DB is currently held in a writer lock.
+
+    Strategy: open a fresh connection with a 100ms busy_timeout and try
+    `BEGIN IMMEDIATE`. SQLite returns an OperationalError ("database is
+    locked"/"busy") iff another connection currently holds the writer lock.
+    Rolls back immediately on success so we never block anyone else.
+    """
+    p = db_path or DB_PATH
+    if not p.exists():
+        return LockStatus(locked=False, detail="db file does not exist yet", holders=[])
+    conn: sqlite3.Connection | None = None
+    try:
+        conn = sqlite3.connect(p, timeout=0.2, isolation_level=None)
+        conn.execute("PRAGMA busy_timeout = 100")
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            conn.execute("ROLLBACK")
+            return LockStatus(locked=False, detail="writer lock available", holders=_lock_holders(p))
+        except sqlite3.OperationalError as e:
+            msg = str(e).lower()
+            if "lock" in msg or "busy" in msg:
+                return LockStatus(locked=True, detail=str(e), holders=_lock_holders(p))
+            raise
+    except sqlite3.OperationalError as e:
+        return LockStatus(locked=True, detail=str(e), holders=_lock_holders(p))
+    finally:
+        if conn is not None:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+
 @contextmanager
 def connect(db_path: Path | None = None) -> Iterator[sqlite3.Connection]:
     p = db_path or DB_PATH
@@ -106,8 +176,12 @@ def connect(db_path: Path | None = None) -> Iterator[sqlite3.Connection]:
         except Exception:
             pass
     
-    # Connect with timeout and retry-friendly settings
-    conn = sqlite3.connect(p, timeout=30.0, check_same_thread=False)
+    # Connect with timeout and retry-friendly settings.
+    # isolation_level=None puts sqlite3 in autocommit mode: each statement
+    # commits immediately, so the writer lock is held for milliseconds at a
+    # time instead of for the full pipeline run. This lets the dashboard and
+    # ad-hoc tools write while a `jobbot run` is in progress.
+    conn = sqlite3.connect(p, timeout=30.0, check_same_thread=False, isolation_level=None)
     conn.row_factory = sqlite3.Row
     
     try:
@@ -243,6 +317,51 @@ def finish_run(conn: sqlite3.Connection, run_id: int, **counts) -> None:
             run_id,
         ),
     )
+
+
+def jobs_needing_enrichment(conn: sqlite3.Connection) -> list[JobPosting]:
+    """Re-hydrate JobPosting objects for rows where description_scraped IS NULL.
+
+    These are postings scraped before the enrichment phase was wired into the
+    pipeline; without this they would never get a body fetch on subsequent runs
+    because dedup excludes them from `all_new`.
+    """
+    rows = conn.execute(
+        "SELECT raw_json FROM seen_jobs WHERE description_scraped IS NULL "
+        "AND raw_json IS NOT NULL"
+    ).fetchall()
+    out: list[JobPosting] = []
+    for row in rows:
+        try:
+            out.append(JobPosting.model_validate_json(row["raw_json"]))
+        except Exception:
+            continue
+    return out
+
+
+def jobs_needing_backfill(conn: sqlite3.Connection, min_words: int, limit: int) -> list[JobPosting]:
+    """Rows whose body is missing or shorter than `min_words` — sorted oldest
+    first so backfill steadily drains the long tail of pre-enrichment rows
+    without thrashing the most recent ones. The CLI caps `limit` per
+    invocation to keep the work bounded.
+    """
+    rows = conn.execute(
+        "SELECT raw_json FROM seen_jobs "
+        "WHERE raw_json IS NOT NULL "
+        "  AND (description_scraped IS NULL "
+        "       OR description_word_count IS NULL "
+        "       OR description_word_count < ?) "
+        "ORDER BY first_seen_at ASC "
+        "LIMIT ?",
+        (min_words, limit),
+    ).fetchall()
+    out: list[JobPosting] = []
+    for row in rows:
+        try:
+            out.append(JobPosting.model_validate_json(row["raw_json"]))
+        except Exception:
+            continue
+    return out
 
 
 def jobs_by_status(conn: sqlite3.Connection, status: JobStatus, since: datetime | None = None) -> list[sqlite3.Row]:

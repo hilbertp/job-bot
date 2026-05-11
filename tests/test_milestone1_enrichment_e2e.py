@@ -56,7 +56,7 @@ class _FakeScraper:
 
     def fetch_detail(self, job: JobPosting):
         self.fetch_detail_calls += 1
-        long_body = " ".join(["responsibility"] * 140)  # 140 words
+        long_body = " ".join(["responsibility"] * 240)  # >= MIN_BODY_WORDS
         return job.model_copy(update={"description": long_body})
 
 
@@ -84,7 +84,7 @@ def test_pipeline_enriches_new_jobs_before_scoring(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(pipeline, "passes_heuristic", lambda _job, _profile: (True, ""))
     monkeypatch.setattr(pipeline, "send_digest", lambda *_args, **_kwargs: None)
 
-    def _fake_llm_score(job, _profile, _secrets):
+    def _fake_llm_score(job, _profile, _secrets, **_kwargs):
         scored_descriptions.append(job.description)
         return ScoreResult(score=10, reason="below threshold")
 
@@ -111,6 +111,6 @@ def test_pipeline_enriches_new_jobs_before_scoring(tmp_path: Path, monkeypatch):
         "Pipeline did not call fetch_detail on newly scraped jobs"
     )
     assert scored_descriptions, "Expected at least one scoring call"
-    assert len(scored_descriptions[0].split()) >= 100, (
-        "Scoring ran without enriched full body (expected >=100 words)"
+    assert len(scored_descriptions[0].split()) >= 200, (
+        "Scoring ran without enriched full body (expected >=200 words)"
     )

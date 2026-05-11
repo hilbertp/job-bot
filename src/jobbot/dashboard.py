@@ -8,8 +8,11 @@ from pathlib import Path
 
 from flask import Flask, abort, jsonify, render_template
 
+from .config import REPO_ROOT
 from .models import JobStatus
 from .state import connect
+
+EXPORT_STATUSES = ("scored", "below_threshold", "filtered", "generated", "scraped")
 
 _TEMPLATES_DIR = Path(__file__).with_name("templates")
 app = Flask(__name__, template_folder=str(_TEMPLATES_DIR))
@@ -430,6 +433,119 @@ def api_latest_run_portal_hits():
     })
 
 
+@app.route("/api/shortlist")
+def api_shortlist():
+    """Stage-3 shortlist: jobs with score >= 70, with the tailored CV +
+    cover letter inlined from disk so the dashboard can render them.
+
+    Optional `?min_score=NN` overrides the 70 default.
+    """
+    from flask import request
+
+    try:
+        min_score = int(request.args.get("min_score", 70))
+    except ValueError:
+        min_score = 70
+
+    with connect() as conn:
+        cur = conn.execute(
+            """
+            SELECT id, title, company, source, status, score, score_reason,
+                   url, output_dir, raw_json,
+                   description_full, description_word_count,
+                   seniority, salary_text, apply_email
+            FROM seen_jobs
+            WHERE score IS NOT NULL AND score >= ?
+            ORDER BY score DESC, first_seen_at DESC
+            """,
+            (min_score,),
+        )
+        rows = cur.fetchall()
+
+    jobs = []
+    for r in rows:
+        description = r[10] or ""
+        if not description and r[9]:
+            try:
+                payload = json.loads(r[9] or "{}")
+                if isinstance(payload, dict):
+                    description = str(payload.get("description", ""))
+            except json.JSONDecodeError:
+                description = ""
+
+        cv_md = cover_letter_md = ""
+        cv_html_path = cl_html_path = None
+        if r[8]:
+            out = Path(r[8])
+            cv_md_path = out / "cv.md"
+            cl_md_path = out / "cover_letter.md"
+            if cv_md_path.exists():
+                try:
+                    cv_md = cv_md_path.read_text()
+                except Exception:
+                    cv_md = ""
+            if cl_md_path.exists():
+                try:
+                    cover_letter_md = cl_md_path.read_text()
+                except Exception:
+                    cover_letter_md = ""
+            if (out / "cv.html").exists():
+                cv_html_path = str(out / "cv.html")
+            if (out / "cover_letter.html").exists():
+                cl_html_path = str(out / "cover_letter.html")
+
+        jobs.append({
+            "id": r[0],
+            "title": r[1],
+            "company": r[2],
+            "source": r[3],
+            "status": r[4],
+            "score": r[5],
+            "reason": r[6] or "",
+            "url": r[7],
+            "output_dir": r[8],
+            "description": description,
+            "description_word_count": r[11] or 0,
+            "seniority": r[12] or _extract_seniority_required(r[1] or "", description),
+            "salary_text": r[13] or _extract_expected_salary(r[1] or "", description),
+            "apply_email": r[14],
+            "cv_md": cv_md,
+            "cover_letter_md": cover_letter_md,
+            "cv_html_url": f"/shortlist/{r[0]}/cv.html" if cv_html_path else None,
+            "cover_letter_html_url": f"/shortlist/{r[0]}/cover_letter.html" if cl_html_path else None,
+        })
+
+    return jsonify({"min_score": min_score, "count": len(jobs), "jobs": jobs})
+
+
+@app.route("/shortlist/<job_id>/<filename>")
+def shortlist_doc(job_id: str, filename: str):
+    """Serve a generated CV/cover-letter HTML for a shortlisted job.
+
+    Locked down to the per-job output_dir recorded in seen_jobs and to a
+    fixed allowlist of filenames so we can't be tricked into serving
+    arbitrary files via path traversal.
+    """
+    if filename not in {"cv.html", "cover_letter.html", "cv.md", "cover_letter.md"}:
+        abort(404)
+    with connect() as conn:
+        cur = conn.execute("SELECT output_dir FROM seen_jobs WHERE id = ?", (job_id,))
+        row = cur.fetchone()
+    if not row or not row[0]:
+        abort(404)
+    out_dir = Path(row[0]).resolve()
+    target = (out_dir / filename).resolve()
+    try:
+        target.relative_to(out_dir)
+    except ValueError:
+        abort(404)
+    if not target.exists():
+        abort(404)
+    from flask import send_file
+    mime = "text/html" if filename.endswith(".html") else "text/markdown"
+    return send_file(str(target), mimetype=mime)
+
+
 @app.route("/api/latest-run-jobs")
 def api_latest_run_jobs():
     """Get all jobs scraped in the latest run, with stage-1 attributes.
@@ -515,6 +631,69 @@ def api_latest_run_jobs():
             })
     
     return jsonify(jobs)
+
+
+@app.route("/api/export/jobs", methods=["POST"])
+def api_export_jobs():
+    """Dump all jobs (with full descriptions) to data/exports/ as JSON.
+    Returns the relative path written and a per-status breakdown."""
+    placeholders = ",".join("?" * len(EXPORT_STATUSES))
+    with connect() as conn:
+        cur = conn.execute(
+            f"SELECT id, source, url, title, company, status, score, score_reason, "
+            f"description_full, description_word_count, seniority, salary_text, "
+            f"first_seen_at, scored_at, enriched_at, raw_json "
+            f"FROM seen_jobs WHERE status IN ({placeholders}) "
+            f"ORDER BY (CASE WHEN status IN ('scored','generated') THEN 0 "
+            f"WHEN status='below_threshold' THEN 1 ELSE 2 END), "
+            f"score DESC NULLS LAST, first_seen_at DESC",
+            EXPORT_STATUSES,
+        )
+        rows = cur.fetchall()
+
+    jobs = []
+    for r in rows:
+        description = r["description_full"]
+        if not description and r["raw_json"]:
+            try:
+                description = json.loads(r["raw_json"]).get("description", "")
+            except json.JSONDecodeError:
+                description = ""
+        jobs.append({
+            "id": r["id"],
+            "source": r["source"],
+            "url": r["url"],
+            "title": r["title"],
+            "company": r["company"],
+            "status": r["status"],
+            "score": r["score"],
+            "score_reason": r["score_reason"],
+            "seniority": r["seniority"],
+            "salary_text": r["salary_text"],
+            "description_word_count": r["description_word_count"],
+            "first_seen_at": r["first_seen_at"],
+            "scored_at": r["scored_at"],
+            "enriched_at": r["enriched_at"],
+            "description": description,
+        })
+
+    payload = {
+        "n_jobs": len(jobs),
+        "by_status": {s: sum(1 for j in jobs if j["status"] == s) for s in EXPORT_STATUSES},
+        "jobs": jobs,
+    }
+
+    out_dir = REPO_ROOT / "data" / "exports"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now(tz=timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    out_path = out_dir / f"jobs_export_{ts}.json"
+    out_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False))
+    return jsonify({
+        "ok": True,
+        "path": str(out_path.relative_to(REPO_ROOT)),
+        "n_jobs": len(jobs),
+        "by_status": payload["by_status"],
+    })
 
 
 def run(host: str = "127.0.0.1", port: int = 5001, debug: bool = False) -> None:

@@ -125,6 +125,8 @@ Theoretical and practical knowledge of:
 
 Diplom Wirtschaftsingenieur (Industrial Engineering), Technische Universität Berlin
 
+- First master's-phase specialisation: Logistics (supply chain, operations, transport systems)
+
 ---
 
 ## Languages

@@ -44,6 +44,10 @@ class DigestConfig(BaseModel):
     max_per_email: int = 100
 
 
+class EnrichmentConfig(BaseModel):
+    per_run_cap: int = 100
+
+
 class SourceConfig(BaseModel):
     enabled: bool = True
     auto_submit: bool = False
@@ -59,6 +63,7 @@ class Config(BaseModel):
     apply: ApplyConfig = Field(default_factory=ApplyConfig)
     otp: OtpConfig = Field(default_factory=OtpConfig)
     captcha: CaptchaConfig = Field(default_factory=CaptchaConfig)
+    enrichment: EnrichmentConfig = Field(default_factory=EnrichmentConfig)
 
 
 def load_secrets(env_file: Path | None = None) -> Secrets:

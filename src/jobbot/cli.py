@@ -15,7 +15,7 @@ from .pipeline import daily_digest, run_with_failure_alerts
 from .profile_distiller import rebuild_compiled_profile
 from .profile_distiller.website_fetcher import fetch_website
 from .scrapers import REGISTRY
-from .state import connect
+from .state import connect, db_lock_status
 
 console = Console()
 
@@ -107,11 +107,69 @@ def cmd_sources(_args) -> int:
     return 0
 
 
+def cmd_db_status(_args) -> int:
+    """Report whether the SQLite writer lock is currently held."""
+    status = db_lock_status()
+    color = "red" if status.locked else "green"
+    state = "LOCKED" if status.locked else "available"
+    console.print(f"[{color}]{state}[/{color}] — {status.detail}")
+    if status.holders:
+        table = Table(title="processes with the DB file open")
+        table.add_column("pid"); table.add_column("command")
+        for h in status.holders:
+            table.add_row(h.get("pid", "?"), h.get("command", "?"))
+        console.print(table)
+    return 1 if status.locked else 0
+
+
 def cmd_dashboard(_args) -> int:
     from .dashboard import run as run_dashboard
     console.print("[bold]🤖 jobbot dashboard[/bold] starting on [cyan]http://localhost:5001[/cyan]")
     console.print("Press Ctrl+C to stop")
     run_dashboard()
+    return 0
+
+
+def cmd_enrich_backfill(args) -> int:
+    """PRD §7.3 FR-ENR-04 + §7.5 FR-SCO-01: backfill body text for rows that
+    were scraped before enrichment was wired in, or that came back below the
+    200-word scoring floor. Capped per invocation so repeated runs steadily
+    drain the queue without long-running pulls."""
+    from .enrichment.runner import enrich_new_postings
+    from .scoring import MIN_BODY_WORDS
+    from .state import jobs_needing_backfill
+
+    if not getattr(args, "backfill", False):
+        console.print("[red]Usage:[/red] jobbot enrich --backfill [--limit N]")
+        return 2
+
+    cap = int(getattr(args, "limit", 100) or 100)
+    with connect() as conn:
+        candidates = jobs_needing_backfill(conn, min_words=MIN_BODY_WORDS, limit=cap)
+        if not candidates:
+            console.print("nothing to backfill — every row has body >= "
+                          f"{MIN_BODY_WORDS} words.")
+            return 0
+        console.print(f"backfilling {len(candidates)} rows (cap {cap}, "
+                      f"floor {MIN_BODY_WORDS} words)...")
+        report = enrich_new_postings(candidates, conn, registry=REGISTRY)
+
+    table = Table(title="enrichment backfill — per-source success rate")
+    table.add_column("source")
+    table.add_column("attempted", justify="right")
+    table.add_column("succeeded", justify="right")
+    table.add_column("failed", justify="right")
+    table.add_column("rate", justify="right")
+    sources = sorted(set(report.per_source_success) | set(report.per_source_failure))
+    for source in sources:
+        s = report.per_source_success.get(source, 0)
+        f = report.per_source_failure.get(source, 0)
+        attempted = s + f
+        rate = f"{(100 * s / attempted):.0f}%" if attempted else "—"
+        table.add_row(source, str(attempted), str(s), str(f), rate)
+    console.print(table)
+    console.print(f"total: attempted={report.n_attempted}, "
+                  f"succeeded={report.n_succeeded}, failed={report.n_failed}")
     return 0
 
 
@@ -137,6 +195,18 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("status",  help="Show pipeline counts.").set_defaults(fn=cmd_status)
     sub.add_parser("sources", help="List registered scrapers.").set_defaults(fn=cmd_sources)
     sub.add_parser("dashboard", help="Start web dashboard on localhost:5001.").set_defaults(fn=cmd_dashboard)
+    sub.add_parser("db-status", help="Show SQLite writer-lock state and any holders.").set_defaults(fn=cmd_db_status)
+
+    enrich = sub.add_parser(
+        "enrich",
+        help="Re-fetch detail pages for rows with no body or word_count < 200. "
+             "Requires --backfill.",
+    )
+    enrich.add_argument("--backfill", action="store_true",
+                        help="Backfill body text for rows below the scoring floor.")
+    enrich.add_argument("--limit", type=int, default=100,
+                        help="Max rows to backfill in this invocation (default 100).")
+    enrich.set_defaults(fn=cmd_enrich_backfill)
 
     profile = sub.add_parser("profile", help="Profile corpus + distillation commands.")
     profile_sub = profile.add_subparsers(dest="profile_cmd", required=True)

@@ -1,4 +1,16 @@
-"""Two-stage matcher: cheap heuristic prefilter, then Claude Haiku for the survivors."""
+"""Two-stage matcher: cheap heuristic prefilter, then Claude for the survivors.
+
+PRD §7.5 FR-SCO-01..05. The scorer enforces three hard preconditions before
+calling the LLM. If any fail, it raises `CannotScore` with the reason —
+callers persist this as a `cannot_score:*` status instead of a numeric score:
+  1. job body length >= MIN_BODY_WORDS (200)
+  2. primary CV loaded successfully from data/corpus/cvs/PRIMARY_*
+  3. (caller-provided) Anthropic API key present
+
+Cost note: Sonnet pricing at expected ~120 postings/day puts monthly LLM
+spend in the ~€150-200 range (versus ~€40 on Haiku). The user has approved
+this trade-off in exchange for substantially more accurate scoring.
+"""
 from __future__ import annotations
 
 import json
@@ -12,6 +24,34 @@ from .models import JobPosting, ScoreResult
 from .profile import Profile
 
 PROMPT_PATH = REPO_ROOT / "prompts" / "match_score.md"
+
+# PRD §7.5 FR-SCO-01: a posting needs a substantive body before scoring.
+# Below this threshold the description is just a snippet (LinkedIn search
+# previews, Stepstone teaser cards) and the scorer would hallucinate.
+MIN_BODY_WORDS = 200
+
+
+class CannotScore(Exception):
+    """A hard precondition for LLM scoring is not satisfied. The caller must
+    persist `status='cannot_score:<reason>'` rather than calling the LLM."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+
+# Deal-breaker keywords describing role seniority. When the job *title* clearly
+# signals a senior+ role, these are scoped to the title only — a "Junior Team
+# Lead" hiring contact in the body of a Senior PM posting should not filter it.
+_SENIORITY_DEAL_BREAKERS = {
+    "junior", "jr", "jr.",
+    "entry level", "entry-level",
+    "intern", "internship", "praktikum", "praktikant",
+    "werkstudent", "student", "trainee",
+}
+_SENIOR_TITLE_RE = re.compile(
+    r"\b(senior|sr\.?|lead|staff|principal|head|director|chief|vp)\b",
+    re.IGNORECASE,
+)
 
 
 def _contains_keyword(text: str, keyword: str) -> bool:
@@ -48,11 +88,16 @@ def _parse_score_json(text: str) -> dict:
 
 def passes_heuristic(job: JobPosting, profile: Profile) -> tuple[bool, str]:
     """Cheap, no-LLM filter. Returns (passes, reason_if_not)."""
-    text = (job.description + " " + job.title).lower()
+    title_lower = (job.title or "").lower()
+    text = ((job.description or "") + " " + (job.title or "")).lower()
+    title_is_senior = bool(_SENIOR_TITLE_RE.search(job.title or ""))
 
-    # Deal-breaker keywords
+    # Deal-breaker keywords. Seniority-related keywords are scoped to the title
+    # only when the title signals a senior+ role — see _SENIORITY_DEAL_BREAKERS.
     for kw in profile.deal_breakers.get("keywords", []):
-        if _contains_keyword(text, kw):
+        kw_norm = (kw or "").strip().lower()
+        scope = title_lower if (kw_norm in _SENIORITY_DEAL_BREAKERS and title_is_senior) else text
+        if _contains_keyword(scope, kw_norm):
             return False, f"deal-breaker keyword: {kw}"
 
     # Industry deal-breakers (tag-based)
@@ -60,10 +105,11 @@ def passes_heuristic(job: JobPosting, profile: Profile) -> tuple[bool, str]:
         if _contains_keyword(text, ind):
             return False, f"deal-breaker industry: {ind}"
 
-    # Remote requirement
-    if profile.preferences.get("remote") and profile.deal_breakers.get("on_site_only"):
-        if any(s in text for s in ["on-site only", "on site only", "vor ort"]):
-            return False, "on-site only role"
+    # Remote/on-site is not a heuristic deal-breaker. Substring matches like the
+    # German "vor Ort" are too generic ("Termine vor Ort", "Kunden vor Ort",
+    # "Teams vor Ort in Deutschland") and produced false positives across
+    # hybrid/remote-friendly postings. The LLM scorer judges remote fit with
+    # the full job text + CV in scope.
 
     # At least one must-have skill mentioned
     must = [s.lower() for s in profile.must_have_skills]
@@ -79,12 +125,16 @@ def llm_score(
     secrets: Secrets,
     cv_markdown: str | None = None,
 ) -> ScoreResult:
-    """Ask Haiku for a 0-100 fit score. Returns a ScoreResult.
+    """Ask the LLM for a 0-100 fit score. Returns a ScoreResult.
 
-    If `cv_markdown` is provided (the full base CV), include it in the payload
-    so the model can score against actual experience and tooling, not just the
-    thin profile_summary.
+    Raises `CannotScore` if a hard precondition fails (see module docstring).
+    The caller must translate that into the matching `cannot_score:*` status.
     """
+    body = (job.description or "").strip()
+    word_count = len(body.split())
+    if word_count < MIN_BODY_WORDS:
+        raise CannotScore(f"no_body: description has {word_count} words, need >= {MIN_BODY_WORDS}")
+
     client = Anthropic(api_key=secrets.anthropic_api_key)
     prompt = PROMPT_PATH.read_text()
     payload: dict = {

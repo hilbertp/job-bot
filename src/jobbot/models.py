@@ -10,10 +10,12 @@ from pydantic import BaseModel, Field, HttpUrl
 
 class JobStatus(str, Enum):  # str-mixin for sqlite/JSON compatibility, works on 3.10+
     SCRAPED = "scraped"
-    FILTERED = "filtered"               # heuristic deal-breaker
-    SCORED = "scored"                   # has an LLM score
-    BELOW_THRESHOLD = "below_threshold" # scored but not generated
-    GENERATED = "generated"             # CV + cover letter written
+    FILTERED = "filtered"                              # heuristic deal-breaker
+    CANNOT_SCORE_NO_BODY = "cannot_score:no_body"      # < 200 words, refuse to score
+    CANNOT_SCORE_NO_PRIMARY_CV = "cannot_score:no_primary_cv"  # PRIMARY_* CV unreadable
+    SCORED = "scored"                                  # has an LLM score
+    BELOW_THRESHOLD = "below_threshold"                # scored but not generated
+    GENERATED = "generated"                            # CV + cover letter written
     APPLY_QUEUED = "apply_queued"
     APPLY_SUBMITTED = "apply_submitted"
     APPLY_NEEDS_REVIEW = "apply_needs_review"

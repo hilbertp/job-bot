@@ -15,11 +15,11 @@ from .generators import generate_documents
 from .models import JobPosting, JobStatus
 from .notify import send_digest, send_failure_alert
 from .profile import Profile, load_base_cv, load_profile
-from .scoring import llm_score, passes_heuristic
+from .scoring import CannotScore, llm_score, passes_heuristic
 from .scrapers import REGISTRY
 from .state import (
-    connect, finish_run, jobs_by_status, record_application,
-    start_run, update_status, upsert_new,
+    connect, finish_run, jobs_by_status, jobs_needing_enrichment,
+    record_application, start_run, update_status, upsert_new,
 )
 
 log = structlog.get_logger()
@@ -36,6 +36,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
     n_fetched = n_new = n_generated = n_applied = 0
     n_enriched = n_enrichment_failed = 0
     n_filtered = n_scored = n_below_threshold = n_score_failed = 0
+    n_cannot_score = 0
     blocker_counts: Counter[str] = Counter()
     score_values: list[int] = []
     per_source_fetched: Counter[str] = Counter()
@@ -71,9 +72,16 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                     log.exception("scraper_failed", source=name, query=query)
                     errors.append({"source": name, "error": f"{type(e).__name__}: {e}"})
 
-        # 2) Enrich all fetched postings so every match in this run has a
-        # persisted description payload (new and previously seen entries).
-        enrichment = enrich_new_postings(list(all_fetched_by_id.values()), conn, registry=REGISTRY)
+        # 2) Enrich postings missing a body fetch: every freshly-scraped job
+        # in this run, plus every seen_jobs row where description_scraped IS
+        # NULL (scraped before enrichment was wired in — dedup would otherwise
+        # exclude them forever). Capped per run to keep first-launch bounded.
+        to_enrich_by_id: dict[str, JobPosting] = dict(all_fetched_by_id)
+        for stale in jobs_needing_enrichment(conn):
+            to_enrich_by_id.setdefault(stale.id, stale)
+        cap = config.enrichment.per_run_cap
+        to_enrich = list(to_enrich_by_id.values())[:cap]
+        enrichment = enrich_new_postings(to_enrich, conn, registry=REGISTRY)
         n_enriched = enrichment.n_succeeded
         n_enrichment_failed = enrichment.n_failed
 
@@ -86,8 +94,9 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 continue
             try:
                 candidate = JobPosting.model_validate_json(row["raw_json"])
-                if len((candidate.description or "").split()) >= 100:
-                    to_score[row["id"]] = candidate
+                # llm_score will enforce MIN_BODY_WORDS and raise CannotScore
+                # for thin bodies; that's the right place for the gate.
+                to_score[row["id"]] = candidate
             except Exception as e:
                 errors.append({"source": row["source"], "error": f"decode: {e}"})
 
@@ -100,7 +109,21 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 blocker_counts[reason or "filtered by heuristic"] += 1
                 continue
             try:
-                result = llm_score(job, profile, secrets)
+                result = llm_score(job, profile, secrets, cv_markdown=base_cv)
+            except CannotScore as e:
+                # PRD §7.5 FR-SCO-01: refuse to score, persist the reason so
+                # the digest can surface it instead of a misleading number.
+                reason = e.reason
+                if reason.startswith("no_body"):
+                    new_status = JobStatus.CANNOT_SCORE_NO_BODY
+                elif reason.startswith("no_primary_cv"):
+                    new_status = JobStatus.CANNOT_SCORE_NO_PRIMARY_CV
+                else:
+                    new_status = JobStatus.CANNOT_SCORE_NO_BODY
+                update_status(conn, job.id, new_status, score=None, reason=reason)
+                n_cannot_score += 1
+                blocker_counts[f"cannot_score: {reason}"] += 1
+                continue
             except Exception as e:
                 log.exception("score_failed", job_id=job.id)
                 errors.append({"source": job.source, "error": f"score: {e}"})
@@ -196,6 +219,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 "enriched": n_enriched,
                 "enrichment_failed": n_enrichment_failed,
                 "filtered": n_filtered,
+                "cannot_score": n_cannot_score,
                 "scored": n_scored,
                 "below_threshold": n_below_threshold,
                 "score_failed": n_score_failed,
