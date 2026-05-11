@@ -3,6 +3,10 @@ score_threshold: 0            # 0-100; minimum score to include in digest
 max_jobs_per_run: 200         # safety cap on LLM spend
 output_dir: output            # relative to repo root
 
+# Static outgoing CV PDF (skip per-job CV tailoring, keep cover letter tailored).
+# Set to empty / null to restore Markdown→HTML→PDF per-job tailoring.
+cv_pdf_path: "data/general CV.pdf"
+
 digest:
   generate_docs_above_score: 70
   max_per_email: 100

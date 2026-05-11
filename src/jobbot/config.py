@@ -58,6 +58,11 @@ class Config(BaseModel):
     score_threshold: int = 70
     max_jobs_per_run: int = 50
     output_dir: str = "output"
+    # Path (relative to repo root) to a pre-designed static CV PDF. When this
+    # file exists, the generator skips per-job CV tailoring and attaches this
+    # PDF as-is — the cover letter remains tailored. Set to None / empty to
+    # restore per-job Markdown→HTML→PDF tailoring.
+    cv_pdf_path: str | None = "data/general CV.pdf"
     digest: DigestConfig = Field(default_factory=DigestConfig)
     sources: dict[str, SourceConfig] = Field(default_factory=dict)
     apply: ApplyConfig = Field(default_factory=ApplyConfig)
