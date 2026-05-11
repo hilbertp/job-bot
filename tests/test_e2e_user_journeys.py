@@ -212,6 +212,26 @@ def test_run_detail_page_404s_for_unknown_run() -> None:
     assert resp.status_code == 404
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="Dashboard re-run control is not implemented yet",
+)
+def test_dashboard_home_exposes_rerun_control(tmp_path: Path, monkeypatch) -> None:
+    """The dashboard should let the user trigger a new pipeline run without
+    leaving the browser."""
+    from jobbot.dashboard.server import _load_legacy_dashboard_module
+
+    monkeypatch.setattr("jobbot.state.DB_PATH", tmp_path / "jobbot.db")
+    client = _load_legacy_dashboard_module().app.test_client()
+
+    resp = client.get("/")
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+    assert "Run pipeline" in html
+    assert 'data-testid="run-pipeline"' in html
+    assert "/api/runs/trigger" in html
+
+
 # =============================================================================
 # Journey 2 — match scores, filter reasons, body coverage, cannot_score
 # =============================================================================
@@ -555,6 +575,114 @@ def _fake_generate_documents(job, profile, base_cv, secrets, config):
     )
 
 
+def test_generate_documents_writes_complete_tailored_bundle(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    """The real generator must create every expected per-job artifact when the
+    PDF renderer succeeds: md/html/pdf for both CV and cover letter."""
+    import sys
+    from datetime import date
+    from types import SimpleNamespace
+
+    import jobbot.generators.pipeline as generator
+
+    class FakeHTML:
+        def __init__(self, *, string: str) -> None:
+            self.string = string
+
+        def write_pdf(self, target: str) -> None:
+            Path(target).write_bytes(b"%PDF-1.4\n% fake test pdf\n")
+
+    rendered_docs = iter([
+        "# Tailored CV\n\n- Product leadership for Acme.\n",
+        "# Cover Letter\n\nDear Acme team,\n",
+    ])
+    monkeypatch.setattr(generator, "_call_sonnet", lambda *_args, **_kwargs: next(rendered_docs))
+    monkeypatch.setitem(sys.modules, "weasyprint", SimpleNamespace(HTML=FakeHTML))
+
+    config = _make_config()
+    config.output_dir = str(tmp_path / "output")
+    job = JobPosting(
+        id="bundle_1",
+        source="fake",
+        title="Senior Product Manager",
+        company="Acme",
+        url="https://example.com/jobs/bundle_1",  # type: ignore
+        apply_url="https://example.com/jobs/bundle_1",  # type: ignore
+        description=" ".join(["responsibility"] * 240),
+    )
+
+    docs = generator.generate_documents(
+        job, _make_profile(), "Base CV", _make_secrets(), config,
+    )
+
+    out = Path(docs.output_dir)
+    expected_files = {
+        "cv.md", "cv.html", "cv.pdf",
+        "cover_letter.md", "cover_letter.html", "cover_letter.pdf",
+    }
+    assert {path.name for path in out.iterdir()} >= expected_files
+    assert out.parent.name == date.today().isoformat()
+    assert docs.cv_pdf == str(out / "cv.pdf")
+    assert docs.cover_letter_pdf == str(out / "cover_letter.pdf")
+    assert (out / "cv.md").read_text().startswith("# Tailored CV")
+    assert (out / "cover_letter.md").read_text().startswith("# Cover Letter")
+    assert "<html" in (out / "cv.html").read_text()
+    assert (out / "cv.pdf").read_bytes().startswith(b"%PDF")
+    assert (out / "cover_letter.pdf").read_bytes().startswith(b"%PDF")
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="PDF render failures are still swallowed instead of surfaced as incomplete artifacts",
+)
+def test_generate_documents_does_not_silently_drop_pdf_artifacts(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    """If PDF rendering fails, the generator should make that visible to the
+    test suite instead of returning a partially generated bundle silently."""
+    import sys
+    from types import SimpleNamespace
+
+    import jobbot.generators.pipeline as generator
+
+    class BrokenHTML:
+        def __init__(self, *, string: str) -> None:
+            self.string = string
+
+        def write_pdf(self, target: str) -> None:
+            raise RuntimeError(f"cannot render {target}")
+
+    rendered_docs = iter([
+        "# Tailored CV\n\n- Product leadership for Acme.\n",
+        "# Cover Letter\n\nDear Acme team,\n",
+    ])
+    monkeypatch.setattr(generator, "_call_sonnet", lambda *_args, **_kwargs: next(rendered_docs))
+    monkeypatch.setitem(sys.modules, "weasyprint", SimpleNamespace(HTML=BrokenHTML))
+
+    config = _make_config()
+    config.output_dir = str(tmp_path / "output")
+    config.cv_pdf_path = ""
+    job = JobPosting(
+        id="bundle_pdf_failure",
+        source="fake",
+        title="Senior Product Manager",
+        company="Acme",
+        url="https://example.com/jobs/bundle_pdf_failure",  # type: ignore
+        apply_url="https://example.com/jobs/bundle_pdf_failure",  # type: ignore
+        description=" ".join(["responsibility"] * 240),
+    )
+
+    docs = generator.generate_documents(
+        job, _make_profile(), "Base CV", _make_secrets(), config,
+    )
+
+    assert docs.cv_pdf is not None
+    assert docs.cover_letter_pdf is not None
+    assert Path(docs.cv_pdf).exists()
+    assert Path(docs.cover_letter_pdf).exists()
+
+
 def test_pipeline_writes_both_score_and_score_tailored_when_generation_runs(
     tmp_path: Path, monkeypatch,
 ) -> None:
@@ -637,6 +765,8 @@ def test_api_shortlist_exposes_tailored_score_fields(tmp_path: Path, monkeypatch
     assert target["score_tailored"] == 93
     assert target["score_delta"] == 8
     assert target["tailored_reason"].startswith("tailored")
+    assert target["cv_html_url"] == "/shortlist/sl_1/cv.html"
+    assert target["cover_letter_html_url"] == "/shortlist/sl_1/cover_letter.html"
 
 
 def test_shortlist_doc_route_serves_existing_html(tmp_path: Path, monkeypatch) -> None:
