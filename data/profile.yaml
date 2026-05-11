@@ -15,7 +15,11 @@ personal:
 preferences:
   remote: true
   on_site_ok: false          # open to hybrid if role is strong
-  willing_to_relocate: false
+  willing_to_relocate: true
+  # Free-form note the LLM scorer reads alongside willing_to_relocate.
+  # Captures the constraint that a bool can't express: relocation is on the
+  # table if the country is right, currently based in Berlin.
+  relocation_notes: "Willing to relocate as long as it's the right country. Currently based in Berlin, Germany."
   desired_salary_eur:
     min: 80000
     max: 110000
