@@ -4,11 +4,20 @@
     <a class="underline" href="/runs">← Back to runs</a>
 </div>
 
+{% if in_progress %}<meta http-equiv="refresh" content="5">{% endif %}
 <div class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-6">
-    <h2 class="text-2xl font-bold mb-4">Run #{{ run.id }}</h2>
+    <div class="flex flex-wrap items-center gap-3 mb-4">
+        <h2 class="text-2xl font-bold">Run #{{ run.id }}</h2>
+        {% if in_progress %}
+        <span class="inline-flex items-center gap-2 bg-amber-400/20 border border-amber-300/40 text-amber-100 text-xs px-3 py-1 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-amber-300 animate-pulse"></span>
+            in progress · auto-refreshing every 5s
+        </span>
+        {% endif %}
+    </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
         <div><span class="text-purple-200">Started:</span> {{ run.started_at }}</div>
-        <div><span class="text-purple-200">Finished:</span> {{ run.finished_at or '-' }}</div>
+        <div><span class="text-purple-200">Finished:</span> {{ run.finished_at or '—' }}</div>
         <div><span class="text-purple-200">Errors:</span> {{ run.n_errors }}</div>
     </div>
 </div>
@@ -19,6 +28,7 @@
         <div>Fetched: <strong>{{ stages.get('fetched', run.n_fetched) }}</strong></div>
         <div>New: <strong>{{ stages.get('new', run.n_new) }}</strong></div>
         <div>Duplicates/Seen: <strong>{{ stages.get('duplicates_or_seen_before', 0) }}</strong></div>
+        <div>Enriched: <strong>{{ stages.get('enriched', 0) }}</strong></div>
         <div>Filtered: <strong>{{ stages.get('filtered', 0) }}</strong></div>
         <div>Scored: <strong>{{ stages.get('scored', 0) }}</strong></div>
         <div>Below Threshold: <strong>{{ stages.get('below_threshold', 0) }}</strong></div>
