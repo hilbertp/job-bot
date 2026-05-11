@@ -30,7 +30,9 @@ preferences:
 
 # Hard filters — job dropped before LLM scoring if any match
 deal_breakers:
-  industries: ["defense", "weapons", "gambling", "tobacco"]
+  # Empty — user is open to any industry. Keep this list empty unless a
+  # genuinely off-limits sector emerges; the LLM scorer judges fit, not ethics.
+  industries: []
   keywords: ["unpaid", "commission only", "junior", "entry level"]
   on_site_only: true   # dropped if remote is required and job is on-site only
 
