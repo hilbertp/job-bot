@@ -759,7 +759,8 @@ def api_latest_run_jobs():
             placeholders = ",".join("?" * len(fetched_ids))
             cur = conn.execute(
                 f"""
-                SELECT title, company, source, status, score, score_reason, url, raw_json
+                SELECT title, company, source, status, score, score_reason, url, raw_json,
+                       description_scraped, description_word_count
                 FROM seen_jobs
                 WHERE id IN ({placeholders})
                 ORDER BY source ASC, title ASC
@@ -771,7 +772,8 @@ def api_latest_run_jobs():
         if not rows:
             cur = conn.execute(
                 """
-                SELECT title, company, source, status, score, score_reason, url, raw_json
+                SELECT title, company, source, status, score, score_reason, url, raw_json,
+                       description_scraped, description_word_count
                 FROM seen_jobs
                 WHERE first_seen_at >= ?
                 ORDER BY source ASC, title ASC
@@ -783,7 +785,8 @@ def api_latest_run_jobs():
         if not rows:
             cur = conn.execute(
                 """
-                SELECT title, company, source, status, score, score_reason, url, raw_json
+                SELECT title, company, source, status, score, score_reason, url, raw_json,
+                       description_scraped, description_word_count
                 FROM seen_jobs
                 ORDER BY source ASC, title ASC
                 LIMIT ?
@@ -802,6 +805,13 @@ def api_latest_run_jobs():
             except json.JSONDecodeError:
                 description = ""
 
+            description_scraped_raw = r[8]
+            description_scraped: bool | None
+            if description_scraped_raw is None:
+                description_scraped = None  # unknown — predates enrichment
+            else:
+                description_scraped = bool(description_scraped_raw)
+
             jobs.append({
                 "title": r[0],
                 "company": r[1],
@@ -812,6 +822,8 @@ def api_latest_run_jobs():
                 "url": r[6],
                 "expected_salary": _extract_expected_salary(r[0] or "", description),
                 "seniority_required": _extract_seniority_required(r[0] or "", description),
+                "description_scraped": description_scraped,
+                "description_word_count": r[9],
             })
     
     return jsonify(jobs)

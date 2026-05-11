@@ -47,6 +47,8 @@ line-length = 100
 target-version = "py311"
 
 [tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
 markers = [
   "e2e: end-to-end user journey tests",
   "live: tests that require real network services",

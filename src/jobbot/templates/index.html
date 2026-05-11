@@ -81,13 +81,14 @@
                     <th class="pb-2">Score</th>
                     <th class="pb-2">Position Title</th>
                     <th class="pb-2">Portal</th>
+                    <th class="pb-2">Description Scraped</th>
                     <th class="pb-2">Expected Salary</th>
                     <th class="pb-2">Seniority Required</th>
                     <th class="pb-2">Link</th>
                 </tr>
             </thead>
             <tbody id="stage1-body">
-                <tr><td colspan="6" class="py-3">Loading...</td></tr>
+                <tr><td colspan="7" class="py-3">Loading...</td></tr>
             </tbody>
         </table>
     </div>
@@ -242,8 +243,19 @@ async function loadStage1Data() {
     tbody.innerHTML = '';
     const shortlist = jobs.filter(j => isPoPm(j.title));
     if (!shortlist.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="py-3">No PO/PM titles in latest run.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="py-3">No PO/PM titles in latest run.</td></tr>';
         return;
+    }
+
+    function descriptionScrapedCell(job) {
+        if (job.description_scraped === true) {
+            const wc = job.description_word_count ? ` (${job.description_word_count}w)` : '';
+            return `<span class="text-green-300" title="full body scraped from detail page">✓ yes${wc}</span>`;
+        }
+        if (job.description_scraped === false) {
+            return '<span class="text-amber-300" title="detail page fetch produced no usable body — see logs">✗ no</span>';
+        }
+        return '<span class="text-purple-200" title="row predates enrichment phase">—</span>';
     }
 
     function scoreCell(job) {
@@ -264,6 +276,7 @@ async function loadStage1Data() {
             <td class="py-3">${scoreCell(job)}</td>
             <td class="py-3">${job.title || ''}</td>
             <td class="py-3">${job.source || ''}</td>
+            <td class="py-3">${descriptionScrapedCell(job)}</td>
             <td class="py-3">${job.expected_salary || 'not specified'}</td>
             <td class="py-3">${job.seniority_required || 'not specified'}</td>
             <td class="py-3"><a class="underline" target="_blank" href="${job.url || '#'}">open</a></td>
