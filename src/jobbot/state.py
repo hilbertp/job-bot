@@ -209,7 +209,14 @@ def connect(db_path: Path | None = None) -> Iterator[sqlite3.Connection]:
 
 
 def upsert_new(conn: sqlite3.Connection, jobs: list[JobPosting]) -> list[JobPosting]:
-    """Insert jobs we have not seen before. Returns the subset that was new."""
+    """Insert jobs we have not seen before. Returns the subset that was new.
+
+    Newly scraped rows start with `score = NULL` per PRD §7.5 FR-SCO-01..05:
+    a numeric score only exists after the LLM scorer runs with all three
+    preconditions satisfied. Persisting a 0 placeholder would mix unscored
+    rows into the "filtered / failed at score=0" bucket and lie to anyone
+    reading the column directly.
+    """
     new_jobs: list[JobPosting] = []
     for j in jobs:
         cur = conn.execute(
@@ -223,8 +230,8 @@ def upsert_new(conn: sqlite3.Connection, jobs: list[JobPosting]) -> list[JobPost
                 j.company,
                 _now(),
                 JobStatus.SCRAPED.value,
-                0,
-                "awaiting scoring",
+                None,
+                None,
                 json.dumps(j.model_dump(mode="json")),
             ),
         )
@@ -390,6 +397,82 @@ def jobs_needing_backfill(conn: sqlite3.Connection, min_words: int, limit: int) 
             out.append(JobPosting.model_validate_json(row["raw_json"]))
         except Exception:
             continue
+    return out
+
+
+def scrub_stale_scores(conn: sqlite3.Connection) -> int:
+    """PRD §7.5 FR-SCO-01..05: enforce the invariant that a numeric `score`
+    cannot coexist with a violated precondition.
+
+    A row was historically allowed to be scored when its raw_json carried a
+    long listing-card snippet, even if the detail body was never fetched.
+    Under the post-fix gate, those rows are mis-scored. This helper nulls
+    their score columns, clears `scored_at`, and downgrades `status` to
+    `cannot_score:no_body` so the next `jobbot enrich --backfill` plus
+    `jobbot rescore --base` cycle can recover them honestly.
+
+    Returns the number of rows scrubbed. Idempotent.
+    """
+    cannot_score = JobStatus.CANNOT_SCORE_NO_BODY.value
+    scored = JobStatus.SCORED.value
+    below = JobStatus.BELOW_THRESHOLD.value
+    cur = conn.execute(
+        "UPDATE seen_jobs "
+        "SET score = NULL, "
+        "    score_breakdown_json = NULL, "
+        "    scored_at = NULL, "
+        "    score_reason = CASE "
+        "        WHEN status IN (?, ?) "
+        "        THEN 'cannot_score:no_body (scrubbed: missed precondition)' "
+        "        ELSE NULL END, "
+        "    status = CASE WHEN status IN (?, ?) THEN ? ELSE status END "
+        "WHERE score IS NOT NULL "
+        "  AND (description_scraped IS NULL "
+        "       OR description_scraped = 0 "
+        "       OR description_word_count IS NULL "
+        "       OR description_word_count < ?)",
+        (scored, below, scored, below, cannot_score, 200),
+    )
+    return cur.rowcount
+
+
+def jobs_needing_base_rescore(
+    conn: sqlite3.Connection, limit: int,
+) -> list[JobPosting]:
+    """Rows that pass the preconditions but never received a base score —
+    typically because they pre-date the scorer's enrichment gate, or
+    `scrub_stale_scores` just nulled a previously-bogus score.
+
+    Returns hydrated JobPosting objects with `description` swapped in from
+    `description_full` so the prompt sees the real body, not the listing
+    snippet. Ordered most-recent-first so backfill prioritises fresh
+    postings the user might still want to apply to.
+    """
+    rows = conn.execute(
+        "SELECT raw_json, description_full FROM seen_jobs "
+        "WHERE raw_json IS NOT NULL "
+        "  AND description_scraped = 1 "
+        "  AND description_word_count >= 200 "
+        "  AND score IS NULL "
+        "  AND status IN (?, ?, ?) "
+        "ORDER BY first_seen_at DESC "
+        "LIMIT ?",
+        (
+            JobStatus.SCRAPED.value,
+            JobStatus.CANNOT_SCORE_NO_BODY.value,
+            JobStatus.CANNOT_SCORE_NO_PRIMARY_CV.value,
+            limit,
+        ),
+    ).fetchall()
+    out: list[JobPosting] = []
+    for row in rows:
+        try:
+            job = JobPosting.model_validate_json(row["raw_json"])
+        except Exception:
+            continue
+        if row["description_full"]:
+            job = job.model_copy(update={"description": row["description_full"]})
+        out.append(job)
     return out
 
 

@@ -90,28 +90,43 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
         # 3) Score (heuristic → LLM)
         # Retry pending scraped jobs from previous runs as well, so transient
         # LLM/network failures do not leave jobs stuck in "scraped" forever.
-        to_score: dict[str, JobPosting] = {j.id: j for j in enrichment.enriched_jobs}
+        # `to_score` values are (job, description_scraped) — the flag must be
+        # propagated to the scorer per PRD §7.5 FR-SCO-01.
+        to_score: dict[str, tuple[JobPosting, bool]] = {
+            j.id: (j, True) for j in enrichment.enriched_jobs
+        }
         for row in jobs_by_status(conn, JobStatus.SCRAPED):
             if row["id"] in to_score:
                 continue
             try:
                 candidate = JobPosting.model_validate_json(row["raw_json"])
-                # llm_score will enforce MIN_BODY_WORDS and raise CannotScore
-                # for thin bodies; that's the right place for the gate.
-                to_score[row["id"]] = candidate
+                # For legacy SCRAPED rows the raw_json description is just the
+                # listing-card snippet. Swap in the enriched body if we have
+                # one, and forward the enrichment flag verbatim so the scorer
+                # can refuse rows that were never really enriched.
+                if row["description_full"]:
+                    candidate = candidate.model_copy(
+                        update={"description": row["description_full"]}
+                    )
+                desc_scraped = bool(row["description_scraped"])
+                to_score[row["id"]] = (candidate, desc_scraped)
             except Exception as e:
                 errors.append({"source": row["source"], "error": f"decode: {e}"})
 
         to_generate: list[tuple[JobPosting, int, str]] = []
-        for job in list(to_score.values())[: config.max_jobs_per_run]:
+        for job, desc_scraped in list(to_score.values())[: config.max_jobs_per_run]:
             ok, reason = passes_heuristic(job, profile)
             if not ok:
-                update_status(conn, job.id, JobStatus.FILTERED, score=0, reason=reason)
+                # No score is assigned here: heuristic filtering happens *before*
+                # the LLM runs, and PRD §7.5 reserves the `score` column for
+                # actual LLM output. Leaving it NULL preserves the invariant
+                # that "score IS NOT NULL ⇒ preconditions passed".
+                update_status(conn, job.id, JobStatus.FILTERED, reason=reason)
                 n_filtered += 1
                 blocker_counts[reason or "filtered by heuristic"] += 1
                 continue
             try:
-                result = llm_score(job, profile, secrets)
+                result = llm_score(job, profile, secrets, description_scraped=desc_scraped)
             except CannotScore as e:
                 # PRD §7.5 FR-SCO-01: refuse to score, persist the reason so
                 # the digest can surface it instead of a misleading number.
@@ -137,7 +152,10 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 n_score_failed += 1
                 err_label = f"scoring error: {type(e).__name__}"
                 blocker_counts[err_label] += 1
-                update_status(conn, job.id, JobStatus.SCRAPED, score=0, reason=err_label)
+                # No score recorded: the LLM call failed, so per PRD §7.5
+                # there is no trustworthy number. Status drops back to
+                # SCRAPED so the next run retries.
+                update_status(conn, job.id, JobStatus.SCRAPED, reason=err_label)
                 continue
             if result.score < config.score_threshold:
                 update_status(conn, job.id, JobStatus.BELOW_THRESHOLD,

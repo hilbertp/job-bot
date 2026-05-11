@@ -222,11 +222,13 @@ def test_dashboard_home_exposes_live_run_progress_polling(
     assert "% With Description" in html
 
 
-def test_dashboard_stage1_panel_shows_latest_run_finished_time_and_duration(
+def test_dashboard_stage1_panel_summarises_hits_and_portals(
     tmp_path: Path, monkeypatch,
 ) -> None:
-    """User journey: in Stage 1, I can see when the latest scrape run finished
-    and how long that run took."""
+    """User journey: in Stage 1, I can see at a glance how many hits the
+    latest run produced and how many portals contributed — that's what
+    belongs in the header, not when the run finished (that lives in
+    Recent Runs)."""
     db = tmp_path / "jobbot.db"
     monkeypatch.setattr("jobbot.state.DB_PATH", db)
     run_id, ids = _seed_in_progress_run(db)
@@ -248,24 +250,20 @@ def test_dashboard_stage1_panel_shows_latest_run_finished_time_and_duration(
     payload = client.get("/api/latest-run-portal-hits").get_json()
     assert payload["run_id"] == run_id
     assert payload["in_progress"] is False
-    assert payload["finished_at"] is not None
-    assert payload["elapsed_sec"] >= 0
 
     resp = client.get("/")
     assert resp.status_code == 200
     html = resp.get_data(as_text=True)
 
+    # New header badges: hits + portals.
     assert "Stage 1: Hits per Portal" in html
-    assert "Last run" in html
-    assert "Duration" in html
-    assert 'id="stage1-last-run-finished-at"' in html
-    assert 'id="stage1-last-run-duration"' in html
-
-    assert "hits.finished_at" in html
-    assert "hits.elapsed_sec" in html
-    assert "stage1-last-run-finished-at" in html
-    assert "stage1-last-run-duration" in html
-    assert "formatElapsed(hits.elapsed_sec)" in html
+    assert 'id="stage1-total-hits"' in html
+    assert 'id="stage1-portals-count"' in html
+    assert "Hits" in html
+    assert "Portals" in html
+    assert "updateStage1HeaderBadges" in html
+    assert "hits.total" in html
+    assert "hits.per_portal" in html
 
 
 def test_dashboard_panels_have_chevrons_and_expand_collapse_function(

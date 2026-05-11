@@ -134,9 +134,28 @@ def test_llm_score_refuses_short_body() -> None:
         description="Lead product. " * 5,  # well below MIN_BODY_WORDS
     )
     with pytest.raises(CannotScore) as exc:
-        llm_score(job, _profile(), _secrets())
+        llm_score(job, _profile(), _secrets(), description_scraped=True)
     assert exc.value.reason.startswith("no_body")
     assert str(MIN_BODY_WORDS) in exc.value.reason
+
+
+def test_llm_score_refuses_when_description_not_scraped() -> None:
+    """FR-SCO-01: a long listing-card snippet is not a real body. Without an
+    enrichment fetch (description_scraped=False), refuse — even if the
+    snippet is over the word-count floor."""
+    body = " ".join(["lead product"] * 250)  # well above MIN_BODY_WORDS
+    job = JobPosting(
+        id="snippet",
+        source="test",
+        title="Senior Product Manager",
+        company="Acme",
+        url="https://example.com/jobs/snippet",  # type: ignore
+        description=body,
+    )
+    with pytest.raises(CannotScore) as exc:
+        llm_score(job, _profile(), _secrets(), description_scraped=False)
+    assert exc.value.reason.startswith("no_body")
+    assert "description_scraped" in exc.value.reason
 
 
 def test_llm_score_refuses_when_primary_cv_missing(tmp_path: Path, monkeypatch) -> None:
@@ -157,7 +176,7 @@ def test_llm_score_refuses_when_primary_cv_missing(tmp_path: Path, monkeypatch) 
         description=body,
     )
     with pytest.raises(CannotScore) as exc:
-        llm_score(job, _profile(), _secrets())
+        llm_score(job, _profile(), _secrets(), description_scraped=True)
     assert exc.value.reason.startswith("no_primary_cv")
 
 
