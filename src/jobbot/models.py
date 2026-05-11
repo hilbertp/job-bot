@@ -13,6 +13,7 @@ class JobStatus(str, Enum):  # str-mixin for sqlite/JSON compatibility, works on
     FILTERED = "filtered"                              # heuristic deal-breaker
     CANNOT_SCORE_NO_BODY = "cannot_score:no_body"      # < 200 words, refuse to score
     CANNOT_SCORE_NO_PRIMARY_CV = "cannot_score:no_primary_cv"  # PRIMARY_* CV unreadable
+    CANNOT_SCORE_SOURCE_UNSUPPORTED = "cannot_score:source_unsupported"  # scraper has no fetch_detail
     SCORED = "scored"                                  # has an LLM score
     BELOW_THRESHOLD = "below_threshold"                # scored but not generated
     GENERATED = "generated"                            # CV + cover letter written

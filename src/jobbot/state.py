@@ -380,16 +380,21 @@ def jobs_needing_backfill(conn: sqlite3.Connection, min_words: int, limit: int) 
     first so backfill steadily drains the long tail of pre-enrichment rows
     without thrashing the most recent ones. The CLI caps `limit` per
     invocation to keep the work bounded.
+
+    Rows already marked `cannot_score:source_unsupported` are excluded:
+    those came from sources with no `fetch_detail` (freelance_de today),
+    so no amount of re-running will help them.
     """
     rows = conn.execute(
         "SELECT raw_json FROM seen_jobs "
         "WHERE raw_json IS NOT NULL "
+        "  AND status != ? "
         "  AND (description_scraped IS NULL "
         "       OR description_word_count IS NULL "
         "       OR description_word_count < ?) "
         "ORDER BY first_seen_at ASC "
         "LIMIT ?",
-        (min_words, limit),
+        (JobStatus.CANNOT_SCORE_SOURCE_UNSUPPORTED.value, min_words, limit),
     ).fetchall()
     out: list[JobPosting] = []
     for row in rows:

@@ -50,6 +50,8 @@ The scaffold is roughly 60% done. This document tells the implementer (Copilot o
 
 **Acceptance:** after one full `jobbot run`, ≥80% of new LinkedIn / WWR / Stepstone postings have `description_scraped = TRUE` and `description_word_count > 200` in SQLite.
 
+- `jobbot enrich --backfill` (CLI + `enrichment/backfill.py`): drains the pre-enrichment NULL-body tail without locking transient failures into `cannot_score:no_body`; supports `--dry-run`, `--source <name>`, and 1-req/s/source pacing. freelance_de rows are terminal-marked `cannot_score:source_unsupported`.
+
 ---
 
 ## Milestone 3 — Six-axis scoring + digest layout
