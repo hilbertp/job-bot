@@ -10,7 +10,14 @@ from flask import Flask, abort, jsonify, render_template
 
 from .config import REPO_ROOT
 from .models import JobStatus
-from .state import apply_channel, apply_channel_ats_name, connect
+from .state import (
+    apply_channel,
+    apply_channel_ats_name,
+    connect,
+    get_job_for_rescore,
+    set_user_comment,
+    update_base_score_only,
+)
 
 EXPORT_STATUSES = ("scored", "below_threshold", "filtered", "generated", "scraped")
 
@@ -629,7 +636,8 @@ def api_shortlist():
                    url, output_dir, raw_json,
                    description_full, description_word_count,
                    seniority, salary_text, apply_email,
-                   score_tailored, score_tailored_reason
+                   score_tailored, score_tailored_reason,
+                   user_comment, user_comment_at
             FROM seen_jobs
             WHERE score IS NOT NULL AND score >= ?
             ORDER BY score DESC, first_seen_at DESC
@@ -717,9 +725,94 @@ def api_shortlist():
             "score_tailored": score_tailored,
             "tailored_reason": r[16] or "",
             "score_delta": score_delta,
+            # Dashboard feedback-rescore: the candidate's prose note on this
+            # row (None if untouched) and when they last edited it. The
+            # frontend preloads the textarea from `user_comment` and shows
+            # `user_comment_at` as a "saved <time>" indicator.
+            "user_comment": r[17] or "",
+            "user_comment_at": r[18],
         })
 
     return jsonify({"min_score": min_score, "count": len(jobs), "jobs": jobs})
+
+
+@app.route("/api/jobs/<job_id>/feedback-rescore", methods=["POST"])
+def api_feedback_rescore(job_id: str):
+    """Re-score a single posting with the candidate's prose feedback
+    injected into the scoring prompt. Driven by the dashboard's per-card
+    textarea + Rescore button.
+
+    Request body: ``{"comment": "<prose>"}``. Empty/whitespace comments
+    are rejected with 400 — clearing a comment is a separate concept and
+    isn't wired here yet.
+
+    Response: ``{"ok": true, "old_score": <int>, "new_score": <int>,
+    "reason": <str>, "scored_at": <iso>, "user_comment_at": <iso>}``.
+    Errors return ``{"ok": false, "error": <str>}`` with status 404
+    (job missing), 422 (preconditions failed — body too short, no
+    PRIMARY_ CV, etc.), or 500 (scorer raised unexpectedly).
+    """
+    from flask import request
+    from .config import load_secrets
+    from .profile import load_profile
+    from .scoring import CannotScore, llm_score
+
+    payload = request.get_json(silent=True) or {}
+    comment = (payload.get("comment") or "").strip()
+    if not comment:
+        return jsonify({"ok": False, "error": "comment is required"}), 400
+
+    with connect() as conn:
+        loaded = get_job_for_rescore(conn, job_id)
+        if loaded is None:
+            return jsonify({"ok": False, "error": "job not found"}), 404
+        job, _status = loaded
+
+        # Capture the pre-rescore score for the UI before we overwrite it.
+        old_row = conn.execute(
+            "SELECT score FROM seen_jobs WHERE id = ?", (job_id,),
+        ).fetchone()
+        old_score = old_row["score"] if old_row else None
+
+        set_user_comment(conn, job_id, comment)
+
+        try:
+            secrets = load_secrets()
+            profile = load_profile()
+            result = llm_score(
+                job, profile, secrets,
+                description_scraped=True,
+                user_feedback=comment,
+            )
+        except CannotScore as e:
+            # Comment is saved; just the rescore could not run because a
+            # precondition failed. Surface the reason so the user can fix it.
+            return jsonify({
+                "ok": False,
+                "error": f"cannot_score: {e.reason}",
+                "comment_saved": True,
+            }), 422
+        except Exception as e:  # noqa: BLE001 — surface scorer failures to the UI
+            return jsonify({
+                "ok": False,
+                "error": f"scorer error: {e}",
+                "comment_saved": True,
+            }), 500
+
+        update_base_score_only(conn, job_id, result.score, result.reason)
+        new_row = conn.execute(
+            "SELECT scored_at, user_comment_at FROM seen_jobs WHERE id = ?",
+            (job_id,),
+        ).fetchone()
+
+    return jsonify({
+        "ok": True,
+        "old_score": old_score,
+        "new_score": result.score,
+        "reason": result.reason,
+        "scored_at": new_row["scored_at"] if new_row else None,
+        "user_comment_at": new_row["user_comment_at"] if new_row else None,
+    })
 
 
 @app.route("/shortlist/<job_id>/<filename>")
