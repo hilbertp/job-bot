@@ -19,9 +19,15 @@ Your job: return a single JSON object with EXACTLY these fields and nothing else
     "skills_match": <integer 0-100>,
     "location_remote_fit": <integer 0-100>,
     "seniority_fit": <integer 0-100>
-  }
+  },
+  "discard_reason": "<one short sentence naming the PRIMARY blocker — REQUIRED when score < 50, OMITTED for higher scores>"
 }
 ```
+
+`discard_reason` is dashboard-facing: it must name the single biggest blocker
+(e.g. "role is junior backlog-support only", "domain is core healthcare and
+candidate lacks it", "on-site-only in San Francisco — candidate is Berlin
+remote-first"). Keep it under 18 words. Omit the field entirely for scores ≥ 50.
 
 Scoring rubric:
 
@@ -33,7 +39,7 @@ Scoring rubric:
 Calibration guidance:
 
 - Product-management fit is primarily about scope and operating mode: strategy, discovery, roadmap ownership, customer/workflow understanding, stakeholder alignment, delivery with engineering, measurable business outcomes, pricing/packaging/monetization, and cross-functional ownership.
-- Product-management fit is primarily about scope and operating mode: strategy, discovery, roadmap ownership, customer/workflow understanding, stakeholder alignment, delivery with engineering, measurable business outcomes, pricing/packaging/monetization, and cross-functional ownership.
+- Classical Product Owner roles (backlog ownership, sprint planning, refinement, story-writing, agile ceremonies, requirement breakdown, stakeholder coordination) are an EXPLICIT target for this candidate — they have ~10 years of PO experience and these roles are well within their wheelhouse. Do NOT demote a posting just because it reads as PO-coded rather than PM-coded, "tactical" rather than "strategic", or "execution-focused" rather than "vision-focused". A clean PO role at appropriate seniority should score 75+ on role_match unless something else is genuinely off.
 - Domain gap — soft case: if the posting uses "ideally", "preferred", "nice to have", "bonus", or "plus" for a domain, or only mentions the domain in passing, treat the gap as manageable. Transferable B2B SaaS / platform / workflow / automation / marketplace / fintech / regulated-software experience covers most of the work. Do NOT describe a missing soft-preferred subdomain as a "core competency" gap.
 - Domain gap — hard case: if the posting describes a domain as required, mandatory, core, central, essential, or "you must understand X to do this job" — OR if the product itself IS that domain (e.g. the product is accounting software, ERP, payroll, medical devices, legal tech, defense systems) — treat the missing domain as a real penalty even when transferable B2B SaaS experience exists. The candidate cannot do the job's core work without learning the domain first. In this case, role/skills sub-scores should drop meaningfully and the overall score should reflect that gap.
 - If `user_facts` contain academic specialization or prior hands-on work in a requested domain (for example logistics/supply-chain study, or a shipped project in that domain) count that as real domain evidence. Do not claim "no X domain experience" unless both the CV and user_facts lack it.

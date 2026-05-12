@@ -48,6 +48,15 @@ class JobPosting(BaseModel):
 class ScoreResult(BaseModel):
     score: int = Field(..., ge=0, le=100)
     reason: str
+    # Structured per-axis sub-scores (role / skills / location / seniority).
+    # Persisted to seen_jobs.score_breakdown_json so the dashboard can render
+    # "Role 82 | Skills 85 | Location 25 | Seniority 78 — ..." without having
+    # to parse the embedded prefix out of the freeform `reason` text.
+    breakdown: dict | None = None
+    # Filled in by the LLM (or the heuristic filter) when the row is being
+    # dropped from the shortlist. Surfaces the primary blocker on the
+    # dashboard so false negatives are debuggable at a glance.
+    discard_reason: str | None = None
 
 
 class GeneratedDocs(BaseModel):

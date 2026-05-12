@@ -236,6 +236,13 @@ def _invoke_scorer(
     score = int(data["score"])
     reason = str(data.get("reason", ""))
 
+    # Pull the structured breakdown out of the model's JSON response and
+    # carry it through on ScoreResult so the persistence layer can write
+    # score_breakdown_json. The text reason keeps the legacy
+    # "role=X, skills=Y, ..." prefix for backwards compatibility (old
+    # consumers parse it from there); new dashboards read the structured
+    # dict directly.
+    breakdown_struct: dict | None = None
     breakdown = data.get("breakdown")
     if isinstance(breakdown, dict):
         def _to_int(key: str) -> int | None:
@@ -250,12 +257,27 @@ def _invoke_scorer(
         loc = _to_int("location_remote_fit")
         seniority = _to_int("seniority_fit")
         if all(v is not None for v in (role, skills, loc, seniority)):
+            breakdown_struct = {
+                "role": role,
+                "skills": skills,
+                "location": loc,
+                "seniority": seniority,
+            }
             reason = (
                 f"role={role}, skills={skills}, location={loc}, seniority={seniority}; "
                 f"{reason}"
             )
 
-    return ScoreResult(score=score, reason=reason)
+    raw_discard = data.get("discard_reason")
+    discard_reason = (
+        str(raw_discard).strip() or None
+    ) if isinstance(raw_discard, str) and raw_discard.strip() else None
+
+    return ScoreResult(
+        score=score, reason=reason,
+        breakdown=breakdown_struct,
+        discard_reason=discard_reason,
+    )
 
 
 def _usage_int(usage: object, name: str) -> int:

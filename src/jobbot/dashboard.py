@@ -50,6 +50,47 @@ SENIORITY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
 ]
 
 
+_BREAKDOWN_TEXT_RE = re.compile(
+    r"role\s*=\s*(\d+)\s*,\s*skills\s*=\s*(\d+)\s*,\s*location\s*=\s*(\d+)\s*,\s*seniority\s*=\s*(\d+)",
+    re.IGNORECASE,
+)
+
+
+def _parse_score_breakdown(
+    breakdown_json: str | None, reason_text: str | None,
+) -> dict | None:
+    """Return {role, skills, location, seniority} or None.
+
+    Prefers the structured JSON column (new rows). Falls back to parsing
+    the legacy "role=X, skills=Y, location=Z, seniority=W" prefix that
+    used to be embedded in score_reason (old rows). Returns None when
+    neither source has data — the dashboard shows "—" in that case."""
+    if breakdown_json:
+        try:
+            obj = json.loads(breakdown_json)
+            if isinstance(obj, dict) and all(
+                k in obj for k in ("role", "skills", "location", "seniority")
+            ):
+                return {
+                    "role": int(obj["role"]),
+                    "skills": int(obj["skills"]),
+                    "location": int(obj["location"]),
+                    "seniority": int(obj["seniority"]),
+                }
+        except (json.JSONDecodeError, TypeError, ValueError):
+            pass
+    if reason_text:
+        m = _BREAKDOWN_TEXT_RE.search(reason_text)
+        if m:
+            return {
+                "role": int(m.group(1)),
+                "skills": int(m.group(2)),
+                "location": int(m.group(3)),
+                "seniority": int(m.group(4)),
+            }
+    return None
+
+
 def _extract_expected_salary(title: str, description: str) -> str:
     text = f"{title}\n{description}"
     for pattern in SALARY_PATTERNS:
@@ -1216,7 +1257,8 @@ def api_latest_run_jobs():
             cur = conn.execute(
                 f"""
                 SELECT title, company, source, status, score, score_reason, url, raw_json,
-                       description_scraped, description_word_count, apply_email
+                       description_scraped, description_word_count, apply_email,
+                       score_breakdown_json, discard_reason
                 FROM seen_jobs
                 WHERE id IN ({placeholders})
                 ORDER BY source ASC, title ASC
@@ -1229,7 +1271,8 @@ def api_latest_run_jobs():
             cur = conn.execute(
                 """
                 SELECT title, company, source, status, score, score_reason, url, raw_json,
-                       description_scraped, description_word_count, apply_email
+                       description_scraped, description_word_count, apply_email,
+                       score_breakdown_json, discard_reason
                 FROM seen_jobs
                 WHERE first_seen_at >= ?
                 ORDER BY source ASC, title ASC
@@ -1242,7 +1285,8 @@ def api_latest_run_jobs():
             cur = conn.execute(
                 """
                 SELECT title, company, source, status, score, score_reason, url, raw_json,
-                       description_scraped, description_word_count, apply_email
+                       description_scraped, description_word_count, apply_email,
+                       score_breakdown_json, discard_reason
                 FROM seen_jobs
                 ORDER BY source ASC, title ASC
                 LIMIT ?
@@ -1281,6 +1325,11 @@ def api_latest_run_jobs():
             channel = apply_channel(apply_email=r[10], apply_url=apply_url_raw)
             ats_name = apply_channel_ats_name(apply_url_raw) if channel == "form" else None
 
+            # Structured per-axis breakdown for the Scoring Reason column.
+            # New rows have score_breakdown_json populated; older rows only
+            # have the "role=X, skills=Y, ..." prefix embedded in
+            # score_reason — both paths produce the same dict.
+            breakdown = _parse_score_breakdown(r[11], r[5])
             jobs.append({
                 "title": r[0],
                 "company": r[1],
@@ -1297,6 +1346,8 @@ def api_latest_run_jobs():
                 "apply_url": apply_url_raw,
                 "apply_channel": channel,
                 "apply_channel_ats_name": ats_name,
+                "score_breakdown": breakdown,
+                "discard_reason": r[12],
             })
     
     return jsonify(jobs)
