@@ -173,7 +173,7 @@
         </span>
     </div>
     <div id="stage4-panel-body" class="hidden px-6 pb-6" data-panel-body>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-6">
             <div class="bg-white/5 rounded-lg border border-white/10 p-3">
                 <div class="text-purple-200">Received</div>
                 <div class="text-2xl font-bold">{{ outcome_counts.received }}</div>
@@ -190,6 +190,26 @@
                 <div class="text-purple-200">Interview</div>
                 <div class="text-2xl font-bold">{{ outcome_counts.interview }}</div>
             </div>
+        </div>
+        <p class="text-sm text-purple-100 mb-3">Every application on file — bot-sent and manually-marked. Click <span class="font-mono">.eml</span> to inspect the exact message that left the mailbox.</p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm" id="applications-table">
+                <thead>
+                    <tr class="text-purple-200 border-b border-white/10">
+                        <th class="pb-2">When</th>
+                        <th class="pb-2">Channel</th>
+                        <th class="pb-2">Company / Role</th>
+                        <th class="pb-2">To</th>
+                        <th class="pb-2">Subject</th>
+                        <th class="pb-2">Proof</th>
+                        <th class="pb-2">Status</th>
+                        <th class="pb-2">Audit</th>
+                    </tr>
+                </thead>
+                <tbody id="applications-body">
+                    <tr><td colspan="8" class="py-3 text-purple-200">Loading...</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </section>
@@ -799,6 +819,72 @@ if (shortlistSortDirBtn) {
 }
 
 loadShortlist();
+
+// Stage 4: per-application transparency table.
+//
+// Each row shows one entry from the applications table: when, channel
+// (bot vs manual mark), company/role, recipient address, the exact
+// Subject line parsed from the persisted .eml on disk, proof-ladder
+// level (L0–L5), status, and an "Audit" cell that links to the .eml
+// so the operator can inspect what actually left the mailbox.
+async function loadApplications() {
+    const tbody = document.getElementById('applications-body');
+    if (!tbody) return;
+    let res;
+    try {
+        res = await fetch('/api/applications');
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="8" class="py-3 text-red-300">Failed to load applications.</td></tr>';
+        return;
+    }
+    if (!res.ok) {
+        tbody.innerHTML = `<tr><td colspan="8" class="py-3 text-red-300">API error: ${res.status}</td></tr>`;
+        return;
+    }
+    const rows = await res.json();
+    if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="py-3 text-purple-200">No applications on file yet. Send your first batch with <span class="font-mono">jobbot apply</span> or <span class="font-mono">jobbot mark-applied</span>.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = '';
+    for (const a of rows) {
+        const when = (a.attempted_at || '').replace('T', ' ').slice(0, 16);
+        const proof = a.proof_level === null || a.proof_level === undefined ? 'L0' : `L${a.proof_level}`;
+        const channelIcon = a.channel === 'bot' ? '📧 bot' : '📝 manual';
+        const channelTone = a.channel === 'bot' ? 'text-purple-100' : 'text-purple-200';
+        const subject = a.subject || (a.error ? `(send failed) ${a.error}` : '(no subject captured)');
+        const status = a.status || 'unknown';
+        const statusTone = (
+            status === 'apply_submitted' ? 'text-green-300' :
+            status === 'apply_failed' ? 'text-red-300' :
+            status === 'apply_needs_review' ? 'text-yellow-200' :
+            'text-purple-200'
+        );
+        const auditCell = a.has_eml
+            ? `<a class="underline text-purple-100" target="_blank" href="/applications/${encodeURIComponent(a.job_id)}/application.eml" title="Download the persisted .eml for full audit">.eml</a>`
+            : '<span class="text-purple-300" title="No .eml on disk for this row (e.g. manually-marked)">—</span>';
+        const toText = a.to || '—';
+        const subjectEsc = String(subject).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-white/5';
+        tr.innerHTML = `
+            <td class="py-3 text-xs whitespace-nowrap">${when}</td>
+            <td class="py-3 text-xs whitespace-nowrap ${channelTone}">${channelIcon}</td>
+            <td class="py-3">
+                <div class="font-semibold">${a.company || ''}</div>
+                <div class="text-xs text-purple-200">${a.title || ''}</div>
+            </td>
+            <td class="py-3 text-xs whitespace-nowrap"><span class="font-mono">${toText}</span></td>
+            <td class="py-3 text-xs max-w-md truncate" title="${subjectEsc}">${subjectEsc}</td>
+            <td class="py-3 text-xs whitespace-nowrap font-semibold ${proof === 'L0' ? 'text-red-300' : proof === 'L1' ? 'text-purple-100' : 'text-green-300'}">${proof}</td>
+            <td class="py-3 text-xs whitespace-nowrap ${statusTone}">${status}</td>
+            <td class="py-3 text-xs">${auditCell}</td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+loadApplications();
 
 document.getElementById('run-pipeline-btn').addEventListener('click', async () => {
     const btn = document.getElementById('run-pipeline-btn');
