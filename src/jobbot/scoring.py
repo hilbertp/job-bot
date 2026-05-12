@@ -290,6 +290,7 @@ def llm_score(
     secrets: Secrets,
     *,
     description_scraped: bool,
+    user_feedback: str | None = None,
 ) -> ScoreResult:
     """Ask the LLM for a 0-100 fit score. Returns a ScoreResult.
 
@@ -301,6 +302,14 @@ def llm_score(
     body. A listing-card snippet that happens to be 200+ words still
     fails the gate when this flag is False — the scorer must never trust
     a body the enrichment phase did not vouch for.
+
+    `user_feedback`, when set, is injected as an extra prompt section
+    ("Candidate feedback on previous score") between the hard preferences
+    and the job description. Used by scripts/rescore_from_feedback.py so
+    the model can reconsider an earlier score in light of context the
+    candidate provided after the fact (e.g. "I am willing to relocate to
+    Freiburg", "I have hands-on Finanzbuchhaltung experience from a prior
+    role not on my CV").
     """
     if not description_scraped:
         raise CannotScore(
@@ -318,5 +327,11 @@ def llm_score(
     except FileNotFoundError as e:
         raise CannotScore(f"no_primary_cv: {e}") from e
 
-    user_message = _build_user_message(job, profile, primary_cv)
+    extra: tuple[str, str] | None = None
+    if user_feedback and user_feedback.strip():
+        extra = ("Candidate feedback on previous score", user_feedback.strip())
+
+    user_message = _build_user_message(
+        job, profile, primary_cv, extra_section=extra,
+    )
     return _invoke_scorer(secrets, user_message)

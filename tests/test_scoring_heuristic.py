@@ -236,6 +236,86 @@ def test_user_message_tailored_variant_swaps_cv_and_injects_cover_letter() -> No
     assert hp < cl < jd, f"cover letter section misplaced: hp={hp}, cl={cl}, jd={jd}"
 
 
+def test_llm_score_injects_user_feedback_section(monkeypatch) -> None:
+    """The user_feedback kwarg is injected as a 'Candidate feedback on
+    previous score' section between hard preferences and the job
+    description, so the model can reconsider an earlier score given
+    context the candidate provided after the fact."""
+    job = JobPosting(
+        id="feedback-msg",
+        source="linkedin",
+        title="Senior Product Manager",
+        company="Acme",
+        url="https://example.com/jobs/feedback-msg",  # type: ignore
+        description="job body " * 250,  # comfortably above MIN_BODY_WORDS
+    )
+    monkeypatch.setattr(
+        "jobbot.scoring.load_primary_cv",
+        lambda: "# Primary CV\n\nbackground...",
+    )
+    captured: dict[str, str] = {}
+
+    def fake_invoke(secrets, user_message):
+        captured["msg"] = user_message
+        from jobbot.models import ScoreResult
+        return ScoreResult(score=55, reason="fake")
+
+    monkeypatch.setattr("jobbot.scoring._invoke_scorer", fake_invoke)
+
+    feedback = "I am willing to relocate to Freiburg and I have prior Finanzbuchhaltung experience."
+    result = llm_score(
+        job, _profile(), _secrets(),
+        description_scraped=True,
+        user_feedback=feedback,
+    )
+    assert result.score == 55  # the fake passes through
+
+    msg = captured["msg"]
+    assert "# Candidate feedback on previous score" in msg
+    assert feedback in msg
+
+    # Sits between hard preferences and the job description (FR-SCO-02 ordering).
+    hp = msg.find("# Hard preferences (yaml)")
+    fb = msg.find("# Candidate feedback on previous score")
+    jd = msg.find("# Job description")
+    assert hp < fb < jd, f"feedback section misplaced: hp={hp}, fb={fb}, jd={jd}"
+
+
+def test_llm_score_omits_feedback_section_when_empty(monkeypatch) -> None:
+    """Without user_feedback (or with whitespace only), no feedback
+    section is added — the prompt is identical to the no-feedback path."""
+    job = JobPosting(
+        id="no-feedback",
+        source="linkedin",
+        title="Senior PM",
+        company="Acme",
+        url="https://example.com/jobs/no-feedback",  # type: ignore
+        description="job body " * 250,
+    )
+    monkeypatch.setattr(
+        "jobbot.scoring.load_primary_cv",
+        lambda: "# Primary CV\n\nbackground...",
+    )
+    captured: dict[str, str] = {}
+
+    def fake_invoke(secrets, user_message):
+        captured["msg"] = user_message
+        from jobbot.models import ScoreResult
+        return ScoreResult(score=40, reason="fake")
+
+    monkeypatch.setattr("jobbot.scoring._invoke_scorer", fake_invoke)
+
+    # Both None and a whitespace-only string should skip the section.
+    for fb in (None, "", "   \n\t  "):
+        captured.clear()
+        llm_score(
+            job, _profile(), _secrets(),
+            description_scraped=True,
+            user_feedback=fb,
+        )
+        assert "# Candidate feedback on previous score" not in captured["msg"]
+
+
 def test_llm_score_tailored_refuses_empty_inputs() -> None:
     """The rescore is meaningless without both tailored artifacts — refuse."""
     job = JobPosting(
