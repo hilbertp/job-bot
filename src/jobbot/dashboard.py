@@ -1227,6 +1227,126 @@ def shortlist_doc(job_id: str, filename: str):
     return send_file(str(target), mimetype=mime)
 
 
+@app.route("/api/applications")
+def api_applications():
+    """One row per row in the applications table — for the Stage 4 panel's
+    transparency view. Joins seen_jobs for title/company/score/output_dir
+    and parses the per-job application.eml on disk for the exact subject
+    that went out. Returns rows ordered most-recent-first."""
+    from email import message_from_bytes
+    from email.header import decode_header, make_header
+
+    def _decode_header(raw: str | None) -> str | None:
+        """RFC-2047-decode a header so non-ASCII (em-dashes, umlauts) come
+        back as the original Unicode the user wrote, not =?utf-8?b?...?=."""
+        if not raw:
+            return raw
+        try:
+            return str(make_header(decode_header(raw))).strip()
+        except Exception:
+            return raw.strip()
+
+    rows_out = []
+    with connect() as conn:
+        cur = conn.execute("""
+            SELECT a.job_id, a.attempted_at, a.status AS app_status,
+                   a.submitted, a.dry_run, a.proof_level, a.proof_evidence,
+                   a.confirmation_url, a.error, a.last_response_at,
+                   a.response_type, a.response_subject, a.response_snippet,
+                   s.title, s.company, s.source, s.score, s.output_dir,
+                   s.apply_email, s.url, s.status AS seen_status
+            FROM applications a
+            JOIN seen_jobs s ON s.id = a.job_id
+            ORDER BY a.attempted_at DESC
+        """)
+        for r in cur.fetchall():
+            try:
+                evidence = json.loads(r["proof_evidence"] or "[]")
+            except (json.JSONDecodeError, TypeError):
+                evidence = []
+            # `source` on proof_evidence entries: "application" = bot, anything
+            # else (e.g. "manual") = human-marked. Default to "application"
+            # for backwards compat with rows recorded before the channel tag.
+            channel = "manual"
+            for ev in evidence:
+                if isinstance(ev, dict) and ev.get("source") == "application":
+                    channel = "bot"
+                    break
+
+            # Pull the exact Subject line + recipient that went out from the
+            # persisted .eml. Falls back to the seen_jobs.apply_email column
+            # for rows where the .eml wasn't kept on disk.
+            eml_path = None
+            sent_subject = None
+            sent_to = r["apply_email"]
+            if r["output_dir"]:
+                p = Path(r["output_dir"]) / "application.eml"
+                if p.exists():
+                    eml_path = str(p)
+                    try:
+                        msg = message_from_bytes(p.read_bytes())
+                        sent_subject = _decode_header(msg.get("Subject"))
+                        eml_to = _decode_header(msg.get("To"))
+                        if eml_to:
+                            sent_to = eml_to
+                    except Exception:
+                        pass
+
+            rows_out.append({
+                "job_id": r["job_id"],
+                "title": r["title"],
+                "company": r["company"],
+                "source": r["source"],
+                "score": r["score"],
+                "channel": channel,           # "bot" | "manual"
+                "to": sent_to,
+                "subject": sent_subject,
+                "status": r["app_status"],
+                "seen_status": r["seen_status"],
+                "submitted": bool(r["submitted"]),
+                "dry_run": bool(r["dry_run"]),
+                "proof_level": r["proof_level"],
+                "error": r["error"],
+                "attempted_at": r["attempted_at"],
+                "last_response_at": r["last_response_at"],
+                "response_type": r["response_type"],
+                "response_subject": r["response_subject"],
+                "response_snippet": r["response_snippet"],
+                "confirmation_url": r["confirmation_url"],
+                "url": r["url"],
+                "has_eml": eml_path is not None,
+                # Don't expose the absolute path — the eml route gates it.
+            })
+    return jsonify(rows_out)
+
+
+@app.route("/applications/<job_id>/application.eml")
+def application_eml(job_id: str):
+    """Serve the persisted .eml for a sent (or attempted) application —
+    audit trail viewer. Path-traversal-safe: we look up the per-job
+    output_dir from the DB and only serve the exact `application.eml`
+    inside it. Browsers will offer the .eml as a download; recruiters
+    never see this route."""
+    with connect() as conn:
+        cur = conn.execute(
+            "SELECT output_dir FROM seen_jobs WHERE id = ?", (job_id,),
+        )
+        row = cur.fetchone()
+    if not row or not row[0]:
+        abort(404)
+    out_dir = Path(row[0]).resolve()
+    target = (out_dir / "application.eml").resolve()
+    try:
+        target.relative_to(out_dir)
+    except ValueError:
+        abort(404)
+    if not target.exists():
+        abort(404)
+    from flask import send_file
+    return send_file(str(target), mimetype="message/rfc822",
+                     as_attachment=False, download_name="application.eml")
+
+
 @app.route("/api/latest-run-jobs")
 def api_latest_run_jobs():
     """Get all jobs scraped in the latest run, with stage-1 attributes.
