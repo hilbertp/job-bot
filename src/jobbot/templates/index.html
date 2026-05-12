@@ -46,6 +46,36 @@
     <a id="run-banner-link" class="underline ml-auto text-amber-100/90" href="#">view details</a>
 </div>
 
+<!-- ============================================================
+     OUTBOUND PIPELINE — top-of-dashboard CRM view
+     One card per sent application. Always visible (not collapsed)
+     so the operator sees the full pipeline at a glance every time.
+     Per-card action buttons advance the proof ladder when something
+     happens outside the bot's awareness (a reply lands in the inbox,
+     a recruiter calls, etc.).
+============================================================ -->
+<section id="outbound-pipeline-panel" class="bg-white/10 rounded-2xl border border-white/20 mb-8 overflow-hidden">
+    <div class="px-6 py-5 flex flex-wrap items-baseline justify-between gap-3 border-b border-white/10">
+        <div class="flex flex-wrap items-baseline gap-3">
+            <h2 class="text-xl font-bold">Outbound Pipeline</h2>
+            <span id="outbound-pipeline-count" class="text-xs text-purple-200">— applications</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 text-xs" data-outbound-filters>
+            <button data-filter="all"        class="px-2 py-1 rounded bg-white/20 text-purple-100 hover:bg-white/30">All</button>
+            <button data-filter="waiting"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">⏳ Waiting</button>
+            <button data-filter="received"   class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">📨 Received</button>
+            <button data-filter="replied"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">💬 Replied</button>
+            <button data-filter="interview"  class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">🎯 Interview</button>
+            <button data-filter="rejected"   class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">🚫 Rejected</button>
+            <button data-filter="bounced"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">⚠️ Bounced</button>
+        </div>
+    </div>
+    <div class="px-6 py-5">
+        <div id="outbound-pipeline-empty" class="hidden text-sm text-purple-200">No applications sent yet. Mark a job manually with <span class="font-mono">jobbot mark-applied &lt;id&gt;</span> or let the apply pipeline run.</div>
+        <div id="outbound-pipeline-body" class="space-y-3"></div>
+    </div>
+</section>
+
 <section id="stage1-panel" class="bg-white/10 rounded-2xl border border-white/20 mb-8 overflow-hidden" data-collapsible-panel>
     <div class="flex w-full flex-wrap items-start justify-between gap-3 cursor-pointer select-none px-6 py-5 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="stage1-panel-body" aria-expanded="false" aria-label="Toggle Stage 1: Hits per Portal" title="Expand panel">
         <div class="flex flex-wrap items-baseline gap-3">
@@ -885,6 +915,179 @@ async function loadApplications() {
 }
 
 loadApplications();
+
+// =========================================================
+// Outbound Pipeline (CRM view) — top-of-dashboard panel
+// =========================================================
+//
+// Renders one card per application from /api/applications.
+// State pill colour-coding tracks the proof ladder:
+//   L0 (bounced)      → red
+//   L1 (waiting)      → purple
+//   L2 (received/ack) → blue
+//   L3 (replied)      → cyan
+//   L4 (interview)    → green
+//   L5 (rejected)     → grey
+//
+// Action buttons POST to /api/applications/<id>/transition with
+// {state: "..."} — the server appends to proof_evidence and updates
+// proof_level / response_type / status as needed. On success the
+// card re-renders in place.
+
+const OUTBOUND_STATE_BUCKETS = {
+    bounced:   { label: '⚠️ Bounced',   tone: 'bg-red-500/30 text-red-100 border-red-400/50' },
+    waiting:   { label: '⏳ Waiting',   tone: 'bg-purple-500/30 text-purple-100 border-purple-400/50' },
+    received:  { label: '📨 Received',  tone: 'bg-blue-500/30 text-blue-100 border-blue-400/50' },
+    replied:   { label: '💬 Replied',   tone: 'bg-cyan-500/30 text-cyan-100 border-cyan-400/50' },
+    interview: { label: '🎯 Interview', tone: 'bg-green-500/30 text-green-100 border-green-400/50' },
+    rejected:  { label: '🚫 Rejected',  tone: 'bg-zinc-500/30 text-zinc-200 border-zinc-400/50' },
+};
+
+let outboundCache = [];
+let outboundFilter = 'all';
+
+function outboundBucket(a) {
+    // Bounce wins when status flips to apply_failed (or proof drops to 0).
+    if (a.status === 'apply_failed' || a.response_type === 'bounced') return 'bounced';
+    if (a.proof_level >= 5 || a.response_type === 'rejected') return 'rejected';
+    if (a.proof_level >= 4 || a.response_type === 'interview') return 'interview';
+    if (a.proof_level >= 3 || a.response_type === 'replied') return 'replied';
+    if (a.proof_level >= 2 || a.response_type === 'acknowledged') return 'received';
+    return 'waiting';
+}
+
+function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderOutboundCard(a) {
+    const bucket = outboundBucket(a);
+    const pill = OUTBOUND_STATE_BUCKETS[bucket];
+    const when = (a.attempted_at || '').replace('T', ' ').slice(0, 16);
+    const channelIcon = a.channel === 'bot' ? '📧 bot' : '📝 manual';
+    const subject = a.subject || (a.error ? `(send failed) ${a.error}` : '(no subject)');
+    const auditLink = a.has_eml
+        ? `<a class="underline" target="_blank" href="/applications/${encodeURIComponent(a.job_id)}/application.eml">view .eml</a>`
+        : '<span class="text-purple-300">no .eml</span>';
+
+    // Action buttons (state transitions). We always show all 5 transitions —
+    // the operator may want to override the bot's signals.
+    const actions = ['received', 'replied', 'interview', 'rejected', 'bounced'];
+    const actionBtns = actions.map(s => `
+        <button data-action="${s}" data-job-id="${escapeHtml(a.job_id)}"
+                class="text-[10px] uppercase tracking-wider px-2 py-1 rounded border border-white/20 bg-white/5 hover:bg-white/15 text-purple-100">
+          ${OUTBOUND_STATE_BUCKETS[s].label}
+        </button>`).join('');
+
+    return `
+      <div class="rounded-xl border border-white/10 bg-white/5 p-4" data-job-id="${escapeHtml(a.job_id)}" data-bucket="${bucket}">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-baseline gap-2">
+              <span class="text-base font-semibold">${escapeHtml(a.company || '')}</span>
+              <span class="text-xs text-purple-200">${escapeHtml(a.title || '')}</span>
+            </div>
+            <div class="text-xs text-purple-200 mt-1">
+              <span class="font-mono">${escapeHtml(a.to || '')}</span>
+              <span class="mx-1">·</span>
+              <span>${escapeHtml(channelIcon)}</span>
+              <span class="mx-1">·</span>
+              <span>${when}</span>
+              <span class="mx-1">·</span>
+              ${auditLink}
+            </div>
+            <div class="text-xs text-purple-100 mt-1 truncate" title="${escapeHtml(subject)}">${escapeHtml(subject)}</div>
+          </div>
+          <span class="px-2 py-1 text-xs rounded border ${pill.tone} whitespace-nowrap">${pill.label} · L${a.proof_level ?? 0}</span>
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2">${actionBtns}</div>
+      </div>
+    `;
+}
+
+function applyOutboundFilter() {
+    const body = document.getElementById('outbound-pipeline-body');
+    const empty = document.getElementById('outbound-pipeline-empty');
+    const count = document.getElementById('outbound-pipeline-count');
+    const filtered = outboundFilter === 'all'
+        ? outboundCache
+        : outboundCache.filter(a => outboundBucket(a) === outboundFilter);
+    count.textContent = `${filtered.length} of ${outboundCache.length} applications`;
+    if (!filtered.length) {
+        body.innerHTML = '';
+        empty.classList.remove('hidden');
+        empty.textContent = outboundCache.length === 0
+            ? 'No applications sent yet.'
+            : `No applications in "${outboundFilter}" bucket.`;
+        return;
+    }
+    empty.classList.add('hidden');
+    body.innerHTML = filtered.map(renderOutboundCard).join('');
+}
+
+async function loadOutboundPipeline() {
+    try {
+        const res = await fetch('/api/applications');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        outboundCache = await res.json();
+    } catch (e) {
+        document.getElementById('outbound-pipeline-body').innerHTML =
+            `<div class="text-red-300 text-sm">Failed to load: ${e}</div>`;
+        return;
+    }
+    applyOutboundFilter();
+}
+
+async function postTransition(jobId, state) {
+    const res = await fetch(`/api/applications/${encodeURIComponent(jobId)}/transition`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({state}),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({error: `HTTP ${res.status}`}));
+        alert(`Transition failed: ${err.error || res.status}`);
+        return false;
+    }
+    return true;
+}
+
+// Filter chips
+document.querySelectorAll('[data-outbound-filters] [data-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        outboundFilter = btn.getAttribute('data-filter');
+        document.querySelectorAll('[data-outbound-filters] [data-filter]').forEach(b => {
+            const active = b.getAttribute('data-filter') === outboundFilter;
+            b.className = active
+                ? 'px-2 py-1 rounded bg-white/20 text-purple-100 hover:bg-white/30'
+                : 'px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20';
+        });
+        applyOutboundFilter();
+    });
+});
+
+// Action buttons — delegate from the panel body so dynamically rendered
+// cards keep working without re-binding.
+document.getElementById('outbound-pipeline-body').addEventListener('click', async ev => {
+    const btn = ev.target.closest('button[data-action]');
+    if (!btn) return;
+    const action = btn.getAttribute('data-action');
+    const jobId = btn.getAttribute('data-job-id');
+    btn.disabled = true;
+    btn.textContent = '…';
+    const ok = await postTransition(jobId, action);
+    if (ok) {
+        await loadOutboundPipeline();
+    } else {
+        btn.disabled = false;
+        btn.textContent = OUTBOUND_STATE_BUCKETS[action].label;
+    }
+});
+
+loadOutboundPipeline();
+// Light auto-refresh — picks up inbox-scan transitions / new sends in flight
+setInterval(loadOutboundPipeline, 30000);
 
 document.getElementById('run-pipeline-btn').addEventListener('click', async () => {
     const btn = document.getElementById('run-pipeline-btn');

@@ -1320,6 +1320,38 @@ def api_applications():
     return jsonify(rows_out)
 
 
+@app.route("/api/applications/<job_id>/transition", methods=["POST"])
+def api_application_transition(job_id: str):
+    """CRM action endpoint: advance an application's state.
+
+    Body: {"state": "received"|"replied"|"interview"|"rejected"|"bounced",
+           "note": "optional free text"}
+    The endpoint is intentionally idempotent w.r.t. each click — the
+    transition is appended to proof_evidence with a timestamp, so an
+    operator can mark "received" then later mark "replied" without
+    losing the earlier signal.
+    """
+    from flask import request as flask_request
+    from .state import VALID_APPLICATION_TRANSITIONS, transition_application
+
+    payload = flask_request.get_json(silent=True) or {}
+    state = (payload.get("state") or "").strip().lower()
+    note = (payload.get("note") or "").strip() or None
+    if state not in VALID_APPLICATION_TRANSITIONS:
+        return jsonify({
+            "ok": False,
+            "error": f"unsupported state {state!r}",
+            "allowed": list(VALID_APPLICATION_TRANSITIONS),
+        }), 400
+
+    try:
+        with connect() as conn:
+            transition_application(conn, job_id, new_state=state, note=note)
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 404
+    return jsonify({"ok": True, "job_id": job_id, "state": state})
+
+
 @app.route("/applications/<job_id>/application.eml")
 def application_eml(job_id: str):
     """Serve the persisted .eml for a sent (or attempted) application —
