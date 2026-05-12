@@ -122,6 +122,11 @@ def _ensure_list_str(value: Any) -> list[str]:
   return out
 
 
+def _clean_str(value: Any) -> str:
+  """Normalize scalar strings and collapse accidental whitespace."""
+  return " ".join(str(value or "").split())
+
+
 def _normalize_profile(data: dict[str, Any]) -> dict[str, Any]:
   """PRD §7.4 FR-PRO-02: force output into required schema with safe defaults."""
   voice = data.get("voice") if isinstance(data.get("voice"), dict) else {}
@@ -136,6 +141,9 @@ def _normalize_profile(data: dict[str, Any]) -> dict[str, Any]:
   for item in capabilities_in:
     if not isinstance(item, dict):
       continue
+    skill = _clean_str(item.get("skill", ""))
+    if not skill:
+      continue
     years_value = item.get("years")
     try:
       years = int(years_value)
@@ -143,7 +151,7 @@ def _normalize_profile(data: dict[str, Any]) -> dict[str, Any]:
       years = 0
     capabilities.append(
       {
-        "skill": str(item.get("skill", "")),
+        "skill": skill,
         "years": years,
         "sources": _ensure_list_str(item.get("sources", [])),
       }
@@ -154,6 +162,9 @@ def _normalize_profile(data: dict[str, Any]) -> dict[str, Any]:
   for item in domains_in:
     if not isinstance(item, dict):
       continue
+    name = _clean_str(item.get("name", ""))
+    if not name:
+      continue
     years_value = item.get("years")
     try:
       years = int(years_value)
@@ -162,18 +173,21 @@ def _normalize_profile(data: dict[str, Any]) -> dict[str, Any]:
     depth = str(item.get("depth", "low"))
     if depth not in {"low", "mid", "deep"}:
       depth = "low"
-    domains.append({"name": str(item.get("name", "")), "depth": depth, "years": years})
+    domains.append({"name": name, "depth": depth, "years": years})
 
   achievements_in = data.get("achievements") if isinstance(data.get("achievements"), list) else []
   achievements: list[dict[str, Any]] = []
   for item in achievements_in:
     if not isinstance(item, dict):
       continue
+    text = _clean_str(item.get("text", ""))
+    if not text:
+      continue
     metric = item.get("metric")
     achievements.append(
       {
-        "text": str(item.get("text", "")),
-        "company": str(item.get("company", "")),
+        "text": text,
+        "company": _clean_str(item.get("company", "")),
         "metric": None if metric in (None, "") else str(metric),
       }
     )
@@ -206,13 +220,21 @@ def _call_sonnet(corpus_payload: dict[str, Any], api_key: str) -> dict[str, Any]
   """PRD §7.4 FR-PRO-02: perform a single Sonnet call for full-profile distillation."""
   system_prompt = (
     "You distill a candidate profile from supplied corpus documents. "
-    "Return YAML only, no markdown fences, with exact top-level keys: "
+    "Return a strict JSON object only, no markdown fences, with exact top-level keys: "
     "voice, capabilities, domains, achievements, seniority_signals, languages. "
     "Rules: PRIMARY CV is authoritative for facts. Cover letters contribute only to voice.*. "
+    "Other CVs may add capabilities, domains, and achievements when they do not contradict the PRIMARY CV. "
     "Website pages contribute to voice/domains only and never override CV facts. "
-    "Never invent facts; use null or [] when unknown."
+    "Never invent facts; use null or [] when unknown. "
+    "Do not emit empty placeholder objects. If a list item has no concrete skill/name/text, omit it. "
+    "For a normal non-empty product-leadership corpus, extract a useful profile: about 10-20 concrete capabilities, "
+    "3-8 domains, 5-12 achievements, seniority signals, and languages when supported by the documents."
   )
-  user_payload = json.dumps(corpus_payload)
+  user_payload = (
+    "Distill this corpus into the required JSON schema. Preserve evidence via source paths. "
+    "Use the supplied texts only.\n\n"
+    f"{json.dumps(corpus_payload)}"
+  )
 
   client = Anthropic(api_key=api_key)
   msg = client.messages.create(
@@ -222,9 +244,16 @@ def _call_sonnet(corpus_payload: dict[str, Any], api_key: str) -> dict[str, Any]
     messages=[{"role": "user", "content": user_payload}],
   )
   text = "".join(block.text for block in msg.content if block.type == "text")
-  parsed = yaml.safe_load(_strip_fenced_yaml(text))
+  cleaned = _strip_fenced_yaml(text)
+  try:
+    parsed = json.loads(cleaned)
+  except json.JSONDecodeError:
+    # Existing tests and older prompt versions use YAML. Keep accepting YAML
+    # as a fallback, but prefer JSON for live calls because candidate quotes
+    # often contain colons that make model-authored YAML brittle.
+    parsed = yaml.safe_load(cleaned)
   if not isinstance(parsed, dict):
-    raise ValueError("Distiller model output was not a YAML object")
+    raise ValueError("Distiller model output was not an object")
   return parsed
 
 
@@ -249,6 +278,15 @@ def rebuild_compiled_profile(
     payload = _bundle_for_prompt(bundle)
     distilled = _call_sonnet(payload, api_key=api_key)
     normalized = _normalize_profile(distilled)
+    if not (
+      normalized["capabilities"]
+      or normalized["domains"]
+      or normalized["achievements"]
+    ):
+      raise ValueError(
+        "Distiller model output contained no usable capabilities, domains, "
+        "or achievements; refusing to overwrite compiled profile."
+      )
     normalized["compiled_at"] = datetime.now(tz=timezone.utc).isoformat()
     normalized["corpus_fingerprint"] = _corpus_fingerprint(corpus_root)
 

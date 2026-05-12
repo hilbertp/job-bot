@@ -158,6 +158,7 @@ def _build_user_message(
     compiled = {
         "must_have_skills": profile.must_have_skills,
         "nice_to_have_skills": profile.nice_to_have_skills,
+        "user_facts": profile.user_facts,
         "capabilities": profile.capabilities,
         "domains": profile.domains,
         "achievements": profile.achievements,

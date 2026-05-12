@@ -441,7 +441,7 @@ def _cmd_rescore_base(args) -> int:
 
 def cmd_profile_rebuild(_args) -> int:
     """PRD §7.4 FR-PRO-02: rebuild data/profile.compiled.yaml from corpus."""
-    output = rebuild_compiled_profile()
+    output = rebuild_compiled_profile(secrets=load_secrets())
     console.print(f"compiled profile written: {output}")
     return 0
 
