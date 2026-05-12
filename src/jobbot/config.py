@@ -28,6 +28,11 @@ class Secrets(BaseModel):
     truenorth_smtp_port: int = 587
     truenorth_smtp_user: str = ""
     truenorth_smtp_pass: str = ""
+    # IMAP for the outbound mailbox — the inbox scanner reads replies +
+    # bounces here and auto-advances the dashboard cards. Same login as
+    # SMTP on IONOS; defaults to imap.ionos.de:993.
+    truenorth_imap_host: str = "imap.ionos.de"
+    truenorth_imap_port: int = 993
 
 
 class ApplyConfig(BaseModel):
@@ -94,6 +99,8 @@ def load_secrets(env_file: Path | None = None) -> Secrets:
         truenorth_smtp_port=int(os.environ.get("TRUENORTH_SMTP_PORT", "587")),
         truenorth_smtp_user=os.environ.get("TRUENORTH_SMTP_USER", ""),
         truenorth_smtp_pass=os.environ.get("TRUENORTH_SMTP_PASS", ""),
+        truenorth_imap_host=os.environ.get("TRUENORTH_IMAP_HOST", "imap.ionos.de"),
+        truenorth_imap_port=int(os.environ.get("TRUENORTH_IMAP_PORT", "993")),
     )
 
 
