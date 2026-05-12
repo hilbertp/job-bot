@@ -83,6 +83,13 @@ SEEN_JOBS_ADD_COLUMNS: list[tuple[str, str]] = [
     ("score_tailored_reason", "TEXT"),
     ("score_tailored_breakdown_json", "TEXT"),
     ("scored_tailored_at", "TEXT"),
+    # Dashboard feedback-rescore: prose comment the candidate left on a
+    # row whose score they want the model to reconsider. The comment is
+    # injected into the next llm_score(..., user_feedback=...) call and
+    # persists on the row so the dashboard can show "rescored with your
+    # note from <timestamp>" alongside the new score.
+    ("user_comment", "TEXT"),
+    ("user_comment_at", "TEXT"),
 ]
 
 
@@ -317,6 +324,61 @@ def update_score_tailored(
             job_id,
         ),
     )
+
+
+def update_base_score_only(
+    conn: sqlite3.Connection, job_id: str, score: int | None, reason: str,
+) -> None:
+    """Refresh the base score (score + score_reason + scored_at) without
+    touching `status`. Used by the rescore-from-feedback flow so a row
+    already in a late-stage status (GENERATED, APPLY_*) doesn't get
+    knocked back to SCORED/BELOW_THRESHOLD. `score=None` records a
+    cannot_score reason on a late-stage row without demoting status."""
+    scored_at = _now() if score is not None else None
+    conn.execute(
+        "UPDATE seen_jobs SET score = ?, score_reason = ?, scored_at = ? "
+        "WHERE id = ?",
+        (score, reason, scored_at, job_id),
+    )
+
+
+def set_user_comment(
+    conn: sqlite3.Connection, job_id: str, comment: str | None,
+) -> None:
+    """Persist (or clear) the dashboard's per-row prose comment.
+    `comment=None` or empty/whitespace nulls the columns. `user_comment_at`
+    timestamps when the user last touched the comment, separate from
+    `scored_at` so the dashboard can show "comment from <t1>, score
+    refreshed at <t2>"."""
+    cleaned = (comment or "").strip() or None
+    conn.execute(
+        "UPDATE seen_jobs SET user_comment = ?, user_comment_at = ? WHERE id = ?",
+        (cleaned, _now() if cleaned else None, job_id),
+    )
+
+
+def get_job_for_rescore(
+    conn: sqlite3.Connection, job_id: str,
+) -> tuple[object, str | None] | None:
+    """Hydrate a JobPosting for the dashboard feedback-rescore endpoint.
+    Returns (JobPosting, current_status) or None if the row is missing or
+    its raw_json can't be parsed. `description` is swapped in from
+    `description_full` (the post-enrichment body) so the prompt sees the
+    real body, not the listing snippet."""
+    from .models import JobPosting
+    row = conn.execute(
+        "SELECT raw_json, description_full, status FROM seen_jobs WHERE id = ?",
+        (job_id,),
+    ).fetchone()
+    if not row or not row["raw_json"]:
+        return None
+    try:
+        job = JobPosting.model_validate_json(row["raw_json"])
+    except Exception:
+        return None
+    if row["description_full"]:
+        job = job.model_copy(update={"description": row["description_full"]})
+    return job, row["status"]
 
 
 def record_application(conn: sqlite3.Connection, job_id: str, result) -> None:

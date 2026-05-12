@@ -118,7 +118,13 @@
 <section id="stage3-panel" class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-8" data-collapsible-panel>
     <div class="flex flex-wrap items-start justify-between gap-3 mb-2 cursor-pointer select-none rounded-lg px-2 -mx-2 py-1 -my-1 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="stage3-panel-body" aria-expanded="true" aria-label="Toggle Stage 3: Tailored Shortlist" title="Collapse panel">
         <div class="flex flex-wrap items-baseline gap-3">
-            <h2 class="text-xl font-bold">Stage 3: Tailored Shortlist (score ≥ 70)</h2>
+            <h2 class="text-xl font-bold">Stage 3: Tailored Shortlist</h2>
+            <label class="text-xs text-purple-200 flex items-baseline gap-1" title="lower this to see rows below the suitable cutoff (e.g. ones whose score dropped under a stricter rescore)">
+                score ≥
+                <input id="shortlist-min-score" type="number" min="0" max="100" step="1" value="70"
+                    class="w-14 text-right bg-white/10 border border-white/20 rounded px-1 py-0.5 text-purple-100"
+                    aria-label="minimum score" />
+            </label>
             <div class="text-xs text-purple-200 flex flex-wrap gap-4">
                 <span><span id="stage3-job-count" class="text-purple-100 font-semibold">—</span> jobs</span>
                 <span><span id="stage3-rescored-count" class="text-purple-100 font-semibold">—</span> rescored</span>
@@ -481,8 +487,17 @@ function escapeHtml(s) {
     return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-async function loadShortlist() {
-    const res = await fetch('/api/shortlist?min_score=70');
+async function loadShortlist(minScore) {
+    const empty = document.getElementById('shortlist-empty');
+    if (minScore === undefined || minScore === null) {
+        const input = document.getElementById('shortlist-min-score');
+        minScore = input ? parseInt(input.value, 10) : 70;
+        if (Number.isNaN(minScore)) minScore = 70;
+    }
+    if (empty) {
+        empty.textContent = `No jobs at score ≥ ${minScore} yet — re-run the pipeline or lower the threshold.`;
+    }
+    const res = await fetch(`/api/shortlist?min_score=${minScore}`);
     if (!res.ok) return;
     const payload = await res.json();
     const body = document.getElementById('shortlist-body');
@@ -538,7 +553,7 @@ async function loadShortlist() {
         const baseScoreTitle = hasTailored
             ? 'pre-tailoring base score (primary CV) — superseded by the tailored score'
             : 'base score (primary CV)';
-        let scorePillsHtml = `<span class="${baseScoreClasses}" title="${baseScoreTitle}">${baseScore}</span>`;
+        let scorePillsHtml = `<span class="${baseScoreClasses}" data-score-base title="${baseScoreTitle}">${baseScore}</span>`;
         if (hasTailored) {
             const deltaColor = delta > 0 ? 'text-green-300' : delta < 0 ? 'text-red-300' : 'text-purple-200';
             const deltaSign = delta > 0 ? '+' : '';
@@ -569,7 +584,7 @@ async function loadShortlist() {
             <div class="hidden border-t border-white/10 p-4 space-y-4" data-body>
                 <div class="text-sm">
                     <div class="text-purple-200 mb-1">Reason (base CV)</div>
-                    <div>${escapeHtml(job.reason || '—')}</div>
+                    <div data-reason-base>${escapeHtml(job.reason || '—')}</div>
                 </div>
                 <div class="text-sm">
                     <div class="text-purple-200 mb-1">Reason (tailored CV + CL)</div>
@@ -578,6 +593,29 @@ async function loadShortlist() {
                             ? escapeHtml(job.tailored_reason || '—')
                             : '<span class="italic text-purple-200">tailored rescore pending — run `jobbot rescore --backfill`</span>'
                     }</div>
+                </div>
+                <div class="text-sm bg-white/5 rounded p-3 border border-white/10">
+                    <div class="text-purple-200 mb-1 flex flex-wrap items-baseline gap-2">
+                        <span>Your feedback for a rescore</span>
+                        <span class="text-xs text-purple-300" data-feedback-saved-at>${
+                            job.user_comment_at
+                                ? `last saved ${escapeHtml(job.user_comment_at)}`
+                                : ''
+                        }</span>
+                    </div>
+                    <textarea
+                        class="w-full bg-white/10 border border-white/20 rounded p-2 text-sm text-purple-100"
+                        rows="3"
+                        placeholder="e.g. 'I am willing to relocate to Freiburg' or 'I have Finanzbuchhaltung experience not on my CV'"
+                        data-feedback-textarea
+                    >${escapeHtml(job.user_comment || '')}</textarea>
+                    <div class="mt-2 flex flex-wrap items-baseline gap-3">
+                        <button
+                            class="px-3 py-1 rounded bg-purple-500/40 hover:bg-purple-500/60 text-sm font-semibold"
+                            data-feedback-rescore="${job.id}"
+                        >Rescore with this feedback</button>
+                        <span class="text-xs text-purple-200" data-feedback-status></span>
+                    </div>
                 </div>
                 <div class="text-sm">
                     <div class="text-purple-200 mb-1">Posting</div>
@@ -607,8 +645,76 @@ async function loadShortlist() {
         const btn = card.querySelector('button');
         const bodyDiv = card.querySelector('[data-body]');
         btn.addEventListener('click', () => bodyDiv.classList.toggle('hidden'));
+        const rescoreBtn = card.querySelector('[data-feedback-rescore]');
+        if (rescoreBtn) {
+            rescoreBtn.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                rescoreWithFeedback(card, rescoreBtn.dataset.feedbackRescore);
+            });
+        }
         body.appendChild(card);
     }
+}
+
+async function rescoreWithFeedback(card, jobId) {
+    const textarea = card.querySelector('[data-feedback-textarea]');
+    const statusEl = card.querySelector('[data-feedback-status]');
+    const btn = card.querySelector('[data-feedback-rescore]');
+    const comment = (textarea && textarea.value || '').trim();
+    if (!comment) {
+        statusEl.textContent = 'Add a comment before rescoring.';
+        statusEl.className = 'text-xs text-yellow-300';
+        return;
+    }
+    btn.disabled = true;
+    const originalLabel = btn.textContent;
+    btn.textContent = 'Rescoring…';
+    statusEl.textContent = '';
+    try {
+        const res = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/feedback-rescore`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ comment }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+            const note = data && data.comment_saved
+                ? '(comment was saved, but the rescore did not run)'
+                : '';
+            throw new Error(`${(data && data.error) || res.statusText} ${note}`.trim());
+        }
+        const oldScore = data.old_score;
+        const newScore = data.new_score;
+        const baseEl = card.querySelector('[data-score-base]');
+        if (baseEl) baseEl.textContent = newScore;
+        const reasonEl = card.querySelector('[data-reason-base]');
+        if (reasonEl) reasonEl.textContent = data.reason || '—';
+        const savedAtEl = card.querySelector('[data-feedback-saved-at]');
+        if (savedAtEl && data.user_comment_at) {
+            savedAtEl.textContent = `last saved ${data.user_comment_at}`;
+        }
+        const sign = (oldScore !== null && newScore !== null && newScore > oldScore) ? '+' : '';
+        const direction = (oldScore !== null && newScore !== null)
+            ? `${oldScore} → ${newScore} (${sign}${newScore - oldScore})`
+            : `score=${newScore}`;
+        statusEl.textContent = `Rescored: ${direction}`;
+        statusEl.className = 'text-xs text-green-300';
+    } catch (err) {
+        statusEl.textContent = `Error: ${err.message || err}`;
+        statusEl.className = 'text-xs text-red-300';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = originalLabel;
+    }
+}
+
+const minScoreInput = document.getElementById('shortlist-min-score');
+if (minScoreInput) {
+    let debounceTimer;
+    minScoreInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => loadShortlist(), 300);
+    });
 }
 
 loadShortlist();
