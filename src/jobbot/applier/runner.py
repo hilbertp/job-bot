@@ -23,6 +23,16 @@ def apply_to_job(
     job: JobPosting, profile: Profile, docs: GeneratedDocs,
     secrets: Secrets, config: Config,
 ) -> ApplyResult:
+    # Route to the email channel first when the enrichment step extracted
+    # a careers/jobs/bewerbung mailbox from the posting — sending an email
+    # is simpler and more reliable than driving a web form, and matches
+    # PRD §7.7 FR-APP-02. The email channel itself enforces dry-run when
+    # SMTP creds are missing, so this is safe even before the operator
+    # finishes wiring TRUENORTH_SMTP_*.
+    if job.apply_email:
+        from .email_channel import send_email_application
+        return send_email_application(job, profile, docs, secrets, config)
+
     if not job.apply_url:
         return ApplyResult(status=JobStatus.APPLY_NEEDS_REVIEW,
                            needs_review_reason="no apply_url on posting")
