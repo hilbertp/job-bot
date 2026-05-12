@@ -473,6 +473,109 @@ def jobs_with_submitted_application(conn: sqlite3.Connection) -> set[str]:
     return {r["job_id"] for r in rows}
 
 
+# Allowed CRM transitions and the proof_level + response_type they imply.
+# `bounced` is special — it flips submitted=0 and status=apply_failed so the
+# row is treated as a failed send, not a successful one waiting for a reply.
+_TRANSITIONS = {
+    "received":  {"proof_level": 2, "response_type": "acknowledged"},
+    "replied":   {"proof_level": 3, "response_type": "replied"},
+    "interview": {"proof_level": 4, "response_type": "interview"},
+    "rejected":  {"proof_level": 5, "response_type": "rejected"},
+    "bounced":   {"proof_level": 0, "response_type": "bounced"},
+}
+
+VALID_APPLICATION_TRANSITIONS = tuple(_TRANSITIONS.keys())
+
+
+def transition_application(
+    conn: sqlite3.Connection,
+    job_id: str,
+    *,
+    new_state: str,
+    note: str | None = None,
+) -> None:
+    """CRM-style manual transition for an applications row.
+
+    Used by the dashboard's per-application action buttons when the operator
+    observes something outside the bot's awareness (an inbox reply, a phone
+    interview, a bounce notification, etc.). Each call appends a fresh entry
+    to proof_evidence so the timeline is preserved; the row's proof_level,
+    response_type, last_response_at, and (for bounces) submitted/status are
+    updated to match the new state.
+
+    Raises ValueError if `new_state` isn't one of VALID_APPLICATION_TRANSITIONS.
+    """
+    from .models import JobStatus
+
+    spec = _TRANSITIONS.get(new_state)
+    if spec is None:
+        raise ValueError(
+            f"unsupported transition {new_state!r}; "
+            f"allowed: {VALID_APPLICATION_TRANSITIONS}"
+        )
+
+    row = conn.execute(
+        "SELECT proof_evidence, submitted FROM applications WHERE job_id = ?",
+        (job_id,),
+    ).fetchone()
+    if not row:
+        raise ValueError(f"no application row for job_id={job_id}")
+
+    try:
+        evidence = json.loads(row["proof_evidence"] or "[]")
+        if not isinstance(evidence, list):
+            evidence = []
+    except json.JSONDecodeError:
+        evidence = []
+    evidence.append({
+        "level": spec["proof_level"],
+        "source": "manual_transition",
+        "transition": new_state,
+        "note": note,
+        "at": _now(),
+    })
+
+    # Bounces flip the application to a failed-send state so the dashboard
+    # stops counting it as "submitted, waiting for a reply".
+    sets = [
+        "proof_level = ?",
+        "response_type = ?",
+        "last_response_at = ?",
+        "last_checked_at = ?",
+        "proof_evidence = ?",
+    ]
+    args: list = [
+        spec["proof_level"],
+        spec["response_type"],
+        _now(),
+        _now(),
+        json.dumps(evidence),
+    ]
+    if new_state == "bounced":
+        sets.extend(["submitted = ?", "status = ?", "error = ?"])
+        args.extend([0, JobStatus.APPLY_FAILED.value,
+                     f"bounced: {note}" if note else "bounced"])
+    sets.append("WHERE job_id = ?")  # placeholder, we'll splice below
+    args.append(job_id)
+
+    conn.execute(
+        "UPDATE applications SET " + ", ".join(sets[:-1]) + " " + sets[-1],
+        args,
+    )
+
+    # Keep seen_jobs.status in sync for the dashboard funnel + "already
+    # applied" guard. Bounces drop the row out of "applied" — operators
+    # may want to re-try via a different channel.
+    new_seen_status = (
+        JobStatus.APPLY_FAILED.value if new_state == "bounced"
+        else JobStatus.APPLY_SUBMITTED.value
+    )
+    conn.execute(
+        "UPDATE seen_jobs SET status = ? WHERE id = ?",
+        (new_seen_status, job_id),
+    )
+
+
 def mark_application_manually(
     conn: sqlite3.Connection,
     job_id: str,
