@@ -215,6 +215,47 @@ def test_rebuild_corpus_fingerprint_stable(tmp_path: Path, monkeypatch):
     )
 
 
+def test_rebuild_compiled_profile_rejects_empty_placeholder_output(
+    tmp_path: Path, monkeypatch,
+):
+    """A blank placeholder profile weakens every scorer call. Reject it
+    instead of silently overwriting data/profile.compiled.yaml with junk."""
+    from jobbot.profile_distiller.distiller import rebuild_compiled_profile
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+    corpus_root = _fake_corpus_root(tmp_path)
+    output_path = tmp_path / "profile.compiled.yaml"
+    mock_response = _make_mock_anthropic_response(
+        """
+voice: {}
+capabilities:
+  - skill: ""
+    years: 0
+    sources: []
+domains: []
+achievements:
+  - text: ""
+    company: ""
+    metric:
+seniority_signals: {}
+languages: []
+"""
+    )
+
+    with patch("jobbot.profile_distiller.distiller.Anthropic") as mock_cls:
+        instance = mock_cls.return_value
+        instance.messages.create.return_value = mock_response
+
+        with pytest.raises(ValueError, match="no usable capabilities"):
+            rebuild_compiled_profile(
+                corpus_root=corpus_root,
+                output_path=output_path,
+                secrets=None,
+            )
+
+    assert not output_path.exists()
+
+
 # ---------------------------------------------------------------------------
 # 6. DB schema — all M1 enrichment columns present after connect()
 # ---------------------------------------------------------------------------

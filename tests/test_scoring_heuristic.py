@@ -7,7 +7,7 @@ from jobbot.config import Secrets
 from jobbot.models import JobPosting
 from jobbot.profile import Profile
 from jobbot.scoring import (
-    CannotScore, MIN_BODY_WORDS, _build_user_message,
+    CannotScore, MIN_BODY_WORDS, PROMPT_PATH, _build_user_message,
     llm_score, llm_score_tailored, passes_heuristic,
 )
 
@@ -237,6 +237,29 @@ def test_user_message_tailored_variant_swaps_cv_and_injects_cover_letter() -> No
     assert hp < cl < jd, f"cover letter section misplaced: hp={hp}, cl={cl}, jd={jd}"
 
 
+def test_user_profile_facts_are_prompted_as_authoritative() -> None:
+    """User-entered facts can enrich the profile even when the PRIMARY_ CV
+    omitted them, without treating generated profile guesses as stronger
+    than the CV."""
+    fact = "Logistik Vertiefung im Master Studium an der TU Berlin."
+    profile = _profile().model_copy(update={"user_facts": [fact]})
+    job = JobPosting(
+        id="profile-fact",
+        source="dailyremote",
+        title="Product Manager",
+        company="Descartes",
+        url="https://example.com/jobs/profile-fact",  # type: ignore
+        description="Job body " * 100,
+    )
+
+    msg = _build_user_message(job, profile, base_cv="# CV\n\nProduct leadership.")
+    prompt = PROMPT_PATH.read_text()
+
+    assert "user_facts:" in msg
+    assert fact in msg
+    assert "Treat `user_facts` as authoritative user-provided facts" in prompt
+
+
 def test_llm_score_tailored_refuses_empty_inputs() -> None:
     """The rescore is meaningless without both tailored artifacts — refuse."""
     job = JobPosting(
@@ -313,3 +336,20 @@ def test_initial_llm_score_uses_sonnet_primary_cv_and_full_scraped_description(
     assert "PRIMARY PROFILE SENTINEL" in user_message
     assert "# Job description" in user_message
     assert sentinel in user_message
+
+
+def test_score_prompt_does_not_over_penalize_transferable_pm_domain_gaps() -> None:
+    """Regression for the Descartes/SellerCloud case: a strong PM role fit
+    must not be dragged below shortlist range solely because the exact
+    e-commerce/OMS/WMS/logistics domain is absent from the CV. Behavior is
+    encoded by the soft/hard domain-gap split in the calibration block."""
+    prompt = PROMPT_PATH.read_text()
+
+    assert "Domain gap — soft case" in prompt
+    assert "treat the gap as manageable" in prompt
+    assert "Transferable B2B SaaS" in prompt
+    assert "Domain gap — hard case" in prompt
+    assert "required, mandatory, core, central, essential" in prompt
+    assert "should usually score 85+" in prompt
+    assert "\"ideally\", \"preferred\", \"nice to have\", \"bonus\", or \"plus\"" in prompt
+    assert "academic specialization or prior hands-on work in a requested domain" in prompt

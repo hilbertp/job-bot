@@ -24,6 +24,7 @@ class Profile(BaseModel):
     achievements: list[dict[str, Any]] = Field(default_factory=list)
     seniority_signals: dict = Field(default_factory=dict)
     languages: list[str] = Field(default_factory=list)
+    user_facts: list[str] = Field(default_factory=list)
     compiled_at: str | None = None
     corpus_fingerprint: str | None = None
 
