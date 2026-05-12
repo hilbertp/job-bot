@@ -46,36 +46,6 @@
     <a id="run-banner-link" class="underline ml-auto text-amber-100/90" href="#">view details</a>
 </div>
 
-<!-- ============================================================
-     OUTBOUND PIPELINE — top-of-dashboard CRM view
-     One card per sent application. Always visible (not collapsed)
-     so the operator sees the full pipeline at a glance every time.
-     Per-card action buttons advance the proof ladder when something
-     happens outside the bot's awareness (a reply lands in the inbox,
-     a recruiter calls, etc.).
-============================================================ -->
-<section id="outbound-pipeline-panel" class="bg-white/10 rounded-2xl border border-white/20 mb-8 overflow-hidden">
-    <div class="px-6 py-5 flex flex-wrap items-baseline justify-between gap-3 border-b border-white/10">
-        <div class="flex flex-wrap items-baseline gap-3">
-            <h2 class="text-xl font-bold">Outbound Pipeline</h2>
-            <span id="outbound-pipeline-count" class="text-xs text-purple-200">— applications</span>
-        </div>
-        <div class="flex flex-wrap items-center gap-2 text-xs" data-outbound-filters>
-            <button data-filter="all"        class="px-2 py-1 rounded bg-white/20 text-purple-100 hover:bg-white/30">All</button>
-            <button data-filter="waiting"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">⏳ Waiting</button>
-            <button data-filter="received"   class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">📨 Received</button>
-            <button data-filter="replied"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">💬 Replied</button>
-            <button data-filter="interview"  class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">🎯 Interview</button>
-            <button data-filter="rejected"   class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">🚫 Rejected</button>
-            <button data-filter="bounced"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">⚠️ Bounced</button>
-        </div>
-    </div>
-    <div class="px-6 py-5">
-        <div id="outbound-pipeline-empty" class="hidden text-sm text-purple-200">No applications sent yet. Mark a job manually with <span class="font-mono">jobbot mark-applied &lt;id&gt;</span> or let the apply pipeline run.</div>
-        <div id="outbound-pipeline-body" class="space-y-3"></div>
-    </div>
-</section>
-
 <section id="stage1-panel" class="bg-white/10 rounded-2xl border border-white/20 mb-8 overflow-hidden" data-collapsible-panel>
     <div class="flex w-full flex-wrap items-start justify-between gap-3 cursor-pointer select-none px-6 py-5 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="stage1-panel-body" aria-expanded="false" aria-label="Toggle Stage 1: Hits per Portal" title="Expand panel">
         <div class="flex flex-wrap items-baseline gap-3">
@@ -244,7 +214,7 @@
     </div>
 </section>
 
-<section id="recent-runs-panel" class="bg-white/10 rounded-2xl border border-white/20 overflow-hidden" data-collapsible-panel>
+<section id="recent-runs-panel" class="bg-white/10 rounded-2xl border border-white/20 mb-8 overflow-hidden" data-collapsible-panel>
     <div class="flex w-full flex-wrap items-start justify-between gap-3 cursor-pointer select-none px-6 py-5 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="recent-runs-panel-body" aria-expanded="false" aria-label="Toggle Recent Runs" title="Expand panel">
         <div class="flex flex-wrap items-baseline gap-3">
             <h2 class="text-xl font-bold">Recent Runs</h2>
@@ -293,6 +263,37 @@
                 </tbody>
             </table>
         </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     OUTBOUND PIPELINE — CRM view (last panel, collapsible)
+     One card per sent application. Per-card action buttons advance
+     the proof ladder when something happens outside the bot's
+     awareness (a reply lands, a recruiter calls, etc.).
+============================================================ -->
+<section id="outbound-pipeline-panel" class="bg-white/10 rounded-2xl border border-white/20 overflow-hidden" data-collapsible-panel>
+    <div class="flex w-full flex-wrap items-start justify-between gap-3 cursor-pointer select-none px-6 py-5 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="outbound-pipeline-panel-body" aria-expanded="false" aria-label="Toggle Outbound Pipeline" title="Expand panel">
+        <div class="flex flex-wrap items-baseline gap-3">
+            <h2 class="text-xl font-bold">Outbound Pipeline</h2>
+            <span id="outbound-pipeline-count" class="text-xs text-purple-200">— applications</span>
+        </div>
+        <span class="text-base text-purple-100 select-none" data-panel-toggle aria-controls="outbound-pipeline-panel-body" aria-expanded="false" aria-hidden="true">
+            <span data-panel-toggle-icon aria-hidden="true">▸</span>
+        </span>
+    </div>
+    <div id="outbound-pipeline-panel-body" class="hidden px-6 pb-6" data-panel-body>
+        <div class="flex flex-wrap items-center gap-2 text-xs mb-4" data-outbound-filters>
+            <button data-filter="all"        class="px-2 py-1 rounded bg-white/20 text-purple-100 hover:bg-white/30">All</button>
+            <button data-filter="waiting"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">⏳ Waiting</button>
+            <button data-filter="received"   class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">📨 Received</button>
+            <button data-filter="replied"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">💬 Replied</button>
+            <button data-filter="interview"  class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">🎯 Interview</button>
+            <button data-filter="rejected"   class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">🚫 Rejected</button>
+            <button data-filter="bounced"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">⚠️ Bounced</button>
+        </div>
+        <div id="outbound-pipeline-empty" class="hidden text-sm text-purple-200">No applications sent yet. Mark a job manually with <span class="font-mono">jobbot mark-applied &lt;id&gt;</span> or let the apply pipeline run.</div>
+        <div id="outbound-pipeline-body" class="space-y-3"></div>
     </div>
 </section>
 

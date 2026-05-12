@@ -581,6 +581,25 @@ def _extract_section(pattern: "re.Pattern[str]", text: str) -> str:
     return m.group(0).strip() if m else ""
 
 
+_SECTION_HEADING_RE = re.compile(
+    r"^#\s+I{1,3}\s+[^\n]+\n+",
+    re.MULTILINE | re.IGNORECASE,
+)
+
+
+def _strip_section_heading(md: str) -> str:
+    """Remove the leading "# I  Cover letter" / "# II  Curriculum vitae"
+    heading from an extracted sub-section.
+
+    Why: the unified application_package layout uses those H1s as visual
+    section dividers in the polished PDF. But when the cover-letter
+    sub-section is used standalone (the email body, the cover_letter.md
+    artifact, the dashboard preview), the heading leaks through as a
+    weird `<h1>I Cover letter</h1>` at the top of the recipient's view.
+    The section body is what the consumer actually wants."""
+    return _SECTION_HEADING_RE.sub("", md, count=1).lstrip()
+
+
 def generate_application_package(
     job: JobPosting, profile: Profile, base_cv: str,
     secrets: Secrets, config: Config,
@@ -627,6 +646,13 @@ def generate_application_package(
     # previews of cv.md / cover_letter.md) keep working unchanged.
     cl_md = _extract_section(_SEC_COVER_LETTER_RE, package_md) or package_md
     cv_md = _extract_section(_SEC_CURRICULUM_VITAE_RE, package_md) or package_md
+    # The extracted sub-sections still begin with "# I  Cover letter" /
+    # "# II  Curriculum vitae" — fine in the unified PDF where those are
+    # visual dividers, but they render as an `<h1>` at the top of the
+    # email body / standalone CV view. Strip the leading heading so the
+    # consumer sees just the actual content.
+    cl_md = _strip_section_heading(cl_md)
+    cv_md = _strip_section_heading(cv_md)
 
     out_root = REPO_ROOT / config.output_dir / date.today().isoformat()
     job_dir = out_root / f"{job.source}__{_slug(job.company)}__{_slug(job.title)}"
