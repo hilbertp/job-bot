@@ -20,7 +20,8 @@ from .scoring import CannotScore, llm_score, llm_score_tailored, passes_heuristi
 from .scrapers import REGISTRY
 from .state import (
     apply_channel, apply_channel_ats_name, connect, finish_run, jobs_by_status,
-    jobs_needing_enrichment, mark_run_stopped, record_application, start_run,
+    jobs_needing_enrichment, jobs_with_submitted_application,
+    mark_run_stopped, record_application, start_run,
     update_score_tailored, update_run_stage_progress, update_status, upsert_new,
     wait_while_paused,
 )
@@ -409,6 +410,17 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
             # 5) Auto-apply (opt-in per source)
             src_cfg = config.sources.get(job.source)
             if src_cfg and src_cfg.auto_submit and n_applied < config.apply.per_run_limit:
+                # Never re-apply to a job that already has a real submitted
+                # application on file — bot OR manual mark. This is the
+                # primary foot-gun guard; without it, every run would
+                # re-send to the same employer.
+                already_applied = jobs_with_submitted_application(conn)
+                if job.id in already_applied:
+                    log.info("apply_skip_already_applied", job_id=job.id,
+                             title=job.title, company=job.company)
+                    entry["apply_status"] = "skipped_already_applied"
+                    matches.append(entry)
+                    continue
                 # Make sure apply_email (extracted at enrichment time, looked
                 # up above for the digest) rides with the JobPosting so the
                 # runner can route to the email channel without re-querying.
