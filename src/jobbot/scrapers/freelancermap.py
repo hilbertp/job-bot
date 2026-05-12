@@ -68,7 +68,11 @@ class FreelancermapScraper(BaseScraper):
                 id=stable_id(self.source, full),
                 source=self.source,
                 title=title,
-                company="(see posting)",  # company appears on detail page; cheap to add later
+                # freelancermap hides the employer behind their login wall, so neither
+                # the listing nor the public detail page exposes the real company name.
+                # The placeholder is on the state.py _COMPANY_PLACEHOLDERS list so it
+                # never overwrites a real name elsewhere.
+                company="freelancermap (Auftraggeber anonym)",
                 url=full,
                 apply_url=full,
                 description=title,  # full description requires a detail-page fetch

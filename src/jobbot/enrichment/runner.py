@@ -153,6 +153,7 @@ def enrich_new_postings(
             seniority=seniority_match.group(1).lower() if seniority_match else None,
             salary_text=salary_match.group(0) if salary_match else None,
             apply_email=apply_email,
+            company=enriched.company,
         )
 
         if description_scraped:
