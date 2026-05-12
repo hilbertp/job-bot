@@ -1,5 +1,5 @@
-# Philipp Hilbert
-Berlin, Germany · hilbertp@gmail.com · linkedin.com/in/...
+# Your Name
+City, Country · you@example.com · linkedin.com/in/your-handle
 
 ## Summary
 One paragraph. Replace this with your real summary — it's the hook. Keep it factual; the LLM will tailor wording per job but never invent.
