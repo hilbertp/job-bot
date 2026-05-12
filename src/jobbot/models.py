@@ -58,6 +58,15 @@ class GeneratedDocs(BaseModel):
     output_dir: str
     cv_pdf: str | None = None            # absolute path; None if WeasyPrint unavailable
     cover_letter_pdf: str | None = None  # absolute path; None if WeasyPrint unavailable
+    # Unified opus-style application package: single PDF containing the
+    # bespoke "Why <company>" / "AI-native stack" / "How I would work" /
+    # cover letter (I) / curriculum vitae (II) sections. When set, this is
+    # the preferred attachment for the email channel — cv_pdf and
+    # cover_letter_pdf are kept as fallbacks for ATS web forms that require
+    # separate uploads.
+    application_package_md: str | None = None
+    application_package_html: str | None = None
+    application_package_pdf: str | None = None
 
 
 class ApplyResult(BaseModel):

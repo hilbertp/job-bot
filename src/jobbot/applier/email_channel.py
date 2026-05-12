@@ -93,10 +93,20 @@ def _build_message(
     if docs.cover_letter_html:
         msg.add_alternative(docs.cover_letter_html, subtype="html")
 
-    for filename, pdf_path in (
-        ("cv.pdf", docs.cv_pdf),
-        ("cover_letter.pdf", docs.cover_letter_pdf),
-    ):
+    # Prefer the unified opus-style application package (one polished PDF
+    # with cover letter as Section I and CV as Section II). Fall back to
+    # the separate cv.pdf + cover_letter.pdf when the package didn't render
+    # — recruiters get something either way.
+    if docs.application_package_pdf and Path(docs.application_package_pdf).exists():
+        attachments: list[tuple[str, str]] = [
+            ("application_package.pdf", docs.application_package_pdf),
+        ]
+    else:
+        attachments = [
+            ("cv.pdf", docs.cv_pdf or ""),
+            ("cover_letter.pdf", docs.cover_letter_pdf or ""),
+        ]
+    for filename, pdf_path in attachments:
         if not pdf_path:
             continue
         p = Path(pdf_path)

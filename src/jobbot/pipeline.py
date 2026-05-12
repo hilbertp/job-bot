@@ -12,7 +12,7 @@ import structlog
 from .applier import apply_to_job
 from .config import Config, Secrets
 from .enrichment.runner import enrich_new_postings
-from .generators import generate_documents
+from .generators import generate_application_package, generate_documents
 from .models import JobPosting, JobStatus
 from .notify import send_digest, send_failure_alert
 from .profile import Profile, load_base_cv, load_profile
@@ -355,12 +355,12 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 continue
 
             try:
-                if "run_id" in inspect.signature(generate_documents).parameters:
-                    docs = generate_documents(
-                        job, profile, base_cv, secrets, config, run_id=run_id,
-                    )
-                else:
-                    docs = generate_documents(job, profile, base_cv, secrets, config)
+                # Prefer the unified opus-style application package so the
+                # email channel attaches a single polished PDF. CV + CL PDFs
+                # are still produced as ATS form-upload fallbacks.
+                docs = generate_application_package(
+                    job, profile, base_cv, secrets, config, run_id=run_id,
+                )
                 update_status(conn, job.id, JobStatus.GENERATED, output_dir=docs.output_dir)
                 n_generated += 1
                 update_run_stage_progress(

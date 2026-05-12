@@ -547,9 +547,11 @@ def test_digest_template_renders_cannot_score_section_when_provided() -> None:
 # Journey 3 — tailored CV + cover letter, score before vs after
 # =============================================================================
 
-def _fake_generate_documents(job, profile, base_cv, secrets, config):
-    """A generate_documents stub that writes minimal real artifacts to disk so
-    the /shortlist/<id>/<file> route has something to serve."""
+def _fake_generate_documents(job, profile, base_cv, secrets, config, **_kwargs):
+    """A generator stub that writes minimal real artifacts to disk so the
+    /shortlist/<id>/<file> route has something to serve. Works as a
+    replacement for both `generate_documents` and the newer
+    `generate_application_package` (accepts **kwargs to swallow run_id)."""
     out_root = Path(config.output_dir).resolve() / "test-run" / job.id
     out_root.mkdir(parents=True, exist_ok=True)
     cv_md = f"# CV (tailored for {job.company})\n\nReordered bullets.\n"
@@ -699,7 +701,7 @@ def test_pipeline_writes_both_score_and_score_tailored_when_generation_runs(
     # Redirect generation output into the tmp dir so we don't pollute output/.
     config = _make_config(generate_above=80)
     config.output_dir = str(tmp_path / "out")
-    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents); monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
 
     pipeline.run_once(config, _make_secrets())
 
@@ -739,7 +741,7 @@ def test_api_shortlist_exposes_tailored_score_fields(tmp_path: Path, monkeypatch
     )
     config = _make_config(generate_above=80)
     config.output_dir = str(tmp_path / "out")
-    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents); monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
 
     pipeline.run_once(config, _make_secrets())
 
@@ -786,7 +788,7 @@ def test_dashboard_does_not_present_base_score_as_tailored_rescore(
     monkeypatch.setattr(pipeline, "llm_score_tailored", _tailored_rescore_not_live)
     config = _make_config(generate_above=80)
     config.output_dir = str(tmp_path / "out")
-    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents); monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
 
     pipeline.run_once(config, _make_secrets())
 
@@ -830,7 +832,7 @@ def test_shortlist_doc_route_serves_existing_html(tmp_path: Path, monkeypatch) -
     )
     config = _make_config(generate_above=80)
     config.output_dir = str(tmp_path / "out")
-    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents); monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
 
     pipeline.run_once(config, _make_secrets())
 
@@ -866,7 +868,7 @@ def test_shortlist_doc_route_rejects_filenames_outside_allowlist(
     )
     config = _make_config(generate_above=80)
     config.output_dir = str(tmp_path / "out")
-    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents); monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
 
     pipeline.run_once(config, _make_secrets())
 
