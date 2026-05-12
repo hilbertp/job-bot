@@ -266,6 +266,62 @@ def _write_pdf_failure_artifact(target: Path, label: str, error: Exception) -> s
     return str(target)
 
 
+def _trust_anchor_line(profile: Profile) -> str | None:
+    """Build the one-line "online presence" trust band — LinkedIn, GitHub,
+    personal site (e.g. true-north.berlin), plus the YouTube English-language
+    sample link when present. Empty links are skipped.
+
+    Returns markdown like "[LinkedIn](url) · [GitHub](url) · [site](url) ·
+    [YouTube (EN sample)](url)", or None if the profile has no links at all
+    (don't inject an empty band)."""
+    links = (profile.personal or {}).get("links") or {}
+    entries: list[tuple[str, str]] = []
+    if links.get("linkedin"):
+        entries.append(("LinkedIn", links["linkedin"]))
+    if links.get("github"):
+        entries.append(("GitHub", links["github"]))
+    if links.get("website"):
+        label = links["website"].split("://", 1)[-1].rstrip("/")
+        entries.append((label, links["website"]))
+    if links.get("youtube_english_sample"):
+        entries.append(("YouTube (EN sample)", links["youtube_english_sample"]))
+    if not entries:
+        return None
+    return " · ".join(f"[{label}]({url})" for label, url in entries)
+
+
+def _inject_trust_anchors(cv_md: str, profile: Profile) -> str:
+    """Make LinkedIn / GitHub / personal-site links prominently visible at
+    BOTH the top (right after the H1 header block) and the bottom of every
+    tailored CV. The LLM is told not to invent facts, so we add these as a
+    deterministic post-process — they're guaranteed to appear regardless of
+    what the model did with the base CV."""
+    line = _trust_anchor_line(profile)
+    if not line:
+        return cv_md
+    lines = cv_md.splitlines()
+    # Insert at the first horizontal-rule divider — the conventional end of
+    # the CV's header block (name + role + contact-line). If the model
+    # dropped the divider, fall back to inserting after the H1 + any
+    # immediately-following non-blank lines (subtitle, contact line).
+    insert_at: int | None = None
+    for i, raw in enumerate(lines):
+        if raw.strip() == "---":
+            insert_at = i
+            break
+    if insert_at is None:
+        for i, raw in enumerate(lines):
+            if raw.startswith("# "):
+                insert_at = i + 1
+                while insert_at < len(lines) and lines[insert_at].strip():
+                    insert_at += 1
+                break
+    if insert_at is None:
+        insert_at = len(lines)
+    lines[insert_at:insert_at] = ["", line, ""]
+    return "\n".join(lines + ["", "---", "", line, ""])
+
+
 def generate_documents(
     job: JobPosting, profile: Profile, base_cv: str,
     secrets: Secrets, config: Config,
@@ -286,6 +342,10 @@ def generate_documents(
         client, cv_prompt, payload,
         run_id=run_id, phase="generate_cv", job_id=job.id,
     )
+    # Pin LinkedIn / GitHub / personal-site links visibly at top + bottom of
+    # every tailored CV. Done post-LLM so the bands are guaranteed regardless
+    # of what the model chose to keep from the base CV's header.
+    cv_md = _inject_trust_anchors(cv_md, profile)
     cl_md = _call_sonnet(
         client, cl_prompt, payload,
         run_id=run_id, phase="generate_cover_letter", job_id=job.id,

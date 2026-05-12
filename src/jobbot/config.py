@@ -20,6 +20,14 @@ class Secrets(BaseModel):
     captcha_api_key: str = ""
     imap_host: str = "imap.gmail.com"
     imap_port: int = 993
+    # PRD §7.7 — outbound application channel uses a dedicated business
+    # mailbox at hilbert@true-north.berlin (NOT the Gmail digest address).
+    # All four fields must be set together for the email channel to send;
+    # if any is missing, the channel forces dry-run regardless of config.
+    truenorth_smtp_host: str = ""
+    truenorth_smtp_port: int = 587
+    truenorth_smtp_user: str = ""
+    truenorth_smtp_pass: str = ""
 
 
 class ApplyConfig(BaseModel):
@@ -82,6 +90,10 @@ def load_secrets(env_file: Path | None = None) -> Secrets:
         captcha_api_key=os.environ.get("CAPTCHA_API_KEY", ""),
         imap_host=os.environ.get("IMAP_HOST", "imap.gmail.com"),
         imap_port=int(os.environ.get("IMAP_PORT", "993")),
+        truenorth_smtp_host=os.environ.get("TRUENORTH_SMTP_HOST", ""),
+        truenorth_smtp_port=int(os.environ.get("TRUENORTH_SMTP_PORT", "587")),
+        truenorth_smtp_user=os.environ.get("TRUENORTH_SMTP_USER", ""),
+        truenorth_smtp_pass=os.environ.get("TRUENORTH_SMTP_PASS", ""),
     )
 
 

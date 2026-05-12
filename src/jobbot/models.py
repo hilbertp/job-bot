@@ -39,6 +39,10 @@ class JobPosting(BaseModel):
     description: str = ""
     tags: list[str] = Field(default_factory=list)
     raw: dict[str, Any] = Field(default_factory=dict)
+    # Populated by the enrichment step (extract_apply_email) and threaded
+    # through to the applier so apply_to_job() can route to the email
+    # channel without a per-call DB lookup.
+    apply_email: str | None = None
 
 
 class ScoreResult(BaseModel):

@@ -140,6 +140,10 @@ def enrich_new_postings(
 
         log.debug("enrichment_persisting", job_id=job.id, source=job.source, word_count=word_count, scraped=description_scraped)
 
+        # Thread the extracted contact through the in-memory job so the
+        # applier can route to the email channel without a DB round-trip.
+        enriched.apply_email = apply_email
+
         update_enrichment(
             conn,
             job_id=job.id,

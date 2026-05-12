@@ -409,6 +409,11 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
             # 5) Auto-apply (opt-in per source)
             src_cfg = config.sources.get(job.source)
             if src_cfg and src_cfg.auto_submit and n_applied < config.apply.per_run_limit:
+                # Make sure apply_email (extracted at enrichment time, looked
+                # up above for the digest) rides with the JobPosting so the
+                # runner can route to the email channel without re-querying.
+                if not job.apply_email and apply_email:
+                    job.apply_email = apply_email
                 try:
                     res = apply_to_job(job, profile, docs, secrets, config)
                     record_application(conn, job.id, res)
