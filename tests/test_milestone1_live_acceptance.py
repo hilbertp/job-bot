@@ -1,20 +1,20 @@
 """Live acceptance test for PRD Milestone 1 enrichment quality.
 
-This test intentionally uses real scrapers and real network calls.
-It is opt-in because it is slow/flaky by nature and depends on source uptime.
-
-Enable with:
-    JOBBOT_RUN_LIVE_ENRICHMENT_ACCEPTANCE=1
+This test uses real scrapers and real network calls. It runs by default
+because a silently-skipped regression test gives us no signal — we'd
+rather see flaky failures than fly blind on enrichment quality.
 
 What it validates:
 1) Trigger a fresh pipeline run (real scrape + enrichment).
 2) Read rows inserted in this run from SQLite.
 3) Per enabled source, assert at least 80% have enriched descriptions
    (description_scraped=1 and description_word_count >= 100).
+
+To skip locally when offline / rate-limited, run:
+    pytest -m "not live"
 """
 from __future__ import annotations
 
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -24,7 +24,6 @@ from jobbot.config import Config, DigestConfig, Secrets, SourceConfig
 from jobbot.pipeline import run_once
 from jobbot.state import connect
 
-LIVE_ENV_FLAG = "JOBBOT_RUN_LIVE_ENRICHMENT_ACCEPTANCE"
 MIN_SUCCESS_RATE = 0.80
 
 
@@ -32,9 +31,6 @@ MIN_SUCCESS_RATE = 0.80
 @pytest.mark.live
 @pytest.mark.integration
 def test_live_enrichment_acceptance_80_percent(tmp_path: Path, monkeypatch):
-    if os.getenv(LIVE_ENV_FLAG) != "1":
-        pytest.skip(f"set {LIVE_ENV_FLAG}=1 to run live acceptance test")
-
     # Isolate this live test into a temporary DB.
     db_path = tmp_path / "jobbot_live_acceptance.db"
     monkeypatch.setattr("jobbot.state.DB_PATH", db_path)

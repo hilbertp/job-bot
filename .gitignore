@@ -36,6 +36,7 @@ data/corpus/website/
 # --- State, runtime, and generated artifacts (never commit) ---
 data/jobbot.db
 data/jobbot.db-*
+data/jobbot.db.*
 data/debug_*.db
 data/debug_*.db-*
 data/exports/
