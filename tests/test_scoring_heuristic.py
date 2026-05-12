@@ -353,3 +353,29 @@ def test_score_prompt_does_not_over_penalize_transferable_pm_domain_gaps() -> No
     assert "should usually score 85+" in prompt
     assert "\"ideally\", \"preferred\", \"nice to have\", \"bonus\", or \"plus\"" in prompt
     assert "academic specialization or prior hands-on work in a requested domain" in prompt
+
+
+def test_score_prompt_treats_hybrid_plus_willing_to_relocate_as_compatible() -> None:
+    """Regression for the Peter Park case: a senior PM role in Munich
+    with a 3-days-office / 2-days-remote schedule was scored 62 because
+    the model treated `preferences.on_site_ok: false` as a hard veto
+    even though `willing_to_relocate: true`. The corrected calibration
+    must pin three things:
+
+      1. Hybrid is NOT incompatible when willing_to_relocate=true.
+      2. Hybrid in Germany + EU-based candidate + willing_to_relocate
+         should land the location axis in 70-90.
+      3. on_site_ok=false is a remote-first preference, not a hybrid veto.
+
+    If any of these three pins go missing, every German hybrid role
+    in the shortlist becomes vulnerable to the same under-score.
+    """
+    prompt = PROMPT_PATH.read_text()
+
+    assert "Location scoring (axis-level guidance)" in prompt
+    assert "Do not treat hybrid as incompatible if the candidate is willing to relocate" in prompt
+    assert "Germany/EU-based with willing_to_relocate=true" in prompt
+    assert "location score should normally be 70–90" in prompt
+    assert "severe penalties below 40 for location when the role is on-site-only" in prompt
+    assert "on_site_ok: false" in prompt
+    assert "preference for remote-first, NOT a veto on hybrid" in prompt
