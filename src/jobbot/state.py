@@ -339,8 +339,18 @@ def update_enrichment(
     seniority: str | None,
     salary_text: str | None,
     apply_email: str | None,
+    company: str | None = None,
 ) -> None:
-    """Persist enrichment fields for a posting and keep raw_json description in sync."""
+    """Persist enrichment fields for a posting and keep raw_json description in sync.
+
+    When `company` is provided AND non-empty AND not a known listing-page
+    placeholder, the seen_jobs.company column is updated. This catches the
+    common case where the listing page hides the employer behind a
+    "[Unlock with Premium]" / "Unknown" / "(see posting)" stub and the real
+    name only appears on the detail page (e.g. dailyremote's JSON-LD).
+    Without this, every dailyremote row would dedup against the placeholder
+    and the dashboard would show 50+ rows all labelled "Unknown".
+    """
     row = conn.execute("SELECT raw_json FROM seen_jobs WHERE id = ?", (job_id,)).fetchone()
     raw_json = row["raw_json"] if row else "{}"
     try:
@@ -349,23 +359,45 @@ def update_enrichment(
         payload = {}
     if isinstance(payload, dict):
         payload["description"] = description_full or payload.get("description", "")
+        if _is_real_company_name(company):
+            payload["company"] = company
 
-    conn.execute(
+    base_sql = (
         "UPDATE seen_jobs SET description_full = ?, description_scraped = ?, "
         "description_word_count = ?, seniority = ?, salary_text = ?, apply_email = ?, "
-        "enriched_at = ?, raw_json = ? WHERE id = ?",
-        (
-            description_full,
-            int(description_scraped),
-            description_word_count,
-            seniority,
-            salary_text,
-            apply_email,
-            _now(),
-            json.dumps(payload),
-            job_id,
-        ),
+        "enriched_at = ?, raw_json = ?"
     )
+    params: list = [
+        description_full,
+        int(description_scraped),
+        description_word_count,
+        seniority,
+        salary_text,
+        apply_email,
+        _now(),
+        json.dumps(payload),
+    ]
+    if _is_real_company_name(company):
+        base_sql += ", company = ?"
+        params.append(company)
+    conn.execute(base_sql + " WHERE id = ?", params + [job_id])
+
+
+_COMPANY_PLACEHOLDERS = {
+    "", "unknown", "n/a", "na", "none", "tbd",
+    "(see posting)", "[unlock with premium]", "see posting",
+    "anonymous", "anonymous company", "confidential",
+    "auftraggeber", "projektanbieter",  # freelancermap-style
+    "freelancermap (auftraggeber anonym)",
+}
+
+
+def _is_real_company_name(name: str | None) -> bool:
+    """Filter out the listing-page placeholders that hide real company names
+    (dailyremote's "Unknown", freelancermap's "(see posting)", etc.)."""
+    if not name:
+        return False
+    return name.strip().lower() not in _COMPANY_PLACEHOLDERS
 
 
 def update_score_tailored(
