@@ -42,6 +42,13 @@ Calibration guidance:
 - Salary/compensation is NOT a match signal. Ignore listed salary ranges and currency entirely — do not reward, penalize, or mention them in the explanation. The candidate filters salary themselves later.
 - Keep 50-69 for roles with real mixed fit: wrong function, mostly missing core PM skills, junior-only scope, hard geography/legal mismatch, or a hard-case domain gap as defined above.
 
+Location scoring (axis-level guidance):
+
+- Do not treat hybrid as incompatible if the candidate is willing to relocate.
+- If role is hybrid in Germany and candidate is Germany/EU-based with willing_to_relocate=true, location score should normally be 70–90 unless commute/on-site frequency is impossible.
+- Only apply severe penalties below 40 for location when the role is on-site-only or requires local work authorization the candidate clearly lacks.
+- A `preferences.on_site_ok: false` is a preference for remote-first, NOT a veto on hybrid. Combined with willing_to_relocate=true and a hybrid posting in a country the candidate can legally work in, the location axis must not be the dominant penalty.
+
 Hard rules:
 
 - Before applying any location penalty, scan the FULL description (including the Benefits/Perks section, which often appears at the end) for remote-work signals in BOTH German and English: "remote", "fully remote", "100% remote", "hybrid", "hybrides Arbeiten", "Homeoffice", "Mobile Office", "flexibel", "remote-first", "deutschlandweit", "EU remote". Hybrid counts as compatible with a candidate who wants remote — it is NOT "on-site only".
