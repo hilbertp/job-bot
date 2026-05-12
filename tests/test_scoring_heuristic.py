@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -158,13 +159,13 @@ def test_llm_score_refuses_when_description_not_scraped() -> None:
     assert "description_scraped" in exc.value.reason
 
 
-def test_llm_score_refuses_when_primary_cv_missing(tmp_path: Path, monkeypatch) -> None:
-    """FR-SCO-01: if PRIMARY_* CV cannot be loaded, refuse — never silent fallback."""
-    # Point scoring.load_primary_cv at an empty corpus directory.
-    empty_corpus = tmp_path / "corpus"
-    (empty_corpus / "cvs").mkdir(parents=True)
-    monkeypatch.setattr("jobbot.scoring.load_primary_cv",
-                        lambda: (_ for _ in ()).throw(FileNotFoundError("no PRIMARY_")))
+def test_llm_score_refuses_when_primary_cv_missing(monkeypatch) -> None:
+    """FR-SCO-01: if the PRIMARY_ corpus CV is missing, refuse — never silent
+    fallback to a thinner profile file."""
+    monkeypatch.setattr(
+        "jobbot.scoring.load_primary_cv",
+        lambda: (_ for _ in ()).throw(FileNotFoundError("no PRIMARY_ CV")),
+    )
 
     body = " ".join(["lead product"] * 250)  # comfortably above MIN_BODY_WORDS
     job = JobPosting(
@@ -191,7 +192,7 @@ def test_user_message_has_five_sections_in_order() -> None:
         url="https://example.com/jobs/ordering",  # type: ignore
         description="Job body text " * 100,
     )
-    msg = _build_user_message(job, _profile(), primary_cv="# Philipp Hilbert CV\n\nExperience: ...")
+    msg = _build_user_message(job, _profile(), base_cv="# Philipp Hilbert CV\n\nExperience: ...")
 
     headers = [
         "# Primary CV (source of truth)",
@@ -220,7 +221,7 @@ def test_user_message_tailored_variant_swaps_cv_and_injects_cover_letter() -> No
     tailored_cl = "Dear Acme team,\n\nI'm excited..."
 
     msg = _build_user_message(
-        job, _profile(), primary_cv=tailored_cv,
+        job, _profile(), base_cv=tailored_cv,
         cv_section_label="Tailored CV (this application's CV)",
         extra_section=("Cover letter (tailored)", tailored_cl),
     )
@@ -255,3 +256,60 @@ def test_llm_score_tailored_refuses_empty_inputs() -> None:
         llm_score_tailored(job, _profile(), _secrets(),
                            tailored_cv_md="cv", tailored_cover_letter_md="   ")
     assert exc.value.reason.startswith("no_tailored_cl")
+
+
+def test_initial_llm_score_uses_sonnet_primary_cv_and_full_scraped_description(
+    monkeypatch,
+) -> None:
+    """Regression for the initial profile checker/scorer:
+    - calls Sonnet, not Haiku;
+    - uses the PRIMARY_ CV corpus text;
+    - sends the full enriched job description under the cap."""
+    captured: dict = {}
+
+    class FakeMessages:
+        def create(self, **kwargs):
+            captured.update(kwargs)
+            return SimpleNamespace(
+                content=[
+                    SimpleNamespace(
+                        type="text",
+                        text='{"score": 88, "reason": "strong primary-profile fit"}',
+                    )
+                ]
+            )
+
+    class FakeAnthropic:
+        def __init__(self, api_key: str) -> None:
+            captured["api_key"] = api_key
+            self.messages = FakeMessages()
+
+    monkeypatch.setattr("jobbot.scoring.Anthropic", FakeAnthropic)
+    monkeypatch.setattr(
+        "jobbot.scoring.load_primary_cv",
+        lambda: "# PRIMARY PROFILE SENTINEL\n\nProduct leadership proof.",
+    )
+
+    sentinel = "FULL_DESCRIPTION_SENTINEL_AT_END"
+    body = " ".join(["product management ownership"] * 220) + f" {sentinel}"
+    job = JobPosting(
+        id="initial-score",
+        source="test",
+        title="Senior Product Manager",
+        company="Acme",
+        url="https://example.com/jobs/initial-score",  # type: ignore
+        description=body,
+    )
+
+    result = llm_score(job, _profile(), _secrets(), description_scraped=True)
+
+    assert result.score == 88
+    assert captured["api_key"] == "dummy"
+    assert captured["model"] == "claude-sonnet-4-6"
+    assert captured["max_tokens"] == 800
+
+    user_message = captured["messages"][0]["content"]
+    assert "# Primary CV (source of truth)" in user_message
+    assert "PRIMARY PROFILE SENTINEL" in user_message
+    assert "# Job description" in user_message
+    assert sentinel in user_message

@@ -3,7 +3,7 @@
 Pins:
   - The five stages render in the user-specified order with the
     correct absolute counts.
-  - Retention % is computed against the PREVIOUS stage and color-bucketed
+  - Percent badges are computed against Total and color-bucketed
     (red < 20%, amber 20-50%, green >= 50%).
   - `cannot_score:*` rows count toward Total but NOT toward Suitable.
   - The Interviewed card carries an `M5` pill so the placeholder zero
@@ -16,7 +16,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-import pytest
 from bs4 import BeautifulSoup
 
 from jobbot.dashboard.server import _load_legacy_dashboard_module
@@ -24,7 +23,7 @@ from jobbot.dashboard.server import _load_legacy_dashboard_module
 _dashboard = _load_legacy_dashboard_module()
 compute_funnel = _dashboard.compute_funnel
 compute_activity_today = _dashboard.compute_activity_today
-_retention_color = _dashboard._retention_color
+_percentage_color = _dashboard._percentage_color
 from jobbot.models import JobPosting, JobStatus
 from jobbot.state import (
     connect,
@@ -66,7 +65,7 @@ def _seed_known_funnel(db: Path) -> None:
         # Mark j0 as cannot_score:no_body — counted in Total, NOT in Suitable
         update_status(
             conn, "j0", JobStatus.CANNOT_SCORE_NO_BODY,
-            reason="< 200 words",
+            reason="< 100 words",
         )
 
         # 6 rows score >= 70 (j1..j6)
@@ -149,7 +148,7 @@ def test_cannot_score_row_counts_total_but_not_suitable(
         upsert_new(conn, [_job("only_cannot")])
         update_status(
             conn, "only_cannot", JobStatus.CANNOT_SCORE_NO_BODY,
-            reason="< 200 words",
+            reason="< 100 words",
         )
         # NOTE: no score recorded — column stays NULL.
 
@@ -160,7 +159,7 @@ def test_cannot_score_row_counts_total_but_not_suitable(
     assert counts["Suitable"] == 0
 
 
-def test_retention_pct_is_against_previous_stage(
+def test_funnel_percentages_are_against_total_jobs(
     tmp_path: Path, monkeypatch,
 ) -> None:
     db = tmp_path / "jobbot.db"
@@ -171,29 +170,29 @@ def test_retention_pct_is_against_previous_stage(
         funnel = compute_funnel(conn)
 
     by_label = {s["label"]: s for s in funnel}
-    assert by_label["Total"]["retention_pct"] is None
-    assert by_label["Suitable"]["retention_pct"] == 60.0      # 6/10
-    assert by_label["Tailored"]["retention_pct"] == 50.0      # 3/6
-    assert by_label["Applied"]["retention_pct"] == pytest.approx(33.3, abs=0.1)  # 1/3
-    assert by_label["Interviewed"]["retention_pct"] == 0.0    # 0/1
+    assert by_label["Total"]["pct_of_total"] is None
+    assert by_label["Suitable"]["pct_of_total"] == 60.0      # 6/10
+    assert by_label["Tailored"]["pct_of_total"] == 30.0      # 3/10
+    assert by_label["Applied"]["pct_of_total"] == 10.0       # 1/10
+    assert by_label["Interviewed"]["pct_of_total"] == 0.0    # 0/10
 
 
-def test_retention_color_thresholds() -> None:
+def test_percentage_color_thresholds() -> None:
     """Red < 20%, amber 20-50%, green 50%+."""
-    assert _retention_color(0.0) == "red"
-    assert _retention_color(19.9) == "red"
-    assert _retention_color(20.0) == "amber"
-    assert _retention_color(49.9) == "amber"
-    assert _retention_color(50.0) == "green"
-    assert _retention_color(100.0) == "green"
-    assert _retention_color(None) == "neutral"
+    assert _percentage_color(0.0) == "red"
+    assert _percentage_color(19.9) == "red"
+    assert _percentage_color(20.0) == "amber"
+    assert _percentage_color(49.9) == "amber"
+    assert _percentage_color(50.0) == "green"
+    assert _percentage_color(100.0) == "green"
+    assert _percentage_color(None) == "neutral"
 
 
-def test_funnel_retention_color_assignment(
+def test_funnel_percentage_color_assignment(
     tmp_path: Path, monkeypatch,
 ) -> None:
-    """Seeded fixture: Suitable 60% (green), Tailored 50% (green),
-    Applied ~33% (amber), Interviewed 0% (red)."""
+    """Seeded fixture: Suitable 60% (green), Tailored 30% (amber),
+    Applied 10% (red), Interviewed 0% (red)."""
     db = tmp_path / "jobbot.db"
     monkeypatch.setattr("jobbot.state.DB_PATH", db)
     _seed_known_funnel(db)
@@ -202,11 +201,11 @@ def test_funnel_retention_color_assignment(
         funnel = compute_funnel(conn)
 
     by_label = {s["label"]: s for s in funnel}
-    assert by_label["Total"]["retention_color"] == "neutral"
-    assert by_label["Suitable"]["retention_color"] == "green"
-    assert by_label["Tailored"]["retention_color"] == "green"
-    assert by_label["Applied"]["retention_color"] == "amber"
-    assert by_label["Interviewed"]["retention_color"] == "red"
+    assert by_label["Total"]["percentage_color"] == "neutral"
+    assert by_label["Suitable"]["percentage_color"] == "green"
+    assert by_label["Tailored"]["percentage_color"] == "amber"
+    assert by_label["Applied"]["percentage_color"] == "red"
+    assert by_label["Interviewed"]["percentage_color"] == "red"
 
 
 def test_interviewed_has_pending_milestone_flag(
@@ -227,21 +226,21 @@ def test_interviewed_has_pending_milestone_flag(
         assert by_label[other]["pending_milestone"] is None
 
 
-def test_funnel_empty_db_renders_zeros_and_no_retention(
+def test_funnel_empty_db_renders_zeros_and_no_percentage(
     tmp_path: Path, monkeypatch,
 ) -> None:
-    """No rows anywhere — every count is 0; retention is None past Total
-    because prev_count = 0 produces an undefined ratio."""
+    """No rows anywhere — every count is 0; percentages are undefined
+    because there is no total denominator."""
     db = tmp_path / "jobbot.db"
     monkeypatch.setattr("jobbot.state.DB_PATH", db)
     with connect(db) as conn:
         funnel = compute_funnel(conn)
 
     assert all(s["count"] == 0 for s in funnel)
-    assert funnel[0]["retention_pct"] is None  # Total has no predecessor
+    assert funnel[0]["pct_of_total"] is None
     for s in funnel[1:]:
-        assert s["retention_pct"] is None
-        assert s["retention_color"] == "neutral"
+        assert s["pct_of_total"] is None
+        assert s["percentage_color"] == "neutral"
 
 
 # ---------------------------------------------------------------------------
@@ -311,11 +310,11 @@ def test_dashboard_home_renders_five_funnel_cards(
     assert counts == ["10", "6", "3", "1", "0"]
 
 
-def test_dashboard_home_renders_retention_color_classes(
+def test_dashboard_home_renders_percentage_color_classes(
     tmp_path: Path, monkeypatch,
 ) -> None:
-    """The seeded fixture produces green/green/amber/red — assert each
-    card carries the matching data-funnel-retention attribute."""
+    """The seeded fixture produces green/amber/red/red — assert each
+    card carries the matching data-funnel-percentage attribute."""
     db = tmp_path / "jobbot.db"
     monkeypatch.setattr("jobbot.state.DB_PATH", db)
     _seed_known_funnel(db)
@@ -325,13 +324,13 @@ def test_dashboard_home_renders_retention_color_classes(
     soup = BeautifulSoup(html, "html.parser")
     cards = soup.find(id="funnel-strip").find_all(attrs={"data-funnel-stage": True})
 
-    # The Total card has no retention badge; the other four do.
-    badges = [c.find(attrs={"data-funnel-retention": True}) for c in cards]
-    assert badges[0] is None  # Total carries no retention badge
-    assert badges[1]["data-funnel-retention"] == "green"   # Suitable 60%
-    assert badges[2]["data-funnel-retention"] == "green"   # Tailored 50%
-    assert badges[3]["data-funnel-retention"] == "amber"   # Applied 33%
-    assert badges[4]["data-funnel-retention"] == "red"     # Interviewed 0%
+    # The Total card has no percentage badge; the other four do.
+    badges = [c.find(attrs={"data-funnel-percentage": True}) for c in cards]
+    assert badges[0] is None
+    assert badges[1]["data-funnel-percentage"] == "green"   # Suitable 60%
+    assert badges[2]["data-funnel-percentage"] == "amber"   # Tailored 30%
+    assert badges[3]["data-funnel-percentage"] == "red"     # Applied 10%
+    assert badges[4]["data-funnel-percentage"] == "red"     # Interviewed 0%
 
 
 def test_dashboard_home_renders_m5_pill_on_interviewed(

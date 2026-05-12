@@ -34,7 +34,7 @@ async function loadRuns() {
         const tr = document.createElement('tr');
         tr.className = 'border-b border-white/5';
         tr.innerHTML = `
-            <td class="py-3"><a class="underline" href="/runs/${run.id}">#${run.id} · ${run.timestamp || ''}</a></td>
+            <td class="py-3"><a class="underline" href="/runs/${run.id}" title="${run.timestamp || ''}">#${run.id} · ${run.timestamp_display || run.timestamp || ''}</a></td>
             <td class="py-3">${run.n_fetched ?? 0}</td>
             <td class="py-3">${run.n_new ?? 0}</td>
             <td class="py-3">${run.n_generated ?? 0}</td>

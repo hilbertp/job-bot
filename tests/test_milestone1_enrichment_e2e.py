@@ -111,6 +111,6 @@ def test_pipeline_enriches_new_jobs_before_scoring(tmp_path: Path, monkeypatch):
         "Pipeline did not call fetch_detail on newly scraped jobs"
     )
     assert scored_descriptions, "Expected at least one scoring call"
-    assert len(scored_descriptions[0].split()) >= 200, (
-        "Scoring ran without enriched full body (expected >=200 words)"
+    assert len(scored_descriptions[0].split()) >= 100, (
+        "Scoring ran without enriched full body (expected >=100 words)"
     )

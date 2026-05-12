@@ -28,7 +28,7 @@ import structlog
 
 from ..models import JobPosting
 from ..scrapers import REGISTRY
-from ..state import update_enrichment
+from ..state import update_enrichment, update_run_stage_progress
 from .email_extractor import extract_apply_email
 
 log = structlog.get_logger()
@@ -48,7 +48,13 @@ class EnrichmentReport:
     enriched_jobs: list[JobPosting] = field(default_factory=list)
 
 
-def enrich_new_postings(jobs: list[JobPosting], conn, registry: dict[str, object] | None = None) -> EnrichmentReport:
+def enrich_new_postings(
+    jobs: list[JobPosting],
+    conn,
+    registry: dict[str, object] | None = None,
+    *,
+    run_id: int | None = None,
+) -> EnrichmentReport:
     """Walk new jobs, call each scraper's fetch_detail, persist enrichment cols.
 
     Returns counts suitable for the digest's per-source health table.
@@ -57,9 +63,22 @@ def enrich_new_postings(jobs: list[JobPosting], conn, registry: dict[str, object
 
     scraper_registry = REGISTRY if registry is None else registry
     log.info("enrichment_starting", n_jobs=len(jobs), n_scrapers=len(scraper_registry))
+    if run_id is not None:
+        update_run_stage_progress(
+            conn, run_id, "enrichment",
+            total=len(jobs), started=0, completed=0, failed=0, skipped=0,
+            current_index=0, current_item_id=None, current_label=None,
+        )
 
-    for job in jobs:
+    for idx, job in enumerate(jobs, start=1):
         report.n_attempted += 1
+        if run_id is not None:
+            update_run_stage_progress(
+                conn, run_id, "enrichment",
+                total=len(jobs), started=idx, current_index=idx,
+                current_item_id=job.id,
+                current_label=f"{job.title} @ {job.company} ({job.source})",
+            )
         scraper = scraper_registry.get(job.source)
         fetch_detail = getattr(scraper, "fetch_detail", None) if scraper is not None else None
         if not callable(fetch_detail):
@@ -76,6 +95,12 @@ def enrich_new_postings(jobs: list[JobPosting], conn, registry: dict[str, object
                 salary_text=None,
                 apply_email=None,
             )
+            if run_id is not None:
+                update_run_stage_progress(
+                    conn, run_id, "enrichment",
+                    completed=report.n_succeeded,
+                    failed=report.n_failed,
+                )
             continue
 
         try:
@@ -98,6 +123,12 @@ def enrich_new_postings(jobs: list[JobPosting], conn, registry: dict[str, object
                 salary_text=None,
                 apply_email=None,
             )
+            if run_id is not None:
+                update_run_stage_progress(
+                    conn, run_id, "enrichment",
+                    completed=report.n_succeeded,
+                    failed=report.n_failed,
+                )
             continue
 
         text = (enriched.description or "").strip()
@@ -127,6 +158,12 @@ def enrich_new_postings(jobs: list[JobPosting], conn, registry: dict[str, object
         else:
             report.n_failed += 1
             report.per_source_failure[job.source] += 1
+        if run_id is not None:
+            update_run_stage_progress(
+                conn, run_id, "enrichment",
+                completed=report.n_succeeded,
+                failed=report.n_failed,
+            )
     
     log.info("enrichment_complete", n_attempted=report.n_attempted, n_succeeded=report.n_succeeded, n_failed=report.n_failed)
 
