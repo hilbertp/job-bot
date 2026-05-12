@@ -417,6 +417,64 @@ def record_application(conn: sqlite3.Connection, job_id: str, result) -> None:
     )
 
 
+def jobs_with_submitted_application(conn: sqlite3.Connection) -> set[str]:
+    """Return the set of job_ids that already have a real submitted
+    application on file — bot OR manual mark. The pipeline must consult
+    this set BEFORE every auto-apply attempt to avoid double-sending.
+
+    Counts only rows with `submitted = 1`. Dry-run rows (submitted = 0,
+    dry_run = 1) deliberately do NOT count — those are queued previews,
+    not confirmed sends."""
+    rows = conn.execute(
+        "SELECT DISTINCT job_id FROM applications WHERE submitted = 1"
+    ).fetchall()
+    return {r["job_id"] for r in rows}
+
+
+def mark_application_manually(
+    conn: sqlite3.Connection,
+    job_id: str,
+    *,
+    note: str | None = None,
+    channel: str = "manual",
+) -> None:
+    """Record that the operator applied to this job OUTSIDE the bot.
+
+    Writes an `applications` row with submitted=1 + proof_level=1 + a
+    proof_evidence entry tagged source="manual", and flips the seen_jobs
+    status to APPLY_SUBMITTED. After this call the pipeline's apply step
+    will skip the job on every future run (the same guard that protects
+    against re-sending a bot-submitted application).
+
+    Idempotent: re-running on the same job_id replaces the row but keeps
+    the "manual" provenance tag. Note text, when set, is preserved in
+    needs_review_reason so the dashboard / digest can surface it.
+    """
+    from .models import JobStatus
+
+    evidence = [{
+        "level": 1,
+        "source": channel,
+        "submitted": True,
+        "note": note,
+        "at": _now(),
+    }]
+    conn.execute(
+        "INSERT OR REPLACE INTO applications(job_id, attempted_at, status, submitted, "
+        "dry_run, needs_review_reason, error, screenshot_path, confirmation_url, "
+        "proof_level, proof_evidence, last_checked_at) "
+        "VALUES (?, ?, ?, 1, 0, ?, NULL, NULL, NULL, 1, ?, ?)",
+        (
+            job_id, _now(), JobStatus.APPLY_SUBMITTED.value,
+            note, json.dumps(evidence), _now(),
+        ),
+    )
+    conn.execute(
+        "UPDATE seen_jobs SET status = ? WHERE id = ?",
+        (JobStatus.APPLY_SUBMITTED.value, job_id),
+    )
+
+
 def start_run(conn: sqlite3.Connection) -> int:
     cur = conn.execute("INSERT INTO runs(started_at) VALUES (?)", (_now(),))
     run_id = cur.lastrowid  # type: ignore[assignment]

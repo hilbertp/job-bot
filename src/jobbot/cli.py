@@ -144,6 +144,31 @@ def cmd_apply(args) -> int:
     return cmd_run(args)
 
 
+def cmd_mark_applied(args) -> int:
+    """Mark a job as already applied to (outside the bot — LinkedIn UI,
+    in-person, recruiter call). The pipeline's apply step will skip this
+    job on every subsequent run."""
+    from .state import mark_application_manually
+
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT id, title, company, status FROM seen_jobs WHERE id = ?",
+            (args.job_id,),
+        ).fetchone()
+        if row is None:
+            console.print(f"[red]no seen_jobs row found with id={args.job_id}[/red]")
+            return 1
+        mark_application_manually(conn, args.job_id, note=args.note,
+                                  channel=args.channel)
+    console.print(
+        f"[green]marked as applied[/green]: {row['title']} @ {row['company']} "
+        f"({args.job_id}) — future pipeline runs will skip this job."
+    )
+    if args.note:
+        console.print(f"  note: {args.note}")
+    return 0
+
+
 def cmd_dashboard(_args) -> int:
     from .dashboard import run as run_dashboard
     console.print("[bold]🤖 jobbot dashboard[/bold] starting on [cyan]http://localhost:5001[/cyan]")
@@ -520,6 +545,18 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("scan-inbox", help="Scan inbox for application outcomes.").set_defaults(fn=cmd_scan_inbox)
     sub.add_parser("inbox-scan", help="Alias for scan-inbox.").set_defaults(fn=cmd_scan_inbox)
     sub.add_parser("apply", help="Run the scheduled apply pipeline pass.").set_defaults(fn=cmd_apply)
+
+    mark = sub.add_parser(
+        "mark-applied",
+        help="Mark a job as already applied to outside the bot. Future "
+             "pipeline runs will skip it.",
+    )
+    mark.add_argument("job_id", help="The seen_jobs.id of the job to mark.")
+    mark.add_argument("--note", default=None,
+                      help="Free-text note (e.g. 'applied via LinkedIn UI').")
+    mark.add_argument("--channel", default="manual",
+                      help="Provenance tag for proof_evidence (default: manual).")
+    mark.set_defaults(fn=cmd_mark_applied)
 
     enrich = sub.add_parser(
         "enrich",
