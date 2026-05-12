@@ -139,6 +139,14 @@ def cmd_scan_inbox(_args) -> int:
     return 0
 
 
+def cmd_init(_args) -> int:
+    """Interactive newcomer wizard: writes .env + profile.yaml + config.yaml
+    + base_cv.md after a focused Q&A. Designed for someone who has never
+    touched the codebase."""
+    from .onboard import run
+    return run()
+
+
 def cmd_apply(args) -> int:
     """Run the configured pipeline pass used by the scheduled apply job."""
     return cmd_run(args)
@@ -536,6 +544,7 @@ def cmd_profile_remove(args) -> int:
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="jobbot")
     sub = p.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("init",    help="Interactive newcomer setup: writes .env + profile.yaml + config.yaml + base_cv.md.").set_defaults(fn=cmd_init)
     sub.add_parser("run",     help="Run one full pipeline pass.").set_defaults(fn=cmd_run)
     sub.add_parser("digest",  help="Send a digest of the last 24h.").set_defaults(fn=cmd_digest)
     sub.add_parser("status",  help="Show pipeline counts.").set_defaults(fn=cmd_status)

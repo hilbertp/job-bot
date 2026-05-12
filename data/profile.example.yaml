@@ -2,17 +2,18 @@
 # Replace with your real data and save as data/profile.yaml.
 
 personal:
-  full_name: "Philipp Hilbert"
-  email: "hilbertp@gmail.com"
-  phone: "+49 ..."
+  full_name: "Your Name"
+  email: "you@example.com"
+  phone: "+49 ..."          # or +1 / +44 / etc — country code that matches your location
   location:
-    city: "Berlin"
-    country: "Germany"
-    timezone: "Europe/Berlin"
+    city: "Your City"
+    country: "Your Country"
+    timezone: "Europe/Berlin"   # IANA tz: e.g. America/New_York, Asia/Singapore, Europe/London
   links:
-    linkedin: "https://www.linkedin.com/in/..."
-    github: "https://github.com/..."
-    website: "https://..."
+    linkedin: "https://www.linkedin.com/in/your-handle"
+    github: "https://github.com/your-handle"
+    website: "https://your-site.example"
+    # youtube_english_sample: "https://www.youtube.com/watch?v=..."   # optional: link to a sample of you speaking English
 
 # Used by both the scorer and the auto-applier's standard fields.
 preferences:
