@@ -191,7 +191,11 @@ def test_user_message_has_five_sections_in_order() -> None:
         url="https://example.com/jobs/ordering",  # type: ignore
         description="Job body text " * 100,
     )
-    msg = _build_user_message(job, _profile(), primary_cv="# Philipp Hilbert CV\n\nExperience: ...")
+    static_prefix, dynamic_suffix = _build_user_message(
+        job, _profile(),
+        primary_cv="# Philipp Hilbert CV\n\nExperience: ...",
+    )
+    msg = static_prefix + dynamic_suffix
 
     headers = [
         "# Primary CV (source of truth)",
@@ -203,6 +207,16 @@ def test_user_message_has_five_sections_in_order() -> None:
     positions = [msg.find(h) for h in headers]
     assert all(p != -1 for p in positions), f"missing section header(s): {positions}"
     assert positions == sorted(positions), f"sections out of order: {positions}"
+
+    # Static prefix is the cache-stable portion: CV + profile + prefs.
+    # Dynamic suffix holds the job-specific body + metadata.
+    assert "# Primary CV (source of truth)" in static_prefix
+    assert "# Compiled profile (yaml)" in static_prefix
+    assert "# Hard preferences (yaml)" in static_prefix
+    assert "# Job description" in dynamic_suffix
+    assert "# Job metadata" in dynamic_suffix
+    assert "# Job description" not in static_prefix
+    assert "# Primary CV (source of truth)" not in dynamic_suffix
 
 
 def test_user_message_tailored_variant_swaps_cv_and_injects_cover_letter() -> None:
@@ -219,11 +233,13 @@ def test_user_message_tailored_variant_swaps_cv_and_injects_cover_letter() -> No
     tailored_cv = "# Tailored CV for Acme\n\nReordered bullets for this role."
     tailored_cl = "Dear Acme team,\n\nI'm excited..."
 
-    msg = _build_user_message(
+    static_prefix, dynamic_suffix = _build_user_message(
         job, _profile(), primary_cv=tailored_cv,
         cv_section_label="Tailored CV (this application's CV)",
         extra_section=("Cover letter (tailored)", tailored_cl),
+        cv_in_static=False,
     )
+    msg = static_prefix + dynamic_suffix
 
     assert "# Tailored CV (this application's CV)" in msg
     assert "# Primary CV (source of truth)" not in msg
@@ -234,6 +250,14 @@ def test_user_message_tailored_variant_swaps_cv_and_injects_cover_letter() -> No
     cl = msg.find("# Cover letter (tailored)")
     jd = msg.find("# Job description")
     assert hp < cl < jd, f"cover letter section misplaced: hp={hp}, cl={cl}, jd={jd}"
+
+    # Tailored CV is dynamic (varies per posting) — it must NOT be in the
+    # cache-stable static prefix. Only the profile + prefs blocks are
+    # cache-stable on this path.
+    assert "# Tailored CV (this application's CV)" not in static_prefix
+    assert "# Tailored CV (this application's CV)" in dynamic_suffix
+    assert "# Compiled profile (yaml)" in static_prefix
+    assert "# Hard preferences (yaml)" in static_prefix
 
 
 def test_llm_score_tailored_refuses_empty_inputs() -> None:
