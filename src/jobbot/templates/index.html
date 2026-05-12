@@ -111,6 +111,7 @@
                         <th class="pb-2" data-stage1-sort="description_scraped">Description Scraped</th>
                         <th class="pb-2" data-stage1-sort="expected_salary">Expected Salary</th>
                         <th class="pb-2" data-stage1-sort="seniority_required">Seniority Required</th>
+                        <th class="pb-2">Scoring Reason</th>
                         <th class="pb-2">Link</th>
                     </tr>
                 </thead>
@@ -459,6 +460,69 @@ async function loadStage1Data() {
         return '<span class="inline-flex items-center gap-1 whitespace-nowrap text-purple-200"><span aria-hidden="true">✋</span><span>manual</span></span>';
     }
 
+    // Stage 2 "Scoring Reason" column.
+    //
+    // For new rows the server sends a structured `score_breakdown` dict
+    // ({role, skills, location, seniority}). For old rows the embedded
+    // "role=82, skills=85, ..." prefix in score_reason is parsed
+    // server-side into the same shape. Either path produces a clean
+    // 4-axis pill row + a one-line narrative.
+    //
+    // Output format matches the user-spec:
+    //   `Role 82 | Skills 85 | Location 25 | Seniority 78 — <reason>`
+    //
+    // When status is 'filtered' OR score < 70 (didn't make shortlist),
+    // the narrative is prefixed "Discarded:" so a false negative jumps
+    // out without having to read the full reason line.
+    function scoringReasonCell(job) {
+        const bd = job.score_breakdown;
+        const reason = (job.reason || '').trim();
+        const explicitDiscard = (job.discard_reason || '').trim();
+        const score = job.score;
+        const status = (job.status || '').toLowerCase();
+
+        // Strip the legacy "role=X, skills=Y, location=Z, seniority=W;" prefix
+        // from the reason text — the structured pills above will surface those.
+        const cleanReason = reason
+            .replace(/^role\s*=\s*\d+\s*,\s*skills\s*=\s*\d+\s*,\s*location\s*=\s*\d+\s*,\s*seniority\s*=\s*\d+\s*;?\s*/i, '')
+            .trim();
+
+        const isDiscarded = (
+            status === 'filtered'
+            || (score !== null && score !== undefined && score < 70)
+        );
+        const narrative = explicitDiscard || cleanReason || '';
+        const narrativeWithPrefix = (
+            isDiscarded && narrative && !narrative.toLowerCase().startsWith('discarded:')
+        ) ? `Discarded: ${narrative}` : narrative;
+
+        // Build the pill row from the structured breakdown when we have it.
+        let pills = '';
+        if (bd && typeof bd === 'object') {
+            const axes = [
+                ['Role', bd.role], ['Skills', bd.skills],
+                ['Location', bd.location], ['Seniority', bd.seniority],
+            ];
+            pills = axes.map(([label, val]) => {
+                if (val === null || val === undefined) return '';
+                const tone = val >= 70 ? 'text-green-300'
+                           : val >= 40 ? 'text-yellow-200'
+                                       : 'text-red-300';
+                return `<span class="${tone}">${label} ${val}</span>`;
+            }).filter(Boolean).join('<span class="text-purple-400 mx-1">|</span>');
+        }
+
+        const titleAttr = (reason || '').replace(/"/g, '&quot;');
+        if (!pills && !narrativeWithPrefix) {
+            return '<span class="text-purple-300">—</span>';
+        }
+        const dash = (pills && narrativeWithPrefix) ? '<span class="text-purple-400 mx-2">—</span>' : '';
+        const narrativeHtml = narrativeWithPrefix
+            ? `<span class="text-purple-200" title="${titleAttr}">${narrativeWithPrefix}</span>`
+            : '';
+        return `<div class="text-xs leading-snug max-w-xl">${pills}${dash}${narrativeHtml}</div>`;
+    }
+
     function scoreCell(job) {
         const s = job.score;
         if (s === null || s === undefined) return '<span class="text-purple-200">—</span>';
@@ -481,6 +545,7 @@ async function loadStage1Data() {
             <td class="py-3">${descriptionScrapedCell(job)}</td>
             <td class="py-3">${job.expected_salary || 'not specified'}</td>
             <td class="py-3">${job.seniority_required || 'not specified'}</td>
+            <td class="py-3">${scoringReasonCell(job)}</td>
             <td class="py-3"><a class="underline" target="_blank" href="${job.url || '#'}">open</a></td>
         `;
         tbody.appendChild(tr);

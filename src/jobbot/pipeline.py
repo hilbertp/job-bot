@@ -221,7 +221,11 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 # the LLM runs, and PRD §7.5 reserves the `score` column for
                 # actual LLM output. Leaving it NULL preserves the invariant
                 # that "score IS NOT NULL ⇒ preconditions passed".
-                update_status(conn, job.id, JobStatus.FILTERED, reason=reason)
+                # Persist the heuristic rejection cause to discard_reason so the
+                # dashboard's Scoring Reason column shows WHY the row was dropped
+                # without making the user open the row to read score_reason.
+                update_status(conn, job.id, JobStatus.FILTERED, reason=reason,
+                              discard_reason=f"heuristic: {reason}")
                 n_filtered += 1
                 update_run_stage_progress(
                     conn, run_id, "scoring",
@@ -281,7 +285,9 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 continue
             if result.score < config.score_threshold:
                 update_status(conn, job.id, JobStatus.BELOW_THRESHOLD,
-                              score=result.score, reason=result.reason)
+                              score=result.score, reason=result.reason,
+                              breakdown=result.breakdown,
+                              discard_reason=result.discard_reason)
                 n_below_threshold += 1
                 score_values.append(result.score)
                 update_run_stage_progress(
@@ -291,7 +297,9 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 )
                 continue
             update_status(conn, job.id, JobStatus.SCORED,
-                          score=result.score, reason=result.reason)
+                          score=result.score, reason=result.reason,
+                          breakdown=result.breakdown,
+                          discard_reason=result.discard_reason)
             n_scored += 1
             score_values.append(result.score)
             to_generate.append((job, result.score, result.reason))

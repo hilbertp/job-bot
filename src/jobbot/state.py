@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS seen_jobs (
     salary_text   TEXT,
     apply_email   TEXT,
     score_breakdown_json TEXT,
+    discard_reason TEXT,
     enriched_at   TEXT,
     scored_at     TEXT,
     output_dir    TEXT,
@@ -123,6 +124,7 @@ SEEN_JOBS_ADD_COLUMNS: list[tuple[str, str]] = [
     ("salary_text", "TEXT"),
     ("apply_email", "TEXT"),
     ("score_breakdown_json", "TEXT"),
+    ("discard_reason", "TEXT"),
     ("enriched_at", "TEXT"),
     ("scored_at", "TEXT"),
     # Stage-3 rescore: the same scorer run AFTER tailored CV + CL are
@@ -314,7 +316,9 @@ def upsert_new(conn: sqlite3.Connection, jobs: list[JobPosting]) -> list[JobPost
 
 def update_status(conn: sqlite3.Connection, job_id: str, status: JobStatus,
                   score: int | None = None, reason: str | None = None,
-                  output_dir: str | None = None) -> None:
+                  output_dir: str | None = None,
+                  breakdown: dict | None = None,
+                  discard_reason: str | None = None) -> None:
     sets = ["status = ?"]
     args: list = [status.value]
     if score is not None:
@@ -326,6 +330,12 @@ def update_status(conn: sqlite3.Connection, job_id: str, status: JobStatus,
     if output_dir is not None:
         sets.append("output_dir = ?")
         args.append(output_dir)
+    if breakdown is not None:
+        sets.append("score_breakdown_json = ?")
+        args.append(json.dumps(breakdown))
+    if discard_reason is not None:
+        sets.append("discard_reason = ?")
+        args.append(discard_reason)
     args.append(job_id)
     conn.execute(f"UPDATE seen_jobs SET {', '.join(sets)} WHERE id = ?", args)
 
@@ -1012,17 +1022,31 @@ def jobs_needing_base_rescore_force(
 
 def update_base_score_only(
     conn: sqlite3.Connection, job_id: str, score: int | None, reason: str,
+    breakdown: dict | None = None, discard_reason: str | None = None,
 ) -> None:
     """Refresh the base score (score + score_reason + scored_at) without
     touching `status`. Used by the force-rescore loop so a row already in
     a late-stage status (GENERATED, APPLY_*) doesn't get knocked back to
     SCORED/BELOW_THRESHOLD. `score=None` records a cannot_score reason on
-    a late-stage row without demoting its status."""
+    a late-stage row without demoting its status.
+
+    Accepts optional `breakdown` (structured per-axis sub-scores) and
+    `discard_reason`. When None, the corresponding columns are NOT touched
+    — important on force-rescore loops where one row's failure shouldn't
+    wipe a previous row's good breakdown. Pass an empty dict / "" to
+    explicitly clear instead."""
     scored_at = _now() if score is not None else None
+    sets = ["score = ?", "score_reason = ?", "scored_at = ?"]
+    args: list = [score, reason, scored_at]
+    if breakdown is not None:
+        sets.append("score_breakdown_json = ?")
+        args.append(json.dumps(breakdown) if breakdown else None)
+    if discard_reason is not None:
+        sets.append("discard_reason = ?")
+        args.append(discard_reason or None)
+    args.append(job_id)
     conn.execute(
-        "UPDATE seen_jobs SET score = ?, score_reason = ?, scored_at = ? "
-        "WHERE id = ?",
-        (score, reason, scored_at, job_id),
+        f"UPDATE seen_jobs SET {', '.join(sets)} WHERE id = ?", args,
     )
 
 
