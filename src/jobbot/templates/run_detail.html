@@ -14,11 +14,98 @@
             in progress · auto-refreshing every 5s
         </span>
         {% endif %}
+        <span class="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-purple-100 text-xs px-3 py-1 rounded-full">
+            control: {{ control_state.requested_state }}
+        </span>
+        {% if in_progress and control_state.requested_state == 'paused' %}
+        <div class="flex flex-wrap gap-2 ml-auto" data-run-controls data-run-id="{{ run.id }}">
+            <button type="button" data-run-action="resume" class="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-300/40 text-emerald-100 px-3 py-1.5 rounded-lg text-sm font-semibold" title="Resume this paused run">▶ Play</button>
+            <button type="button" data-run-action="stop" class="bg-red-500/20 hover:bg-red-500/30 border border-red-300/40 text-red-100 px-3 py-1.5 rounded-lg text-sm font-semibold" title="Stop run">⏹ Stop</button>
+        </div>
+        {% elif in_progress %}
+        <div class="flex flex-wrap gap-2 ml-auto" data-run-controls data-run-id="{{ run.id }}">
+            <button type="button" data-run-action="pause" class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-300/40 text-amber-100 px-3 py-1.5 rounded-lg text-sm font-semibold" title="Pause after the current step">⏸ Pause</button>
+            <button type="button" data-run-action="stop" class="bg-red-500/20 hover:bg-red-500/30 border border-red-300/40 text-red-100 px-3 py-1.5 rounded-lg text-sm font-semibold" title="Stop run">⏹ Stop</button>
+        </div>
+        {% elif control_state.requested_state == 'stopped' %}
+        <div class="flex flex-wrap gap-2 ml-auto" data-run-controls data-run-id="{{ run.id }}">
+            <button type="button" data-run-action="start" class="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-300/40 text-emerald-100 px-3 py-1.5 rounded-lg text-sm font-semibold" title="Start a fresh run">▶ Play</button>
+        </div>
+        {% endif %}
     </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-        <div><span class="text-purple-200">Started:</span> {{ run.started_at }}</div>
-        <div><span class="text-purple-200">Finished:</span> {{ run.finished_at or '—' }}</div>
+        <div><span class="text-purple-200">Started:</span> <span title="{{ run.started_at }}">{{ run.started_at_display }}</span></div>
+        <div><span class="text-purple-200">Finished:</span> <span title="{{ run.finished_at or '' }}">{{ run.finished_at_display }}</span></div>
         <div><span class="text-purple-200">Errors:</span> {{ run.n_errors }}</div>
+    </div>
+</div>
+
+<div class="bg-white/10 rounded-2xl p-6 border border-white/20 mb-6">
+    <div class="flex flex-wrap items-baseline justify-between gap-3 mb-4">
+        <h3 class="text-xl font-bold">Live Progress</h3>
+        <div class="text-sm text-purple-100">
+            LLM calls <strong>{{ llm_usage.totals.calls }}</strong>
+            · tokens <strong>{{ llm_usage.totals.input_tokens + llm_usage.totals.output_tokens }}</strong>
+            · est. cost <strong>${{ "%.4f"|format(llm_usage.totals.cost_usd) }}</strong>
+        </div>
+    </div>
+    <div class="space-y-4">
+        {% for row in progress_rows %}
+        <div>
+            <div class="flex flex-wrap items-baseline justify-between gap-3 text-sm mb-1">
+                <div>
+                    <span class="font-semibold capitalize">{{ row.stage.replace('_', ' ') }}</span>
+                    <span class="text-purple-200">
+                        {{ row.item_n }}/{{ row.display_total }}
+                        · done {{ row.done }}
+                        · failed {{ row.failed }}
+                        · skipped {{ row.skipped }}
+                    </span>
+                </div>
+                <span class="text-purple-100 font-semibold">{{ "%.1f"|format(row.pct) }}%</span>
+            </div>
+            <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div class="h-full bg-emerald-300/80" style="width: {{ row.pct }}%"></div>
+            </div>
+            {% if row.active and row.current_label %}
+            <div class="text-xs text-purple-200 mt-1">Current: {{ row.current_label }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-6">
+        <h4 class="text-sm font-semibold text-purple-100 mb-2">Token And Cost Tracking</h4>
+        {% if llm_usage.phases %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead>
+                    <tr class="text-purple-200 border-b border-white/10">
+                        <th class="pb-2">Phase</th>
+                        <th class="pb-2">Model</th>
+                        <th class="pb-2">Calls</th>
+                        <th class="pb-2">Input</th>
+                        <th class="pb-2">Output</th>
+                        <th class="pb-2">Est. Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for phase in llm_usage.phases %}
+                    <tr class="border-b border-white/5">
+                        <td class="py-2">{{ phase.phase }}</td>
+                        <td class="py-2">{{ phase.model }}</td>
+                        <td class="py-2">{{ phase.calls }}</td>
+                        <td class="py-2">{{ phase.input_tokens }}</td>
+                        <td class="py-2">{{ phase.output_tokens }}</td>
+                        <td class="py-2">${{ "%.4f"|format(phase.cost_usd) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-sm text-purple-200">No LLM token usage was recorded for this run. Older runs only show DB-derived progress.</p>
+        {% endif %}
     </div>
 </div>
 
@@ -32,6 +119,9 @@
         <div>New: <strong>{{ stages.get('new', run.n_new) }}</strong></div>
         <div>Duplicates/Seen: <strong>{{ stages.get('duplicates_or_seen_before', 0) }}</strong></div>
         <div>Enriched: <strong>{{ stages.get('enriched', 0) }}</strong></div>
+        <div>Enrichment Attempted: <strong>{{ stages.get('enrichment_attempted', enrichment_progress.attempted) }}</strong></div>
+        <div>No Description: <strong>{{ stages.get('enrichment_failed', enrichment_progress.no_description) }}</strong></div>
+        <div>Enrichment Pending: <strong>{{ stages.get('enrichment_pending', enrichment_progress.pending) }}</strong></div>
         <div>Filtered: <strong>{{ stages.get('filtered', 0) }}</strong></div>
         <div>Scored: <strong>{{ stages.get('scored', 0) }}</strong></div>
         <div>Below Threshold: <strong>{{ stages.get('below_threshold', 0) }}</strong></div>
@@ -51,6 +141,9 @@
                     <th class="pb-2">Portal</th>
                     <th class="pb-2">Hits</th>
                     <th class="pb-2">% With Description</th>
+                    <th class="pb-2">Enriched</th>
+                    <th class="pb-2">No Description</th>
+                    <th class="pb-2">Pending</th>
                 </tr>
             </thead>
             <tbody>
@@ -62,9 +155,12 @@
                         {{ "%.1f"|format(row.percent_with_description) }}%
                         <span class="text-xs text-purple-200">({{ row.with_description }}/{{ row.total }})</span>
                     </td>
+                    <td class="py-3">{{ row.enriched }}</td>
+                    <td class="py-3">{{ row.no_description }}</td>
+                    <td class="py-3">{{ row.pending }}</td>
                 </tr>
                 {% else %}
-                <tr><td colspan="3" class="py-3 text-purple-200">No portals reporting yet.</td></tr>
+                <tr><td colspan="6" class="py-3 text-purple-200">No portals reporting yet.</td></tr>
                 {% endfor %}
             </tbody>
             <tfoot>
@@ -72,6 +168,9 @@
                     <td class="pt-3">Total</td>
                     <td class="pt-3">{{ portal_total }}</td>
                     <td class="pt-3">{{ "%.1f"|format(portal_pct_with_description) }}%</td>
+                    <td class="pt-3">{{ enrichment_progress.enriched }}</td>
+                    <td class="pt-3">{{ enrichment_progress.no_description }}</td>
+                    <td class="pt-3">{{ enrichment_progress.pending }}</td>
                 </tr>
             </tfoot>
         </table>
@@ -103,4 +202,31 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+document.querySelectorAll('[data-run-action]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const wrap = btn.closest('[data-run-controls]');
+        const runId = wrap && wrap.getAttribute('data-run-id');
+        const action = btn.getAttribute('data-run-action');
+        if (!runId || !action) return;
+        wrap.querySelectorAll('button').forEach(b => b.disabled = true);
+        try {
+            if (action === 'start') {
+                await fetch('/api/runs/trigger', {method: 'POST'});
+                window.location.href = '/runs';
+                return;
+            } else {
+                await fetch(`/api/runs/${runId}/control`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action}),
+                });
+            }
+        } finally {
+            window.location.reload();
+        }
+    });
+});
+</script>
 {% endblock %}

@@ -55,7 +55,7 @@ class FakeScraper:
 
     def fetch_detail(self, job):
         self.fetch_detail_calls += 1
-        long_body = " ".join(["responsibility"] * 240)  # >= MIN_BODY_WORDS (200)
+        long_body = " ".join(["responsibility"] * 240)  # >= MIN_BODY_WORDS (100)
         return job.model_copy(update={"description": long_body})
 
 
@@ -212,10 +212,6 @@ def test_run_detail_page_404s_for_unknown_run() -> None:
     assert resp.status_code == 404
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Dashboard re-run control is not implemented yet",
-)
 def test_dashboard_home_exposes_rerun_control(tmp_path: Path, monkeypatch) -> None:
     """The dashboard should let the user trigger a new pipeline run without
     leaving the browser."""
@@ -438,15 +434,11 @@ def test_latest_run_portal_hits_exposes_description_coverage_by_source(
     }
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Body coverage should require description_word_count >= 200, not just non-empty text",
-)
 def test_latest_run_portal_hits_body_coverage_uses_minimum_word_count(
     tmp_path: Path, monkeypatch,
 ) -> None:
     """User-facing body coverage means usable job-body coverage: postings with
-    description_word_count >= 200 by source."""
+    description_word_count >= 100 by source."""
     from jobbot.dashboard.server import _load_legacy_dashboard_module
     from jobbot.models import JobPosting
     from jobbot.state import connect, finish_run, start_run, update_enrichment, upsert_new
@@ -543,7 +535,7 @@ def test_digest_template_renders_cannot_score_section_when_provided() -> None:
                     "location": "Berlin", "url": "https://example.com/jobs/1",
                     "source": "linkedin"},
             "status": "cannot_score:no_body",
-            "reason": "no_body: description has 24 words, need >= 200",
+            "reason": "no_body: description has 24 words, need >= 100",
         }],
     )
     assert "Cannot score" in html
@@ -632,10 +624,6 @@ def test_generate_documents_writes_complete_tailored_bundle(
     assert (out / "cover_letter.pdf").read_bytes().startswith(b"%PDF")
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="PDF render failures are still swallowed instead of surfaced as incomplete artifacts",
-)
 def test_generate_documents_does_not_silently_drop_pdf_artifacts(
     tmp_path: Path, monkeypatch,
 ) -> None:

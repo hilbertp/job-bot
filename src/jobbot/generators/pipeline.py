@@ -178,13 +178,63 @@ def _render_html(md: str) -> str:
 </body></html>"""
 
 
-def _call_sonnet(client: Anthropic, system_prompt: str, user_payload: str) -> str:
+def _usage_int(usage: object, name: str) -> int:
+    if isinstance(usage, dict):
+        value = usage.get(name, 0)
+    else:
+        value = getattr(usage, name, 0)
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _record_usage_if_present(
+    msg: object,
+    *,
+    run_id: int | None,
+    phase: str,
+    job_id: str | None,
+    model: str,
+) -> None:
+    if run_id is None:
+        return
+    usage = getattr(msg, "usage", None)
+    if usage is None:
+        return
+    from ..state import connect, record_llm_usage
+
+    with connect() as conn:
+        record_llm_usage(
+            conn,
+            run_id=run_id,
+            phase=phase,
+            job_id=job_id,
+            model=model,
+            input_tokens=_usage_int(usage, "input_tokens"),
+            output_tokens=_usage_int(usage, "output_tokens"),
+            cache_creation_input_tokens=_usage_int(usage, "cache_creation_input_tokens"),
+            cache_read_input_tokens=_usage_int(usage, "cache_read_input_tokens"),
+        )
+
+
+def _call_sonnet(
+    client: Anthropic,
+    system_prompt: str,
+    user_payload: str,
+    *,
+    run_id: int | None = None,
+    phase: str,
+    job_id: str | None = None,
+) -> str:
+    model = "claude-sonnet-4-6"
     msg = client.messages.create(
-        model="claude-sonnet-4-6",
+        model=model,
         max_tokens=2000,
         system=system_prompt,
         messages=[{"role": "user", "content": user_payload}],
     )
+    _record_usage_if_present(msg, run_id=run_id, phase=phase, job_id=job_id, model=model)
     return "".join(b.text for b in msg.content if b.type == "text").strip()
 
 
@@ -198,9 +248,29 @@ def _resolve_static_cv(config: Config) -> Path | None:
     return p if p.is_file() else None
 
 
+def _write_pdf_failure_artifact(target: Path, label: str, error: Exception) -> str:
+    """Write a visible placeholder PDF plus a sidecar error note.
+
+    The PDF intentionally starts with a PDF header so downstream code has a
+    concrete artifact to inspect instead of a silent missing path.
+    """
+    safe_error = f"{type(error).__name__}: {error}".replace("\n", " ")
+    target.write_bytes(
+        b"%PDF-1.4\n"
+        + f"% jobbot failed to render {label}: {safe_error}\n".encode("utf-8")
+        + b"%%EOF\n"
+    )
+    target.with_suffix(".render_error.txt").write_text(
+        f"Failed to render {label} PDF\n{safe_error}\n"
+    )
+    return str(target)
+
+
 def generate_documents(
     job: JobPosting, profile: Profile, base_cv: str,
     secrets: Secrets, config: Config,
+    *,
+    run_id: int | None = None,
 ) -> GeneratedDocs:
     client = Anthropic(api_key=secrets.anthropic_api_key)
 
@@ -212,8 +282,14 @@ def generate_documents(
         f"# Base CV\n\n{base_cv}\n"
     )
 
-    cv_md = _call_sonnet(client, cv_prompt, payload)
-    cl_md = _call_sonnet(client, cl_prompt, payload)
+    cv_md = _call_sonnet(
+        client, cv_prompt, payload,
+        run_id=run_id, phase="generate_cv", job_id=job.id,
+    )
+    cl_md = _call_sonnet(
+        client, cl_prompt, payload,
+        run_id=run_id, phase="generate_cover_letter", job_id=job.id,
+    )
 
     out_root = REPO_ROOT / config.output_dir / date.today().isoformat()
     job_dir = out_root / f"{job.source}__{_slug(job.company)}__{_slug(job.title)}"
@@ -228,27 +304,47 @@ def generate_documents(
 
     cv_pdf_path: str | None = None
     cl_pdf_path: str | None = None
+    cv_pdf_dest = job_dir / "cv.pdf"
+    cl_pdf_dest = job_dir / "cover_letter.pdf"
     try:
         from weasyprint import HTML as WP
-        _cv_pdf = job_dir / "cv.pdf"
-        _cl_pdf = job_dir / "cover_letter.pdf"
-        WP(string=cv_html).write_pdf(str(_cv_pdf))
-        WP(string=cl_html).write_pdf(str(_cl_pdf))
-        cv_pdf_path = str(_cv_pdf)
-        cl_pdf_path = str(_cl_pdf)
-    except Exception:
-        pass  # WeasyPrint optional; fall back below.
+    except Exception as e:
+        cv_render_error = cl_render_error = e
+        WP = None
+    else:
+        cv_render_error = cl_render_error = None
+        try:
+            WP(string=cv_html).write_pdf(str(cv_pdf_dest))
+            cv_pdf_path = str(cv_pdf_dest)
+        except Exception as e:
+            cv_render_error = e
+        try:
+            WP(string=cl_html).write_pdf(str(cl_pdf_dest))
+            cl_pdf_path = str(cl_pdf_dest)
+        except Exception as e:
+            cl_render_error = e
 
     # Fallback: if the tailored CV PDF didn't render, copy the static
-    # general CV.pdf in so the application is still attachable. The cover
-    # letter has no static fallback — adapters skip the file upload if
-    # cl_pdf_path is None.
+    # general CV.pdf in so the application is still attachable. If no static
+    # fallback exists, write a visible placeholder artifact plus sidecar note
+    # so the failure is not silently hidden.
     if cv_pdf_path is None:
         static_cv = _resolve_static_cv(config)
         if static_cv is not None:
-            cv_pdf_dest = job_dir / "cv.pdf"
             shutil.copyfile(static_cv, cv_pdf_dest)
             cv_pdf_path = str(cv_pdf_dest)
+            if cv_render_error is not None:
+                cv_pdf_dest.with_suffix(".render_error.txt").write_text(
+                    f"Tailored CV PDF render failed; copied static CV fallback.\n"
+                    f"{type(cv_render_error).__name__}: {cv_render_error}\n"
+                )
+        elif cv_render_error is not None:
+            cv_pdf_path = _write_pdf_failure_artifact(cv_pdf_dest, "CV", cv_render_error)
+
+    if cl_pdf_path is None and cl_render_error is not None:
+        cl_pdf_path = _write_pdf_failure_artifact(
+            cl_pdf_dest, "cover letter", cl_render_error,
+        )
 
     return GeneratedDocs(
         cv_md=cv_md, cv_html=cv_html,

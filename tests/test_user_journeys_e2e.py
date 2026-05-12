@@ -33,22 +33,31 @@ def test_profiles_are_present_readable_and_primary_is_set():
 
 
 @pytest.mark.e2e
-@pytest.mark.xfail(strict=True, reason="Profile upload command not implemented yet")
-def test_user_can_upload_profile_via_cli():
+def test_user_can_upload_profile_via_cli(tmp_path: Path, monkeypatch):
     """User story: can upload/add a profile via app command."""
     import jobbot.cli as cli_module
 
-    # Expected UX target. This currently fails because command does not exist.
-    rc = cli_module.main(["profile", "add", "data/corpus/cvs/example.md"])
+    monkeypatch.setattr(cli_module, "REPO_ROOT", tmp_path)
+    source = tmp_path / "example.md"
+    source.write_text("# Example CV\n\n" + "profile " * 80)
+
+    rc = cli_module.main(["profile", "add", str(source)])
+
     assert rc == 0
+    assert (tmp_path / "data" / "corpus" / "cvs" / "example.md").exists()
 
 
 @pytest.mark.e2e
-@pytest.mark.xfail(strict=True, reason="Profile remove command not implemented yet")
-def test_user_can_remove_profile_via_cli():
+def test_user_can_remove_profile_via_cli(tmp_path: Path, monkeypatch):
     """User story: can remove a profile via app command."""
     import jobbot.cli as cli_module
 
-    # Expected UX target. This currently fails because command does not exist.
+    monkeypatch.setattr(cli_module, "REPO_ROOT", tmp_path)
+    target = tmp_path / "data" / "corpus" / "cvs" / "example.md"
+    target.parent.mkdir(parents=True)
+    target.write_text("# Example CV\n\n" + "profile " * 80)
+
     rc = cli_module.main(["profile", "remove", "data/corpus/cvs/example.md"])
+
     assert rc == 0
+    assert not target.exists()

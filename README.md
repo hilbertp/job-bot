@@ -124,7 +124,7 @@ jobbot digest          # re-send the digest of the last 24h (e.g. after a scrape
 jobbot status          # current pipeline counts per stage
 jobbot db-status       # check SQLite writer lock + holders
 jobbot dashboard       # local web dashboard at http://localhost:5001 (Ctrl-C to stop)
-jobbot enrich --backfill --limit 100    # backfill bodies for rows with word_count < 200
+jobbot enrich --backfill --limit 100    # backfill bodies for rows with word_count < 100
 jobbot rescore --backfill --limit 50    # rescore generated rows against their tailored CV + CL
 ```
 

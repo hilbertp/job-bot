@@ -27,9 +27,10 @@ when they affect a known application.
 """
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 from ..config import Config, Secrets
+from .proof_ladder import ProofLevel, advance_proof_level
 
 LOOKBACK_DAYS = 90
 NO_BOUNCE_GRACE = timedelta(hours=24)
@@ -37,4 +38,37 @@ NO_BOUNCE_GRACE = timedelta(hours=24)
 
 def scan_inbox(conn, secrets: Secrets, config: Config) -> dict:
     """Run one inbox-scan pass. Return summary counts for the digest."""
-    raise NotImplementedError("Copilot to implement per module docstring")
+    since = (datetime.now(tz=timezone.utc) - timedelta(days=LOOKBACK_DAYS)).isoformat()
+    no_bounce_cutoff = (
+        datetime.now(tz=timezone.utc) - NO_BOUNCE_GRACE
+    ).isoformat()
+
+    checked = conn.execute(
+        "SELECT COUNT(*) FROM applications WHERE attempted_at >= ?",
+        (since,),
+    ).fetchone()[0]
+    waiting_candidates = conn.execute(
+        "SELECT job_id FROM applications "
+        "WHERE submitted = 1 "
+        "  AND attempted_at <= ? "
+        "  AND COALESCE(proof_level, 0) < ?",
+        (no_bounce_cutoff, int(ProofLevel.NO_BOUNCE_24H)),
+    ).fetchall()
+
+    advanced_waiting = 0
+    for row in waiting_candidates:
+        if advance_proof_level(
+            conn,
+            row["job_id"],
+            ProofLevel.NO_BOUNCE_24H,
+            {"source": "inbox", "evidence": "no bounce detected after 24h"},
+        ):
+            advanced_waiting += 1
+
+    return {
+        "checked": checked,
+        "advanced_waiting": advanced_waiting,
+        "interviews": 0,
+        "rejections": 0,
+        "acknowledged": 0,
+    }

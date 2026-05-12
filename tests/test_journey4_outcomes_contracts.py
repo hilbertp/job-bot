@@ -1,18 +1,10 @@
 """Journey 4 contract tests for inbound employer outcomes.
 
-These are strict xfail tests by design. They document the backend and UI
-contract for the "sent / received / waiting / rejected / interview" journey
-before the implementation exists.
+These document the backend and UI contract for the
+"sent / received / waiting / rejected / interview" journey.
 """
 from __future__ import annotations
 
-import pytest
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="Journey 4 JobStatus values are not modeled yet",
-)
 def test_journey4_job_status_values_are_modeled() -> None:
     from jobbot.models import JobStatus
 
@@ -22,10 +14,6 @@ def test_journey4_job_status_values_are_modeled() -> None:
     assert JobStatus.INTERVIEW_INVITED.value == "interview_invited"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Applications response metadata or responses table is not modeled yet",
-)
 def test_application_response_persistence_schema_exists(tmp_path, monkeypatch) -> None:
     from jobbot.state import connect
 
@@ -52,10 +40,6 @@ def test_application_response_persistence_schema_exists(tmp_path, monkeypatch) -
     assert required_response_cols.issubset(app_cols) or "responses" in tables
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Inbound email classifier is not implemented yet",
-)
 def test_inbound_classifier_detects_interview_and_rejection() -> None:
     from jobbot.outcomes.classifier import classify_message
 
@@ -69,10 +53,6 @@ def test_inbound_classifier_detects_interview_and_rejection() -> None:
     )[0] == "rejection"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Proof ladder status transitions are not implemented yet",
-)
 def test_proof_ladder_advances_application_to_employer_received(
     tmp_path, monkeypatch,
 ) -> None:
@@ -124,29 +104,51 @@ def test_proof_ladder_advances_application_to_employer_received(
     assert "recruiter@acme.example" in row["proof_evidence"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="scan-inbox CLI command is not registered yet",
-)
-def test_scan_inbox_cli_command_is_registered(monkeypatch) -> None:
+def test_scan_inbox_cli_command_is_registered(tmp_path, monkeypatch) -> None:
     import jobbot.cli as cli_module
 
     calls: list[str] = []
+    monkeypatch.setattr("jobbot.state.DB_PATH", tmp_path / "jobbot.db")
+    monkeypatch.setattr(cli_module, "load_config", lambda: object())
+    monkeypatch.setattr(cli_module, "load_secrets", lambda: object())
     monkeypatch.setattr(
         "jobbot.outcomes.scan_inbox",
         lambda *_args, **_kwargs: calls.append("scan") or {"checked": 0},
     )
 
     rc = cli_module.main(["scan-inbox"])
+    rc_alias = cli_module.main(["inbox-scan"])
 
     assert rc == 0
-    assert calls == ["scan"]
+    assert rc_alias == 0
+    assert calls == ["scan", "scan"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Dashboard Stage 4 outcome panel is not implemented yet",
-)
+def test_scheduled_apply_cli_command_is_registered(monkeypatch) -> None:
+    import jobbot.cli as cli_module
+
+    calls: list[str] = []
+    monkeypatch.setattr(cli_module, "load_config", lambda: object())
+    monkeypatch.setattr(cli_module, "load_secrets", lambda: object())
+    monkeypatch.setattr(
+        cli_module,
+        "run_with_failure_alerts",
+        lambda *_args, **_kwargs: calls.append("apply") or {
+            "n_fetched": 0,
+            "n_new": 0,
+            "n_generated": 0,
+            "n_applied": 0,
+            "n_errors": 0,
+            "diagnostics": {},
+        },
+    )
+
+    rc = cli_module.main(["apply"])
+
+    assert rc == 0
+    assert calls == ["apply"]
+
+
 def test_dashboard_renders_stage4_outcome_panel(tmp_path, monkeypatch) -> None:
     from jobbot.dashboard.server import _load_legacy_dashboard_module
 

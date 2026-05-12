@@ -10,7 +10,7 @@ What it validates:
 1) Trigger a fresh pipeline run (real scrape + enrichment).
 2) Read rows inserted in this run from SQLite.
 3) Per enabled source, assert at least 80% have enriched descriptions
-   (description_scraped=1 and description_word_count > 200).
+   (description_scraped=1 and description_word_count >= 100).
 """
 from __future__ import annotations
 
@@ -92,7 +92,7 @@ def test_live_enrichment_acceptance_80_percent(tmp_path: Path, monkeypatch):
             enriched = conn.execute(
                 "SELECT COUNT(*) FROM seen_jobs "
                 "WHERE source = ? AND first_seen_at >= ? "
-                "AND description_scraped = 1 AND description_word_count > 200",
+                "AND description_scraped = 1 AND description_word_count >= 100",
                 (source_name, started.isoformat()),
             ).fetchone()[0]
 

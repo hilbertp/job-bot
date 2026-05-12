@@ -40,6 +40,8 @@ data/debug_*.db
 data/debug_*.db-*
 data/exports/
 data/jobs_export.json
+data/reports/
+data/.fuse_hidden*
 output/
 logs/
 *.log

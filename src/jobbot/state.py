@@ -5,6 +5,7 @@ import json
 import shutil
 import sqlite3
 import subprocess
+import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -51,7 +52,15 @@ CREATE TABLE IF NOT EXISTS applications (
     needs_review_reason TEXT,
     error               TEXT,
     screenshot_path     TEXT,
-    confirmation_url    TEXT
+    confirmation_url    TEXT,
+    received_at         TEXT,
+    last_response_at    TEXT,
+    response_type       TEXT,
+    response_subject    TEXT,
+    response_snippet    TEXT,
+    proof_level         INTEGER NOT NULL DEFAULT 0,
+    proof_evidence      TEXT,
+    last_checked_at     TEXT
 );
 
 CREATE TABLE IF NOT EXISTS runs (
@@ -64,6 +73,45 @@ CREATE TABLE IF NOT EXISTS runs (
     n_applied    INTEGER DEFAULT 0,
     n_errors     INTEGER DEFAULT 0,
     summary_json TEXT
+);
+
+CREATE TABLE IF NOT EXISTS run_stage_progress (
+    run_id        INTEGER NOT NULL REFERENCES runs(id),
+    stage         TEXT NOT NULL,
+    total         INTEGER DEFAULT 0,
+    started       INTEGER DEFAULT 0,
+    completed     INTEGER DEFAULT 0,
+    failed        INTEGER DEFAULT 0,
+    skipped       INTEGER DEFAULT 0,
+    current_index INTEGER DEFAULT 0,
+    current_item_id TEXT,
+    current_label TEXT,
+    metadata_json TEXT,
+    updated_at    TEXT NOT NULL,
+    PRIMARY KEY (run_id, stage)
+);
+
+CREATE TABLE IF NOT EXISTS llm_usage (
+    id                          INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id                      INTEGER REFERENCES runs(id),
+    phase                       TEXT NOT NULL,
+    job_id                      TEXT,
+    model                       TEXT NOT NULL,
+    input_tokens                INTEGER DEFAULT 0,
+    output_tokens               INTEGER DEFAULT 0,
+    cache_creation_input_tokens INTEGER DEFAULT 0,
+    cache_read_input_tokens     INTEGER DEFAULT 0,
+    cost_usd                    REAL DEFAULT 0,
+    created_at                  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_run_stage_progress_run ON run_stage_progress(run_id);
+CREATE INDEX IF NOT EXISTS idx_llm_usage_run ON llm_usage(run_id);
+
+CREATE TABLE IF NOT EXISTS run_control (
+    run_id          INTEGER PRIMARY KEY REFERENCES runs(id),
+    requested_state TEXT NOT NULL DEFAULT 'running',
+    reason          TEXT,
+    updated_at      TEXT NOT NULL
 );
 """
 
@@ -85,6 +133,17 @@ SEEN_JOBS_ADD_COLUMNS: list[tuple[str, str]] = [
     ("scored_tailored_at", "TEXT"),
 ]
 
+APPLICATIONS_ADD_COLUMNS: list[tuple[str, str]] = [
+    ("received_at", "TEXT"),
+    ("last_response_at", "TEXT"),
+    ("response_type", "TEXT"),
+    ("response_subject", "TEXT"),
+    ("response_snippet", "TEXT"),
+    ("proof_level", "INTEGER NOT NULL DEFAULT 0"),
+    ("proof_evidence", "TEXT"),
+    ("last_checked_at", "TEXT"),
+]
+
 
 def _ensure_seen_jobs_columns(conn: sqlite3.Connection) -> None:
     """PRD §7.2 FR-PER-01: additive, idempotent migration for enrichment columns."""
@@ -96,6 +155,18 @@ def _ensure_seen_jobs_columns(conn: sqlite3.Connection) -> None:
         if name in existing:
             continue
         conn.execute(f"ALTER TABLE seen_jobs ADD COLUMN {name} {typ}")
+
+
+def _ensure_applications_columns(conn: sqlite3.Connection) -> None:
+    """Additive migration for application outcome/proof-ladder columns."""
+    existing = {
+        row["name"]
+        for row in conn.execute("PRAGMA table_info(applications)")
+    }
+    for name, typ in APPLICATIONS_ADD_COLUMNS:
+        if name in existing:
+            continue
+        conn.execute(f"ALTER TABLE applications ADD COLUMN {name} {typ}")
 
 
 def _now() -> str:
@@ -199,6 +270,7 @@ def connect(db_path: Path | None = None) -> Iterator[sqlite3.Connection]:
         
         conn.executescript(SCHEMA)
         _ensure_seen_jobs_columns(conn)
+        _ensure_applications_columns(conn)
         yield conn
         conn.commit()
     finally:
@@ -320,22 +392,40 @@ def update_score_tailored(
 
 
 def record_application(conn: sqlite3.Connection, job_id: str, result) -> None:
+    proof_level = 1 if result.submitted else 0
+    proof_evidence = []
+    if result.submitted:
+        proof_evidence.append({
+            "level": proof_level,
+            "source": "application",
+            "confirmation_url": result.confirmation_url,
+            "submitted": True,
+            "at": _now(),
+        })
     conn.execute(
         "INSERT OR REPLACE INTO applications(job_id, attempted_at, status, submitted, dry_run, "
-        "needs_review_reason, error, screenshot_path, confirmation_url) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "needs_review_reason, error, screenshot_path, confirmation_url, proof_level, "
+        "proof_evidence, last_checked_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             job_id, _now(), result.status.value,
             int(result.submitted), int(result.dry_run),
             result.needs_review_reason, result.error,
             result.screenshot_path, result.confirmation_url,
+            proof_level, json.dumps(proof_evidence), _now(),
         ),
     )
 
 
 def start_run(conn: sqlite3.Connection) -> int:
     cur = conn.execute("INSERT INTO runs(started_at) VALUES (?)", (_now(),))
-    return cur.lastrowid  # type: ignore[return-value]
+    run_id = cur.lastrowid  # type: ignore[assignment]
+    conn.execute(
+        "INSERT OR REPLACE INTO run_control(run_id, requested_state, reason, updated_at) "
+        "VALUES (?, 'running', NULL, ?)",
+        (run_id, _now()),
+    )
+    return run_id  # type: ignore[return-value]
 
 
 def finish_run(conn: sqlite3.Connection, run_id: int, **counts) -> None:
@@ -353,6 +443,282 @@ def finish_run(conn: sqlite3.Connection, run_id: int, **counts) -> None:
             run_id,
         ),
     )
+    request_run_control(conn, run_id, "finished", reason="run completed")
+
+
+def request_run_control(
+    conn: sqlite3.Connection,
+    run_id: int,
+    requested_state: str,
+    *,
+    reason: str | None = None,
+) -> None:
+    if requested_state not in {"running", "paused", "stop_requested", "stopped", "finished"}:
+        raise ValueError(f"unsupported run control state: {requested_state}")
+    conn.execute(
+        "INSERT OR REPLACE INTO run_control(run_id, requested_state, reason, updated_at) "
+        "VALUES (?, ?, ?, ?)",
+        (run_id, requested_state, reason, _now()),
+    )
+
+
+def run_control_state(conn: sqlite3.Connection, run_id: int) -> dict[str, str | None]:
+    row = conn.execute(
+        "SELECT requested_state, reason, updated_at FROM run_control WHERE run_id = ?",
+        (run_id,),
+    ).fetchone()
+    if not row:
+        return {"requested_state": "running", "reason": None, "updated_at": None}
+    return {
+        "requested_state": row["requested_state"],
+        "reason": row["reason"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def wait_while_paused(conn: sqlite3.Connection, run_id: int) -> bool:
+    """Return False if the run should stop, True when execution may continue."""
+    while True:
+        state = run_control_state(conn, run_id)["requested_state"]
+        if state in {"stop_requested", "stopped"}:
+            return False
+        if state != "paused":
+            return True
+        time.sleep(1)
+
+
+def mark_run_stopped(conn: sqlite3.Connection, run_id: int, *, reason: str) -> None:
+    row = conn.execute(
+        "SELECT started_at, finished_at FROM runs WHERE id = ?",
+        (run_id,),
+    ).fetchone()
+    if row and row["finished_at"] is None:
+        summary = {
+            "stopped": True,
+            "stop_reason": reason,
+        }
+        conn.execute(
+            "UPDATE runs SET finished_at = ?, n_errors = n_errors + 1, summary_json = ? "
+            "WHERE id = ? AND finished_at IS NULL",
+            (_now(), json.dumps(summary), run_id),
+        )
+    request_run_control(conn, run_id, "stopped", reason=reason)
+
+
+def update_run_stage_progress(
+    conn: sqlite3.Connection,
+    run_id: int,
+    stage: str,
+    *,
+    total: int | None = None,
+    started: int | None = None,
+    completed: int | None = None,
+    failed: int | None = None,
+    skipped: int | None = None,
+    current_index: int | None = None,
+    current_item_id: str | None = None,
+    current_label: str | None = None,
+    metadata: dict | None = None,
+) -> None:
+    """Upsert live progress for one run stage.
+
+    The dashboard reads this while the pipeline is running, so each write is
+    deliberately small and autocommitted.
+    """
+    row = conn.execute(
+        "SELECT * FROM run_stage_progress WHERE run_id = ? AND stage = ?",
+        (run_id, stage),
+    ).fetchone()
+    values = {
+        "total": 0,
+        "started": 0,
+        "completed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "current_index": 0,
+        "current_item_id": None,
+        "current_label": None,
+        "metadata_json": "{}",
+    }
+    if row:
+        values.update({key: row[key] for key in values.keys()})
+    updates = {
+        "total": total,
+        "started": started,
+        "completed": completed,
+        "failed": failed,
+        "skipped": skipped,
+        "current_index": current_index,
+        "current_item_id": current_item_id,
+        "current_label": current_label,
+        "metadata_json": json.dumps(metadata or {}) if metadata is not None else None,
+    }
+    for key, value in updates.items():
+        if value is not None:
+            values[key] = value
+    conn.execute(
+        """
+        INSERT OR REPLACE INTO run_stage_progress(
+            run_id, stage, total, started, completed, failed, skipped,
+            current_index, current_item_id, current_label, metadata_json, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            run_id, stage,
+            values["total"], values["started"], values["completed"],
+            values["failed"], values["skipped"], values["current_index"],
+            values["current_item_id"], values["current_label"],
+            values["metadata_json"], _now(),
+        ),
+    )
+
+
+def run_stage_progress(conn: sqlite3.Connection, run_id: int) -> list[dict]:
+    rows = conn.execute(
+        """
+        SELECT stage, total, started, completed, failed, skipped, current_index,
+               current_item_id, current_label, metadata_json, updated_at
+        FROM run_stage_progress
+        WHERE run_id = ?
+        ORDER BY CASE stage
+            WHEN 'scrape' THEN 1
+            WHEN 'enrichment' THEN 2
+            WHEN 'scoring' THEN 3
+            WHEN 'generation' THEN 4
+            WHEN 'tailored_rescore' THEN 5
+            WHEN 'apply' THEN 6
+            ELSE 99
+        END, stage
+        """,
+        (run_id,),
+    ).fetchall()
+    out: list[dict] = []
+    for row in rows:
+        try:
+            metadata = json.loads(row["metadata_json"] or "{}")
+        except json.JSONDecodeError:
+            metadata = {}
+        out.append({
+            "stage": row["stage"],
+            "total": int(row["total"] or 0),
+            "started": int(row["started"] or 0),
+            "completed": int(row["completed"] or 0),
+            "failed": int(row["failed"] or 0),
+            "skipped": int(row["skipped"] or 0),
+            "current_index": int(row["current_index"] or 0),
+            "current_item_id": row["current_item_id"],
+            "current_label": row["current_label"],
+            "metadata": metadata if isinstance(metadata, dict) else {},
+            "updated_at": row["updated_at"],
+        })
+    return out
+
+
+_MODEL_PRICES_USD_PER_MTOK = {
+    # Anthropic public Sonnet 4-family pricing: $3/M input, $15/M output.
+    "sonnet-4": {"input": 3.0, "output": 15.0, "cache_write": 3.75, "cache_read": 0.30},
+    "haiku-4.5": {"input": 1.0, "output": 5.0, "cache_write": 1.25, "cache_read": 0.10},
+}
+
+
+def estimate_llm_cost_usd(
+    model: str,
+    *,
+    input_tokens: int,
+    output_tokens: int,
+    cache_creation_input_tokens: int = 0,
+    cache_read_input_tokens: int = 0,
+) -> float:
+    model_l = (model or "").lower()
+    if "haiku" in model_l and "4" in model_l:
+        prices = _MODEL_PRICES_USD_PER_MTOK["haiku-4.5"]
+    else:
+        prices = _MODEL_PRICES_USD_PER_MTOK["sonnet-4"]
+    cost = (
+        input_tokens * prices["input"]
+        + output_tokens * prices["output"]
+        + cache_creation_input_tokens * prices["cache_write"]
+        + cache_read_input_tokens * prices["cache_read"]
+    ) / 1_000_000
+    return round(cost, 6)
+
+
+def record_llm_usage(
+    conn: sqlite3.Connection,
+    *,
+    run_id: int | None,
+    phase: str,
+    job_id: str | None,
+    model: str,
+    input_tokens: int,
+    output_tokens: int,
+    cache_creation_input_tokens: int = 0,
+    cache_read_input_tokens: int = 0,
+) -> None:
+    cost_usd = estimate_llm_cost_usd(
+        model,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        cache_creation_input_tokens=cache_creation_input_tokens,
+        cache_read_input_tokens=cache_read_input_tokens,
+    )
+    conn.execute(
+        """
+        INSERT INTO llm_usage(
+            run_id, phase, job_id, model, input_tokens, output_tokens,
+            cache_creation_input_tokens, cache_read_input_tokens, cost_usd, created_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            run_id, phase, job_id, model, input_tokens, output_tokens,
+            cache_creation_input_tokens, cache_read_input_tokens, cost_usd, _now(),
+        ),
+    )
+
+
+def llm_usage_summary(conn: sqlite3.Connection, run_id: int) -> dict:
+    rows = conn.execute(
+        """
+        SELECT phase, model, COUNT(*) AS calls,
+               SUM(input_tokens) AS input_tokens,
+               SUM(output_tokens) AS output_tokens,
+               SUM(cache_creation_input_tokens) AS cache_creation_input_tokens,
+               SUM(cache_read_input_tokens) AS cache_read_input_tokens,
+               SUM(cost_usd) AS cost_usd
+        FROM llm_usage
+        WHERE run_id = ?
+        GROUP BY phase, model
+        ORDER BY phase, model
+        """,
+        (run_id,),
+    ).fetchall()
+    phases: list[dict] = []
+    totals = {
+        "calls": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "cost_usd": 0.0,
+    }
+    for row in rows:
+        item = {
+            "phase": row["phase"],
+            "model": row["model"],
+            "calls": int(row["calls"] or 0),
+            "input_tokens": int(row["input_tokens"] or 0),
+            "output_tokens": int(row["output_tokens"] or 0),
+            "cache_creation_input_tokens": int(row["cache_creation_input_tokens"] or 0),
+            "cache_read_input_tokens": int(row["cache_read_input_tokens"] or 0),
+            "cost_usd": float(row["cost_usd"] or 0),
+        }
+        phases.append(item)
+        for key in totals:
+            totals[key] += item[key]
+    totals["cost_usd"] = round(float(totals["cost_usd"]), 6)
+    return {"totals": totals, "phases": phases}
 
 
 def jobs_needing_enrichment(conn: sqlite3.Connection) -> list[JobPosting]:
@@ -431,7 +797,7 @@ def scrub_stale_scores(conn: sqlite3.Connection) -> int:
         "       OR description_scraped = 0 "
         "       OR description_word_count IS NULL "
         "       OR description_word_count < ?)",
-        (scored, below, scored, below, cannot_score, 200),
+        (scored, below, scored, below, cannot_score, 100),
     )
     return cur.rowcount
 
@@ -448,19 +814,22 @@ def jobs_needing_base_rescore(
     snippet. Ordered most-recent-first so backfill prioritises fresh
     postings the user might still want to apply to.
     """
+    # Includes legacy primary/base-CV status names so old rows still flow
+    # through the rescore once the corpus profile has been fixed.
     rows = conn.execute(
         "SELECT raw_json, description_full FROM seen_jobs "
         "WHERE raw_json IS NOT NULL "
         "  AND description_scraped = 1 "
-        "  AND description_word_count >= 200 "
+        "  AND description_word_count >= 100 "
         "  AND score IS NULL "
-        "  AND status IN (?, ?, ?) "
+        "  AND status IN (?, ?, ?, ?) "
         "ORDER BY first_seen_at DESC "
         "LIMIT ?",
         (
             JobStatus.SCRAPED.value,
             JobStatus.CANNOT_SCORE_NO_BODY.value,
             JobStatus.CANNOT_SCORE_NO_PRIMARY_CV.value,
+            JobStatus.CANNOT_SCORE_NO_BASE_CV.value,
             limit,
         ),
     ).fetchall()
@@ -474,6 +843,97 @@ def jobs_needing_base_rescore(
             job = job.model_copy(update={"description": row["description_full"]})
         out.append(job)
     return out
+
+
+def force_clear_base_scores(conn: sqlite3.Connection) -> tuple[int, int]:
+    """Null base-score columns for every row that currently carries a score,
+    in preparation for a full `rescore --base --force` pass.
+
+    Two buckets:
+      - SCORED / BELOW_THRESHOLD rows are downgraded to SCRAPED so the
+        existing rescore queue picks them up.
+      - Later-stage rows (GENERATED, APPLY_*, EMPLOYER_*, REJECTED,
+        INTERVIEW_INVITED) keep their status — we don't want to undo
+        downstream pipeline progress just to refresh a score. Their score
+        gets re-set in place by the force rescore loop.
+
+    Returns (early_cleared, late_cleared) row counts. Idempotent.
+    """
+    scored = JobStatus.SCORED.value
+    below = JobStatus.BELOW_THRESHOLD.value
+    scraped = JobStatus.SCRAPED.value
+    # First: downgrade SCORED/BELOW_THRESHOLD to SCRAPED and null score cols.
+    early = conn.execute(
+        "UPDATE seen_jobs SET "
+        "  score = NULL, "
+        "  score_breakdown_json = NULL, "
+        "  scored_at = NULL, "
+        "  score_reason = 'cleared for base CV rescore', "
+        "  status = ? "
+        "WHERE score IS NOT NULL AND status IN (?, ?)",
+        (scraped, scored, below),
+    ).rowcount
+    # Second: null score cols for late-stage rows but keep their status.
+    late = conn.execute(
+        "UPDATE seen_jobs SET "
+        "  score = NULL, "
+        "  score_breakdown_json = NULL, "
+        "  scored_at = NULL, "
+        "  score_reason = 'cleared for base CV rescore' "
+        "WHERE score IS NOT NULL",
+        (),
+    ).rowcount
+    return early, late
+
+
+def jobs_needing_base_rescore_force(
+    conn: sqlite3.Connection, limit: int,
+) -> list[tuple[JobPosting, str]]:
+    """Force-mode counterpart to `jobs_needing_base_rescore`. Returns every
+    row passing the preconditions (real body, scraped, >=100 words) with a
+    NULL base score, regardless of status — except FILTERED, which the
+    heuristic rejected for non-CV reasons and should never reach the LLM.
+
+    Returns (job, current_status) tuples so the caller can decide whether
+    to update status or just refresh the score column for late-stage rows.
+    """
+    rows = conn.execute(
+        "SELECT raw_json, description_full, status FROM seen_jobs "
+        "WHERE raw_json IS NOT NULL "
+        "  AND description_scraped = 1 "
+        "  AND description_word_count >= 100 "
+        "  AND score IS NULL "
+        "  AND status != ? "
+        "ORDER BY first_seen_at DESC "
+        "LIMIT ?",
+        (JobStatus.FILTERED.value, limit),
+    ).fetchall()
+    out: list[tuple[JobPosting, str]] = []
+    for row in rows:
+        try:
+            job = JobPosting.model_validate_json(row["raw_json"])
+        except Exception:
+            continue
+        if row["description_full"]:
+            job = job.model_copy(update={"description": row["description_full"]})
+        out.append((job, row["status"]))
+    return out
+
+
+def update_base_score_only(
+    conn: sqlite3.Connection, job_id: str, score: int | None, reason: str,
+) -> None:
+    """Refresh the base score (score + score_reason + scored_at) without
+    touching `status`. Used by the force-rescore loop so a row already in
+    a late-stage status (GENERATED, APPLY_*) doesn't get knocked back to
+    SCORED/BELOW_THRESHOLD. `score=None` records a cannot_score reason on
+    a late-stage row without demoting its status."""
+    scored_at = _now() if score is not None else None
+    conn.execute(
+        "UPDATE seen_jobs SET score = ?, score_reason = ?, scored_at = ? "
+        "WHERE id = ?",
+        (score, reason, scored_at, job_id),
+    )
 
 
 def jobs_needing_tailored_rescore(

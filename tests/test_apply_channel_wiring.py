@@ -119,6 +119,21 @@ def test_stage2_template_renders_apply_via_column(tmp_path: Path, monkeypatch) -
     assert 'colspan="8"' in html
 
 
+def test_stage2_apply_via_cell_keeps_icon_and_label_on_one_line(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    db = tmp_path / "jobbot.db"
+    monkeypatch.setattr("jobbot.state.DB_PATH", db)
+    _seed_one_per_channel(db)
+
+    client = _load_legacy_dashboard_module().app.test_client()
+    html = client.get("/").get_data(as_text=True)
+
+    assert '<td class="py-3 whitespace-nowrap">${applyChannelCell(job)}</td>' in html
+    assert 'class="inline-flex items-center gap-1 whitespace-nowrap text-purple-300"' in html
+    assert '<span aria-hidden="true">🌐</span><span>external</span>' in html
+
+
 def test_digest_template_renders_channel_pill_and_source_summary(tmp_path: Path) -> None:
     template_dir = Path(__file__).resolve().parents[1] / "src" / "jobbot" / "notify" / "templates"
     env = Environment(loader=FileSystemLoader(str(template_dir)), autoescape=True)

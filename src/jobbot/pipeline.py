@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import traceback
+import inspect
 from collections import Counter
 from datetime import datetime, timezone
 from typing import Any
@@ -19,8 +20,9 @@ from .scoring import CannotScore, llm_score, llm_score_tailored, passes_heuristi
 from .scrapers import REGISTRY
 from .state import (
     apply_channel, apply_channel_ats_name, connect, finish_run, jobs_by_status,
-    jobs_needing_enrichment, record_application, start_run, update_score_tailored,
-    update_status, upsert_new,
+    jobs_needing_enrichment, mark_run_stopped, record_application, start_run,
+    update_score_tailored, update_run_stage_progress, update_status, upsert_new,
+    wait_while_paused,
 )
 
 log = structlog.get_logger()
@@ -48,9 +50,60 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
     with connect() as conn:
         run_id = start_run(conn)
 
+        def _stopped_result(reason: str) -> dict[str, Any]:
+            mark_run_stopped(conn, run_id, reason=reason)
+            diagnostics = {
+                "stages": {
+                    "fetched": n_fetched,
+                    "new": n_new,
+                    "duplicates_or_seen_before": max(0, n_fetched - n_new),
+                    "enriched": n_enriched,
+                    "enrichment_failed": n_enrichment_failed,
+                    "filtered": n_filtered,
+                    "cannot_score": n_cannot_score,
+                    "scored": n_scored,
+                    "below_threshold": n_below_threshold,
+                    "score_failed": n_score_failed,
+                    "generated": n_generated,
+                    "applied": n_applied,
+                    "stopped": 1,
+                },
+                "per_source_fetched": dict(per_source_fetched),
+                "per_source_new": dict(per_source_new),
+                "fetched_ids": list(dict.fromkeys(fetched_ids)),
+                "score_stats": {},
+                "top_blockers": [{"reason": reason, "count": 1}],
+            }
+            return {
+                "run_id": run_id,
+                "n_fetched": n_fetched, "n_new": n_new,
+                "n_generated": n_generated, "n_applied": n_applied,
+                "n_errors": len(errors) + 1,
+                "diagnostics": diagnostics,
+                "stopped": True,
+            }
+
+        def _continue_or_stop() -> dict[str, Any] | None:
+            if wait_while_paused(conn, run_id):
+                return None
+            return _stopped_result("stopped from dashboard")
+
         # 1) Scrape
         all_new: list[JobPosting] = []
         all_fetched_by_id: dict[str, JobPosting] = {}
+        scrape_queries = [
+            (name, query)
+            for name, src_cfg in config.sources.items()
+            if src_cfg.enabled
+            for query in src_cfg.queries
+        ]
+        update_run_stage_progress(
+            conn, run_id, "scrape",
+            total=len(scrape_queries), started=0, completed=0, failed=0, skipped=0,
+            current_index=0, current_item_id=None, current_label=None,
+        )
+        scrape_index = 0
+        scrape_failed = 0
         for name, src_cfg in config.sources.items():
             if not src_cfg.enabled:
                 continue
@@ -59,6 +112,20 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 errors.append({"source": name, "error": "no scraper registered"})
                 continue
             for query in src_cfg.queries:
+                if stopped := _continue_or_stop():
+                    return stopped
+                scrape_index += 1
+                update_run_stage_progress(
+                    conn, run_id, "scrape",
+                    total=len(scrape_queries), started=scrape_index,
+                    current_index=scrape_index,
+                    current_item_id=name,
+                    current_label=f"{name} · {query}",
+                    metadata={
+                        "hits_so_far": n_fetched,
+                        "new_so_far": n_new,
+                    },
+                )
                 try:
                     fetched = scraper.fetch(query)
                     for job in fetched:
@@ -70,9 +137,27 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                     all_new.extend(new)
                     n_new += len(new)
                     per_source_new[name] += len(new)
+                    update_run_stage_progress(
+                        conn, run_id, "scrape",
+                        completed=scrape_index,
+                        metadata={
+                            "hits_so_far": n_fetched,
+                            "new_so_far": n_new,
+                        },
+                    )
                 except Exception as e:
                     log.exception("scraper_failed", source=name, query=query)
                     errors.append({"source": name, "error": f"{type(e).__name__}: {e}"})
+                    scrape_failed += 1
+                    update_run_stage_progress(
+                        conn, run_id, "scrape",
+                        completed=max(0, scrape_index - scrape_failed),
+                        failed=scrape_failed,
+                        metadata={
+                            "hits_so_far": n_fetched,
+                            "new_so_far": n_new,
+                        },
+                    )
 
         # 2) Enrich postings missing a body fetch: every freshly-scraped job
         # in this run, plus every seen_jobs row where description_scraped IS
@@ -83,7 +168,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
             to_enrich_by_id.setdefault(stale.id, stale)
         cap = config.enrichment.per_run_cap
         to_enrich = list(to_enrich_by_id.values())[:cap]
-        enrichment = enrich_new_postings(to_enrich, conn, registry=REGISTRY)
+        enrichment = enrich_new_postings(to_enrich, conn, registry=REGISTRY, run_id=run_id)
         n_enriched = enrichment.n_succeeded
         n_enrichment_failed = enrichment.n_failed
 
@@ -114,7 +199,21 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 errors.append({"source": row["source"], "error": f"decode: {e}"})
 
         to_generate: list[tuple[JobPosting, int, str]] = []
-        for job, desc_scraped in list(to_score.values())[: config.max_jobs_per_run]:
+        score_candidates = list(to_score.values())[: config.max_jobs_per_run]
+        update_run_stage_progress(
+            conn, run_id, "scoring",
+            total=len(score_candidates), started=0, completed=0, failed=0,
+            current_index=0, current_label=None,
+        )
+        for idx, (job, desc_scraped) in enumerate(score_candidates, start=1):
+            if stopped := _continue_or_stop():
+                return stopped
+            update_run_stage_progress(
+                conn, run_id, "scoring",
+                total=len(score_candidates), started=idx, current_index=idx,
+                current_item_id=job.id,
+                current_label=f"{job.title} @ {job.company}",
+            )
             ok, reason = passes_heuristic(job, profile)
             if not ok:
                 # No score is assigned here: heuristic filtering happens *before*
@@ -123,10 +222,20 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 # that "score IS NOT NULL ⇒ preconditions passed".
                 update_status(conn, job.id, JobStatus.FILTERED, reason=reason)
                 n_filtered += 1
+                update_run_stage_progress(
+                    conn, run_id, "scoring",
+                    completed=n_scored + n_below_threshold + n_filtered + n_cannot_score,
+                    skipped=n_filtered,
+                )
                 blocker_counts[reason or "filtered by heuristic"] += 1
                 continue
             try:
-                result = llm_score(job, profile, secrets, description_scraped=desc_scraped)
+                result = llm_score(
+                    job, profile, secrets,
+                    description_scraped=desc_scraped,
+                    run_id=run_id,
+                    phase="score_base",
+                )
             except CannotScore as e:
                 # PRD §7.5 FR-SCO-01: refuse to score, persist the reason so
                 # the digest can surface it instead of a misleading number.
@@ -135,6 +244,8 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                     new_status = JobStatus.CANNOT_SCORE_NO_BODY
                 elif reason.startswith("no_primary_cv"):
                     new_status = JobStatus.CANNOT_SCORE_NO_PRIMARY_CV
+                elif reason.startswith("no_base_cv"):
+                    new_status = JobStatus.CANNOT_SCORE_NO_BASE_CV
                 else:
                     new_status = JobStatus.CANNOT_SCORE_NO_BODY
                 update_status(conn, job.id, new_status, score=None, reason=reason)
@@ -145,6 +256,11 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                     "status": new_status.value,
                     "reason": reason,
                 })
+                update_run_stage_progress(
+                    conn, run_id, "scoring",
+                    completed=n_scored + n_below_threshold + n_filtered + n_cannot_score,
+                    failed=n_cannot_score + n_score_failed,
+                )
                 continue
             except Exception as e:
                 log.exception("score_failed", job_id=job.id)
@@ -156,21 +272,51 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 # there is no trustworthy number. Status drops back to
                 # SCRAPED so the next run retries.
                 update_status(conn, job.id, JobStatus.SCRAPED, reason=err_label)
+                update_run_stage_progress(
+                    conn, run_id, "scoring",
+                    completed=n_scored + n_below_threshold + n_filtered + n_cannot_score,
+                    failed=n_cannot_score + n_score_failed,
+                )
                 continue
             if result.score < config.score_threshold:
                 update_status(conn, job.id, JobStatus.BELOW_THRESHOLD,
                               score=result.score, reason=result.reason)
                 n_below_threshold += 1
                 score_values.append(result.score)
+                update_run_stage_progress(
+                    conn, run_id, "scoring",
+                    completed=n_scored + n_below_threshold + n_filtered + n_cannot_score,
+                    failed=n_cannot_score + n_score_failed,
+                )
                 continue
             update_status(conn, job.id, JobStatus.SCORED,
                           score=result.score, reason=result.reason)
             n_scored += 1
             score_values.append(result.score)
             to_generate.append((job, result.score, result.reason))
+            update_run_stage_progress(
+                conn, run_id, "scoring",
+                completed=n_scored + n_below_threshold + n_filtered + n_cannot_score,
+                failed=n_cannot_score + n_score_failed,
+            )
 
         # 4) Generate
-        for job, score, reason in to_generate:
+        update_run_stage_progress(
+            conn, run_id, "generation",
+            total=len(to_generate), started=0, completed=0, failed=0,
+            current_index=0, current_label=None,
+        )
+        generation_skipped = 0
+        generation_failed = 0
+        for gen_idx, (job, score, reason) in enumerate(to_generate, start=1):
+            if stopped := _continue_or_stop():
+                return stopped
+            update_run_stage_progress(
+                conn, run_id, "generation",
+                total=len(to_generate), started=gen_idx, current_index=gen_idx,
+                current_item_id=job.id,
+                current_label=f"{job.title} @ {job.company}",
+            )
             # PRD §7.7 FR-APP-01: derive the application channel per match so
             # the digest + dashboard can show '📧 email / 🔗 Greenhouse / etc.'
             # apply_email lives only in seen_jobs (enrichment column), so we
@@ -199,15 +345,38 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
 
             if score < config.digest.generate_docs_above_score:
                 matches.append(entry)
+                generation_skipped += 1
+                update_run_stage_progress(
+                    conn, run_id, "generation",
+                    completed=n_generated,
+                    skipped=generation_skipped,
+                    failed=generation_failed,
+                )
                 continue
 
             try:
-                docs = generate_documents(job, profile, base_cv, secrets, config)
+                if "run_id" in inspect.signature(generate_documents).parameters:
+                    docs = generate_documents(
+                        job, profile, base_cv, secrets, config, run_id=run_id,
+                    )
+                else:
+                    docs = generate_documents(job, profile, base_cv, secrets, config)
                 update_status(conn, job.id, JobStatus.GENERATED, output_dir=docs.output_dir)
                 n_generated += 1
+                update_run_stage_progress(
+                    conn, run_id, "generation",
+                    completed=n_generated,
+                )
             except Exception as e:
                 log.exception("generate_failed", job_id=job.id)
                 errors.append({"source": job.source, "error": f"generate: {e}"})
+                generation_failed += 1
+                update_run_stage_progress(
+                    conn, run_id, "generation",
+                    completed=n_generated,
+                    failed=generation_failed,
+                    skipped=generation_skipped,
+                )
                 continue
 
             entry.update({
@@ -221,10 +390,14 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
             # the original `score` is unchanged. A failure here is logged
             # but does NOT abort the application step that follows.
             try:
+                if stopped := _continue_or_stop():
+                    return stopped
                 tailored = llm_score_tailored(
                     job, profile, secrets,
                     tailored_cv_md=docs.cv_md,
                     tailored_cover_letter_md=docs.cover_letter_md,
+                    run_id=run_id,
+                    phase="tailored_rescore",
                 )
                 update_score_tailored(conn, job.id, tailored.score, tailored.reason)
                 entry["score_tailored"] = tailored.score
@@ -303,6 +476,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                    summary={"matches": len(matches), **diagnostics})
 
     return {
+        "run_id": run_id,
         "n_fetched": n_fetched, "n_new": n_new,
         "n_generated": n_generated, "n_applied": n_applied,
         "n_errors": len(errors),

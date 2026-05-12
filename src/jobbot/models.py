@@ -11,8 +11,9 @@ from pydantic import BaseModel, Field, HttpUrl
 class JobStatus(str, Enum):  # str-mixin for sqlite/JSON compatibility, works on 3.10+
     SCRAPED = "scraped"
     FILTERED = "filtered"                              # heuristic deal-breaker
-    CANNOT_SCORE_NO_BODY = "cannot_score:no_body"      # < 200 words, refuse to score
-    CANNOT_SCORE_NO_PRIMARY_CV = "cannot_score:no_primary_cv"  # PRIMARY_* CV unreadable
+    CANNOT_SCORE_NO_BODY = "cannot_score:no_body"      # < 100 words, refuse to score
+    CANNOT_SCORE_NO_PRIMARY_CV = "cannot_score:no_primary_cv"  # missing PRIMARY_* CV
+    CANNOT_SCORE_NO_BASE_CV = "cannot_score:no_base_cv"  # legacy alias for old rows
     SCORED = "scored"                                  # has an LLM score
     BELOW_THRESHOLD = "below_threshold"                # scored but not generated
     GENERATED = "generated"                            # CV + cover letter written
@@ -20,6 +21,10 @@ class JobStatus(str, Enum):  # str-mixin for sqlite/JSON compatibility, works on
     APPLY_SUBMITTED = "apply_submitted"
     APPLY_NEEDS_REVIEW = "apply_needs_review"
     APPLY_FAILED = "apply_failed"
+    EMPLOYER_RECEIVED = "employer_received"
+    WAITING_RESPONSE = "waiting_response"
+    REJECTED = "rejected"
+    INTERVIEW_INVITED = "interview_invited"
 
 
 class JobPosting(BaseModel):

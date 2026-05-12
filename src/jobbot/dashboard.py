@@ -3,19 +3,32 @@ from __future__ import annotations
 
 import json
 import re
+import threading
+import traceback
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from flask import Flask, abort, jsonify, render_template
+from flask import Flask, abort, jsonify, render_template, request
 
 from .config import REPO_ROOT
 from .models import JobStatus
-from .state import apply_channel, apply_channel_ats_name, connect
+from .state import (
+    apply_channel, apply_channel_ats_name, connect, mark_run_stopped,
+    llm_usage_summary, request_run_control, run_control_state,
+    run_stage_progress,
+)
 
 EXPORT_STATUSES = ("scored", "below_threshold", "filtered", "generated", "scraped")
 
 _TEMPLATES_DIR = Path(__file__).with_name("templates")
 app = Flask(__name__, template_folder=str(_TEMPLATES_DIR))
+_RUN_TRIGGER_LOCK = threading.Lock()
+_RUN_TRIGGER_STATE: dict[str, str | int | None] = {
+    "status": "idle",
+    "run_id": None,
+    "error": None,
+}
+_MIN_USABLE_DESCRIPTION_WORDS = 100
 
 
 SALARY_PATTERNS = [
@@ -59,20 +72,142 @@ def _extract_seniority_required(title: str, description: str) -> str:
     return "not specified"
 
 
+# Funnel percentage thresholds. Red < 20%, amber 20-50%, green 50%+.
+_RETENTION_AMBER_MIN = 20
+_RETENTION_GREEN_MIN = 50
+
+
+def _percentage_color(pct: float | None) -> str:
+    """Bucket a funnel percentage into red / amber / green."""
+    if pct is None:
+        return "neutral"
+    if pct < _RETENTION_AMBER_MIN:
+        return "red"
+    if pct < _RETENTION_GREEN_MIN:
+        return "amber"
+    return "green"
+
+
+def _count_interviewed(conn) -> int:
+    """Applications that reached interview proof.
+
+    Rejections are proof level 5 but should not inflate the Interviewed card,
+    so count the explicit interview status or level 4 only.
+    """
+    cur = conn.execute(
+        "SELECT COUNT(*) FROM applications "
+        "WHERE status = ? OR proof_level = 4",
+        (JobStatus.INTERVIEW_INVITED.value,),
+    )
+    return cur.fetchone()[0]
+
+
+def compute_funnel(conn) -> list[dict]:
+    """Return the 5-stage outcome funnel for the top dashboard strip.
+
+    Each stage carries the absolute count and the percent of total jobs.
+    The Total card has no percentage badge because it is the denominator.
+    Stages and their SQL — the user's brief, with schema-mapped columns:
+
+      Total        seen_jobs                            COUNT(*)
+      Suitable     seen_jobs.score >= 70                COUNT(*)
+      Tailored     seen_jobs.output_dir IS NOT NULL     COUNT(*)
+      Applied      applications.submitted = 1           COUNT(*)
+      Interviewed  applications.proof_level >= 4        COUNT(*) — M5
+
+    `cannot_score:*` rows count toward Total but not toward Suitable,
+    because `score IS NULL` for them — exactly what the user wants.
+    """
+    total = conn.execute("SELECT COUNT(*) FROM seen_jobs").fetchone()[0]
+    suitable = conn.execute(
+        "SELECT COUNT(*) FROM seen_jobs WHERE score >= 70"
+    ).fetchone()[0]
+    tailored = conn.execute(
+        "SELECT COUNT(*) FROM seen_jobs WHERE output_dir IS NOT NULL"
+    ).fetchone()[0]
+    applied = conn.execute(
+        "SELECT COUNT(*) FROM applications WHERE submitted = 1"
+    ).fetchone()[0]
+    interviewed = _count_interviewed(conn)
+
+    stages: list[tuple[str, int, str | None]] = [
+        ("Total", total, None),
+        ("Suitable", suitable, None),
+        ("Tailored", tailored, None),
+        ("Applied", applied, None),
+        ("Interviewed", interviewed, "M5"),
+    ]
+
+    out: list[dict] = []
+    for label, count, badge in stages:
+        if label == "Total" or total == 0:
+            pct_of_total: float | None = None
+        else:
+            pct_of_total = round(100.0 * count / total, 1)
+        out.append({
+            "label": label,
+            "count": count,
+            "pct_of_total": pct_of_total,
+            "percentage_color": _percentage_color(pct_of_total),
+            "pending_milestone": badge,
+        })
+    return out
+
+
+def compute_activity_today(conn, *, now: datetime | None = None) -> dict:
+    """Counts for the Recent Runs 'Activity today' subline.
+
+    24-hour rolling window (consistent with the prior 'Last 24h' tile).
+    `now` is injectable for deterministic tests.
+    """
+    now = now or datetime.now(tz=timezone.utc)
+    since = (now - timedelta(hours=24)).isoformat()
+
+    posted = conn.execute(
+        "SELECT COUNT(*) FROM seen_jobs WHERE first_seen_at >= ?", (since,),
+    ).fetchone()[0]
+    scored = conn.execute(
+        "SELECT COUNT(*) FROM seen_jobs WHERE scored_at >= ?", (since,),
+    ).fetchone()[0]
+    applied = conn.execute(
+        "SELECT COUNT(*) FROM applications "
+        "WHERE submitted = 1 AND attempted_at >= ?", (since,),
+    ).fetchone()[0]
+    return {"posted": posted, "scored": scored, "applied": applied}
+
+
+def compute_outcome_counts(conn) -> dict[str, int]:
+    """Application outcome counts for the Stage 4 dashboard panel."""
+    rows = conn.execute(
+        "SELECT status, COUNT(*) AS n FROM applications GROUP BY status"
+    ).fetchall()
+    by_status = {row["status"]: int(row["n"] or 0) for row in rows}
+    waiting = (
+        by_status.get(JobStatus.APPLY_SUBMITTED.value, 0)
+        + by_status.get(JobStatus.WAITING_RESPONSE.value, 0)
+    )
+    return {
+        "received": by_status.get(JobStatus.EMPLOYER_RECEIVED.value, 0),
+        "waiting": waiting,
+        "rejected": by_status.get(JobStatus.REJECTED.value, 0),
+        "interview": by_status.get(JobStatus.INTERVIEW_INVITED.value, 0),
+    }
+
+
 @app.route("/")
 def index():
     """Dashboard home page."""
     with connect() as conn:
-        # Get status counts
+        # Get status counts (kept for downstream consumers / per-stage panels)
         status_counts = {}
         for st in JobStatus:
             cur = conn.execute("SELECT COUNT(*) FROM seen_jobs WHERE status = ?", (st.value,))
             status_counts[st.value] = cur.fetchone()[0]
-        
+
         # Get total jobs
         cur = conn.execute("SELECT COUNT(*) FROM seen_jobs")
         total_jobs = cur.fetchone()[0]
-        
+
         # Total run count for the panel-header badge.
         total_runs = conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
 
@@ -89,6 +224,7 @@ def index():
             {
                 "id": r[0],
                 "timestamp": r[1],
+                "timestamp_display": _format_readable_time(r[1]),
                 "n_fetched": r[2],
                 "n_new": r[3],
                 "n_generated": r[4],
@@ -97,26 +233,21 @@ def index():
             }
             for r in cur.fetchall()
         ]
-        
-        # Get last 24h applications
-        since = datetime.now(tz=timezone.utc) - timedelta(hours=24)
-        cur = conn.execute(
-            """
-            SELECT COUNT(*) FROM applications
-            WHERE attempted_at >= ?
-            """,
-            (since.isoformat(),),
-        )
-        applied_24h = cur.fetchone()[0]
+
+        funnel = compute_funnel(conn)
+        activity_today = compute_activity_today(conn)
+        outcome_counts = compute_outcome_counts(conn)
 
     applied_total = status_counts.get(JobStatus.APPLY_SUBMITTED.value, 0)
-    
+
     return render_template("index.html",
                           status_counts=status_counts,
                           total_jobs=total_jobs,
                           total_runs=total_runs,
                           applied_total=applied_total,
-                          applied_24h=applied_24h,
+                          funnel=funnel,
+                          activity_today=activity_today,
+                          outcome_counts=outcome_counts,
                           runs=runs)
 
 
@@ -223,6 +354,7 @@ def api_runs():
             {
                 "id": r[0],
                 "timestamp": r[1],
+                "timestamp_display": _format_readable_time(r[1]),
                 "n_fetched": r[2],
                 "n_new": r[3],
                 "n_generated": r[4],
@@ -232,6 +364,73 @@ def api_runs():
             for r in cur.fetchall()
         ]
     return jsonify(runs)
+
+
+@app.route("/api/runs/trigger", methods=["POST"])
+def api_trigger_run():
+    """Start one pipeline run from the dashboard without blocking the request."""
+    if not _RUN_TRIGGER_LOCK.acquire(blocking=False):
+        return jsonify({
+            "ok": False,
+            "status": "already_running",
+            "error": "pipeline run already in progress",
+        }), 409
+
+    _RUN_TRIGGER_STATE.update({"status": "running", "run_id": None, "error": None})
+
+    def _worker() -> None:
+        try:
+            from .config import load_config, load_secrets
+            from .pipeline import run_with_failure_alerts
+
+            result = run_with_failure_alerts(load_config(), load_secrets())
+            _RUN_TRIGGER_STATE.update({
+                "status": "finished",
+                "run_id": result.get("run_id"),
+                "error": None,
+            })
+        except Exception:
+            _RUN_TRIGGER_STATE.update({
+                "status": "failed",
+                "run_id": None,
+                "error": traceback.format_exc(limit=3),
+            })
+        finally:
+            _RUN_TRIGGER_LOCK.release()
+
+    threading.Thread(target=_worker, name="jobbot-dashboard-run", daemon=True).start()
+    return jsonify({"ok": True, "status": "started"}), 202
+
+
+@app.route("/api/runs/<int:run_id>/control", methods=["POST"])
+def api_run_control(run_id: int):
+    """Cooperative run controls for the local dashboard.
+
+    Pause/resume are picked up by pipeline checkpoint checks. Stop also marks
+    the DB row finished so stale rows no longer look like active token spend.
+    """
+    payload = request.get_json(silent=True) or {}
+    action = str(payload.get("action") or "").strip().lower()
+    if action not in {"pause", "resume", "stop"}:
+        return jsonify({"ok": False, "error": "action must be pause, resume, or stop"}), 400
+
+    with connect() as conn:
+        row = conn.execute("SELECT id, finished_at FROM runs WHERE id = ?", (run_id,)).fetchone()
+        if row is None:
+            abort(404)
+        if action == "pause":
+            if row["finished_at"] is not None:
+                return jsonify({"ok": False, "error": "run already finished"}), 409
+            request_run_control(conn, run_id, "paused", reason="paused from dashboard")
+        elif action == "resume":
+            if row["finished_at"] is not None:
+                return jsonify({"ok": False, "error": "run already finished"}), 409
+            request_run_control(conn, run_id, "running", reason="resumed from dashboard")
+        else:
+            mark_run_stopped(conn, run_id, reason="stopped from dashboard")
+        state = run_control_state(conn, run_id)
+
+    return jsonify({"ok": True, "run_id": run_id, "action": action, **state})
 
 
 @app.route("/runs/<int:run_id>")
@@ -267,17 +466,24 @@ def run_detail_page(run_id: int):
         diagnostics = dict(summary.get("stages", {})) if isinstance(summary.get("stages"), dict) else {}
         score_stats = summary.get("score_stats", {}) if isinstance(summary.get("score_stats"), dict) else {}
         blockers = summary.get("top_blockers", []) if isinstance(summary.get("top_blockers"), list) else []
+        control_state = run_control_state(conn, run_id)
 
         in_progress = row[2] is None
+        if not in_progress and control_state.get("requested_state") != "stopped":
+            control_state = {
+                "requested_state": "finished",
+                "reason": "run completed",
+                "updated_at": row[2],
+            }
         if in_progress:
             started_at = row[1]
             live_counts = conn.execute(
                 """
                 SELECT
                     COUNT(*) AS fetched,
-                    SUM(CASE WHEN description_full IS NOT NULL
-                              AND LENGTH(TRIM(description_full)) > 0
-                             THEN 1 ELSE 0 END) AS with_desc,
+                    SUM(CASE WHEN description_scraped = 1 THEN 1 ELSE 0 END) AS enriched,
+                    SUM(CASE WHEN description_scraped = 0 THEN 1 ELSE 0 END) AS enrichment_failed,
+                    SUM(CASE WHEN description_scraped IS NOT NULL THEN 1 ELSE 0 END) AS enrichment_attempted,
                     SUM(CASE WHEN status = 'scraped'         THEN 1 ELSE 0 END) AS scraped,
                     SUM(CASE WHEN status = 'filtered'        THEN 1 ELSE 0 END) AS filtered,
                     SUM(CASE WHEN status = 'scored'          THEN 1 ELSE 0 END) AS scored,
@@ -289,14 +495,22 @@ def run_detail_page(run_id: int):
                 (started_at,),
             ).fetchone()
             if live_counts:
-                diagnostics.setdefault("fetched", int(live_counts[0] or 0))
-                diagnostics.setdefault("enriched", int(live_counts[1] or 0))
-                diagnostics.setdefault("filtered", int(live_counts[3] or 0))
-                diagnostics.setdefault("scored", int(live_counts[4] or 0))
-                diagnostics.setdefault("below_threshold", int(live_counts[5] or 0))
-                diagnostics.setdefault("generated", int(live_counts[6] or 0))
+                fetched = int(live_counts[0] or 0)
+                attempted = int(live_counts[3] or 0)
+                diagnostics["fetched"] = fetched
+                diagnostics["new"] = fetched
+                diagnostics["enriched"] = int(live_counts[1] or 0)
+                diagnostics["enrichment_failed"] = int(live_counts[2] or 0)
+                diagnostics["enrichment_attempted"] = attempted
+                diagnostics["enrichment_pending"] = max(0, fetched - attempted)
+                diagnostics["filtered"] = int(live_counts[5] or 0)
+                diagnostics["scored"] = int(live_counts[6] or 0)
+                diagnostics["below_threshold"] = int(live_counts[7] or 0)
+                diagnostics["generated"] = int(live_counts[8] or 0)
 
         portal_payload = _portal_payload_for_run(conn, (row[0], row[1], row[2], row[8]))
+        progress_rows = run_stage_progress(conn, run_id)
+        usage_summary = llm_usage_summary(conn, run_id)
 
     portal_rows = sorted(
         (
@@ -306,18 +520,26 @@ def run_detail_page(run_id: int):
                 **(portal_payload["per_portal_description"].get(source) or {
                     "total": 0, "with_description": 0, "percent_with_description": 0.0,
                 }),
+                **(portal_payload["per_portal_enrichment"].get(source) or {
+                    "enriched": 0, "no_description": 0, "attempted": 0, "pending": 0,
+                }),
             }
             for source, hits in portal_payload["per_portal"].items()
         ),
         key=lambda r: r["hits"],
         reverse=True,
     )
+    if not progress_rows:
+        progress_rows = _fallback_run_progress(portal_payload, diagnostics)
+    progress_rows = _decorate_progress_rows(progress_rows, in_progress=in_progress)
     current_stage = _infer_current_stage(portal_payload["total"], diagnostics) if in_progress else None
 
     run_data = {
         "id": row[0],
         "started_at": row[1],
+        "started_at_display": _format_readable_time(row[1]),
         "finished_at": row[2],
+        "finished_at_display": _format_readable_time(row[2]) if row[2] else "—",
         "n_fetched": row[3],
         "n_new": row[4],
         "n_generated": row[5],
@@ -330,10 +552,14 @@ def run_detail_page(run_id: int):
         run=run_data,
         in_progress=in_progress,
         current_stage=current_stage,
+        control_state=control_state,
         stages=diagnostics,
+        progress_rows=progress_rows,
+        llm_usage=usage_summary,
         portal_rows=portal_rows,
         portal_total=portal_payload["total"],
         portal_pct_with_description=portal_payload["percent_with_description"],
+        enrichment_progress=portal_payload["enrichment_progress"],
         score_stats=score_stats,
         blockers=blockers,
     )
@@ -396,6 +622,121 @@ def _parse_iso(ts: str | None) -> datetime | None:
         return None
 
 
+def _format_readable_time(ts: str | None) -> str:
+    """Human display for ISO timestamps stored in the DB.
+
+    The DB keeps UTC-ish ISO strings for machine use; dashboard labels should
+    be compact and readable in the machine's local timezone.
+    """
+    dt = _parse_iso(ts)
+    if dt is None:
+        return "—"
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    local_dt = dt.astimezone()
+    label = f"{local_dt.strftime('%b')} {local_dt.day}, {local_dt.year} {local_dt:%H:%M}"
+    tzname = local_dt.tzname()
+    return f"{label} {tzname}" if tzname else label
+
+
+def _decorate_progress_rows(rows: list[dict], *, in_progress: bool) -> list[dict]:
+    out = []
+    for row in rows:
+        total = int(row.get("total") or 0)
+        completed = int(row.get("completed") or 0)
+        failed = int(row.get("failed") or 0)
+        skipped = int(row.get("skipped") or 0)
+        started = int(row.get("started") or 0)
+        current_index = int(row.get("current_index") or 0)
+        if (
+            not in_progress
+            and total
+            and started >= total
+            and completed + failed + skipped < total
+        ):
+            skipped = max(0, total - completed - failed)
+        done = min(total, completed + failed + skipped) if total else completed + failed + skipped
+        pct = round(done / total * 100.0, 1) if total else 0.0
+        item_n = current_index or done
+        decorated = dict(row)
+        decorated.update({
+            "skipped": skipped,
+            "done": done,
+            "pct": pct,
+            "item_n": item_n,
+            "display_total": total,
+            "active": bool(in_progress and done < total),
+        })
+        out.append(decorated)
+    return out
+
+
+def _fallback_run_progress(portal_payload: dict, stages: dict) -> list[dict]:
+    """Progress rows for runs that predate explicit progress instrumentation."""
+    total = int(portal_payload.get("total") or stages.get("fetched") or 0)
+    enrichment = portal_payload.get("enrichment_progress") or {}
+    enriched = int(enrichment.get("enriched") or stages.get("enriched") or 0)
+    no_desc = int(enrichment.get("no_description") or stages.get("enrichment_failed") or 0)
+    enrichment_attempted = int(enrichment.get("attempted") or enriched + no_desc)
+    scoring_done = (
+        int(stages.get("scored", 0) or 0)
+        + int(stages.get("below_threshold", 0) or 0)
+        + int(stages.get("filtered", 0) or 0)
+        + int(stages.get("cannot_score", 0) or 0)
+        + int(stages.get("score_failed", 0) or 0)
+    )
+    return [
+        {
+            "stage": "scrape",
+            "total": total,
+            "started": total,
+            "completed": total,
+            "failed": 0,
+            "skipped": 0,
+            "current_index": total,
+            "current_item_id": None,
+            "current_label": None,
+            "metadata": {"source": "derived from seen_jobs"},
+        },
+        {
+            "stage": "enrichment",
+            "total": total,
+            "started": enrichment_attempted,
+            "completed": enriched,
+            "failed": no_desc,
+            "skipped": 0,
+            "current_index": enrichment_attempted,
+            "current_item_id": None,
+            "current_label": None,
+            "metadata": {"source": "derived from description_scraped"},
+        },
+        {
+            "stage": "scoring",
+            "total": enriched,
+            "started": scoring_done,
+            "completed": int(stages.get("scored", 0) or 0) + int(stages.get("below_threshold", 0) or 0),
+            "failed": int(stages.get("cannot_score", 0) or 0) + int(stages.get("score_failed", 0) or 0),
+            "skipped": int(stages.get("filtered", 0) or 0),
+            "current_index": scoring_done,
+            "current_item_id": None,
+            "current_label": None,
+            "metadata": {"source": "derived from statuses"},
+        },
+        {
+            "stage": "generation",
+            "total": int(stages.get("scored", 0) or 0),
+            "started": int(stages.get("generated", 0) or 0),
+            "completed": int(stages.get("generated", 0) or 0),
+            "failed": 0,
+            "skipped": 0,
+            "current_index": int(stages.get("generated", 0) or 0),
+            "current_item_id": None,
+            "current_label": None,
+            "metadata": {"source": "derived from statuses"},
+        },
+    ]
+
+
 def _description_counts_by_source(conn, *, ids: list[str] | None = None,
                                   since: str | None = None) -> dict[str, dict[str, float | int]]:
     """Group seen_jobs by source and count rows with non-empty descriptions.
@@ -410,27 +751,27 @@ def _description_counts_by_source(conn, *, ids: list[str] | None = None,
         query = f"""
             SELECT source,
                    COUNT(*) AS total,
-                   SUM(CASE WHEN description_full IS NOT NULL
-                             AND LENGTH(TRIM(description_full)) > 0
+                   SUM(CASE WHEN description_word_count IS NOT NULL
+                             AND description_word_count >= ?
                             THEN 1 ELSE 0 END) AS with_description
             FROM seen_jobs
             WHERE id IN ({placeholders})
             GROUP BY source
         """
-        rows = conn.execute(query, tuple(ids)).fetchall()
+        rows = conn.execute(query, (_MIN_USABLE_DESCRIPTION_WORDS, *tuple(ids))).fetchall()
     elif since:
         rows = conn.execute(
             """
             SELECT source,
                    COUNT(*) AS total,
-                   SUM(CASE WHEN description_full IS NOT NULL
-                             AND LENGTH(TRIM(description_full)) > 0
+                   SUM(CASE WHEN description_word_count IS NOT NULL
+                             AND description_word_count >= ?
                             THEN 1 ELSE 0 END) AS with_description
             FROM seen_jobs
             WHERE first_seen_at >= ?
             GROUP BY source
             """,
-            (since,),
+            (_MIN_USABLE_DESCRIPTION_WORDS, since),
         ).fetchall()
     else:
         return {}
@@ -448,6 +789,58 @@ def _description_counts_by_source(conn, *, ids: list[str] | None = None,
     return out
 
 
+def _enrichment_progress_by_source(conn, *, ids: list[str] | None = None,
+                                   since: str | None = None) -> dict[str, dict[str, int]]:
+    """Per-source enrichment status for live run visibility.
+
+    `description_scraped` is NULL while the detail-page fetch has not been
+    attempted, 1 when a usable body was saved, and 0 when the detail page did
+    not produce a usable description.
+    """
+    if ids:
+        placeholders = ",".join("?" * len(ids))
+        query = f"""
+            SELECT source,
+                   COUNT(*) AS total,
+                   SUM(CASE WHEN description_scraped = 1 THEN 1 ELSE 0 END) AS enriched,
+                   SUM(CASE WHEN description_scraped = 0 THEN 1 ELSE 0 END) AS no_description,
+                   SUM(CASE WHEN description_scraped IS NOT NULL THEN 1 ELSE 0 END) AS attempted
+            FROM seen_jobs
+            WHERE id IN ({placeholders})
+            GROUP BY source
+        """
+        rows = conn.execute(query, tuple(ids)).fetchall()
+    elif since:
+        rows = conn.execute(
+            """
+            SELECT source,
+                   COUNT(*) AS total,
+                   SUM(CASE WHEN description_scraped = 1 THEN 1 ELSE 0 END) AS enriched,
+                   SUM(CASE WHEN description_scraped = 0 THEN 1 ELSE 0 END) AS no_description,
+                   SUM(CASE WHEN description_scraped IS NOT NULL THEN 1 ELSE 0 END) AS attempted
+            FROM seen_jobs
+            WHERE first_seen_at >= ?
+            GROUP BY source
+            """,
+            (since,),
+        ).fetchall()
+    else:
+        return {}
+
+    out: dict[str, dict[str, int]] = {}
+    for source, total, enriched, no_description, attempted in rows:
+        total_i = int(total or 0)
+        attempted_i = int(attempted or 0)
+        out[source] = {
+            "total": total_i,
+            "enriched": int(enriched or 0),
+            "no_description": int(no_description or 0),
+            "attempted": attempted_i,
+            "pending": max(0, total_i - attempted_i),
+        }
+    return out
+
+
 def _empty_portal_payload() -> dict:
     return {
         "run_id": None,
@@ -457,6 +850,16 @@ def _empty_portal_payload() -> dict:
         "elapsed_sec": 0,
         "per_portal": {},
         "per_portal_description": {},
+        "per_portal_enrichment": {},
+        "enrichment_progress": {
+            "total": 0,
+            "attempted": 0,
+            "enriched": 0,
+            "no_description": 0,
+            "pending": 0,
+            "percent_attempted": 0.0,
+            "percent_enriched": 0.0,
+        },
         "total": 0,
         "total_with_description": 0,
         "percent_with_description": 0.0,
@@ -495,8 +898,10 @@ def _portal_payload_for_run(conn, run_row) -> dict:
     fetched_ids = summary.get("fetched_ids") if isinstance(summary, dict) else None
     if isinstance(fetched_ids, list) and fetched_ids:
         per_portal_desc = _description_counts_by_source(conn, ids=fetched_ids)
+        per_portal_enrichment = _enrichment_progress_by_source(conn, ids=fetched_ids)
     else:
         per_portal_desc = _description_counts_by_source(conn, since=started_at)
+        per_portal_enrichment = _enrichment_progress_by_source(conn, since=started_at)
 
     started_dt = _parse_iso(started_at)
     finished_dt = _parse_iso(finished_at)
@@ -517,6 +922,27 @@ def _portal_payload_for_run(conn, run_row) -> dict:
         if isinstance(v, dict)
     )
     pct_with_desc = round(total_with_desc / total_desc_denom * 100.0, 1) if total_desc_denom else 0.0
+    total_enrichment = sum(
+        int(v.get("total", 0))
+        for v in per_portal_enrichment.values()
+        if isinstance(v, dict)
+    )
+    enrichment_attempted = sum(
+        int(v.get("attempted", 0))
+        for v in per_portal_enrichment.values()
+        if isinstance(v, dict)
+    )
+    enrichment_enriched = sum(
+        int(v.get("enriched", 0))
+        for v in per_portal_enrichment.values()
+        if isinstance(v, dict)
+    )
+    enrichment_no_description = sum(
+        int(v.get("no_description", 0))
+        for v in per_portal_enrichment.values()
+        if isinstance(v, dict)
+    )
+    enrichment_pending = max(0, total_enrichment - enrichment_attempted)
 
     return {
         "run_id": run_id,
@@ -526,6 +952,16 @@ def _portal_payload_for_run(conn, run_row) -> dict:
         "elapsed_sec": elapsed_sec,
         "per_portal": per_portal,
         "per_portal_description": per_portal_desc,
+        "per_portal_enrichment": per_portal_enrichment,
+        "enrichment_progress": {
+            "total": total_enrichment,
+            "attempted": enrichment_attempted,
+            "enriched": enrichment_enriched,
+            "no_description": enrichment_no_description,
+            "pending": enrichment_pending,
+            "percent_attempted": round(enrichment_attempted / total_enrichment * 100.0, 1) if total_enrichment else 0.0,
+            "percent_enriched": round(enrichment_enriched / total_enrichment * 100.0, 1) if total_enrichment else 0.0,
+        },
         "total": sum(per_portal.values()),
         "total_with_description": total_with_desc,
         "percent_with_description": pct_with_desc,

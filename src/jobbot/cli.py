@@ -3,13 +3,15 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
+import shutil
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from .config import load_config, load_secrets
+from .config import REPO_ROOT, load_config, load_secrets
 from .models import JobStatus
 from .pipeline import daily_digest, run_with_failure_alerts
 from .profile_distiller import rebuild_compiled_profile
@@ -122,6 +124,26 @@ def cmd_db_status(_args) -> int:
     return 1 if status.locked else 0
 
 
+def cmd_scan_inbox(_args) -> int:
+    from . import outcomes
+
+    config = load_config()
+    try:
+        secrets = load_secrets()
+    except KeyError as e:
+        console.print(f"[yellow]missing inbox secret {e}; running DB-only scan[/yellow]")
+        secrets = None
+    with connect() as conn:
+        summary = outcomes.scan_inbox(conn, secrets, config)
+    console.print(f"inbox scan complete: {summary}")
+    return 0
+
+
+def cmd_apply(args) -> int:
+    """Run the configured pipeline pass used by the scheduled apply job."""
+    return cmd_run(args)
+
+
 def cmd_dashboard(_args) -> int:
     from .dashboard import run as run_dashboard
     console.print("[bold]🤖 jobbot dashboard[/bold] starting on [cyan]http://localhost:5001[/cyan]")
@@ -186,7 +208,8 @@ def cmd_rescore_backfill(args) -> int:
     row whose existing `score` was set in violation of the description-
     scraped + 200-word precondition, then re-score every eligible row
     (status in scraped / cannot_score:* with body now backfilled) against
-    Sonnet + the PRIMARY_* CV. Costs ~1 LLM call per backfilled job.
+    Sonnet + the PRIMARY_ corpus CV. Costs ~1 LLM call per backfilled
+    job.
     """
     from pathlib import Path
 
@@ -278,85 +301,141 @@ def cmd_rescore_backfill(args) -> int:
 
 def _cmd_rescore_base(args) -> int:
     """PRD §7.5 FR-SCO-01..05: scrub legacy scores that violate the
-    description-scraped + 200-word precondition, then re-score every row
+    description-scraped + 100-word precondition, then re-score every row
     that now passes it (status in scraped / cannot_score:*, with a real
-    body of >= 200 words) against Sonnet + the PRIMARY_* CV.
+    body of >= 100 words) against Sonnet + the PRIMARY_ corpus CV.
 
-    Invoked via `jobbot rescore --base`. Bounded by --limit so a single
-    invocation doesn't blow through the API budget on long-tail backlogs.
+    With `--force`, additionally null every existing base score first and
+    re-evaluate every eligible row (used when the evaluator or CV source
+    changed and historical scores no longer reflect reality). Late-stage
+    rows (generated / apply_* / etc.) keep their pipeline status — only
+    the score column is refreshed.
+
+    Invoked via `jobbot rescore --base [--force]`. Bounded by --limit so a
+    single invocation doesn't blow through the API budget on long-tail
+    backlogs.
     """
     from .profile import load_profile
     from .scoring import CannotScore, llm_score
     from .state import (
-        jobs_needing_base_rescore, scrub_stale_scores, update_status,
+        force_clear_base_scores, jobs_needing_base_rescore,
+        jobs_needing_base_rescore_force, scrub_stale_scores,
+        update_base_score_only, update_status,
     )
     from .models import JobStatus
 
+    force = bool(getattr(args, "force", False))
     cap = int(getattr(args, "limit", 100) or 100)
     secrets = load_secrets()
     profile = load_profile()
 
+    # Statuses where it's safe to overwrite `status` based on the new score.
+    # For anything else (GENERATED, APPLY_*, etc.) we only refresh the
+    # score column so we don't undo downstream pipeline progress.
+    overwritable_statuses = {
+        JobStatus.SCRAPED.value,
+        JobStatus.SCORED.value,
+        JobStatus.BELOW_THRESHOLD.value,
+        JobStatus.CANNOT_SCORE_NO_BODY.value,
+        JobStatus.CANNOT_SCORE_NO_PRIMARY_CV.value,
+        JobStatus.CANNOT_SCORE_NO_BASE_CV.value,
+        "cannot_score:no_primary_cv",
+        "cannot_score:no_base_cv",
+    }
+
     with connect() as conn:
+        if force:
+            early, late = force_clear_base_scores(conn)
+            console.print(
+                f"[yellow]force[/yellow] cleared {early} early-stage + "
+                f"{late} late-stage score(s); late-stage statuses preserved"
+            )
+
         n_scrubbed = scrub_stale_scores(conn)
         if n_scrubbed:
             console.print(
                 f"[yellow]scrubbed[/yellow] {n_scrubbed} legacy score(s) "
                 "that violated the description_scraped/word-count precondition"
             )
-        else:
+        elif not force:
             console.print("no stale scores to scrub")
 
-        candidates = jobs_needing_base_rescore(conn, limit=cap)
-        if not candidates:
+        if force:
+            candidates_with_status = jobs_needing_base_rescore_force(conn, limit=cap)
+        else:
+            candidates_with_status = [
+                (job, JobStatus.SCRAPED.value)
+                for job in jobs_needing_base_rescore(conn, limit=cap)
+            ]
+        if not candidates_with_status:
             console.print(
                 "nothing to rescore — every eligible row already has a base score."
             )
             return 0
 
         console.print(
-            f"rescoring {len(candidates)} row(s) with Sonnet + PRIMARY_* CV "
-            f"— ~1 LLM call each (cap {cap})..."
+            f"rescoring {len(candidates_with_status)} row(s) with Sonnet + "
+            f"PRIMARY_ CV — ~1 LLM call each (cap {cap})..."
         )
 
-        table = Table(title="base rescore — Sonnet + PRIMARY CV")
+        table = Table(title="base rescore — Sonnet + PRIMARY_ CV")
         table.add_column("source"); table.add_column("title")
         table.add_column("score", justify="right")
         table.add_column("status", justify="right")
 
-        n_ok = n_cannot = n_failed = 0
-        for job in candidates:
+        n_ok = n_cannot = n_failed = n_score_only = 0
+        for job, current_status in candidates_with_status:
             try:
                 result = llm_score(job, profile, secrets, description_scraped=True)
             except CannotScore as e:
                 reason = e.reason
                 if reason.startswith("no_primary_cv"):
                     new_status = JobStatus.CANNOT_SCORE_NO_PRIMARY_CV
+                elif reason.startswith("no_base_cv"):
+                    new_status = JobStatus.CANNOT_SCORE_NO_BASE_CV
                 else:
                     new_status = JobStatus.CANNOT_SCORE_NO_BODY
-                update_status(conn, job.id, new_status, score=None, reason=reason)
+                # Never demote a late-stage row to cannot_score — refresh the
+                # reason column but keep its pipeline status. Otherwise the
+                # standard cannot_score downgrade is correct.
+                if current_status in overwritable_statuses:
+                    update_status(conn, job.id, new_status, score=None, reason=reason)
+                    table.add_row(job.source, (job.title or "")[:50], "—", new_status.value)
+                else:
+                    update_base_score_only(conn, job.id, score=None, reason=reason)
+                    table.add_row(job.source, (job.title or "")[:50], "—", current_status)
                 n_cannot += 1
-                table.add_row(job.source, (job.title or "")[:50], "—", new_status.value)
                 continue
             except Exception as e:
                 console.print(f"[red]fail[/red] {job.id}: {type(e).__name__}: {e}")
                 n_failed += 1
                 continue
 
-            new_status = (
-                JobStatus.SCORED if result.score >= 70 else JobStatus.BELOW_THRESHOLD
-            )
-            update_status(conn, job.id, new_status,
-                          score=result.score, reason=result.reason)
+            if current_status in overwritable_statuses:
+                new_status = (
+                    JobStatus.SCORED if result.score >= 70 else JobStatus.BELOW_THRESHOLD
+                )
+                update_status(conn, job.id, new_status,
+                              score=result.score, reason=result.reason)
+                table.add_row(
+                    job.source, (job.title or "")[:50],
+                    str(result.score), new_status.value,
+                )
+            else:
+                update_base_score_only(conn, job.id, result.score, result.reason)
+                n_score_only += 1
+                table.add_row(
+                    job.source, (job.title or "")[:50],
+                    str(result.score), f"{current_status} (score refreshed)",
+                )
             n_ok += 1
-            table.add_row(
-                job.source, (job.title or "")[:50],
-                str(result.score), new_status.value,
-            )
 
         console.print(table)
-        console.print(
-            f"done: {n_ok} scored, {n_cannot} cannot_score, {n_failed} failed"
+        summary = (
+            f"done: {n_ok} scored ({n_score_only} score-only refresh), "
+            f"{n_cannot} cannot_score, {n_failed} failed"
         )
+        console.print(summary)
     return 0 if n_failed == 0 else 1
 
 
@@ -374,6 +453,61 @@ def cmd_profile_fetch_website(_args) -> int:
     return 0
 
 
+def _corpus_dir(kind: str) -> Path:
+    if kind not in {"cvs", "cover_letters", "website"}:
+        raise ValueError(f"unsupported profile corpus kind: {kind}")
+    return REPO_ROOT / "data" / "corpus" / kind
+
+
+def cmd_profile_add(args) -> int:
+    """Copy a local profile artifact into data/corpus."""
+    src = Path(args.path).expanduser()
+    if not src.is_file():
+        console.print(f"[red]missing profile artifact:[/red] {src}")
+        return 1
+    dest_dir = _corpus_dir(args.kind)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    dest_name = src.name
+    if args.primary and not dest_name.startswith("PRIMARY_"):
+        dest_name = f"PRIMARY_{dest_name}"
+    dest = dest_dir / dest_name
+    if dest.exists() and not args.force:
+        console.print(
+            f"[red]destination exists:[/red] {dest} "
+            "(pass --force to replace it)"
+        )
+        return 1
+    shutil.copy2(src, dest)
+    console.print(f"profile artifact added: {dest}")
+    return 0
+
+
+def cmd_profile_remove(args) -> int:
+    """Remove a profile artifact from data/corpus by path or basename."""
+    raw = Path(args.path).expanduser()
+    corpus_root = (REPO_ROOT / "data" / "corpus").resolve()
+    candidates = []
+    if raw.is_absolute():
+        candidates.append(raw)
+    else:
+        candidates.append((REPO_ROOT / raw).resolve())
+        candidates.extend(corpus_root.rglob(raw.name))
+
+    for candidate in candidates:
+        target = candidate.resolve()
+        try:
+            target.relative_to(corpus_root)
+        except ValueError:
+            continue
+        if target.is_file():
+            target.unlink()
+            console.print(f"profile artifact removed: {target}")
+            return 0
+
+    console.print(f"[yellow]profile artifact not found:[/yellow] {args.path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="jobbot")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -383,10 +517,13 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("sources", help="List registered scrapers.").set_defaults(fn=cmd_sources)
     sub.add_parser("dashboard", help="Start web dashboard on localhost:5001.").set_defaults(fn=cmd_dashboard)
     sub.add_parser("db-status", help="Show SQLite writer-lock state and any holders.").set_defaults(fn=cmd_db_status)
+    sub.add_parser("scan-inbox", help="Scan inbox for application outcomes.").set_defaults(fn=cmd_scan_inbox)
+    sub.add_parser("inbox-scan", help="Alias for scan-inbox.").set_defaults(fn=cmd_scan_inbox)
+    sub.add_parser("apply", help="Run the scheduled apply pipeline pass.").set_defaults(fn=cmd_apply)
 
     enrich = sub.add_parser(
         "enrich",
-        help="Re-fetch detail pages for rows with no body or word_count < 200. "
+        help="Re-fetch detail pages for rows with no body or word_count < 100. "
              "Requires --backfill.",
     )
     enrich.add_argument("--backfill", action="store_true",
@@ -416,12 +553,40 @@ def main(argv: list[str] | None = None) -> int:
         "--limit", type=int, default=50,
         help="Max rows to rescore in this invocation (default 50).",
     )
+    rescore.add_argument(
+        "--force", action="store_true",
+        help="With --base, null every existing base score first and "
+             "re-evaluate every eligible row against Sonnet + the current "
+             "CV. Used after the evaluator or CV source changes. SCORED/"
+             "BELOW_THRESHOLD rows fall back to SCRAPED; later-stage rows "
+             "(generated, apply_*, etc.) keep their status — only the score "
+             "is refreshed.",
+    )
     rescore.set_defaults(fn=cmd_rescore_backfill)
 
     profile = sub.add_parser("profile", help="Profile corpus + distillation commands.")
     profile_sub = profile.add_subparsers(dest="profile_cmd", required=True)
     profile_sub.add_parser("rebuild", help="Rebuild data/profile.compiled.yaml.").set_defaults(fn=cmd_profile_rebuild)
     profile_sub.add_parser("fetch-website", help="Refresh website corpus markdown files.").set_defaults(fn=cmd_profile_fetch_website)
+    profile_add = profile_sub.add_parser("add", help="Add a CV/profile artifact to data/corpus.")
+    profile_add.add_argument("path", help="File to copy into the corpus.")
+    profile_add.add_argument(
+        "--kind", choices=["cvs", "cover_letters", "website"], default="cvs",
+        help="Corpus bucket to copy into (default: cvs).",
+    )
+    profile_add.add_argument(
+        "--primary", action="store_true",
+        help="Prefix the copied file with PRIMARY_ for the main CV.",
+    )
+    profile_add.add_argument(
+        "--force", action="store_true",
+        help="Replace an existing corpus file with the same name.",
+    )
+    profile_add.set_defaults(fn=cmd_profile_add)
+
+    profile_remove = profile_sub.add_parser("remove", help="Remove a profile artifact from data/corpus.")
+    profile_remove.add_argument("path", help="Corpus path or basename to remove.")
+    profile_remove.set_defaults(fn=cmd_profile_remove)
 
     args = p.parse_args(argv)
     return args.fn(args)

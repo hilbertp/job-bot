@@ -3,12 +3,12 @@
 PRD §7.5 FR-SCO-01..05. The scorer enforces three hard preconditions before
 calling the LLM. If any fail, it raises `CannotScore` with the reason —
 callers persist this as a `cannot_score:*` status instead of a numeric score:
-  1. enrichment ran AND the body it stored is >= MIN_BODY_WORDS (200).
+  1. enrichment ran AND the body it stored is >= MIN_BODY_WORDS (100).
      A long *listing-card* description is not enough — a posting can carry
      a 250-word teaser on the search page while its detail body was never
      fetched. The caller must therefore pass `description_scraped=True`
      explicitly, and word_count is recomputed against `job.description`.
-  2. primary CV loaded successfully from data/corpus/cvs/PRIMARY_*
+  2. primary CV loaded successfully from data/corpus/cvs/PRIMARY_*.
   3. (caller-provided) Anthropic API key present
 
 Cost note: this routes to claude-sonnet-4-6 (max_tokens=800). At expected
@@ -37,7 +37,7 @@ PROFILE_YAML_PATH = REPO_ROOT / "data" / "profile.yaml"
 # PRD §7.5 FR-SCO-01: a posting needs a substantive body before scoring.
 # Below this threshold the description is just a snippet (LinkedIn search
 # previews, Stepstone teaser cards) and the scorer would hallucinate.
-MIN_BODY_WORDS = 200
+MIN_BODY_WORDS = 100
 
 # Cap the primary CV at 18k chars (~3-4k tokens). Sonnet handles much more,
 # but the marginal context past this point is mostly formatting noise.
@@ -138,7 +138,7 @@ def passes_heuristic(job: JobPosting, profile: Profile) -> tuple[bool, str]:
 def _build_user_message(
     job: JobPosting,
     profile: Profile,
-    primary_cv: str,
+    base_cv: str,
     *,
     cv_section_label: str = "Primary CV (source of truth)",
     extra_section: tuple[str, str] | None = None,
@@ -152,7 +152,7 @@ def _build_user_message(
       5. Job metadata
 
     For the Stage-3 rescore, callers substitute the tailored CV markdown for
-    `primary_cv` (with a different label) and pass `extra_section` to inject
+    `base_cv` (with a different label) and pass `extra_section` to inject
     a "Cover letter (tailored)" block between profile and job description.
     """
     compiled = {
@@ -183,7 +183,7 @@ def _build_user_message(
     metadata_yaml = yaml.safe_dump(metadata, sort_keys=False, allow_unicode=True).strip()
 
     body = (job.description or "").strip()[:_JOB_BODY_CAP]
-    cv = primary_cv.strip()[:_PRIMARY_CV_CAP]
+    cv = base_cv.strip()[:_PRIMARY_CV_CAP]
 
     extra_block = ""
     if extra_section:
@@ -214,16 +214,22 @@ def _build_user_message(
 def _invoke_scorer(
     secrets: Secrets,
     user_message: str,
+    *,
+    run_id: int | None = None,
+    phase: str = "score_base",
+    job_id: str | None = None,
 ) -> ScoreResult:
     """Shared LLM call + response parsing for both base and tailored scoring."""
     client = Anthropic(api_key=secrets.anthropic_api_key)
     prompt = PROMPT_PATH.read_text()
+    model = "claude-sonnet-4-6"
     msg = client.messages.create(
-        model="claude-sonnet-4-6",
+        model=model,
         max_tokens=800,
         system=prompt,
         messages=[{"role": "user", "content": user_message}],
     )
+    _record_usage_if_present(msg, run_id=run_id, phase=phase, job_id=job_id, model=model)
     text = "".join(b.text for b in msg.content if b.type == "text")
     data = _parse_score_json(text)
     score = int(data["score"])
@@ -251,18 +257,61 @@ def _invoke_scorer(
     return ScoreResult(score=score, reason=reason)
 
 
+def _usage_int(usage: object, name: str) -> int:
+    if isinstance(usage, dict):
+        value = usage.get(name, 0)
+    else:
+        value = getattr(usage, name, 0)
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _record_usage_if_present(
+    msg: object,
+    *,
+    run_id: int | None,
+    phase: str,
+    job_id: str | None,
+    model: str,
+) -> None:
+    if run_id is None:
+        return
+    usage = getattr(msg, "usage", None)
+    if usage is None:
+        return
+    from .state import connect, record_llm_usage
+
+    with connect() as conn:
+        record_llm_usage(
+            conn,
+            run_id=run_id,
+            phase=phase,
+            job_id=job_id,
+            model=model,
+            input_tokens=_usage_int(usage, "input_tokens"),
+            output_tokens=_usage_int(usage, "output_tokens"),
+            cache_creation_input_tokens=_usage_int(usage, "cache_creation_input_tokens"),
+            cache_read_input_tokens=_usage_int(usage, "cache_read_input_tokens"),
+        )
+
+
 def llm_score_tailored(
     job: JobPosting,
     profile: Profile,
     secrets: Secrets,
     tailored_cv_md: str,
     tailored_cover_letter_md: str,
+    *,
+    run_id: int | None = None,
+    phase: str = "tailored_rescore",
 ) -> ScoreResult:
     """Score the posting AGAIN using the tailored CV + cover letter the
     generator produced for it. Returns a ScoreResult — does not touch the
     DB. Caller persists via `update_score_tailored`.
 
-    The tailored CV replaces the primary-CV slot (section 1 of the prompt),
+    The tailored CV replaces the base-CV slot (section 1 of the prompt),
     and the tailored cover letter is injected as a new section between the
     hard preferences and the job description. Both are explicitly labelled
     "(tailored)" so the model knows it's evaluating an actual submission
@@ -281,7 +330,10 @@ def llm_score_tailored(
         cv_section_label="Tailored CV (this application's CV)",
         extra_section=("Cover letter (tailored)", tailored_cover_letter_md),
     )
-    return _invoke_scorer(secrets, user_message)
+    return _invoke_scorer(
+        secrets, user_message,
+        run_id=run_id, phase=phase, job_id=job.id,
+    )
 
 
 def llm_score(
@@ -290,6 +342,9 @@ def llm_score(
     secrets: Secrets,
     *,
     description_scraped: bool,
+    user_feedback: str | None = None,
+    run_id: int | None = None,
+    phase: str = "score_base",
 ) -> ScoreResult:
     """Ask the LLM for a 0-100 fit score. Returns a ScoreResult.
 
@@ -301,6 +356,14 @@ def llm_score(
     body. A listing-card snippet that happens to be 200+ words still
     fails the gate when this flag is False — the scorer must never trust
     a body the enrichment phase did not vouch for.
+
+    `user_feedback`, when set, is injected as an extra prompt section
+    ("Candidate feedback on previous score") between the hard preferences
+    and the job description. Used by the feedback-driven rescore flow so
+    the model can reconsider an earlier score in light of context the
+    candidate provided after the fact (e.g. "I am willing to relocate to
+    Freiburg", "I have hands-on Finanzbuchhaltung experience from a prior
+    role not in my CV").
     """
     if not description_scraped:
         raise CannotScore(
@@ -315,8 +378,19 @@ def llm_score(
 
     try:
         primary_cv = load_primary_cv()
-    except FileNotFoundError as e:
+    except (OSError, FileNotFoundError) as e:
         raise CannotScore(f"no_primary_cv: {e}") from e
+    if not primary_cv.strip():
+        raise CannotScore("no_primary_cv: primary CV extracted to empty text")
 
-    user_message = _build_user_message(job, profile, primary_cv)
-    return _invoke_scorer(secrets, user_message)
+    extra: tuple[str, str] | None = None
+    if user_feedback and user_feedback.strip():
+        extra = ("Candidate feedback on previous score", user_feedback.strip())
+
+    user_message = _build_user_message(
+        job, profile, primary_cv, extra_section=extra,
+    )
+    return _invoke_scorer(
+        secrets, user_message,
+        run_id=run_id, phase=phase, job_id=job.id,
+    )
