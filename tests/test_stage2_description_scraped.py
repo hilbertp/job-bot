@@ -103,5 +103,30 @@ def test_stage2_table_renders_description_scraped_column(
     # The renderer reads the two fields we just added to the API
     assert "job.description_scraped === true" in html
     assert "job.description_word_count" in html
-    # Stage 2 has 8 columns once Apply via lands; loading/empty states span them.
-    assert 'colspan="8"' in html
+    # Stage 2 has 10 columns once Company lands; loading/empty states span them.
+    assert 'colspan="10"' in html
+
+
+def test_stage2_table_renders_company_column(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    """Product journey stage 2: the employer must be visible alongside the
+    job title at the scrape stage. Without this, the user has to follow
+    the link to find out who is hiring."""
+    db = tmp_path / "jobbot.db"
+    monkeypatch.setattr("jobbot.state.DB_PATH", db)
+    _seed_run_with_scraped_and_unscraped(db)
+
+    client = _load_legacy_dashboard_module().app.test_client()
+    html = client.get("/").get_data(as_text=True)
+
+    # Column header + sort key
+    assert ">Company<" in html
+    assert 'data-stage1-sort="company"' in html
+    # Row template reads job.company
+    assert "${job.company || ''}" in html
+
+    # The API ships company per row so the front-end has something to render.
+    payload = client.get("/api/latest-run-jobs").get_json()
+    companies = {j["company"] for j in payload}
+    assert {"A", "B"}.issubset(companies)

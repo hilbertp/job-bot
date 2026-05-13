@@ -106,6 +106,7 @@
                     <tr class="text-purple-200 border-b border-white/10">
                         <th class="pb-2" data-stage1-sort="score">Score</th>
                         <th class="pb-2" data-stage1-sort="title">Position Title</th>
+                        <th class="pb-2" data-stage1-sort="company">Company</th>
                         <th class="pb-2" data-stage1-sort="source">Portal</th>
                         <th class="pb-2" data-stage1-sort="apply_channel">Apply via</th>
                         <th class="pb-2" data-stage1-sort="description_scraped">Description Scraped</th>
@@ -116,7 +117,7 @@
                     </tr>
                 </thead>
                 <tbody id="stage1-body">
-                    <tr><td colspan="8" class="py-3">Loading...</td></tr>
+                    <tr><td colspan="10" class="py-3">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -591,6 +592,7 @@ async function loadStage1Data() {
         tr.innerHTML = `
             <td class="py-3">${scoreCell(job)}</td>
             <td class="py-3">${job.title || ''}</td>
+            <td class="py-3">${job.company || ''}</td>
             <td class="py-3">${job.source || ''}</td>
             <td class="py-3 whitespace-nowrap">${applyChannelCell(job)}</td>
             <td class="py-3">${descriptionScrapedCell(job)}</td>
