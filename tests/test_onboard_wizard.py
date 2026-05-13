@@ -9,6 +9,8 @@ Tests pin the contracts:
 - The generated config.yaml has the user's role queries woven into the
   per-source `queries:` blocks (so Stage 2 will show their target jobs,
   not the shipped PM defaults).
+- Optional CV and cover-letter paths are imported into the profile corpus
+  for scoring and writing-style analysis.
 - The wizard does NOT overwrite a pre-existing file without confirmation
   (the "kept yours" branch).
 - The wizard NEVER bakes the original author's name or email into the
@@ -16,7 +18,6 @@ Tests pin the contracts:
 """
 from __future__ import annotations
 
-import io
 from pathlib import Path
 
 import yaml
@@ -119,6 +120,29 @@ def test_wizard_base_cv_includes_users_name_and_target_roles(
     assert cv.startswith("# Jane Doe")
     assert "jane@example.com" in cv
     assert "Sous Chef" in cv  # roles surface in the prompt-guidance paragraph
+
+
+def test_wizard_imports_cv_and_cover_letter_when_paths_are_provided(
+    monkeypatch, tmp_path: Path,
+) -> None:
+    cv_source = tmp_path / "finished_cv.md"
+    cl_source = tmp_path / "finished_cover_letter.md"
+    cv_source.write_text("# Jane Doe\n\n" + "CV evidence " * 40)
+    cl_source.write_text("Dear hiring team,\n\n" + "Cover letter voice " * 40)
+
+    answers = list(HAPPY_PATH_ANSWERS)
+    answers[-2] = str(cv_source)
+    answers[-1] = str(cl_source)
+
+    rc = _drive_wizard(monkeypatch, tmp_path, answers)
+
+    assert rc == 0
+    imported_cv = tmp_path / "data" / "corpus" / "cvs" / "PRIMARY_finished_cv.md"
+    imported_cl = (
+        tmp_path / "data" / "corpus" / "cover_letters" / "finished_cover_letter.md"
+    )
+    assert imported_cv.read_text() == cv_source.read_text()
+    assert imported_cl.read_text() == cl_source.read_text()
 
 
 def test_wizard_does_not_bake_in_original_authors_identity(

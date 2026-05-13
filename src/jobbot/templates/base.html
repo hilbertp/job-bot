@@ -3,25 +3,524 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JobBot Dashboard</title>
+    <title>JobBot</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        /* =========================================================
+           DESIGN TOKENS — JobBot "Modern" (dark zinc + emerald)
+           ========================================================= */
+        :root {
+            color-scheme: dark;
+            --bg:            #09090b;
+            --bg-1:          #0f0f10;
+            --bg-2:          #131316;
+            --bg-3:          #1a1a1d;
+            --surface:       #0f0f10;
+            --surface-strong:#131316;
+            --surface-soft:  rgba(255, 255, 255, 0.04);
+            --surface-hover: rgba(255, 255, 255, 0.07);
+            --control:       rgba(255, 255, 255, 0.06);
+            --control-hover: rgba(255, 255, 255, 0.10);
+            --text:          #fafafa;
+            --text-1:        #f4f4f5;
+            --muted:         #a1a1aa;
+            --subtle:        #71717a;
+            --line:          #18181b;
+            --line-strong:   #27272a;
+            --line-hi:       #3f3f46;
+            --accent:        #34d399;
+            --accent-2:      #10b981;
+            --accent-soft:   rgba(52, 211, 153, 0.12);
+            --info:          #38bdf8;
+            --ok:            #34d399;
+            --warn:          #fbbf24;
+            --danger:        #fb7185;
+            --radius:        10px;
+            --radius-lg:     14px;
+            --shadow-soft:   0 8px 24px rgba(0, 0, 0, 0.30);
+            --shadow-card:   0 12px 32px rgba(0, 0, 0, 0.35);
+            --sidebar-w:     240px;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            background: var(--bg);
+            color: var(--text-1);
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        ::selection { background: rgba(52, 211, 153, 0.25); color: #ecfdf5; }
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; background-clip: padding-box; }
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+        /* Tabular numerals + monospace digit utility used dashboard-wide. */
+        .num {
+            font-variant-numeric: tabular-nums;
+            font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+            letter-spacing: -0.01em;
+        }
+
+        a {
+            color: var(--text-1);
+            text-decoration: none;
+            transition: color .15s ease;
+        }
+        a:hover { color: #fff; }
+        a.underline {
+            text-decoration: underline;
+            text-decoration-color: var(--line-hi);
+            text-underline-offset: 3px;
+        }
+        a.underline:hover { text-decoration-color: var(--accent); }
+
+        /* =========================================================
+           LAYOUT — sidebar + main content
+           ========================================================= */
+        .layout {
+            display: grid;
+            grid-template-columns: var(--sidebar-w) 1fr;
+            min-height: 100vh;
+        }
+        .sidebar {
+            position: sticky; top: 0; height: 100vh;
+            border-right: 1px solid var(--line);
+            background: var(--bg);
+            padding: 20px 14px 16px;
+            display: flex; flex-direction: column; gap: 16px;
+            overflow-y: auto;
+        }
+        .sidebar-logo {
+            display: flex; align-items: center; gap: 10px;
+            padding: 4px 8px; font-weight: 700; font-size: 15px;
+            letter-spacing: -0.01em; color: var(--text);
+        }
+        .sidebar-logo .glyph {
+            width: 28px; height: 28px; border-radius: 8px;
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: #052e16; display: grid; place-items: center;
+            font-size: 13px; font-weight: 900;
+            box-shadow: 0 0 0 1px rgba(16,185,129,0.30), 0 6px 16px rgba(16,185,129,0.18);
+        }
+        .sidebar-section-label {
+            font-size: 10px; font-weight: 600; letter-spacing: 0.10em;
+            text-transform: uppercase; color: var(--subtle);
+            padding: 0 10px; margin-top: 4px;
+        }
+        .nav { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+        .nav a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 7px 10px; border-radius: 7px; color: var(--muted);
+            transition: background .12s ease, color .12s ease;
+        }
+        .nav a:hover { background: var(--bg-1); color: var(--text-1); }
+        .nav a.active { background: var(--bg-1); color: var(--text); }
+        .nav a .nav-glyph {
+            color: var(--subtle); font-size: 11px; width: 14px; text-align: center;
+            transition: color .12s ease;
+        }
+        .nav a.active .nav-glyph,
+        .nav a:hover .nav-glyph { color: var(--accent); }
+        .nav a .nav-badge {
+            margin-left: auto; font-size: 10px; padding: 1px 7px; border-radius: 999px;
+            background: var(--bg-2); color: var(--muted);
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+        }
+        .sidebar-foot {
+            margin-top: auto;
+            padding: 12px; border-radius: 10px;
+            background: var(--bg-1); border: 1px solid var(--line);
+            font-size: 11px; color: var(--muted);
+        }
+        .sidebar-foot strong { color: var(--text); font-weight: 600; }
+        .sidebar-foot .kv {
+            display: flex; justify-content: space-between; gap: 8px; margin-top: 4px;
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+        }
+        .sidebar-foot .kv span:first-child { color: var(--subtle); text-transform: none; }
+        .sidebar-foot .kv span:last-child { color: var(--text-1); }
+        .sidebar-foot .kv .status-ok { color: var(--accent); }
+        .sidebar-foot .kv .status-warn { color: var(--warn); }
+        .sidebar-foot .kv .status-err { color: var(--danger); }
+
+        main.container {
+            position: relative;
+            width: 100%;
+            max-width: 1480px;
+            margin: 0 auto;
+            padding: 28px 32px 80px;
+        }
+
+        /* =========================================================
+           PAGE HEADER
+           ========================================================= */
+        .page-head {
+            display: flex; align-items: flex-end; justify-content: space-between;
+            gap: 18px; padding-bottom: 18px; margin-bottom: 24px;
+            border-bottom: 1px solid var(--line);
+        }
+        .page-kicker {
+            margin-bottom: 6px;
+            color: var(--subtle);
+            font-size: 11px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.10em;
+        }
+        .page-title {
+            font-size: clamp(1.5rem, 2.2vw, 1.875rem);
+            line-height: 1.1; font-weight: 700;
+            letter-spacing: -0.02em; color: var(--text);
+            margin: 0;
+        }
+        .dashboard-actions {
+            display: flex; align-items: center; justify-content: flex-end;
+            flex-wrap: wrap; gap: 10px;
+        }
+        .status-text { color: var(--muted); font-size: 13px; }
+
+        /* =========================================================
+           CARD / PANEL PRIMITIVES (legacy classes preserved)
+           ========================================================= */
+        .surface-panel,
+        section[data-collapsible-panel] {
+            background: var(--surface) !important;
+            border: 1px solid var(--line) !important;
+            border-radius: var(--radius-lg) !important;
+            box-shadow: var(--shadow-soft);
+        }
+        [data-panel-header] {
+            background: transparent !important;
+            transition: background .12s ease;
+        }
+        [data-panel-header]:hover {
+            background: var(--surface-hover) !important;
+        }
+        [data-panel-header] h2 {
+            color: var(--text); font-weight: 600; letter-spacing: -0.005em;
+        }
+        [data-panel-toggle] {
+            width: 28px; height: 28px; display: grid; place-items: center;
+            border: 1px solid var(--line); border-radius: 8px;
+            background: var(--bg-1); color: var(--muted);
+            transition: all .12s ease;
+        }
+        [data-panel-header]:hover [data-panel-toggle] {
+            border-color: var(--line-strong); color: var(--text-1);
+        }
+
+        /* Funnel/metric cards on dashboard. The colored top-stripe ranks
+           a stage at a glance — emerald = total, then through the funnel. */
+        .funnel-card,
+        .metric-card {
+            position: relative; overflow: hidden;
+            background: var(--surface) !important;
+            border: 1px solid var(--line) !important;
+            border-radius: var(--radius-lg) !important;
+            box-shadow: var(--shadow-soft);
+            padding: 16px !important;
+            transition: border-color .15s ease, transform .15s ease;
+        }
+        .funnel-card:hover,
+        .metric-card:hover {
+            border-color: var(--line-strong) !important;
+            transform: translateY(-1px);
+        }
+        .funnel-card::before,
+        .metric-card::before {
+            content: ""; position: absolute; left: 0; right: 0; top: 0;
+            height: 2px; pointer-events: none;
+            background: var(--accent);
+            opacity: 0.7;
+        }
+        .funnel-card:nth-child(2)::before { background: #38bdf8; }
+        .funnel-card:nth-child(3)::before { background: #a78bfa; }
+        .funnel-card:nth-child(4)::before { background: #fbbf24; }
+        .funnel-card:nth-child(5)::before { background: #fb7185; }
+
+        /* Shortlist job cards. */
+        .job-card {
+            background: var(--surface) !important;
+            border: 1px solid var(--line) !important;
+            border-radius: var(--radius-lg) !important;
+            overflow: hidden;
+            transition: border-color .15s ease, transform .15s ease;
+        }
+        .job-card:hover {
+            border-color: var(--line-strong) !important;
+            transform: translateY(-1px);
+        }
+
+        /* =========================================================
+           SKIN — map legacy purple/white Tailwind classes onto tokens.
+           Lets the existing index.html keep its inline utilities while
+           the design changes around it.
+           ========================================================= */
+        .text-gray-100,
+        .text-purple-100 { color: var(--text-1) !important; }
+        .text-purple-200 { color: var(--muted) !important; }
+        .text-purple-300 { color: var(--subtle) !important; }
+        .text-purple-400 { color: #52525b !important; }
+        .text-green-100,
+        .text-green-300,
+        .text-emerald-100,
+        .text-emerald-300 { color: var(--ok) !important; }
+        .text-amber-100,
+        .text-amber-200,
+        .text-amber-300,
+        .text-yellow-200 { color: var(--warn) !important; }
+        .text-red-100,
+        .text-red-300 { color: var(--danger) !important; }
+        .text-blue-100,
+        .text-blue-300,
+        .text-cyan-100,
+        .text-cyan-300 { color: var(--info) !important; }
+
+        .bg-white\/5  { background-color: var(--surface-soft) !important; }
+        .bg-white\/10 { background-color: var(--surface-soft) !important; }
+        .bg-white\/20,
+        .bg-white\/30 { background-color: var(--control) !important; }
+        .bg-black\/20 { background-color: rgba(0,0,0,0.30) !important; }
+        .hover\:bg-white\/10:hover,
+        .hover\:bg-white\/15:hover,
+        .hover\:bg-white\/20:hover,
+        .hover\:bg-white\/30:hover { background-color: var(--control-hover) !important; }
+
+        .border-white\/5,
+        .border-white\/10 { border-color: var(--line) !important; }
+        .border-white\/20,
+        .border-white\/30 { border-color: var(--line-strong) !important; }
+
+        /* Tinted state pill backgrounds used by the outbound CRM */
+        .bg-red-500\/30    { background-color: rgba(251,113,133,0.15) !important; }
+        .bg-amber-400\/20,
+        .bg-amber-500\/20  { background-color: rgba(251,191,36,0.12) !important; }
+        .bg-amber-500\/30  { background-color: rgba(251,191,36,0.18) !important; }
+        .bg-emerald-500\/20 { background-color: rgba(52,211,153,0.12) !important; }
+        .bg-emerald-500\/30 { background-color: rgba(52,211,153,0.18) !important; }
+        .bg-red-500\/20    { background-color: rgba(251,113,133,0.12) !important; }
+        .bg-purple-400\/30,
+        .bg-purple-500\/30 { background-color: rgba(167,139,250,0.16) !important; }
+        .bg-blue-500\/30   { background-color: rgba(56,189,248,0.16) !important; }
+        .bg-cyan-500\/30   { background-color: rgba(34,211,238,0.16) !important; }
+        .bg-green-500\/30  { background-color: rgba(52,211,153,0.18) !important; }
+        .bg-zinc-500\/30   { background-color: rgba(113,113,122,0.20) !important; }
+        .border-amber-300\/40,
+        .border-amber-400\/50 { border-color: rgba(251,191,36,0.35) !important; }
+        .border-emerald-300\/40 { border-color: rgba(52,211,153,0.35) !important; }
+        .border-red-300\/40,
+        .border-red-400\/50 { border-color: rgba(251,113,133,0.35) !important; }
+        .border-purple-200\/40,
+        .border-purple-400\/50 { border-color: rgba(167,139,250,0.35) !important; }
+        .border-blue-400\/50 { border-color: rgba(56,189,248,0.35) !important; }
+        .border-cyan-400\/50 { border-color: rgba(34,211,238,0.35) !important; }
+        .border-zinc-400\/50 { border-color: rgba(113,113,122,0.40) !important; }
+        .border-green-400\/50 { border-color: rgba(52,211,153,0.35) !important; }
+
+        /* Opacity-modifier variants picked up by Tailwind CDN —
+           need explicit overrides because the slash creates a new class. */
+        .bg-white\/15 { background-color: rgba(255,255,255,0.06) !important; }
+        .bg-emerald-300\/80 {
+            background: linear-gradient(90deg, #10b981 0%, #34d399 100%) !important;
+            box-shadow: 0 0 12px rgba(52,211,153,0.35);
+        }
+        .bg-emerald-400\/30 { background-color: rgba(52,211,153,0.18) !important; }
+        .bg-amber-400\/30   { background-color: rgba(251,191,36,0.16) !important; }
+        .text-purple-300\/70 { color: var(--subtle) !important; }
+        .text-amber-100\/90  { color: var(--warn) !important; }
+
+        /* Stat values rendered as bare <strong>X</strong> in run-detail —
+           give them tabular numerals + soft accent so they read like
+           proper metric cards even without a class. */
+        .surface-panel strong,
+        .metric-card strong,
+        .funnel-card strong {
+            color: var(--text);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* =========================================================
+           BUTTONS
+           ========================================================= */
+        button, select, input, textarea { font-family: inherit; }
+        button {
+            transition: background .12s ease, border-color .12s ease, color .12s ease, transform .12s ease;
+        }
+        button:not(:disabled):hover { transform: translateY(-1px); }
+        button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+        /* Primary CTA — Run pipeline */
+        #run-pipeline-btn {
+            color: #052e16 !important;
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important;
+            border: 1px solid rgba(52,211,153,0.6) !important;
+            box-shadow: 0 8px 20px rgba(16,185,129,0.18);
+        }
+        #run-pipeline-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%) !important;
+            box-shadow: 0 10px 24px rgba(16,185,129,0.28);
+        }
+
+        /* Secondary — Export */
+        #export-json-btn {
+            color: var(--text-1) !important;
+            background: var(--bg-1) !important;
+            border: 1px solid var(--line-strong) !important;
+        }
+        #export-json-btn:hover:not(:disabled) {
+            background: var(--bg-2) !important;
+            border-color: var(--line-hi) !important;
+        }
+
+        /* Run-in-progress banner */
+        #run-banner {
+            background: rgba(251,191,36,0.06) !important;
+            border: 1px solid rgba(251,191,36,0.30) !important;
+            color: var(--warn) !important;
+            border-radius: 12px !important;
+        }
+
+        /* =========================================================
+           TABLES
+           ========================================================= */
+        table { border-collapse: separate; border-spacing: 0; color: var(--text-1); }
+        thead tr { color: var(--muted) !important; }
+        th {
+            position: sticky; top: 0; z-index: 2;
+            background: var(--surface);
+            color: var(--subtle);
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            text-align: left;
+            border-bottom: 1px solid var(--line);
+        }
+        td { color: var(--text-1); vertical-align: top; }
+        tbody tr { transition: background .12s ease; }
+        tbody tr:hover { background: var(--surface-hover); }
+
+        /* =========================================================
+           FORM CONTROLS
+           ========================================================= */
+        input, select, textarea {
+            background: var(--bg-1) !important;
+            border: 1px solid var(--line-strong) !important;
+            border-radius: 8px !important;
+            color: var(--text-1) !important;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent) !important;
+        }
+        option { background: var(--bg-1); color: var(--text-1); }
+
+        /* =========================================================
+           SMALL POLISH
+           ========================================================= */
+        details {
+            border: 1px solid var(--line);
+            border-radius: 8px !important;
+            background: var(--bg-1) !important;
+        }
+        summary { color: var(--text-1); cursor: pointer; }
+        pre { color: var(--text-1); }
+        code, .font-mono { color: #6ee7b7; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+        section[data-collapsible-panel] { animation: card-in 280ms ease both; }
+        @keyframes card-in {
+            from { opacity: 0; transform: translateY(4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 880px) {
+            :root { --sidebar-w: 1fr; }
+            .layout { grid-template-columns: 1fr; }
+            .sidebar {
+                position: static; height: auto; padding: 12px 16px;
+                flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px;
+            }
+            .sidebar-section-label, .sidebar-foot { display: none; }
+            .nav { flex-direction: row; gap: 6px; }
+            .nav a { padding: 6px 10px; }
+            .nav a .nav-glyph { display: none; }
+            main.container { padding: 18px 16px 60px; }
+            th { top: auto; position: static; }
+        }
     </style>
+    {% block head_extra %}{% endblock %}
 </head>
-<body class="text-gray-100">
-    <nav class="bg-white/10 backdrop-blur-md border-b border-white/20 p-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold">JobBot</a>
-            <div class="space-x-6">
-                <a href="/" class="hover:text-purple-200">Dashboard</a>
-                <a href="/jobs" class="hover:text-purple-200">Jobs</a>
-                <a href="/runs" class="hover:text-purple-200">Runs</a>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <a class="sidebar-logo" href="/" aria-label="JobBot home">
+                <span class="glyph">J</span>
+                <span>JobBot</span>
+            </a>
+
+            <div class="sidebar-section-label">Workspace</div>
+            <nav class="nav" aria-label="Primary navigation">
+                <a href="/" class="{{ 'active' if request.endpoint == 'index' else '' }}">
+                    <span class="nav-glyph">◆</span><span>Overview</span>
+                </a>
+                <a href="/jobs" class="{{ 'active' if request.endpoint == 'jobs_page' else '' }}">
+                    <span class="nav-glyph">◇</span><span>Jobs</span>
+                </a>
+                <a href="/runs" class="{{ 'active' if request.endpoint in ('runs_page', 'run_detail_page') else '' }}">
+                    <span class="nav-glyph">◇</span><span>Runs</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-section-label">Shortcuts</div>
+            <nav class="nav">
+                <a href="/#stage3-panel"><span class="nav-glyph">◦</span><span>Shortlist</span></a>
+                <a href="/#outbound-pipeline-panel"><span class="nav-glyph">◦</span><span>Outbound CRM</span></a>
+                <a href="/#stage1-panel"><span class="nav-glyph">◦</span><span>Portals</span></a>
+            </nav>
+
+            <div class="sidebar-foot" id="sidebar-last-run" aria-live="polite">
+                <strong>Last run</strong>
+                <div class="kv"><span>status</span><span id="sidebar-last-run-status">—</span></div>
+                <div class="kv"><span>when</span><span id="sidebar-last-run-when">—</span></div>
+                <div class="kv"><span>fetched → tailored</span><span id="sidebar-last-run-flow">—</span></div>
             </div>
-        </div>
-    </nav>
-    <main class="container mx-auto p-6">
-        {% block content %}{% endblock %}
-    </main>
+        </aside>
+
+        <main class="container">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        // Sidebar "last run" footer: load once per page from /api/runs.
+        // Read-only; failure is silent so the sidebar just shows em-dashes.
+        (async function loadSidebarLastRun() {
+            try {
+                const res = await fetch('/api/runs');
+                if (!res.ok) return;
+                const rows = await res.json();
+                if (!rows.length) return;
+                const r = rows[0];
+                const setText = (id, v, cls) => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.textContent = v;
+                    if (cls) el.className = cls;
+                };
+                setText('sidebar-last-run-when', r.timestamp_display || '—');
+                setText('sidebar-last-run-flow', `${r.n_fetched ?? 0} → ${r.n_generated ?? 0}`);
+                if (r.n_errors > 0) setText('sidebar-last-run-status', `${r.n_errors} err`, 'status-err');
+                else if ((r.n_applied ?? 0) > 0) setText('sidebar-last-run-status', 'applied', 'status-ok');
+                else setText('sidebar-last-run-status', 'completed', 'status-ok');
+            } catch (e) { /* sidebar stays at em-dashes */ }
+        })();
+    </script>
 </body>
 </html>

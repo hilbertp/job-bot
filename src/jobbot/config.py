@@ -91,7 +91,12 @@ class Config(BaseModel):
 
 
 def load_secrets(env_file: Path | None = None) -> Secrets:
-    load_dotenv(env_file or REPO_ROOT / ".env")
+    # override=True: `.env` is this project's canonical config. A stale
+    # shell env var (e.g. ANTHROPIC_API_KEY='' inherited from some prior
+    # tool) must NOT silently shadow the real key in .env. Without
+    # override the dashboard's rescore endpoint dies with the Anthropic
+    # SDK error "Could not resolve authentication method".
+    load_dotenv(env_file or REPO_ROOT / ".env", override=True)
     return Secrets(
         anthropic_api_key=os.environ["ANTHROPIC_API_KEY"],
         gmail_address=os.environ["GMAIL_ADDRESS"],

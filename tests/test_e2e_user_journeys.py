@@ -6,8 +6,10 @@ calls (`llm_score`, `llm_score_tailored`, `generate_documents`,
 `send_digest`) are monkeypatched. No network IO, no Anthropic API key
 needed beyond the dummy value in the Secrets fixture.
 
-Journey 4 (sent/received/waiting/rejected/interview) is intentionally
-absent — the backend isn't built yet (see the gap doc).
+Application outcome journey coverage lives in
+`tests/test_journey4_outcomes_contracts.py`,
+`tests/test_outbound_pipeline_transitions.py`, and
+`tests/test_find_job_goal_e2e.py`.
 """
 from __future__ import annotations
 
@@ -701,7 +703,8 @@ def test_pipeline_writes_both_score_and_score_tailored_when_generation_runs(
     # Redirect generation output into the tmp dir so we don't pollute output/.
     config = _make_config(generate_above=80)
     config.output_dir = str(tmp_path / "out")
-    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents); monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
 
     pipeline.run_once(config, _make_secrets())
 
@@ -741,7 +744,8 @@ def test_api_shortlist_exposes_tailored_score_fields(tmp_path: Path, monkeypatch
     )
     config = _make_config(generate_above=80)
     config.output_dir = str(tmp_path / "out")
-    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents); monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
 
     pipeline.run_once(config, _make_secrets())
 
@@ -788,7 +792,8 @@ def test_dashboard_does_not_present_base_score_as_tailored_rescore(
     monkeypatch.setattr(pipeline, "llm_score_tailored", _tailored_rescore_not_live)
     config = _make_config(generate_above=80)
     config.output_dir = str(tmp_path / "out")
-    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents); monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
 
     pipeline.run_once(config, _make_secrets())
 
@@ -832,7 +837,8 @@ def test_shortlist_doc_route_serves_existing_html(tmp_path: Path, monkeypatch) -
     )
     config = _make_config(generate_above=80)
     config.output_dir = str(tmp_path / "out")
-    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents); monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
 
     pipeline.run_once(config, _make_secrets())
 
@@ -868,7 +874,8 @@ def test_shortlist_doc_route_rejects_filenames_outside_allowlist(
     )
     config = _make_config(generate_above=80)
     config.output_dir = str(tmp_path / "out")
-    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents); monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)
+    monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
 
     pipeline.run_once(config, _make_secrets())
 

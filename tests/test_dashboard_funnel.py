@@ -1,11 +1,12 @@
-"""5-stage outcome funnel on the dashboard top strip.
+"""4-stage outcome funnel on the dashboard top strip.
 
 Pins:
-  - The five stages render in the user-specified order with the
-    correct absolute counts.
-  - Percent badges are computed against Total and color-bucketed
-    (red < 20%, amber 20-50%, green >= 50%).
-  - `cannot_score:*` rows count toward Total but NOT toward Suitable.
+  - The four stages render in the user-specified order with the
+    correct absolute counts. The all-time Total card was dropped — the
+    meaningful run-scoped hit count lives in the Stage 1 panel.
+  - No percent badges: with no Total denominator there is no consistent
+    base. Absolute counts already convey the funnel shape.
+  - `cannot_score:*` rows do NOT inflate Suitable (score stays NULL).
   - The Interviewed card carries an `M5` pill so the placeholder zero
     is read as expected, not a bug.
   - The old "Scraped 0 / Last 24h" tiles are gone; Activity Today now
@@ -48,14 +49,13 @@ def _job(job_id: str, source: str = "linkedin") -> JobPosting:
 
 def _seed_known_funnel(db: Path) -> None:
     """Seed a DB with:
-        Total       = 10  (10 rows in seen_jobs)
         Suitable    =  6  (6 rows with score >= 70)
         Tailored    =  3  (3 rows with output_dir set)
         Applied     =  1  (1 application submitted=1)
         Interviewed =  0  (proof_level column doesn't exist yet)
 
-    Includes 1 `cannot_score:no_body` row that counts toward Total but
-    not toward Suitable (score remains NULL).
+    Includes 1 `cannot_score:no_body` row whose score stays NULL — it
+    must NOT count toward Suitable.
     """
     with connect(db) as conn:
         # 10 rows scraped
@@ -105,7 +105,7 @@ def _seed_known_funnel(db: Path) -> None:
 # compute_funnel — pure computation
 # ---------------------------------------------------------------------------
 
-def test_funnel_has_five_stages_in_order(tmp_path: Path, monkeypatch) -> None:
+def test_funnel_has_four_stages_in_order(tmp_path: Path, monkeypatch) -> None:
     db = tmp_path / "jobbot.db"
     monkeypatch.setattr("jobbot.state.DB_PATH", db)
     _seed_known_funnel(db)
@@ -114,7 +114,7 @@ def test_funnel_has_five_stages_in_order(tmp_path: Path, monkeypatch) -> None:
         funnel = compute_funnel(conn)
 
     assert [s["label"] for s in funnel] == [
-        "Total", "Suitable", "Tailored", "Applied", "Interviewed",
+        "Suitable", "Tailored", "Applied", "Interviewed",
     ]
 
 
@@ -128,7 +128,6 @@ def test_funnel_absolute_counts(tmp_path: Path, monkeypatch) -> None:
 
     counts = {s["label"]: s["count"] for s in funnel}
     assert counts == {
-        "Total": 10,
         "Suitable": 6,
         "Tailored": 3,
         "Applied": 1,
@@ -136,12 +135,11 @@ def test_funnel_absolute_counts(tmp_path: Path, monkeypatch) -> None:
     }
 
 
-def test_cannot_score_row_counts_total_but_not_suitable(
+def test_cannot_score_row_does_not_inflate_suitable(
     tmp_path: Path, monkeypatch,
 ) -> None:
     """The pre-fix scoring gate refuses some rows as cannot_score:no_body —
-    their score column stays NULL. They must still appear in Total (they
-    were scraped) but must NOT inflate Suitable."""
+    their score column stays NULL. They must NOT inflate Suitable."""
     db = tmp_path / "jobbot.db"
     monkeypatch.setattr("jobbot.state.DB_PATH", db)
     with connect(db) as conn:
@@ -155,13 +153,11 @@ def test_cannot_score_row_counts_total_but_not_suitable(
         funnel = compute_funnel(conn)
 
     counts = {s["label"]: s["count"] for s in funnel}
-    assert counts["Total"] == 1
     assert counts["Suitable"] == 0
 
 
-def test_funnel_percentages_are_against_total_jobs(
-    tmp_path: Path, monkeypatch,
-) -> None:
+def test_funnel_omits_percentages(tmp_path: Path, monkeypatch) -> None:
+    """No Total denominator means no percent badges on any stage."""
     db = tmp_path / "jobbot.db"
     monkeypatch.setattr("jobbot.state.DB_PATH", db)
     _seed_known_funnel(db)
@@ -169,16 +165,13 @@ def test_funnel_percentages_are_against_total_jobs(
     with connect(db) as conn:
         funnel = compute_funnel(conn)
 
-    by_label = {s["label"]: s for s in funnel}
-    assert by_label["Total"]["pct_of_total"] is None
-    assert by_label["Suitable"]["pct_of_total"] == 60.0      # 6/10
-    assert by_label["Tailored"]["pct_of_total"] == 30.0      # 3/10
-    assert by_label["Applied"]["pct_of_total"] == 10.0       # 1/10
-    assert by_label["Interviewed"]["pct_of_total"] == 0.0    # 0/10
+    for stage in funnel:
+        assert stage["pct_of_total"] is None
+        assert stage["percentage_color"] == "neutral"
 
 
 def test_percentage_color_thresholds() -> None:
-    """Red < 20%, amber 20-50%, green 50%+."""
+    """Red < 20%, amber 20-50%, green 50%+. Helper still used elsewhere."""
     assert _percentage_color(0.0) == "red"
     assert _percentage_color(19.9) == "red"
     assert _percentage_color(20.0) == "amber"
@@ -186,26 +179,6 @@ def test_percentage_color_thresholds() -> None:
     assert _percentage_color(50.0) == "green"
     assert _percentage_color(100.0) == "green"
     assert _percentage_color(None) == "neutral"
-
-
-def test_funnel_percentage_color_assignment(
-    tmp_path: Path, monkeypatch,
-) -> None:
-    """Seeded fixture: Suitable 60% (green), Tailored 30% (amber),
-    Applied 10% (red), Interviewed 0% (red)."""
-    db = tmp_path / "jobbot.db"
-    monkeypatch.setattr("jobbot.state.DB_PATH", db)
-    _seed_known_funnel(db)
-
-    with connect(db) as conn:
-        funnel = compute_funnel(conn)
-
-    by_label = {s["label"]: s for s in funnel}
-    assert by_label["Total"]["percentage_color"] == "neutral"
-    assert by_label["Suitable"]["percentage_color"] == "green"
-    assert by_label["Tailored"]["percentage_color"] == "amber"
-    assert by_label["Applied"]["percentage_color"] == "red"
-    assert by_label["Interviewed"]["percentage_color"] == "red"
 
 
 def test_interviewed_has_pending_milestone_flag(
@@ -222,23 +195,21 @@ def test_interviewed_has_pending_milestone_flag(
 
     by_label = {s["label"]: s for s in funnel}
     assert by_label["Interviewed"]["pending_milestone"] == "M5"
-    for other in ("Total", "Suitable", "Tailored", "Applied"):
+    for other in ("Suitable", "Tailored", "Applied"):
         assert by_label[other]["pending_milestone"] is None
 
 
-def test_funnel_empty_db_renders_zeros_and_no_percentage(
+def test_funnel_empty_db_renders_zeros(
     tmp_path: Path, monkeypatch,
 ) -> None:
-    """No rows anywhere — every count is 0; percentages are undefined
-    because there is no total denominator."""
+    """No rows anywhere — every count is 0."""
     db = tmp_path / "jobbot.db"
     monkeypatch.setattr("jobbot.state.DB_PATH", db)
     with connect(db) as conn:
         funnel = compute_funnel(conn)
 
     assert all(s["count"] == 0 for s in funnel)
-    assert funnel[0]["pct_of_total"] is None
-    for s in funnel[1:]:
+    for s in funnel:
         assert s["pct_of_total"] is None
         assert s["percentage_color"] == "neutral"
 
@@ -288,7 +259,7 @@ def test_activity_today_counts_within_24h_window(
 # Template rendering — full home page check
 # ---------------------------------------------------------------------------
 
-def test_dashboard_home_renders_five_funnel_cards(
+def test_dashboard_home_renders_four_funnel_cards(
     tmp_path: Path, monkeypatch,
 ) -> None:
     db = tmp_path / "jobbot.db"
@@ -303,18 +274,18 @@ def test_dashboard_home_renders_five_funnel_cards(
     assert strip is not None
     cards = strip.find_all(attrs={"data-funnel-stage": True})
     assert [c["data-funnel-stage"] for c in cards] == [
-        "total", "suitable", "tailored", "applied", "interviewed",
+        "suitable", "tailored", "applied", "interviewed",
     ]
     counts = [c.find(attrs={"data-funnel-count": True}).get_text(strip=True)
               for c in cards]
-    assert counts == ["10", "6", "3", "1", "0"]
+    assert counts == ["6", "3", "1", "0"]
 
 
-def test_dashboard_home_renders_percentage_color_classes(
+def test_dashboard_home_funnel_has_no_percentage_badges(
     tmp_path: Path, monkeypatch,
 ) -> None:
-    """The seeded fixture produces green/amber/red/red — assert each
-    card carries the matching data-funnel-percentage attribute."""
+    """With Total removed there is no shared denominator, so percent
+    badges are dropped from every card."""
     db = tmp_path / "jobbot.db"
     monkeypatch.setattr("jobbot.state.DB_PATH", db)
     _seed_known_funnel(db)
@@ -324,13 +295,8 @@ def test_dashboard_home_renders_percentage_color_classes(
     soup = BeautifulSoup(html, "html.parser")
     cards = soup.find(id="funnel-strip").find_all(attrs={"data-funnel-stage": True})
 
-    # The Total card has no percentage badge; the other four do.
-    badges = [c.find(attrs={"data-funnel-percentage": True}) for c in cards]
-    assert badges[0] is None
-    assert badges[1]["data-funnel-percentage"] == "green"   # Suitable 60%
-    assert badges[2]["data-funnel-percentage"] == "amber"   # Tailored 30%
-    assert badges[3]["data-funnel-percentage"] == "red"     # Applied 10%
-    assert badges[4]["data-funnel-percentage"] == "red"     # Interviewed 0%
+    for card in cards:
+        assert card.find(attrs={"data-funnel-percentage": True}) is None
 
 
 def test_dashboard_home_renders_m5_pill_on_interviewed(
@@ -350,7 +316,7 @@ def test_dashboard_home_renders_m5_pill_on_interviewed(
     assert pill.get_text(strip=True) == "M5"
 
     # Sanity: no other card has the pill.
-    for stage in ("total", "suitable", "tailored", "applied"):
+    for stage in ("suitable", "tailored", "applied"):
         card = soup.find(attrs={"data-funnel-stage": stage})
         assert card.find(attrs={"data-funnel-pending-milestone": True}) is None
 

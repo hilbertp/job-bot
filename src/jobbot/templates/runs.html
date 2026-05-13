@@ -1,50 +1,93 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="bg-white/10 rounded-2xl p-6 border border-white/20">
-    <h2 class="text-2xl font-bold mb-6">Pipeline History</h2>
+<div class="page-head">
+    <div>
+        <div class="page-kicker">Execution log</div>
+        <h1 class="page-title">Pipeline History</h1>
+    </div>
+    <div class="dashboard-actions">
+        <span id="runs-count" class="status-text"></span>
+    </div>
+</div>
 
+<div class="surface-panel p-0 overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-left">
             <thead>
-                <tr class="text-purple-200 border-b border-white/10">
-                    <th class="pb-4">Run</th>
-                    <th class="pb-4">Fetched</th>
-                    <th class="pb-4">New</th>
-                    <th class="pb-4">Tailored</th>
-                    <th class="pb-4">Applied</th>
-                    <th class="pb-4">Errors</th>
+                <tr>
+                    <th class="py-3 px-5">Run</th>
+                    <th class="py-3 px-3">Started</th>
+                    <th class="py-3 px-3">Status</th>
+                    <th class="py-3 px-3 text-right">Fetched</th>
+                    <th class="py-3 px-3 text-right">New</th>
+                    <th class="py-3 px-3 text-right">Tailored</th>
+                    <th class="py-3 px-3 text-right">Applied</th>
+                    <th class="py-3 px-3 text-right">Errors</th>
+                    <th class="py-3 px-5"></th>
                 </tr>
             </thead>
-            <tbody id="runs-body"></tbody>
+            <tbody id="runs-body">
+                <tr><td colspan="9" class="py-6 px-5 text-purple-300">Loading…</td></tr>
+            </tbody>
         </table>
     </div>
 </div>
+
+<style>
+.run-pips { display: inline-flex; gap: 3px; align-items: center; }
+.pip { width: 6px; height: 6px; border-radius: 50%; background: #27272a; }
+.pip.on   { background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,0.5); }
+.pip.warn { background: #fbbf24; }
+.pip.err  { background: #fb7185; box-shadow: 0 0 6px rgba(251,113,133,0.5); }
+.run-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500;
+    border: 1px solid;
+}
+.run-status.ok   { background: rgba(52,211,153,0.10);  color: #6ee7b7;  border-color: rgba(52,211,153,0.30); }
+.run-status.warn { background: rgba(251,191,36,0.10);  color: #fcd34d;  border-color: rgba(251,191,36,0.30); }
+.run-status.err  { background: rgba(251,113,133,0.10); color: #fda4af;  border-color: rgba(251,113,133,0.30); }
+.run-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+</style>
 
 <script>
 async function loadRuns() {
     const res = await fetch('/api/runs');
     const rows = await res.json();
     const tbody = document.getElementById('runs-body');
+    const countEl = document.getElementById('runs-count');
+    if (countEl) countEl.textContent = `${rows.length} run${rows.length === 1 ? '' : 's'}`;
     tbody.innerHTML = '';
     if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="py-4">No runs yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="py-6 px-5 text-purple-300">No runs yet — trigger one from the dashboard.</td></tr>';
         return;
     }
     for (const run of rows) {
+        const errors = Number(run.n_errors || 0);
+        const applied = Number(run.n_applied || 0);
+        const generated = Number(run.n_generated || 0);
+        const fetched = Number(run.n_fetched || 0);
+        const newCount = Number(run.n_new || 0);
+        let statusCls = 'ok', statusText = 'completed';
+        if (errors > 0) { statusCls = 'err'; statusText = `${errors} error${errors === 1 ? '' : 's'}`; }
+        else if (applied > 0) { statusCls = 'ok'; statusText = 'applied'; }
+        else if (generated > 0) { statusCls = 'ok'; statusText = 'tailored'; }
+        else if (fetched > 0) { statusCls = 'warn'; statusText = 'scraped only'; }
         const tr = document.createElement('tr');
-        tr.className = 'border-b border-white/5';
         tr.innerHTML = `
-            <td class="py-3"><a class="underline" href="/runs/${run.id}" title="${run.timestamp || ''}">#${run.id} · ${run.timestamp_display || run.timestamp || ''}</a></td>
-            <td class="py-3">${run.n_fetched ?? 0}</td>
-            <td class="py-3">${run.n_new ?? 0}</td>
-            <td class="py-3">${run.n_generated ?? 0}</td>
-            <td class="py-3">${run.n_applied ?? 0}</td>
-            <td class="py-3">${run.n_errors ?? 0}</td>
+            <td class="py-3 px-5"><a class="underline font-mono text-purple-100" href="/runs/${run.id}" title="${run.timestamp || ''}">#${run.id}</a></td>
+            <td class="py-3 px-3 text-purple-200">${run.timestamp_display || run.timestamp || '—'}</td>
+            <td class="py-3 px-3"><span class="run-status ${statusCls}">${statusText}</span></td>
+            <td class="py-3 px-3 text-right num">${fetched}</td>
+            <td class="py-3 px-3 text-right num">${newCount}</td>
+            <td class="py-3 px-3 text-right num">${generated}</td>
+            <td class="py-3 px-3 text-right num">${applied}</td>
+            <td class="py-3 px-3 text-right num ${errors > 0 ? 'text-red-300' : 'text-purple-300'}">${errors}</td>
+            <td class="py-3 px-5 text-right"><a class="text-purple-300 hover:text-purple-100" href="/runs/${run.id}">details →</a></td>
         `;
         tbody.appendChild(tr);
     }
 }
-
 loadRuns();
 </script>
 {% endblock %}

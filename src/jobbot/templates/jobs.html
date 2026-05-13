@@ -1,59 +1,123 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="bg-white/10 rounded-2xl p-6 border border-white/20">
-    <div class="flex flex-wrap gap-2 mb-4">
-        <button onclick="loadJobs('all')" class="px-3 py-1 rounded bg-white/20">All</button>
-        <button onclick="loadJobs('scraped')" class="px-3 py-1 rounded bg-white/20">Scraped</button>
-        <button onclick="loadJobs('scored')" class="px-3 py-1 rounded bg-white/20">Scored</button>
-        <button onclick="loadJobs('generated')" class="px-3 py-1 rounded bg-white/20">Tailored</button>
-        <button onclick="loadJobs('applied')" class="px-3 py-1 rounded bg-white/20">Applied</button>
+<div class="page-head">
+    <div>
+        <div class="page-kicker">Triage queue</div>
+        <h1 class="page-title">Jobs</h1>
+    </div>
+    <div class="dashboard-actions">
+        <span id="jobs-count" class="status-text"></span>
+    </div>
+</div>
+
+<div class="surface-panel p-6">
+    <div class="flex flex-wrap gap-2 mb-5" id="jobs-filters">
+        <button data-filter="all"       class="px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide bg-white/20 text-purple-100 border border-white/30">All</button>
+        <button data-filter="scraped"   class="px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide bg-white/5 text-purple-200 border border-white/10 hover:bg-white/10">Scraped</button>
+        <button data-filter="scored"    class="px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide bg-white/5 text-purple-200 border border-white/10 hover:bg-white/10">Scored</button>
+        <button data-filter="generated" class="px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide bg-white/5 text-purple-200 border border-white/10 hover:bg-white/10">Tailored</button>
+        <button data-filter="applied"   class="px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide bg-white/5 text-purple-200 border border-white/10 hover:bg-white/10">Applied</button>
     </div>
 
     <div class="overflow-x-auto">
         <table class="w-full text-left">
             <thead>
-                <tr class="text-purple-200 border-b border-white/10">
-                    <th class="pb-4">Title</th>
-                    <th class="pb-4">Company</th>
-                    <th class="pb-4">Source</th>
-                    <th class="pb-4">Score</th>
-                    <th class="pb-4">Status</th>
-                    <th class="pb-4">Why / Notes</th>
-                    <th class="pb-4">Link</th>
+                <tr>
+                    <th class="py-2 px-3">Score</th>
+                    <th class="py-2 px-3">Title</th>
+                    <th class="py-2 px-3">Company</th>
+                    <th class="py-2 px-3">Source</th>
+                    <th class="py-2 px-3">Status</th>
+                    <th class="py-2 px-3">Reason</th>
+                    <th class="py-2 px-3"></th>
                 </tr>
             </thead>
-            <tbody id="jobs-body"></tbody>
+            <tbody id="jobs-body">
+                <tr><td colspan="7" class="py-4 text-purple-300 px-3">Loading…</td></tr>
+            </tbody>
         </table>
     </div>
 </div>
 
+<style>
+.score-cell {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 38px; height: 26px; padding: 0 8px; border-radius: 7px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12px; font-weight: 700; letter-spacing: -0.01em;
+}
+.score-high { background: rgba(52,211,153,0.12); color: #34d399; border: 1px solid rgba(52,211,153,0.25); }
+.score-mid  { background: rgba(251,191,36,0.10); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+.score-low  { background: rgba(251,113,133,0.10); color: #fb7185; border: 1px solid rgba(251,113,133,0.25); }
+.score-na   { background: #18181b; color: #71717a; border: 1px solid #27272a; }
+.status-cell {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500;
+    background: #18181b; color: #a1a1aa; border: 1px solid #27272a;
+}
+.status-cell::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.status-scraped         { color: #71717a; }
+.status-filtered        { color: #fb7185; }
+.status-scored          { color: #fbbf24; }
+.status-below_threshold { color: #fb7185; }
+.status-generated       { color: #34d399; }
+.status-apply_submitted { color: #34d399; }
+.status-apply_failed    { color: #fb7185; }
+</style>
+
 <script>
+const JOBS_FILTER_BTNS = Array.from(document.querySelectorAll('#jobs-filters [data-filter]'));
+const ACTIVE_CLS = 'bg-white/20 text-purple-100 border-white/30';
+const IDLE_CLS = 'bg-white/5 text-purple-200 border-white/10 hover:bg-white/10';
+
+function scoreTone(s) {
+    if (s === null || s === undefined) return 'score-na';
+    if (s >= 70) return 'score-high';
+    if (s >= 40) return 'score-mid';
+    return 'score-low';
+}
+
+function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 async function loadJobs(status) {
+    JOBS_FILTER_BTNS.forEach(b => {
+        const active = b.getAttribute('data-filter') === status;
+        b.className = `px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide border ${active ? ACTIVE_CLS : IDLE_CLS}`;
+    });
     const endpoint = status === 'all' ? '/api/jobs' : `/api/jobs/by-status/${status}`;
+    const tbody = document.getElementById('jobs-body');
+    tbody.innerHTML = '<tr><td colspan="7" class="py-4 text-purple-300 px-3">Loading…</td></tr>';
     const res = await fetch(endpoint);
     const rows = await res.json();
-    const tbody = document.getElementById('jobs-body');
-    tbody.innerHTML = '';
+    const countEl = document.getElementById('jobs-count');
+    if (countEl) countEl.textContent = `${rows.length} job${rows.length === 1 ? '' : 's'}`;
     if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="py-4">No jobs found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-purple-300 px-3">No jobs in this bucket yet.</td></tr>';
         return;
     }
-    for (const job of rows) {
-        const tr = document.createElement('tr');
-        tr.className = 'border-b border-white/5';
-        const scoreText = (job.score === null || job.score === undefined) ? 'pending' : String(job.score);
-        tr.innerHTML = `
-            <td class="py-3"><a class="underline" target="_blank" href="${job.url}">${job.title || ''}</a></td>
-            <td class="py-3">${job.company || ''}</td>
-            <td class="py-3">${job.location || ''}</td>
-            <td class="py-3">${scoreText}</td>
-            <td class="py-3">${job.status || ''}</td>
-            <td class="py-3 text-sm text-purple-100">${job.score_reason || '-'}</td>
-            <td class="py-3"><a class="underline" target="_blank" href="${job.url}">open</a></td>
+    tbody.innerHTML = rows.map(job => {
+        const score = job.score;
+        const scoreText = score === null || score === undefined ? '—' : score;
+        const statusCls = `status-${(job.status || '').replace(/-/g, '_')}`;
+        return `
+            <tr>
+                <td class="py-3 px-3"><span class="score-cell ${scoreTone(score)} num">${scoreText}</span></td>
+                <td class="py-3 px-3"><a class="underline" target="_blank" href="${escapeHtml(job.url || '#')}">${escapeHtml(job.title || '')}</a></td>
+                <td class="py-3 px-3 text-purple-200">${escapeHtml(job.company || '')}</td>
+                <td class="py-3 px-3 text-purple-300 text-xs">${escapeHtml(job.location || '')}</td>
+                <td class="py-3 px-3"><span class="status-cell ${statusCls}">${escapeHtml(job.status || '—')}</span></td>
+                <td class="py-3 px-3 text-xs text-purple-200 max-w-xl truncate" title="${escapeHtml(job.score_reason || '')}">${escapeHtml(job.score_reason || '—')}</td>
+                <td class="py-3 px-3"><a class="underline text-purple-200" target="_blank" href="${escapeHtml(job.url || '#')}">open ↗</a></td>
+            </tr>
         `;
-        tbody.appendChild(tr);
-    }
+    }).join('');
 }
+
+JOBS_FILTER_BTNS.forEach(btn => {
+    btn.addEventListener('click', () => loadJobs(btn.getAttribute('data-filter')));
+});
 
 loadJobs('all');
 </script>
