@@ -10,6 +10,72 @@ from ..otp.imap import OtpFetcher
 from ..profile import Profile
 
 
+# Words / phrases that appear on a real "thank you, we received your
+# application" page. Multi-language because Recruitee + JOIN + scope-
+# recruiting all show German variants on German postings. Match is
+# case-insensitive substring.
+_SUCCESS_TEXT_NEEDLES = (
+    "thank you",
+    "thanks for applying",
+    "application received",
+    "application sent",
+    "successfully submitted",
+    "we received your application",
+    "we've received your application",
+    "vielen dank",
+    "bewerbung eingegangen",
+    "bewerbung erhalten",
+)
+
+# Selectors for common CAPTCHA implementations. If any of these is
+# present AFTER the submit click, the application is NOT submitted —
+# the candidate is at a bot-detection wall and needs to finish manually.
+_CAPTCHA_SELECTORS = (
+    ".g-recaptcha",
+    ".h-captcha",
+    "iframe[src*='recaptcha']",
+    "iframe[src*='hcaptcha']",
+    "iframe[title*='recaptcha' i]",
+    "iframe[title*='captcha' i]",
+    "[class*='captcha' i]",
+    "[id*='captcha' i]",
+)
+
+
+def _verify_post_submit(page) -> str:
+    """Inspect the post-submit page state and return one of:
+      - "captcha":  a CAPTCHA wall is up; submission is NOT complete.
+      - "success":  a recognised success-indicator text was found.
+      - "unknown":  page changed but we can't tell — surface to user.
+
+    The runner uses this to refuse claiming APPLY_SUBMITTED on weak
+    signals (URL change alone, click-didn't-raise alone). Documented in
+    feedback memory `feedback_no_overclaiming_success.md` after a real
+    incident on 2026-05-13 where a Recruitee captcha was mistaken for
+    a successful submission.
+    """
+    # CAPTCHA wins over success-text — if a CAPTCHA is on the page,
+    # the application is NOT actually submitted regardless of what
+    # other text might be visible.
+    for sel in _CAPTCHA_SELECTORS:
+        try:
+            if page.locator(sel).count() > 0:
+                return "captcha"
+        except Exception:
+            continue
+    # Look for a success-indicator phrase anywhere in body text.
+    try:
+        body_text = page.evaluate(
+            "() => document.body ? document.body.innerText.toLowerCase() : ''"
+        )
+        for needle in _SUCCESS_TEXT_NEEDLES:
+            if needle in body_text:
+                return "success"
+    except Exception:
+        pass
+    return "unknown"
+
+
 def _load_adapters():
     """Lazy — only when auto-apply actually runs (avoids Playwright import cost).
 
@@ -114,10 +180,46 @@ def apply_to_job(
                 page.click("button[type=submit]")
                 confirmation_url = page.url
 
+            # Capture the post-submit state regardless of outcome — this
+            # is the screenshot the user reviews in Stage 4.
             page.screenshot(path=screenshot_path, full_page=True)
-            return ApplyResult(status=JobStatus.APPLY_SUBMITTED,
-                               submitted=True, screenshot_path=screenshot_path,
-                               confirmation_url=confirmation_url)
+
+            # POST-SUBMIT VERIFICATION — a URL change or HTTP 200 is NOT
+            # proof of submission. We confirm only when the receiving
+            # platform shows positive evidence (a success indicator on the
+            # post-submit page) AND there's no CAPTCHA wall blocking the
+            # next step.
+            verdict = _verify_post_submit(page)
+            if verdict == "captcha":
+                return ApplyResult(
+                    status=JobStatus.APPLY_NEEDS_REVIEW,
+                    needs_review_reason=(
+                        "submit click fired, page advanced, but a CAPTCHA "
+                        "blocks the next step. Manual completion required."
+                    ),
+                    screenshot_path=screenshot_path,
+                    confirmation_url=confirmation_url,
+                )
+            if verdict == "success":
+                return ApplyResult(
+                    status=JobStatus.APPLY_SUBMITTED,
+                    submitted=True,
+                    screenshot_path=screenshot_path,
+                    confirmation_url=confirmation_url,
+                )
+            # Default: unknown post-submit state. Don't claim submission;
+            # surface to the user for manual review.
+            return ApplyResult(
+                status=JobStatus.APPLY_NEEDS_REVIEW,
+                needs_review_reason=(
+                    "submit click fired and page advanced, but no success "
+                    "indicator was found on the post-submit page. Check "
+                    "manually for a confirmation email or visit the URL "
+                    "to verify."
+                ),
+                screenshot_path=screenshot_path,
+                confirmation_url=confirmation_url,
+            )
 
         except Exception as e:  # noqa: BLE001
             # ALWAYS try to capture a post-failure screenshot so the user
