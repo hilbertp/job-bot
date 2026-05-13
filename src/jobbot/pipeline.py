@@ -309,7 +309,17 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 failed=n_cannot_score + n_score_failed,
             )
 
-        # 4) Generate
+        # 4) Generate — only the top-N highest-scoring postings get tailored
+        # CV + cover letter. Lower-ranked shortlist entries still flow through
+        # the loop so they appear in the digest/dashboard, but with docs
+        # skipped (the `score < generate_docs_above_score` branch handles
+        # that). User controls run frequency; there is no daily cap.
+        to_generate.sort(key=lambda triple: triple[1], reverse=True)
+        top_n = config.digest.generate_top_n
+        if top_n > 0 and len(to_generate) > top_n:
+            tailored_ids = {triple[0].id for triple in to_generate[:top_n]}
+        else:
+            tailored_ids = {triple[0].id for triple in to_generate}
         update_run_stage_progress(
             conn, run_id, "generation",
             total=len(to_generate), started=0, completed=0, failed=0,
@@ -352,7 +362,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 "apply_channel_ats_name": ats_name,
             }
 
-            if score < config.digest.generate_docs_above_score:
+            if score < config.digest.generate_docs_above_score or job.id not in tailored_ids:
                 matches.append(entry)
                 generation_skipped += 1
                 update_run_stage_progress(

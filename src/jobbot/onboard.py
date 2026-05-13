@@ -17,12 +17,23 @@ and the rest of the run continues.
 from __future__ import annotations
 
 import re
+import shutil
 from pathlib import Path
 from typing import Callable
 
 from .config import REPO_ROOT
 
 DATA_DIR = REPO_ROOT / "data"
+SUPPORTED_CORPUS_SUFFIXES = {".pdf", ".docx", ".md", ".txt"}
+
+
+def _corpus_cv_dir() -> Path:
+    """Resolved at call time so monkeypatching DATA_DIR in tests takes effect."""
+    return DATA_DIR / "corpus" / "cvs"
+
+
+def _corpus_cl_dir() -> Path:
+    return DATA_DIR / "corpus" / "cover_letters"
 
 
 def _prompt(label: str, default: str = "", *, required: bool = False) -> str:
@@ -63,6 +74,51 @@ def _confirm_overwrite(path: Path) -> bool:
     if not path.exists():
         return True
     return _prompt_yn(f"{path.relative_to(REPO_ROOT)} already exists — overwrite?", default=False)
+
+
+def _expand_user_path(raw: str) -> Path:
+    """Resolve ~ and relative paths against the user's cwd, not the repo."""
+    return Path(raw).expanduser().resolve()
+
+
+def _ingest_corpus_file(
+    src: Path,
+    dest_dir: Path,
+    *,
+    primary: bool,
+) -> Path | None:
+    """Copy `src` into `dest_dir`. For CVs (primary=True), prefixes the
+    filename with `PRIMARY_` so the profile distiller picks it up as the
+    canonical fact source. Returns the destination path on success, or
+    None if the source isn't a supported file type."""
+    if src.suffix.lower() not in SUPPORTED_CORPUS_SUFFIXES:
+        print(
+            f"    ✗  {src.name}: unsupported file type "
+            f"(need {sorted(SUPPORTED_CORPUS_SUFFIXES)}). Skipped."
+        )
+        return None
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    name = f"PRIMARY_{src.name}" if primary else src.name
+    dest = dest_dir / name
+    if dest.exists() and not _prompt_yn(
+        f"    {dest.relative_to(REPO_ROOT)} already exists — overwrite?",
+        default=False,
+    ):
+        print(f"    ⏭  kept existing {dest.relative_to(REPO_ROOT)}")
+        return dest
+    shutil.copy2(src, dest)
+    return dest
+
+
+def _check_primary_cv_collision() -> Path | None:
+    """The distiller requires exactly one PRIMARY_* CV. If one already
+    exists from a prior run, return it so the wizard can ask before
+    creating a second."""
+    cv_dir = _corpus_cv_dir()
+    if not cv_dir.exists():
+        return None
+    existing = [p for p in cv_dir.iterdir() if p.name.startswith("PRIMARY_")]
+    return existing[0] if existing else None
 
 
 def _split_csv(raw: str) -> list[str]:
@@ -178,6 +234,7 @@ apply:
 
 digest:
   generate_docs_above_score: 70
+  generate_top_n: 5            # only the top-N shortlist gets tailored CV+CL per run
   max_per_email: 100
 
 enrichment:
@@ -355,6 +412,61 @@ def run() -> int:
     nice_raw = _prompt("Nice-to-have skills (comma-separated, blank = none)", default="")
     answers["nice_to_have_skills"] = _split_csv(nice_raw)
 
+    print()
+    print(" 10. Your existing CV (style + facts baseline for matching)")
+    print("     Path to your CV file (pdf/docx/md/txt). The bot uses this as")
+    print("     the canonical source of facts AND the style template when it")
+    print("     tailors per-job CVs. Blank = skip (you can drop one in")
+    print("     data/corpus/cvs/PRIMARY_*.{pdf,docx,md,txt} later).")
+    cv_ingested: Path | None = None
+    while True:
+        cv_path_raw = _prompt("Path to your CV", default="")
+        if not cv_path_raw:
+            print("    ⏭  no CV provided — drop one in data/corpus/cvs/ later")
+            break
+        src = _expand_user_path(cv_path_raw)
+        if not src.exists() or not src.is_file():
+            print(f"    ✗  not a file: {src}")
+            continue
+        existing_primary = _check_primary_cv_collision()
+        if existing_primary is not None and not _prompt_yn(
+            f"    A PRIMARY_ CV already exists ({existing_primary.name}). "
+            f"Replace it?",
+            default=False,
+        ):
+            print(f"    ⏭  kept existing {existing_primary.relative_to(REPO_ROOT)}")
+            break
+        if existing_primary is not None:
+            existing_primary.unlink()
+        dest = _ingest_corpus_file(src, _corpus_cv_dir(), primary=True)
+        if dest is not None:
+            print(f"    ✓  copied to {dest.relative_to(REPO_ROOT)}")
+            cv_ingested = dest
+            break
+    answers["cv_ingested"] = cv_ingested
+
+    print()
+    print(" 11. A finished cover letter (sample of your voice)")
+    print("     Path to ONE cover letter you've already written and liked")
+    print("     (pdf/docx/md/txt). The distiller learns your tone from this.")
+    print("     Blank = skip; you can add more later in data/corpus/cover_letters/.")
+    cl_ingested: Path | None = None
+    while True:
+        cl_path_raw = _prompt("Path to a cover letter", default="")
+        if not cl_path_raw:
+            print("    ⏭  no cover letter provided — drop one in data/corpus/cover_letters/ later")
+            break
+        src = _expand_user_path(cl_path_raw)
+        if not src.exists() or not src.is_file():
+            print(f"    ✗  not a file: {src}")
+            continue
+        dest = _ingest_corpus_file(src, _corpus_cl_dir(), primary=False)
+        if dest is not None:
+            print(f"    ✓  copied to {dest.relative_to(REPO_ROOT)}")
+            cl_ingested = dest
+            break
+    answers["cl_ingested"] = cl_ingested
+
     # Write files (asking before overwriting any pre-existing personal file)
     print()
     print("─" * 64)
@@ -393,6 +505,11 @@ def run() -> int:
     print(" 3. Open data/base_cv.md and replace the stub content with your real CV.")
     print("    Keep it 1–3 pages of plain Markdown.")
     print()
+    if answers.get("cv_ingested") or answers.get("cl_ingested"):
+        print(" 4. Compile your profile baseline from the ingested CV / cover letter:")
+        print("    jobbot profile rebuild")
+        print("    This writes data/profile.compiled.yaml, which the scorer reads.")
+        print()
     print(" Then verify:")
     print("    pytest -q -m \"not live\"   # tests pass")
     print("    jobbot run                 # first end-to-end run")

@@ -55,6 +55,12 @@ class CaptchaConfig(BaseModel):
 class DigestConfig(BaseModel):
     generate_docs_above_score: int = 70
     max_per_email: int = 100
+    # PRD §7.6 / product journey stage 4: only the top-N highest-scoring
+    # postings per run get tailored CV + cover letter generation. Everything
+    # else above `generate_docs_above_score` stays in the shortlist (visible
+    # in the digest + dashboard) without burning LLM calls. User controls
+    # how often they trigger a run — there is no daily cap.
+    generate_top_n: int = 5
 
 
 class EnrichmentConfig(BaseModel):
