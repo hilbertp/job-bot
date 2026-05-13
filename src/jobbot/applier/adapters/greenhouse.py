@@ -117,9 +117,24 @@ class GreenhouseAdapter:
             loc = page.locator(sel)
             if loc.count() > 0:
                 loc.first.click()
-                page.wait_for_load_state("networkidle", timeout=30_000)
-                return page.url
-        raise RuntimeError("no submit button found on greenhouse form")
+                break
+        else:
+            raise RuntimeError("no submit button found on greenhouse form")
+        # Post-click wait: Greenhouse can be SPA-heavy; networkidle is
+        # unreliable. Wait for a success indicator or a fixed timeout;
+        # the runner captures a screenshot on either outcome.
+        try:
+            page.wait_for_function(
+                """() => {
+                    const t = document.body.innerText.toLowerCase();
+                    return t.includes('thank you') || t.includes('application received')
+                        || t.includes('successfully') || t.includes('we received your application');
+                }""",
+                timeout=15_000,
+            )
+        except Exception:
+            pass
+        return page.url
 
     # ------------------------------------------------------------------
 

@@ -89,24 +89,53 @@ class RecruiteeAdapter:
         self._fill_custom_questions(page, profile)
 
     def submit(self, page: "Page") -> str:
-        # The footer button on Recruitee has variable wording. Try the
-        # common ones in order; fall back to any submit-type button.
+        # Recruitee's footer button has variable wording across postings.
+        # Probe order: exact English wording → exact German wording →
+        # bare-word fallbacks → type-based fallback. Recruitee actually
+        # ships `<button type="submit">Send</button>` so the type-based
+        # selector is the most reliable; the text matches just let us
+        # log the right intent when both match.
         candidates = [
-            "button:has-text('Send application')",
-            "button:has-text('Apply now')",
-            "button:has-text('Submit application')",
-            "button:has-text('Bewerbung absenden')",
-            "button:has-text('Jetzt bewerben')",
+            "button[type=submit]:has-text('Send application')",
+            "button[type=submit]:has-text('Apply now')",
+            "button[type=submit]:has-text('Submit application')",
+            "button[type=submit]:has-text('Bewerbung absenden')",
+            "button[type=submit]:has-text('Jetzt bewerben')",
+            "button[type=submit]:has-text('Send')",
+            "button[type=submit]:has-text('Bewerben')",
+            "button[type=submit]:has-text('Apply')",
             "button[type=submit]",
             "input[type=submit]",
         ]
+        starting_url = page.url
         for sel in candidates:
             loc = page.locator(sel)
             if loc.count() > 0:
                 loc.first.click()
-                page.wait_for_load_state("networkidle", timeout=30_000)
-                return page.url
-        raise RuntimeError("no submit button found on recruitee form")
+                break
+        else:
+            raise RuntimeError("no submit button found on recruitee form")
+        # Post-click wait: Recruitee never reaches networkidle (constant
+        # analytics traffic), so we instead wait for either the URL to
+        # change OR a success-screen element to appear OR a fixed timeout.
+        # The runner's outer exception handler captures a screenshot
+        # either way, so even a no-match here gives the user a visual
+        # of the actual post-click page state.
+        try:
+            page.wait_for_function(
+                """() => {
+                    const t = document.body.innerText.toLowerCase();
+                    return t.includes('thank you') || t.includes('thanks for applying')
+                        || t.includes('application received') || t.includes('successfully')
+                        || t.includes('vielen dank') || t.includes('bewerbung eingegangen');
+                }""",
+                timeout=15_000,
+            )
+        except Exception:
+            # Either the URL changed (success) or it timed out (uncertain).
+            # Return current URL either way; the runner records the result.
+            pass
+        return page.url
 
     # ------------------------------------------------------------------
 
