@@ -165,6 +165,14 @@ professional experience. Otherwise omit this heading.}
 - **Never invent.** Only use facts from the base CV, profile, or user_facts.
   If the role asks for something the candidate doesn't have, leave it out OR
   surface it transparently in "Honest framing".
+- **Model names are generic.** When referencing OpenAI / Anthropic / Google
+  LLMs as tools, render them WITHOUT version numbers: write "GPT", "Claude",
+  "Gemini" — never "GPT-4o", "GPT-5", "GPT-5.5", "Claude 3.5 Sonnet",
+  "Gemini 1.5 Pro", etc. The candidate uses whatever the current frontier
+  model is; pinning a version dates the document instantly and signals
+  the wrong kind of expertise. Same rule applies anywhere the model is
+  mentioned: AI-native stack, Technical environment, cover letter prose,
+  CV bullets. If the source corpus already names a version, strip it.
 - **Section discipline.** Output the sections in the order above, with the
   exact headings (`## Why {Company}` etc.). Omit conditional sections cleanly
   — do not leave empty headings.

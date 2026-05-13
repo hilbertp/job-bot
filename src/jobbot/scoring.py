@@ -433,22 +433,42 @@ or object would be empty.
   "preference_updates": {<key>: <new value>, ...}
 }
 
-Rules:
-- A "skill" is a concrete tool / language / methodology the candidate
-  mentions HAVING (e.g. "Python", "AWS", "JTBD interviews"). Do NOT pull
-  skills from the job-posting text — only from the candidate's claims.
-- `add_to_user_facts` captures durable facts that don't fit a single
-  skill (e.g. "Open to relocating to Berlin", "Has security clearance
-  eligibility via spouse").
+What each field is FOR (this is the most important rule):
+
+- `must_have_skills` is a HEURISTIC GATE applied to incoming postings.
+  A posting whose body literally contains NONE of these case-insensitive
+  strings is filtered out before scoring. Therefore: only put BROAD,
+  categorical role markers here that virtually every relevant posting
+  will mention by name (e.g. "product manager", "product owner",
+  "product"). Personal skill claims, methodologies, tool names, and PM
+  jargon ("JTBD interviews", "roadmap ownership", "Python", "AWS") do
+  NOT belong here — they would silently filter out real fits.
+  When in doubt, put it in `nice_to_have_skills` or `user_facts`.
+
+- `nice_to_have_skills` is a tag list the scorer uses as positive signal
+  but never as a gate. Concrete personal skills, tools, languages,
+  methodologies, domain tags ("Python", "JTBD interviews", "fintech")
+  all go HERE.
+
+- `user_facts` captures durable narrative facts that don't compress to
+  a single skill tag — e.g. "Has 6 years of B2B SaaS PM experience",
+  "Open to relocating to Munich". One short sentence each.
+
 - `preference_updates` keys must match existing fields in the candidate's
   preferences dict: `remote`, `on_site_ok`, `willing_to_relocate`,
   `work_authorization`, `notice_period_weeks`, `desired_salary_eur`.
   Never invent new keys.
+
+Other rules:
+
 - DROP comments that are pure opinion, frustration, or just rephrase
   what the model already saw ("but it IS a PM role", "wtf").
 - DROP claims that contradict a hard legal/regulatory fact (e.g. "I
   qualify for US security clearance" when the candidate has stated they
   are an EU citizen with no US ties — that's wishful, not a profile fact).
+- NEVER add an LLM model name with a version number (no "GPT-4o",
+  "GPT-5", "Claude 3.5", "Gemini 1.5"). Use plain "GPT" / "Claude" /
+  "Gemini" if naming the model is necessary at all.
 
 Return `{}` if there is nothing to extract. Output JSON only, no prose,
 no code fences."""
