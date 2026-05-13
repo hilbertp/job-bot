@@ -66,6 +66,10 @@ HAPPY_PATH_ANSWERS = [
     # 9. Skills
     "à la carte, HACCP",
     "pastry, wine pairing",
+    # 10. Existing CV (blank = skip)
+    "",
+    # 11. Cover letter sample (blank = skip)
+    "",
 ]
 
 
@@ -163,3 +167,78 @@ def test_wizard_dry_run_is_default_in_generated_config(
     _drive_wizard(monkeypatch, tmp_path, list(HAPPY_PATH_ANSWERS))
     config = yaml.safe_load((tmp_path / "data" / "config.yaml").read_text())
     assert config["apply"]["dry_run"] is True
+
+
+def test_wizard_generates_top_n_knob_in_config(
+    monkeypatch, tmp_path: Path,
+) -> None:
+    """Product journey stage 4: only top-N shortlist gets tailored docs.
+    A fresh config must expose `digest.generate_top_n` so the user can
+    tune it without editing source."""
+    _drive_wizard(monkeypatch, tmp_path, list(HAPPY_PATH_ANSWERS))
+    config = yaml.safe_load((tmp_path / "data" / "config.yaml").read_text())
+    assert config["digest"]["generate_top_n"] == 5
+
+
+def test_wizard_ingests_cv_into_corpus_with_primary_prefix(
+    monkeypatch, tmp_path: Path,
+) -> None:
+    """Stage 1 onboarding: a user pointing at an existing CV file should
+    have it copied into data/corpus/cvs/ with the PRIMARY_ prefix the
+    distiller requires."""
+    src_cv = tmp_path / "my_real_cv.md"
+    src_cv.write_text("# My CV\n\nReal content goes here.\n")
+
+    answers = list(HAPPY_PATH_ANSWERS)
+    # Replace the two blank "skip" entries (positions -2, -1) with paths.
+    answers[-2] = str(src_cv)
+    answers[-1] = ""  # still skip cover letter for this test
+    _drive_wizard(monkeypatch, tmp_path, answers)
+
+    cvs_dir = tmp_path / "data" / "corpus" / "cvs"
+    assert cvs_dir.exists(), "corpus/cvs/ should be created on ingest"
+    files = list(cvs_dir.iterdir())
+    assert len(files) == 1
+    assert files[0].name == "PRIMARY_my_real_cv.md"
+    assert files[0].read_text() == "# My CV\n\nReal content goes here.\n"
+
+
+def test_wizard_ingests_cover_letter_without_primary_prefix(
+    monkeypatch, tmp_path: Path,
+) -> None:
+    """Cover letters don't carry the PRIMARY_ prefix — only CVs do.
+    The distiller treats CLs as voice signal, not a canonical fact source."""
+    src_cl = tmp_path / "sample_letter.md"
+    src_cl.write_text("Dear hiring manager,\n\nSample of my style.\n")
+
+    answers = list(HAPPY_PATH_ANSWERS)
+    answers[-2] = ""  # skip CV
+    answers[-1] = str(src_cl)
+    _drive_wizard(monkeypatch, tmp_path, answers)
+
+    cls_dir = tmp_path / "data" / "corpus" / "cover_letters"
+    assert cls_dir.exists()
+    files = list(cls_dir.iterdir())
+    assert len(files) == 1
+    assert files[0].name == "sample_letter.md"
+    assert not files[0].name.startswith("PRIMARY_")
+
+
+def test_wizard_rejects_unsupported_corpus_file_types(
+    monkeypatch, tmp_path: Path, capsys,
+) -> None:
+    """Distiller only handles pdf/docx/md/txt. A user pointing at a .doc
+    or .rtf should be told it was skipped, and no file should appear in
+    the corpus."""
+    src_bad = tmp_path / "old_cv.rtf"
+    src_bad.write_text("rtf content")
+
+    answers = list(HAPPY_PATH_ANSWERS)
+    answers[-2] = str(src_bad)
+    # After the rejection prints, the prompt fires again; supply a
+    # blank to break out of the loop.
+    answers.insert(-1, "")
+    _drive_wizard(monkeypatch, tmp_path, answers)
+
+    cvs_dir = tmp_path / "data" / "corpus" / "cvs"
+    assert not cvs_dir.exists() or not list(cvs_dir.iterdir())
