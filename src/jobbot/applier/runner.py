@@ -11,12 +11,25 @@ from ..profile import Profile
 
 
 def _load_adapters():
-    """Lazy — only when auto-apply actually runs (avoids Playwright import cost)."""
+    """Lazy — only when auto-apply actually runs (avoids Playwright import cost).
+
+    Order matters: more-specific adapters first, GenericAdapter last as
+    the dry-run-only fallback. Recruitee is listed before Generic so the
+    GTO-Wizard-style postings get the real adapter; everything truly
+    unknown still falls through to Generic.
+    """
     from .adapters.generic import GenericAdapter
     from .adapters.greenhouse import GreenhouseAdapter
     from .adapters.lever import LeverAdapter
+    from .adapters.recruitee import RecruiteeAdapter
     from .adapters.workday import WorkdayAdapter
-    return [GreenhouseAdapter(), LeverAdapter(), WorkdayAdapter(), GenericAdapter()]
+    return [
+        GreenhouseAdapter(),
+        LeverAdapter(),
+        WorkdayAdapter(),
+        RecruiteeAdapter(),
+        GenericAdapter(),
+    ]
 
 
 def apply_to_job(
@@ -57,7 +70,14 @@ def apply_to_job(
         page = ctx.new_page()
 
         try:
-            page.goto(str(job.apply_url), wait_until="networkidle", timeout=30_000)
+            # `networkidle` is too strict for SPA-heavy ATSes (Recruitee fires
+            # continuous analytics/heartbeat traffic and never reaches a quiet
+            # state). `domcontentloaded` gets us past the initial HTML parse;
+            # the adapter then waits for its specific form input to mount
+            # before filling. Net: more reliable across modern ATS hosts,
+            # same behaviour for static/inline forms.
+            page.goto(str(job.apply_url), wait_until="domcontentloaded", timeout=30_000)
+            page.wait_for_timeout(1500)  # let SPA framework settle
 
             adapter = next((a for a in ADAPTERS if a.matches(str(job.apply_url), page)), None)
             if adapter is None:
