@@ -1360,12 +1360,40 @@ function renderOutboundCard(a) {
               ${auditLink}
             </div>
             <div class="text-xs text-purple-100 mt-1 truncate" title="${escapeHtml(subject)}">${escapeHtml(subject)}</div>
+            ${renderSentDocLinks(a)}
           </div>
           <span class="px-2 py-1 text-xs rounded border ${pill.tone} whitespace-nowrap">${pill.label} · L${a.proof_level ?? 0}</span>
         </div>
         <div class="mt-3 flex flex-wrap gap-2">${actionBtns}</div>
       </div>
     `;
+}
+
+// Links to the CV / cover letter / unified package that were sent out
+// for this application. The user wants a one-click path from each Stage 4
+// card to the exact artefacts that left the mailbox, for post-send
+// review without digging through output/ on disk.
+function renderSentDocLinks(a) {
+    const links = [];
+    if (a.package_pdf_url) {
+        links.push(`<a class="underline text-emerald-200" target="_blank" href="${a.package_pdf_url}">📎 package.pdf</a>`);
+    } else if (a.package_html_url) {
+        links.push(`<a class="underline text-emerald-200" target="_blank" href="${a.package_html_url}">📄 package.html</a>`);
+    }
+    if (a.cv_pdf_url) {
+        links.push(`<a class="underline" target="_blank" href="${a.cv_pdf_url}">cv.pdf</a>`);
+    } else if (a.cv_html_url) {
+        links.push(`<a class="underline" target="_blank" href="${a.cv_html_url}">cv.html</a>`);
+    }
+    if (a.cl_pdf_url) {
+        links.push(`<a class="underline" target="_blank" href="${a.cl_pdf_url}">cover_letter.pdf</a>`);
+    } else if (a.cl_html_url) {
+        links.push(`<a class="underline" target="_blank" href="${a.cl_html_url}">cover_letter.html</a>`);
+    }
+    if (!links.length) {
+        return '<div class="text-xs text-purple-300 mt-1">(no docs on disk — likely a manually-marked row)</div>';
+    }
+    return `<div class="text-xs text-purple-100 mt-1 flex flex-wrap gap-3">${links.join('')}</div>`;
 }
 
 function applyOutboundFilter() {
