@@ -1352,6 +1352,106 @@ def api_application_transition(job_id: str):
     return jsonify({"ok": True, "job_id": job_id, "state": state})
 
 
+@app.route("/api/jobs/<job_id>/rescore-with-feedback", methods=["POST"])
+def api_rescore_with_feedback(job_id: str):
+    """Stage-2 disagree-and-rescore endpoint (product vision stage 3).
+
+    Body: {"feedback": "you missed that I have 5 years of Python"}
+
+    Behavior:
+      1. Reconstruct the JobPosting from `raw_json` in seen_jobs.
+      2. Load profile + secrets fresh so any prior feedback is included.
+      3. Call llm_score(..., user_feedback=<comment>) — the scorer
+         injects the comment into the prompt as an extra section.
+      4. Persist the new score + the feedback text to seen_jobs
+         (leaves the original `score` column untouched so the UI can
+         render a true before/after).
+      5. Append the feedback as a durable fact to `data/profile.yaml`
+         under `user_facts` so ALL future scoring picks it up.
+
+    Returns {ok, job_id, score_before, score_after, delta, reason}.
+    """
+    from flask import request as flask_request
+
+    from .config import load_secrets
+    from .models import JobPosting
+    from .profile import append_user_fact, load_profile
+    from .scoring import CannotScore, llm_score
+    from .state import update_user_feedback_rescore
+
+    payload = flask_request.get_json(silent=True) or {}
+    feedback = (payload.get("feedback") or "").strip()
+    if not feedback:
+        return jsonify({"ok": False, "error": "feedback is required"}), 400
+    if len(feedback) > 4000:
+        return jsonify({"ok": False, "error": "feedback exceeds 4000 chars"}), 400
+
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT raw_json, score, description_scraped FROM seen_jobs WHERE id = ?",
+            (job_id,),
+        ).fetchone()
+        if not row:
+            return jsonify({"ok": False, "error": f"unknown job {job_id!r}"}), 404
+        raw_json = row["raw_json"]
+        score_before = row["score"]
+        description_scraped = bool(row["description_scraped"])
+
+    if not raw_json:
+        return jsonify({
+            "ok": False,
+            "error": "job has no raw_json — cannot reconstruct posting",
+        }), 409
+
+    try:
+        job = JobPosting.model_validate_json(raw_json)
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"raw_json invalid: {e}"}), 500
+
+    try:
+        profile = load_profile()
+        secrets = load_secrets()
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"config load failed: {e}"}), 500
+
+    try:
+        result = llm_score(
+            job, profile, secrets,
+            description_scraped=description_scraped,
+            user_feedback=feedback,
+            phase="score_user_feedback",
+        )
+    except CannotScore as e:
+        return jsonify({"ok": False, "error": f"cannot_score: {e}"}), 409
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"scorer failed: {e}"}), 500
+
+    with connect() as conn:
+        update_user_feedback_rescore(
+            conn, job_id, feedback=feedback,
+            score=result.score, reason=result.reason or "",
+        )
+
+    # Persist the feedback as a durable candidate fact. Failure here is
+    # logged but non-fatal — the rescore itself already landed.
+    fact_persisted = True
+    try:
+        append_user_fact(feedback)
+    except Exception:
+        fact_persisted = False
+
+    delta = (result.score - score_before) if score_before is not None else None
+    return jsonify({
+        "ok": True,
+        "job_id": job_id,
+        "score_before": score_before,
+        "score_after": result.score,
+        "delta": delta,
+        "reason": result.reason,
+        "fact_persisted": fact_persisted,
+    })
+
+
 @app.route("/applications/<job_id>/application.eml")
 def application_eml(job_id: str):
     """Serve the persisted .eml for a sent (or attempted) application —
@@ -1410,7 +1510,8 @@ def api_latest_run_jobs():
                 f"""
                 SELECT title, company, source, status, score, score_reason, url, raw_json,
                        description_scraped, description_word_count, apply_email,
-                       score_breakdown_json, discard_reason
+                       score_breakdown_json, discard_reason, id,
+                       score_after_feedback, score_after_feedback_reason, user_feedback
                 FROM seen_jobs
                 WHERE id IN ({placeholders})
                 ORDER BY source ASC, title ASC
@@ -1424,7 +1525,8 @@ def api_latest_run_jobs():
                 """
                 SELECT title, company, source, status, score, score_reason, url, raw_json,
                        description_scraped, description_word_count, apply_email,
-                       score_breakdown_json, discard_reason
+                       score_breakdown_json, discard_reason, id,
+                       score_after_feedback, score_after_feedback_reason, user_feedback
                 FROM seen_jobs
                 WHERE first_seen_at >= ?
                 ORDER BY source ASC, title ASC
@@ -1438,7 +1540,8 @@ def api_latest_run_jobs():
                 """
                 SELECT title, company, source, status, score, score_reason, url, raw_json,
                        description_scraped, description_word_count, apply_email,
-                       score_breakdown_json, discard_reason
+                       score_breakdown_json, discard_reason, id,
+                       score_after_feedback, score_after_feedback_reason, user_feedback
                 FROM seen_jobs
                 ORDER BY source ASC, title ASC
                 LIMIT ?
@@ -1483,6 +1586,7 @@ def api_latest_run_jobs():
             # score_reason — both paths produce the same dict.
             breakdown = _parse_score_breakdown(r[11], r[5])
             jobs.append({
+                "id": r[13],
                 "title": r[0],
                 "company": r[1],
                 "source": r[2],
@@ -1500,6 +1604,9 @@ def api_latest_run_jobs():
                 "apply_channel_ats_name": ats_name,
                 "score_breakdown": breakdown,
                 "discard_reason": r[12],
+                "score_after_feedback": r[14],
+                "score_after_feedback_reason": r[15],
+                "user_feedback": r[16],
             })
     
     return jsonify(jobs)

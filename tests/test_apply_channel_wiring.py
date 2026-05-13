@@ -115,9 +115,10 @@ def test_stage2_template_renders_apply_via_column(tmp_path: Path, monkeypatch) -
     # Click-to-sort wired on column headers
     assert 'data-stage1-sort="apply_channel"' in html
     assert "stage1SortRows" in html
-    # 10 columns total (Score, Title, Company, Portal, Apply via,
-    # Description Scraped, Expected Salary, Seniority, Scoring Reason, Link)
-    assert 'colspan="10"' in html
+    # 11 columns total (Score, Title, Company, Portal, Apply via,
+    # Description Scraped, Expected Salary, Seniority, Scoring Reason,
+    # Disagree, Link)
+    assert 'colspan="11"' in html
 
 
 def test_stage2_apply_via_cell_keeps_icon_and_label_on_one_line(

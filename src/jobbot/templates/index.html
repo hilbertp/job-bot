@@ -113,11 +113,12 @@
                         <th class="pb-2" data-stage1-sort="expected_salary">Expected Salary</th>
                         <th class="pb-2" data-stage1-sort="seniority_required">Seniority Required</th>
                         <th class="pb-2">Scoring Reason</th>
+                        <th class="pb-2">Disagree?</th>
                         <th class="pb-2">Link</th>
                     </tr>
                 </thead>
                 <tbody id="stage1-body">
-                    <tr><td colspan="10" class="py-3">Loading...</td></tr>
+                    <tr><td colspan="11" class="py-3">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -583,7 +584,42 @@ async function loadStage1Data() {
         if (status === 'filtered') return `<span class="text-red-300" title="${(job.reason || 'heuristic filter').replace(/"/g, '&quot;')}">filtered</span>`;
         const reason = (job.reason || '').replace(/"/g, '&quot;');
         const tone = s >= 70 ? 'text-green-300' : s >= 40 ? 'text-yellow-200' : 'text-purple-200';
+        // If a feedback rescore exists, render as "old → new" with tooltips.
+        const after = job.score_after_feedback;
+        if (after !== null && after !== undefined) {
+            const afterTone = after >= 70 ? 'text-green-300' : after >= 40 ? 'text-yellow-200' : 'text-purple-200';
+            const afterReason = (job.score_after_feedback_reason || '').replace(/"/g, '&quot;');
+            return `<span class="text-purple-300 line-through" title="${reason}">${s}</span>`
+                 + `<span class="text-purple-400 mx-1">→</span>`
+                 + `<span class="${afterTone} font-semibold" title="${afterReason}">${after}</span>`;
+        }
         return `<span class="${tone} font-semibold" title="${reason}">${s}</span>`;
+    }
+
+    function disagreeCell(job) {
+        // Render an inline collapsed form. When the user expands it and
+        // submits, JS calls /api/jobs/<id>/rescore-with-feedback and the
+        // row's score cell flips to "old → new" on success.
+        const jobId = (job.id || '').replace(/"/g, '&quot;');
+        if (!jobId) return '<span class="text-purple-400">—</span>';
+        const existing = (job.user_feedback || '').replace(/"/g, '&quot;');
+        const placeholder = "what did the bot miss?";
+        const buttonLabel = existing ? "edit comment" : "comment";
+        return `
+            <details class="text-xs" data-disagree-row data-job-id="${jobId}">
+              <summary class="cursor-pointer text-purple-200 underline">${buttonLabel}</summary>
+              <div class="mt-2 flex flex-col gap-2 max-w-xs">
+                <textarea data-disagree-text rows="3"
+                          class="bg-white/10 border border-white/20 rounded px-2 py-1 text-purple-100 placeholder-purple-300/60"
+                          placeholder="${placeholder}">${existing}</textarea>
+                <button type="button" data-disagree-submit
+                        class="bg-white/20 hover:bg-white/30 px-2 py-1 rounded border border-white/30 text-xs font-semibold self-start">
+                  rescore
+                </button>
+                <span data-disagree-status class="text-purple-200"></span>
+              </div>
+            </details>
+        `;
     }
 
     for (const job of shortlist) {
@@ -599,10 +635,70 @@ async function loadStage1Data() {
             <td class="py-3">${job.expected_salary || 'not specified'}</td>
             <td class="py-3">${job.seniority_required || 'not specified'}</td>
             <td class="py-3">${scoringReasonCell(job)}</td>
+            <td class="py-3 align-top">${disagreeCell(job)}</td>
             <td class="py-3"><a class="underline" target="_blank" href="${job.url || '#'}">open</a></td>
         `;
         tbody.appendChild(tr);
     }
+    wireDisagreeButtons(tbody);
+}
+
+// Disagree-and-rescore: capture the user's comment on a low score, POST it
+// to /api/jobs/<id>/rescore-with-feedback, then refresh the Stage 2 panel
+// so the row's score cell flips to "old → new". Delegated so it survives
+// re-renders.
+function wireDisagreeButtons(root) {
+    root.querySelectorAll('[data-disagree-submit]').forEach((btn) => {
+        btn.addEventListener('click', async (ev) => {
+            const wrap = ev.target.closest('[data-disagree-row]');
+            if (!wrap) return;
+            const jobId = wrap.getAttribute('data-job-id');
+            const textEl = wrap.querySelector('[data-disagree-text]');
+            const statusEl = wrap.querySelector('[data-disagree-status]');
+            const feedback = (textEl.value || '').trim();
+            if (!feedback) {
+                statusEl.textContent = '(write a comment first)';
+                statusEl.className = 'text-yellow-200';
+                return;
+            }
+            statusEl.textContent = 'rescoring…';
+            statusEl.className = 'text-purple-200';
+            btn.disabled = true;
+            try {
+                const res = await fetch(
+                    `/api/jobs/${encodeURIComponent(jobId)}/rescore-with-feedback`,
+                    {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({feedback}),
+                    },
+                );
+                const body = await res.json().catch(() => ({}));
+                if (!res.ok || !body.ok) {
+                    statusEl.textContent = body.error || `rescore failed (${res.status})`;
+                    statusEl.className = 'text-red-300';
+                    btn.disabled = false;
+                    return;
+                }
+                const delta = body.delta;
+                const arrow = delta === null || delta === undefined ? ''
+                            : delta > 0 ? ` (+${delta})`
+                            : delta < 0 ? ` (${delta})` : ' (no change)';
+                statusEl.textContent = `rescored: ${body.score_before ?? '—'} → ${body.score_after}${arrow}. fact saved.`;
+                statusEl.className = 'text-green-300';
+                // Reload the panel so the score cell + sort reflect the new score.
+                if (typeof loadStage1Data === 'function') {
+                    loadStage1Data();
+                } else {
+                    location.reload();
+                }
+            } catch (e) {
+                statusEl.textContent = `network error: ${e.message || e}`;
+                statusEl.className = 'text-red-300';
+                btn.disabled = false;
+            }
+        });
+    });
 }
 
 // Stage 2 column sort: any th with data-stage1-sort toggles between asc/desc

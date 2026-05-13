@@ -61,6 +61,56 @@ def load_profile(path: Path | None = None) -> Profile:
     return Profile.model_validate(merged)
 
 
+def append_user_fact(
+    fact: str,
+    *,
+    profile_path: Path | None = None,
+) -> Path:
+    """Append a single fact to the `user_facts` list in `data/profile.yaml`.
+
+    Used by the Stage-2 disagree-and-rescore flow: when the user writes
+    a comment to challenge a low score, that comment is also persisted
+    as a durable fact about the candidate so ALL future scoring runs
+    pick it up (not just the one job being rescored).
+
+    Idempotent — duplicate facts (case-insensitive, whitespace-collapsed)
+    are not appended a second time.
+
+    The write is performed against the RAW user-edited `profile.yaml`
+    (not the merged `profile.compiled.yaml`), so the distiller can be
+    rerun without trampling these facts.
+
+    Returns the path written.
+    """
+    fact = (fact or "").strip()
+    if not fact:
+        raise ValueError("append_user_fact: refusing to append empty fact")
+
+    p = profile_path or REPO_ROOT / "data" / "profile.yaml"
+    if not p.exists():
+        # Don't silently fall back to profile.example.yaml — that would write
+        # the user's private fact into a shipped example file.
+        raise FileNotFoundError(f"profile.yaml not found at {p}")
+
+    data = yaml.safe_load(p.read_text()) or {}
+    if not isinstance(data, dict):
+        data = {}
+    facts = data.get("user_facts") or []
+    if not isinstance(facts, list):
+        facts = []
+
+    def _normalize(s: str) -> str:
+        return " ".join(s.split()).casefold()
+
+    if _normalize(fact) in {_normalize(str(f)) for f in facts if f}:
+        return p  # already present — no-op
+
+    facts.append(fact)
+    data["user_facts"] = facts
+    p.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True))
+    return p
+
+
 def load_base_cv(path: Path | None = None) -> str:
     p = path or REPO_ROOT / "data" / "base_cv.md"
     if not p.exists():

@@ -133,6 +133,14 @@ SEEN_JOBS_ADD_COLUMNS: list[tuple[str, str]] = [
     ("score_tailored_reason", "TEXT"),
     ("score_tailored_breakdown_json", "TEXT"),
     ("scored_tailored_at", "TEXT"),
+    # Stage-2 user-feedback rescore: when the user disagrees with a low
+    # base score and writes a comment, we keep the original `score`
+    # untouched and persist the rescored value here so old vs. new can be
+    # shown side-by-side. Product vision stage 3.
+    ("user_feedback", "TEXT"),
+    ("feedback_at", "TEXT"),
+    ("score_after_feedback", "INTEGER"),
+    ("score_after_feedback_reason", "TEXT"),
 ]
 
 APPLICATIONS_ADD_COLUMNS: list[tuple[str, str]] = [
@@ -430,6 +438,24 @@ def update_score_tailored(
             _now(),
             job_id,
         ),
+    )
+
+
+def update_user_feedback_rescore(
+    conn: sqlite3.Connection,
+    job_id: str,
+    feedback: str,
+    score: int,
+    reason: str,
+) -> None:
+    """Persist a Stage-2 user-feedback rescore. The user disagreed with the
+    initial score and wrote a comment; the scorer was re-run with that
+    comment in the prompt. We keep the original `score` column untouched
+    so the dashboard can render a before/after pair."""
+    conn.execute(
+        "UPDATE seen_jobs SET user_feedback = ?, feedback_at = ?, "
+        "score_after_feedback = ?, score_after_feedback_reason = ? WHERE id = ?",
+        (feedback, _now(), score, reason, job_id),
     )
 
 
