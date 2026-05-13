@@ -111,6 +111,97 @@ def append_user_fact(
     return p
 
 
+def apply_profile_patch(
+    patch: dict,
+    *,
+    profile_path: Path | None = None,
+) -> dict:
+    """Apply a structured patch produced by
+    `scoring.extract_profile_updates_from_feedback` to `data/profile.yaml`.
+
+    Recognised keys on `patch`:
+      - "add_to_must_have_skills": list[str]
+      - "add_to_nice_to_have_skills": list[str]
+      - "add_to_user_facts": list[str]
+      - "preference_updates": dict[str, Any] — only writes keys already
+        present on the profile's preferences dict (no schema drift).
+
+    Returns a summary of what was *actually* applied (after dedup/skipping
+    pre-existing entries) so the caller can show "learned X, Y" in the UI.
+
+    Idempotent: calling twice with the same patch produces one new entry,
+    not two.
+    """
+    p = profile_path or REPO_ROOT / "data" / "profile.yaml"
+    if not p.exists():
+        raise FileNotFoundError(f"profile.yaml not found at {p}")
+
+    data = yaml.safe_load(p.read_text()) or {}
+    if not isinstance(data, dict):
+        data = {}
+
+    def _normalize(s: Any) -> str:
+        return " ".join(str(s).split()).casefold()
+
+    summary: dict[str, Any] = {
+        "added_must_have_skills": [],
+        "added_nice_to_have_skills": [],
+        "added_facts": [],
+        "updated_preferences": {},
+    }
+
+    for src_key, dest_key, summary_key in [
+        ("add_to_must_have_skills", "must_have_skills", "added_must_have_skills"),
+        ("add_to_nice_to_have_skills", "nice_to_have_skills", "added_nice_to_have_skills"),
+    ]:
+        items = patch.get(src_key) or []
+        if not isinstance(items, list):
+            continue
+        existing = data.get(dest_key) or []
+        if not isinstance(existing, list):
+            existing = []
+        existing_norm = {_normalize(x) for x in existing if x}
+        for raw in items:
+            item = str(raw).strip()
+            if not item or _normalize(item) in existing_norm:
+                continue
+            existing.append(item)
+            existing_norm.add(_normalize(item))
+            summary[summary_key].append(item)
+        data[dest_key] = existing
+
+    new_facts = patch.get("add_to_user_facts") or []
+    if isinstance(new_facts, list):
+        facts = data.get("user_facts") or []
+        if not isinstance(facts, list):
+            facts = []
+        facts_norm = {_normalize(f) for f in facts if f}
+        for raw in new_facts:
+            fact = str(raw).strip()
+            if not fact or _normalize(fact) in facts_norm:
+                continue
+            facts.append(fact)
+            facts_norm.add(_normalize(fact))
+            summary["added_facts"].append(fact)
+        data["user_facts"] = facts
+
+    pref_updates = patch.get("preference_updates") or {}
+    if isinstance(pref_updates, dict):
+        prefs = data.get("preferences") or {}
+        if not isinstance(prefs, dict):
+            prefs = {}
+        for k, v in pref_updates.items():
+            # Only write keys that already exist on the profile so the
+            # extractor can't accidentally introduce new schema fields.
+            if k in prefs and prefs[k] != v:
+                prefs[k] = v
+                summary["updated_preferences"][k] = v
+        data["preferences"] = prefs
+
+    p.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True))
+    return summary
+
+
 def load_base_cv(path: Path | None = None) -> str:
     p = path or REPO_ROOT / "data" / "base_cv.md"
     if not p.exists():

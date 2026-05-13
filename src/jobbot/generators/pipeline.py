@@ -28,150 +28,145 @@ def _slug(s: str) -> str:
 
 
 def _render_html(md: str) -> str:
-    """Markdown → HTML for both browser preview and WeasyPrint PDF output.
+    """Markdown → HTML for the standalone cv.html / cover_letter.html.
 
-    Styling notes — this is the editorial template, scoped per user feedback:
-    keep the H1 (name) typography untouched (system sans), but lift the rest
-    of the document with warm color tokens, hairline section dividers,
-    small-caps section markers, and an accent color on italics. The headline
-    foundry serif from the opus reference PDF is deliberately NOT attempted
-    here — it's a paid typeface and free substitutes don't carry the feel.
+    Editorial typography matching the opus-application reference PDF:
+    serif headlines (Newsreader from Google Fonts), italic role tag in
+    accent rust, § small-caps section markers with hairline rules above,
+    contact line in spaced small-caps sans. This is intentionally the
+    same design system as `_render_application_html` (the unified
+    package), minus the package-only banners and roman-numeral section
+    dividers, so that a click on "cv.html" in the dashboard lands the
+    user in the same visual language as the full application package.
     """
     body = MarkdownIt().render(md)
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <style>
-  /* --- design tokens (warm editorial palette) --- */
+  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500;1,6..72,600&family=Inter:wght@400;500;600;700&display=swap');
+
   :root {{
-    --ink:        #1a1814;  /* primary text */
-    --ink-soft:   #58544b;  /* secondary text, tech notes */
-    --ink-mute:   #8c877d;  /* section markers, contact line */
-    --accent:     #8d2b1c;  /* rust — used on italics for emphasis */
-    --rule:       #d8d4cb;  /* hairline dividers */
-    --paper:      #fdfcfa;  /* off-white background */
+    --ink:        #1a1814;
+    --ink-soft:   #58544b;
+    --ink-mute:   #8c877d;
+    --accent:     #8d2b1c;
+    --rule:       #d8d4cb;
+    --paper:      #fdfcfa;
+    --serif:      'Newsreader', 'EB Garamond', Georgia, 'Times New Roman', serif;
+    --sans:       'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   }}
 
-  /* --- page setup (WeasyPrint reads @page; harmless in browsers) --- */
-  @page {{
-    size: A4;
-    margin: 20mm 22mm;
-  }}
+  @page {{ size: A4; margin: 20mm 22mm; }}
 
   body {{
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
-                 Helvetica, Arial, sans-serif;
+    font-family: var(--serif);
     color: var(--ink);
     background: var(--paper);
-    line-height: 1.55;
-    font-size: 10.5pt;
-    /* Browser-only outer frame; WeasyPrint uses @page margins instead. */
+    line-height: 1.6;
+    font-size: 11pt;
     max-width: 780px;
     margin: 2.2rem auto;
     padding: 0 1rem;
   }}
 
-  /* --- name (left untouched per design scope: system sans, heavy weight) --- */
+  /* Name — large editorial serif with italic role tag */
   h1 {{
-    font-size: 1.9rem;
-    line-height: 1.15;
-    margin: 0 0 0.15rem 0;
-    color: var(--ink);
-    font-weight: 700;
-    letter-spacing: -0.01em;
-  }}
-
-  /* --- "Senior Product Owner" line that sits right under the name --- */
-  h1 + p strong:only-child {{
+    font-family: var(--serif);
+    font-size: 2.4rem;
     font-weight: 500;
-    color: var(--ink-soft);
+    line-height: 1.08;
+    letter-spacing: -0.012em;
+    margin: 0 0 0.6rem 0;
+    color: var(--ink);
   }}
+  h1 em {{ font-style: italic; font-weight: 500; color: var(--ink); }}
 
-  /* --- contact line (third paragraph, plain text) --- */
+  /* "Senior Product Owner" / positioning line under the name */
+  h1 + p {{
+    font-family: var(--serif);
+    font-size: 1.05rem;
+    color: var(--ink-soft);
+    margin: 0 0 1.2rem 0;
+  }}
+  h1 + p em {{ color: var(--accent); font-style: italic; }}
+  h1 + p strong:only-child {{ font-weight: 500; color: var(--ink-soft); }}
+
+  /* Contact line (third paragraph): small caps sans, spaced */
   h1 + p + p {{
+    font-family: var(--sans);
     color: var(--ink-mute);
-    font-size: 0.92em;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
     margin-bottom: 0;
   }}
 
-  /* --- section markers: § SECTION, small-caps, warm gray, hairline above --- */
+  /* § SECTION markers: small-caps sans, warm gray, hairline above */
   h2 {{
+    font-family: var(--sans);
     text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    font-size: 0.74rem;
     font-weight: 600;
     color: var(--ink-mute);
     border-top: 1px solid var(--rule);
-    padding-top: 1.4rem;
-    margin: 2rem 0 0.9rem 0;
+    padding-top: 1.6rem;
+    margin: 2.2rem 0 1rem 0;
   }}
-  h2::before {{
-    content: "§ ";
-    color: var(--ink-mute);
-  }}
+  h2::before {{ content: "§ "; color: var(--ink-mute); }}
 
-  /* --- subsection title (company — role) --- */
+  /* Job/Company heading (serif, slightly heavier) */
   h3 {{
-    font-size: 1.05rem;
-    font-weight: 600;
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    font-weight: 500;
     color: var(--ink);
-    margin: 1.3rem 0 0.1rem 0;
+    margin: 1.4rem 0 0.15rem 0;
     line-height: 1.3;
   }}
 
-  /* --- date range / tech note: italic in accent rust --- */
-  em {{
+  /* H4 — sub-label like role title / week label */
+  h4 {{
+    font-family: var(--serif);
+    font-size: 1.05rem;
     font-style: italic;
-    color: var(--accent);
-  }}
-  /* A standalone italic paragraph (date range or tech note) gets reduced
-     leading so it pairs tightly with the H3 above it. */
-  p > em:only-child {{
-    font-size: 0.9em;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin: 0 0 0.3rem 0;
+    line-height: 1.35;
   }}
 
-  /* --- body paragraphs --- */
-  p {{
-    margin: 0.45rem 0;
-  }}
+  /* Italics → rust accent (matches opus reference italic emphasis) */
+  em {{ font-style: italic; color: var(--accent); }}
+  p > em:only-child {{ font-size: 0.95em; }}
 
-  /* --- bullets: square-ish marker in soft warm gray --- */
-  ul {{
-    padding-left: 1.1rem;
-    margin: 0.4rem 0 0.6rem 0;
-  }}
-  li {{
-    margin: 0.18rem 0;
-  }}
-  li::marker {{
-    color: var(--ink-mute);
-  }}
+  /* Body paragraphs */
+  p {{ margin: 0.5rem 0; }}
 
-  /* --- horizontal rules from `---` in markdown --- */
-  hr {{
-    border: 0;
-    border-top: 1px solid var(--rule);
-    margin: 1.8rem 0;
-  }}
-  /* When an hr immediately precedes a section heading, the heading's own
-     border-top would create a double-line. Suppress one. */
-  hr + h2 {{
-    border-top: 0;
-    padding-top: 0;
-    margin-top: 0.6rem;
-  }}
+  /* Bullets — middle-dot marker, soft warm gray */
+  ul {{ padding-left: 1.1rem; margin: 0.45rem 0 0.7rem 0; }}
+  li {{ margin: 0.2rem 0; }}
+  li::marker {{ color: var(--ink-mute); }}
 
-  /* --- inline strong: same color, just weight --- */
-  strong {{
-    font-weight: 600;
-    color: var(--ink);
-  }}
+  /* Two-column treatment: any UL preceded by a small italic intro
+     paragraph (e.g. "Daily tools, not buzzwords.") gets columnised,
+     matching the opus reference's tools / tech-stack grids. */
+  p em:only-child + ul,
+  p > em:only-child ~ ul {{ column-count: 2; column-gap: 2.2rem; }}
 
-  /* --- inline code, just in case --- */
+  /* Horizontal rules from `---` in markdown */
+  hr {{ border: 0; border-top: 1px solid var(--rule); margin: 1.8rem 0; }}
+  hr + h2 {{ border-top: 0; padding-top: 0; margin-top: 0.6rem; }}
+
+  strong {{ font-weight: 600; color: var(--ink); }}
   code {{
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.88em;
     color: var(--ink-soft);
   }}
+
+  a {{ color: var(--ink); text-decoration: underline; text-decoration-color: var(--rule); }}
+  a:hover {{ text-decoration-color: var(--accent); }}
 </style></head>
 <body>
 {body}

@@ -64,8 +64,18 @@ class WeWorkRemotelyScraper(BaseScraper):
             return None
 
         tree = HTMLParser(r.text)
+        # WWR's current page wraps the actual job body in
+        # `<section class="lis-container__job">`. The old class-name
+        # candidates (`listing-container`, `listing-show-container`,
+        # `article`, `main`) match nothing on the live site — when they
+        # miss, fetch_detail returns None and the RSS-feed `summary` is
+        # left in place, which is the "Related Jobs" sidebar text. That
+        # gave every WWR row a 215-word garbage body that scored badly
+        # regardless of the actual posting.
         body_el = (
-            tree.css_first("div.listing-container")
+            tree.css_first("section.lis-container__job")
+            or tree.css_first("div.lis-container__job")
+            or tree.css_first("div.listing-container")
             or tree.css_first("div.listing-show-container")
             or tree.css_first("article")
             or tree.css_first("main")

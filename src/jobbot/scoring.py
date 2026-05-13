@@ -417,3 +417,88 @@ def llm_score(
         secrets, user_message,
         run_id=run_id, phase=phase, job_id=job.id,
     )
+
+
+_FEEDBACK_EXTRACT_SYSTEM = """You distill a candidate's short feedback comment
+on a job match into structured updates for their profile, so future scoring
+gets better. Comments come from the dashboard's "disagree-and-rescore" form.
+
+Output a single JSON object with these optional keys. Omit any key whose list
+or object would be empty.
+
+{
+  "add_to_must_have_skills": [<skill name>, ...],
+  "add_to_nice_to_have_skills": [<skill name>, ...],
+  "add_to_user_facts": [<one short sentence per fact>, ...],
+  "preference_updates": {<key>: <new value>, ...}
+}
+
+Rules:
+- A "skill" is a concrete tool / language / methodology the candidate
+  mentions HAVING (e.g. "Python", "AWS", "JTBD interviews"). Do NOT pull
+  skills from the job-posting text — only from the candidate's claims.
+- `add_to_user_facts` captures durable facts that don't fit a single
+  skill (e.g. "Open to relocating to Berlin", "Has security clearance
+  eligibility via spouse").
+- `preference_updates` keys must match existing fields in the candidate's
+  preferences dict: `remote`, `on_site_ok`, `willing_to_relocate`,
+  `work_authorization`, `notice_period_weeks`, `desired_salary_eur`.
+  Never invent new keys.
+- DROP comments that are pure opinion, frustration, or just rephrase
+  what the model already saw ("but it IS a PM role", "wtf").
+- DROP claims that contradict a hard legal/regulatory fact (e.g. "I
+  qualify for US security clearance" when the candidate has stated they
+  are an EU citizen with no US ties — that's wishful, not a profile fact).
+
+Return `{}` if there is nothing to extract. Output JSON only, no prose,
+no code fences."""
+
+
+def extract_profile_updates_from_feedback(
+    feedback: str,
+    profile: Profile,
+    secrets: Secrets,
+    *,
+    run_id: int | None = None,
+    job_id: str | None = None,
+) -> dict:
+    """Second LLM pass over a disagree-and-rescore comment that turns it
+    into structured profile updates. Returns a (possibly empty) dict.
+
+    Failure modes (network, parse error, etc.) raise — the caller should
+    treat extraction as best-effort and not block the rescore.
+    """
+    client = Anthropic(api_key=secrets.anthropic_api_key)
+    user_msg = (
+        "Candidate's feedback comment:\n"
+        f'"""\n{feedback.strip()}\n"""\n\n'
+        "Existing profile fields (for context, do not duplicate):\n"
+        f"- must_have_skills: {profile.must_have_skills}\n"
+        f"- nice_to_have_skills: {profile.nice_to_have_skills}\n"
+        f"- preferences: {dict(profile.preferences)}\n"
+        f"- last 5 user_facts: {profile.user_facts[-5:] if profile.user_facts else []}\n\n"
+        "Return the JSON object now."
+    )
+    msg = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=400,
+        system=_FEEDBACK_EXTRACT_SYSTEM,
+        messages=[{"role": "user", "content": user_msg}],
+    )
+    _record_usage_if_present(
+        msg, run_id=run_id, phase="extract_profile_updates",
+        job_id=job_id, model="claude-sonnet-4-6",
+    )
+    text = "".join(b.text for b in msg.content if b.type == "text").strip()
+    # Strip a possible ```json fence if the model added one despite the
+    # instructions.
+    if text.startswith("```"):
+        text = text.split("```", 2)[1] if "```" in text[3:] else text[3:]
+        if text.lower().startswith("json"):
+            text = text[4:]
+        text = text.strip().rstrip("`").strip()
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return {}
+    return data if isinstance(data, dict) else {}

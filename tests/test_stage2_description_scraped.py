@@ -96,15 +96,20 @@ def test_stage2_table_renders_description_scraped_column(
     client = _load_legacy_dashboard_module().app.test_client()
     html = client.get("/").get_data(as_text=True)
 
-    # Column header in the Stage 2 table
-    assert "Description Scraped" in html
-    # JS renderer is hooked up
+    # Description-scraped pill now surfaces inside the stacked "Details"
+    # cell (Salary / Seniority / Description Scraped). The header text
+    # "Description scraped" lives in the column's tooltip; the JS
+    # renderer (descriptionScrapedCell) is still the producer.
+    assert ">Details</th>" in html
+    assert "Description scraped" in html  # in the title attribute
     assert "descriptionScrapedCell(job)" in html
     # The renderer reads the two fields we just added to the API
     assert "job.description_scraped === true" in html
     assert "job.description_word_count" in html
-    # Stage 2 has 11 columns once Disagree lands; loading/empty states span them.
-    assert 'colspan="11"' in html
+    # Stage 2 has 7 columns after collapsing Salary / Seniority /
+    # Description Scraped into one stacked "Details" cell on top of the
+    # earlier Where collapse; loading/empty states span all of them.
+    assert 'colspan="7"' in html
 
 
 def test_stage2_table_renders_company_column(
@@ -120,11 +125,13 @@ def test_stage2_table_renders_company_column(
     client = _load_legacy_dashboard_module().app.test_client()
     html = client.get("/").get_data(as_text=True)
 
-    # Column header + sort key
-    assert ">Company<" in html
+    # Company surfaces inside the stacked "Where" cell. The sort key for
+    # that header is `company` so click-sort still works.
+    assert ">Where</th>" in html
     assert 'data-stage1-sort="company"' in html
-    # Row template reads job.company
-    assert "${job.company || ''}" in html
+    # Row template renders company via whereCell()
+    assert "function whereCell" in html
+    assert "job.company" in html
 
     # The API ships company per row so the front-end has something to render.
     payload = client.get("/api/latest-run-jobs").get_json()

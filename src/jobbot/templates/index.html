@@ -1,41 +1,33 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="flex justify-end items-center mb-4 gap-3">
-    <span id="run-pipeline-status" class="text-sm text-purple-200"></span>
-    <button id="run-pipeline-btn" data-testid="run-pipeline" class="bg-white/20 hover:bg-white/30 disabled:opacity-50 px-4 py-2 rounded-lg border border-white/30 text-sm font-semibold">
-        Run pipeline
-    </button>
-    <span id="export-json-status" class="text-sm text-purple-200"></span>
-    <button id="export-json-btn" class="bg-white/20 hover:bg-white/30 disabled:opacity-50 px-4 py-2 rounded-lg border border-white/30 text-sm font-semibold">
-        Export JSON
-    </button>
+<div class="page-head">
+    <div>
+        <div class="page-kicker">Local job search operating system</div>
+        <h1 class="page-title">Command Center</h1>
+    </div>
+    <div class="dashboard-actions">
+        <span id="run-pipeline-status" class="status-text"></span>
+        <button id="run-pipeline-btn" data-testid="run-pipeline" class="bg-white/20 hover:bg-white/30 disabled:opacity-50 px-4 py-2 rounded-lg border border-white/30 text-sm font-semibold">
+            Run pipeline
+        </button>
+        <span id="export-json-status" class="status-text"></span>
+        <button id="export-json-btn" class="bg-white/20 hover:bg-white/30 disabled:opacity-50 px-4 py-2 rounded-lg border border-white/30 text-sm font-semibold">
+            Export JSON
+        </button>
+    </div>
 </div>
-<div id="funnel-strip" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+<div id="funnel-strip" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
     {% for stage in funnel %}
-    <div class="funnel-card bg-white/20 p-4 rounded-xl backdrop-blur-sm border border-white/30"
-         data-funnel-stage="{{ stage.label|lower }}">
-        <div class="flex items-center justify-between gap-2 mb-1">
-            <h3 class="text-xs uppercase font-semibold text-purple-200">{{ stage.label }}</h3>
+    <div class="funnel-card" data-funnel-stage="{{ stage.label|lower }}">
+        <div class="flex items-center justify-between gap-2 mb-2">
+            <h3 class="text-[11px] uppercase font-semibold tracking-wider text-purple-200">{{ stage.label }}</h3>
             {% if stage.pending_milestone %}
-            <span class="text-[10px] uppercase font-semibold tracking-wide bg-purple-400/30 border border-purple-200/40 text-purple-100 px-1.5 py-0.5 rounded"
+            <span class="text-[10px] font-semibold tracking-wide bg-purple-400/30 border border-purple-200/40 text-purple-100 px-1.5 py-0.5 rounded"
                   title="Pending Milestone — count will stay 0 until {{ stage.pending_milestone }} ships."
                   data-funnel-pending-milestone="{{ stage.pending_milestone }}">{{ stage.pending_milestone }}</span>
             {% endif %}
         </div>
-        <p class="text-3xl font-bold" data-funnel-count>{{ stage.count }}</p>
-        {% if stage.pct_of_total is not none %}
-        <span class="inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full
-                     {% if stage.percentage_color == 'red' %}bg-red-500/30 text-red-100 border border-red-300/40
-                     {% elif stage.percentage_color == 'amber' %}bg-amber-400/30 text-amber-100 border border-amber-300/40
-                     {% elif stage.percentage_color == 'green' %}bg-emerald-400/30 text-emerald-100 border border-emerald-300/40
-                     {% else %}bg-white/10 text-purple-100 border border-white/20{% endif %}"
-              data-funnel-percentage="{{ stage.percentage_color }}"
-              title="{{ stage.pct_of_total }}% of total jobs">{{ stage.pct_of_total }}%</span>
-        {% elif loop.index0 > 0 %}
-        <span class="inline-block mt-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-white/10 text-purple-200 border border-white/20"
-              data-funnel-percentage="neutral"
-              title="No total jobs available">—</span>
-        {% endif %}
+        <p class="num text-3xl font-bold leading-none" data-funnel-count title="{{ stage.count }}">{{ "{:,}".format(stage.count) }}</p>
     </div>
     {% endfor %}
 </div>
@@ -104,21 +96,17 @@
             <table class="w-full text-left">
                 <thead>
                     <tr class="text-purple-200 border-b border-white/10">
-                        <th class="pb-2" data-stage1-sort="score">Score</th>
-                        <th class="pb-2" data-stage1-sort="title">Position Title</th>
-                        <th class="pb-2" data-stage1-sort="company">Company</th>
-                        <th class="pb-2" data-stage1-sort="source">Portal</th>
-                        <th class="pb-2" data-stage1-sort="apply_channel">Apply via</th>
-                        <th class="pb-2" data-stage1-sort="description_scraped">Description Scraped</th>
-                        <th class="pb-2" data-stage1-sort="expected_salary">Expected Salary</th>
-                        <th class="pb-2" data-stage1-sort="seniority_required">Seniority Required</th>
-                        <th class="pb-2">Scoring Reason</th>
-                        <th class="pb-2">Disagree?</th>
-                        <th class="pb-2">Link</th>
+                        <th class="pb-2 whitespace-nowrap relative" data-col-key="score" data-stage1-sort="score">Score</th>
+                        <th class="pb-2 relative" data-col-key="title" data-stage1-sort="title">Position Title</th>
+                        <th class="pb-2 whitespace-nowrap relative" data-col-key="where" data-stage1-sort="company" title="Company · Portal · Apply via — stacked. Click to sort by company.">Where</th>
+                        <th class="pb-2 whitespace-nowrap relative" data-col-key="details" data-stage1-sort="expected_salary" title="Salary · Seniority · Description scraped — stacked. Click to sort by salary.">Details</th>
+                        <th class="pb-2 w-full relative" data-col-key="reason">Scoring Reason</th>
+                        <th class="pb-2 whitespace-nowrap relative" data-col-key="disagree">Disagree?</th>
+                        <th class="pb-2 whitespace-nowrap" data-col-key="link">Link</th>
                     </tr>
                 </thead>
                 <tbody id="stage1-body">
-                    <tr><td colspan="11" class="py-3">Loading...</td></tr>
+                    <tr><td colspan="7" class="py-3">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -176,43 +164,41 @@
     </div>
     <div id="stage4-panel-body" class="hidden px-6 pb-6" data-panel-body>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-6">
-            <div class="bg-white/5 rounded-lg border border-white/10 p-3">
+            <div class="metric-card bg-white/5 rounded-lg border border-white/10 p-3">
                 <div class="text-purple-200">Received</div>
                 <div class="text-2xl font-bold">{{ outcome_counts.received }}</div>
             </div>
-            <div class="bg-white/5 rounded-lg border border-white/10 p-3">
+            <div class="metric-card bg-white/5 rounded-lg border border-white/10 p-3">
                 <div class="text-purple-200">Waiting</div>
                 <div class="text-2xl font-bold">{{ outcome_counts.waiting }}</div>
             </div>
-            <div class="bg-white/5 rounded-lg border border-white/10 p-3">
+            <div class="metric-card bg-white/5 rounded-lg border border-white/10 p-3">
                 <div class="text-purple-200">Rejected</div>
                 <div class="text-2xl font-bold">{{ outcome_counts.rejected }}</div>
             </div>
-            <div class="bg-white/5 rounded-lg border border-white/10 p-3">
+            <div class="metric-card bg-white/5 rounded-lg border border-white/10 p-3">
                 <div class="text-purple-200">Interview</div>
                 <div class="text-2xl font-bold">{{ outcome_counts.interview }}</div>
             </div>
         </div>
-        <p class="text-sm text-purple-100 mb-3">Every application on file — bot-sent and manually-marked. Click <span class="font-mono">.eml</span> to inspect the exact message that left the mailbox.</p>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm" id="applications-table">
-                <thead>
-                    <tr class="text-purple-200 border-b border-white/10">
-                        <th class="pb-2">When</th>
-                        <th class="pb-2">Channel</th>
-                        <th class="pb-2">Company / Role</th>
-                        <th class="pb-2">To</th>
-                        <th class="pb-2">Subject</th>
-                        <th class="pb-2">Proof</th>
-                        <th class="pb-2">Status</th>
-                        <th class="pb-2">Audit</th>
-                    </tr>
-                </thead>
-                <tbody id="applications-body">
-                    <tr><td colspan="8" class="py-3 text-purple-200">Loading...</td></tr>
-                </tbody>
-            </table>
+        <p class="text-sm text-purple-100 mb-3">Every application on file — bot-sent and manually-marked. Filter by bucket; click a state pill on a card to advance the proof ladder (received → replied → interview / rejected / bounced). Click <span class="font-mono">.eml</span> to inspect the exact message that left the mailbox.</p>
+        <div class="flex flex-wrap items-center gap-2 text-xs mb-4" data-outbound-filters>
+            <span id="outbound-pipeline-count" class="text-purple-200 mr-2">— applications</span>
+            <button data-filter="all"        class="px-2 py-1 rounded bg-white/20 text-purple-100 hover:bg-white/30">All</button>
+            <button data-filter="waiting"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">⏳ Waiting</button>
+            <button data-filter="received"   class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">📨 Received</button>
+            <button data-filter="replied"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">💬 Replied</button>
+            <button data-filter="interview"  class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">🎯 Interview</button>
+            <button data-filter="rejected"   class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">🚫 Rejected</button>
+            <button data-filter="bounced"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">⚠️ Bounced</button>
         </div>
+        <div id="outbound-pipeline-empty" class="hidden text-sm text-purple-200">No applications sent yet. Mark a job manually with <span class="font-mono">jobbot mark-applied &lt;id&gt;</span> or let the apply pipeline run.</div>
+        <div id="outbound-pipeline-body" class="space-y-3"></div>
+        <!-- Legacy read-only table retained as a hidden node so the older
+             loadApplications() function (which writes into #applications-body)
+             doesn't crash on a missing element. The visible CRM view above
+             is the canonical surface; this stays purely for back-compat. -->
+        <table class="hidden" aria-hidden="true"><tbody id="applications-body"></tbody></table>
     </div>
 </section>
 
@@ -268,36 +254,12 @@
     </div>
 </section>
 
-<!-- ============================================================
-     OUTBOUND PIPELINE — CRM view (last panel, collapsible)
-     One card per sent application. Per-card action buttons advance
-     the proof ladder when something happens outside the bot's
-     awareness (a reply lands, a recruiter calls, etc.).
-============================================================ -->
-<section id="outbound-pipeline-panel" class="bg-white/10 rounded-2xl border border-white/20 overflow-hidden" data-collapsible-panel>
-    <div class="flex w-full flex-wrap items-start justify-between gap-3 cursor-pointer select-none px-6 py-5 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="outbound-pipeline-panel-body" aria-expanded="false" aria-label="Toggle Outbound Pipeline" title="Expand panel">
-        <div class="flex flex-wrap items-baseline gap-3">
-            <h2 class="text-xl font-bold">Outbound Pipeline</h2>
-            <span id="outbound-pipeline-count" class="text-xs text-purple-200">— applications</span>
-        </div>
-        <span class="text-base text-purple-100 select-none" data-panel-toggle aria-controls="outbound-pipeline-panel-body" aria-expanded="false" aria-hidden="true">
-            <span data-panel-toggle-icon aria-hidden="true">▸</span>
-        </span>
-    </div>
-    <div id="outbound-pipeline-panel-body" class="hidden px-6 pb-6" data-panel-body>
-        <div class="flex flex-wrap items-center gap-2 text-xs mb-4" data-outbound-filters>
-            <button data-filter="all"        class="px-2 py-1 rounded bg-white/20 text-purple-100 hover:bg-white/30">All</button>
-            <button data-filter="waiting"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">⏳ Waiting</button>
-            <button data-filter="received"   class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">📨 Received</button>
-            <button data-filter="replied"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">💬 Replied</button>
-            <button data-filter="interview"  class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">🎯 Interview</button>
-            <button data-filter="rejected"   class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">🚫 Rejected</button>
-            <button data-filter="bounced"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">⚠️ Bounced</button>
-        </div>
-        <div id="outbound-pipeline-empty" class="hidden text-sm text-purple-200">No applications sent yet. Mark a job manually with <span class="font-mono">jobbot mark-applied &lt;id&gt;</span> or let the apply pipeline run.</div>
-        <div id="outbound-pipeline-body" class="space-y-3"></div>
-    </div>
-</section>
+<!-- Outbound Pipeline CRM view is now folded into Stage 4 above; this
+     placeholder section retained as a hidden duplicate-id host so the
+     legacy "outbound-pipeline-count" / "outbound-pipeline-empty"
+     references in the JS keep their getElementById calls happy even if
+     a future Stage-4 refactor renames any of them. Safe to delete once
+     the JS is hardened with optional chaining. -->
 
 <script>
 const PO_PM_RE = /\bproduct\s+(owner|manager|management|lead|head|director)\b|\bprodukt[\s-]*(manager|owner|management)/i;
@@ -473,7 +435,7 @@ async function loadStage1Data() {
         topScoreEl.textContent = scored.length ? Math.max(...scored) : '—';
     }
     if (!shortlist.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="py-3">No PO/PM titles in latest run.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="py-3">No PO/PM titles in latest run.</td></tr>';
         return;
     }
     if (stage1SortKey) {
@@ -489,6 +451,40 @@ async function loadStage1Data() {
             return '<span class="text-amber-300" title="detail page fetch produced no usable body — see logs">✗ no</span>';
         }
         return '<span class="text-purple-200" title="row predates enrichment phase">—</span>';
+    }
+
+    function whereCell(job) {
+        // Stage 2 row footprint: company + portal + apply channel stacked
+        // in one column. The Scoring Reason cell next to it is multi-line
+        // anyway, so we eat its vertical space rather than steal three
+        // columns' worth of horizontal width.
+        const company = (job.company || '—').replace(/"/g, '&quot;');
+        const portal = (job.source || '').replace(/"/g, '&quot;');
+        const channel = applyChannelCell(job);
+        return `
+            <div class="flex flex-col gap-0.5 leading-tight">
+              <span class="font-semibold text-purple-50">${company}</span>
+              <span class="text-xs text-purple-300">${portal}</span>
+              <span class="text-xs">${channel}</span>
+            </div>
+        `;
+    }
+
+    function detailsCell(job) {
+        // Stacks salary / seniority / description-scraped pill in one
+        // column. Same logic as Where: the Scoring Reason cell next door
+        // is multi-line, so vertical room is essentially free; horizontal
+        // room was scarce with three skinny columns.
+        const salary = (job.expected_salary || 'salary not specified').replace(/"/g, '&quot;');
+        const seniority = (job.seniority_required || 'seniority not specified').replace(/"/g, '&quot;');
+        const description = descriptionScrapedCell(job);
+        return `
+            <div class="flex flex-col gap-0.5 leading-tight">
+              <span class="font-semibold text-purple-50">${salary}</span>
+              <span class="text-xs text-purple-300">${seniority}</span>
+              <span class="text-xs">${description}</span>
+            </div>
+        `;
     }
 
     function applyChannelCell(job) {
@@ -573,7 +569,7 @@ async function loadStage1Data() {
         const narrativeHtml = narrativeWithPrefix
             ? `<span class="text-purple-200" title="${titleAttr}">${narrativeWithPrefix}</span>`
             : '';
-        return `<div class="text-xs leading-snug max-w-xl">${pills}${dash}${narrativeHtml}</div>`;
+        return `<div class="text-xs leading-snug">${pills}${dash}${narrativeHtml}</div>`;
     }
 
     function scoreCell(job) {
@@ -608,7 +604,7 @@ async function loadStage1Data() {
         return `
             <details class="text-xs" data-disagree-row data-job-id="${jobId}">
               <summary class="cursor-pointer text-purple-200 underline">${buttonLabel}</summary>
-              <div class="mt-2 flex flex-col gap-2 max-w-xs">
+              <div class="mt-2 flex flex-col gap-2 max-w-xs whitespace-normal">
                 <textarea data-disagree-text rows="3"
                           class="bg-white/10 border border-white/20 rounded px-2 py-1 text-purple-100 placeholder-purple-300/60"
                           placeholder="${placeholder}">${existing}</textarea>
@@ -625,18 +621,19 @@ async function loadStage1Data() {
     for (const job of shortlist) {
         const tr = document.createElement('tr');
         tr.className = 'border-b border-white/5';
+        // Cells use `break-words` so long single-word strings (company
+        // slugs like `weworkremotely`, emails like
+        // `careers-team@some-long-domain.example`) wrap inside narrow
+        // columns instead of overflowing. `align-top` keeps the stacked
+        // Where/Details/Disagree content aligned to the row's top.
         tr.innerHTML = `
-            <td class="py-3">${scoreCell(job)}</td>
-            <td class="py-3">${job.title || ''}</td>
-            <td class="py-3">${job.company || ''}</td>
-            <td class="py-3">${job.source || ''}</td>
-            <td class="py-3 whitespace-nowrap">${applyChannelCell(job)}</td>
-            <td class="py-3">${descriptionScrapedCell(job)}</td>
-            <td class="py-3">${job.expected_salary || 'not specified'}</td>
-            <td class="py-3">${job.seniority_required || 'not specified'}</td>
-            <td class="py-3">${scoringReasonCell(job)}</td>
-            <td class="py-3 align-top">${disagreeCell(job)}</td>
-            <td class="py-3"><a class="underline" target="_blank" href="${job.url || '#'}">open</a></td>
+            <td class="py-3 align-top break-words">${scoreCell(job)}</td>
+            <td class="py-3 align-top break-words">${job.title || ''}</td>
+            <td class="py-3 align-top break-words">${whereCell(job)}</td>
+            <td class="py-3 align-top break-words">${detailsCell(job)}</td>
+            <td class="py-3 align-top break-words">${scoringReasonCell(job)}</td>
+            <td class="py-3 align-top break-words">${disagreeCell(job)}</td>
+            <td class="py-3 align-top break-words"><a class="underline" target="_blank" href="${job.url || '#'}">open</a></td>
         `;
         tbody.appendChild(tr);
     }
@@ -684,7 +681,27 @@ function wireDisagreeButtons(root) {
                 const arrow = delta === null || delta === undefined ? ''
                             : delta > 0 ? ` (+${delta})`
                             : delta < 0 ? ` (${delta})` : ' (no change)';
-                statusEl.textContent = `rescored: ${body.score_before ?? '—'} → ${body.score_after}${arrow}. fact saved.`;
+                // Surface anything the extractor learned, in addition to
+                // the score change. Keeps the user honest about what the
+                // bot now knows that it didn't before.
+                const updates = body.profile_updates || {};
+                const learned = [];
+                for (const s of (updates.added_must_have_skills || [])) {
+                    learned.push(`must-have: ${s}`);
+                }
+                for (const s of (updates.added_nice_to_have_skills || [])) {
+                    learned.push(`nice-to-have: ${s}`);
+                }
+                for (const f of (updates.added_facts || [])) {
+                    learned.push(`fact: ${f}`);
+                }
+                for (const [k, v] of Object.entries(updates.updated_preferences || {})) {
+                    learned.push(`preference ${k}=${JSON.stringify(v)}`);
+                }
+                const learnedSuffix = learned.length
+                    ? ` learned: ${learned.join('; ')}`
+                    : (body.fact_persisted ? ' fact saved.' : ' (no profile update.)');
+                statusEl.textContent = `rescored: ${body.score_before ?? '—'} → ${body.score_after}${arrow}.${learnedSuffix}`;
                 statusEl.className = 'text-green-300';
                 // Reload the panel so the score cell + sort reflect the new score.
                 if (typeof loadStage1Data === 'function') {
@@ -734,20 +751,51 @@ function stage1SortRows(rows) {
 }
 
 function paintStage1SortArrow() {
+    // Manage the arrow as a dedicated <span data-sort-arrow> child so we
+    // never touch the <th>'s textContent — that wipes the entire DOM
+    // subtree, which kills siblings like the resize handle.
     document.querySelectorAll('th[data-stage1-sort]').forEach(other => {
-        other.textContent = other.textContent.replace(/[▲▼]$/, '').trim();
+        const existing = other.querySelector('[data-sort-arrow]');
+        if (existing) existing.textContent = '';
     });
     if (!stage1SortKey) return;
     const active = document.querySelector(`th[data-stage1-sort="${stage1SortKey}"]`);
     if (!active) return;
-    const arrow = stage1SortDir === 1 ? ' ▲' : ' ▼';
-    active.textContent = active.textContent.trim() + arrow;
+    let arrowSpan = active.querySelector('[data-sort-arrow]');
+    if (!arrowSpan) {
+        arrowSpan = document.createElement('span');
+        arrowSpan.setAttribute('data-sort-arrow', 'true');
+        // Insert before the resize handle (which is always the last child)
+        // so the arrow sits inline with the header text.
+        const handle = active.querySelector('[data-col-resizer]');
+        if (handle) active.insertBefore(arrowSpan, handle);
+        else active.appendChild(arrowSpan);
+    }
+    arrowSpan.textContent = stage1SortDir === 1 ? ' ▲' : ' ▼';
 }
+
+// When the user drags a resize handle, mouseup happens outside the
+// handle (often outside the <th> entirely), so the synthesized `click`
+// fires on the lowest common ancestor — the <th> itself — and would
+// trigger a spurious sort. The resizer's onUp sets this flag for a
+// short window; the sort handler bails out while it's set.
+let stage2ResizeJustHappened = false;
 
 document.querySelectorAll('th[data-stage1-sort]').forEach(th => {
     th.style.cursor = 'pointer';
     th.title = 'click to sort';
-    th.addEventListener('click', () => {
+    th.addEventListener('click', (ev) => {
+        if (stage2ResizeJustHappened) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            return;
+        }
+        // Belt-and-braces: if the click landed on (or inside) a resize
+        // handle, never sort. The handle's own click handler already
+        // does this, but a drag whose click bubbles up still lands here.
+        if (ev.target && ev.target.closest && ev.target.closest('[data-col-resizer]')) {
+            return;
+        }
         const key = th.getAttribute('data-stage1-sort');
         if (stage1SortKey === key) {
             stage1SortDir = -stage1SortDir;
@@ -762,6 +810,180 @@ document.querySelectorAll('th[data-stage1-sort]').forEach(th => {
 // Show default sort arrow on first paint so the user sees that the table is
 // pre-sorted by score-desc rather than guessing at the order.
 paintStage1SortArrow();
+
+// User-resizable Stage 2 columns. Each <th data-col-key="..."> gets a
+// 10px drag handle on its right edge. Widths persist to localStorage so
+// they survive reloads.
+//
+// Layout strategy: the table starts in `table-auto` so the browser
+// computes natural widths. The FIRST time the Stage 2 panel becomes
+// visible, we capture those natural widths, apply them as inline styles,
+// and switch the table to `table-fixed`. Why: in `table-auto`, setting
+// `style.width` on a <th> with `whitespace-nowrap` content is treated as
+// a preferred *minimum* — the column refuses to shrink below content
+// width, so dragging the handle visually does nothing. With
+// `table-fixed`, widths are strictly respected and resize works in both
+// directions.
+const STAGE2_COL_LS_PREFIX = 'jobbot.stage2.col.';
+let stage2WidthsLocked = false;
+
+function lockStage2ColumnWidths() {
+    if (stage2WidthsLocked) return;
+    const table = document.querySelector('#stage2-panel-body table');
+    if (!table) return;
+    const headers = table.querySelectorAll('thead th[data-col-key]');
+    if (!headers.length) return;
+    // If the table isn't on screen yet (panel still collapsed), getBoundingClientRect
+    // returns zero widths. Skip and try again later.
+    const widths = Array.from(headers).map(th => Math.round(th.getBoundingClientRect().width));
+    if (widths.every(w => w === 0)) return;
+    headers.forEach((th, i) => {
+        const key = th.getAttribute('data-col-key');
+        const saved = localStorage.getItem(STAGE2_COL_LS_PREFIX + key);
+        const w = (saved && /^\d+$/.test(saved)) ? parseInt(saved, 10) : widths[i];
+        th.style.width = w + 'px';
+    });
+    table.style.tableLayout = 'fixed';
+    stage2WidthsLocked = true;
+}
+
+function attachStage2ColumnResizers() {
+    document.querySelectorAll('th[data-col-key]').forEach((th) => {
+        if (th.querySelector('[data-col-resizer]')) return;  // already wired
+        // Make the th a positioning context (the `relative` class added
+        // server-side handles this; keep this guard for safety).
+        if (getComputedStyle(th).position === 'static') {
+            th.style.position = 'relative';
+        }
+        const handle = document.createElement('span');
+        handle.setAttribute('data-col-resizer', 'true');
+        // Wider hit-target (10px) than the visible line (2px centered) so
+        // it's easy to grab without making the table look cluttered. The
+        // faint line is always visible so the user knows the column edge
+        // is draggable; it brightens on hover/drag.
+        const idleBg = 'linear-gradient(to right, transparent 0, transparent 4px, rgba(255,255,255,0.18) 4px, rgba(255,255,255,0.18) 6px, transparent 6px, transparent 10px)';
+        const hoverBg = 'linear-gradient(to right, transparent 0, transparent 4px, rgba(255,255,255,0.55) 4px, rgba(255,255,255,0.55) 6px, transparent 6px, transparent 10px)';
+        const activeBg = 'linear-gradient(to right, transparent 0, transparent 4px, rgba(255,255,255,0.85) 4px, rgba(255,255,255,0.85) 6px, transparent 6px, transparent 10px)';
+        handle.style.cssText = [
+            'position:absolute', 'top:0', 'right:-5px', 'width:10px',
+            'height:100%', 'cursor:col-resize', 'user-select:none',
+            'z-index:2',
+            `background:${idleBg}`,
+        ].join(';');
+        handle.addEventListener('mouseenter', () => {
+            handle.style.background = hoverBg;
+        });
+        handle.addEventListener('mouseleave', () => {
+            if (!handle.dataset.dragging) handle.style.background = idleBg;
+        });
+        // Block the synthesized click after mouseup from bubbling up to
+        // the <th>'s sort handler. mousedown's stopPropagation only
+        // stops mousedown — click is a separate event that still fires.
+        handle.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+        });
+        handle.addEventListener('mousedown', (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const startX = ev.clientX;
+            const startWidth = th.getBoundingClientRect().width;
+            const key = th.getAttribute('data-col-key');
+            // Excel-style splitter: only the dragged column and its immediate
+            // right neighbour change. The neighbour absorbs the inverse delta
+            // so the table's total width stays put and columns further right
+            // don't visually shift.
+            const nextTh = th.nextElementSibling
+                && th.nextElementSibling.hasAttribute('data-col-key')
+                ? th.nextElementSibling : null;
+            const nextKey = nextTh ? nextTh.getAttribute('data-col-key') : null;
+            const startNextWidth = nextTh ? nextTh.getBoundingClientRect().width : 0;
+            const MIN_COL = 40;
+
+            handle.dataset.dragging = '1';
+            handle.style.background = activeBg;
+            document.body.style.cursor = 'col-resize';
+
+            function onMove(e) {
+                let delta = e.clientX - startX;
+                // Floor: don't shrink the dragged column below MIN_COL.
+                if (startWidth + delta < MIN_COL) delta = MIN_COL - startWidth;
+                // Ceiling: if there's a neighbour, don't shrink it below MIN_COL.
+                if (nextTh && startNextWidth - delta < MIN_COL) {
+                    delta = startNextWidth - MIN_COL;
+                }
+                th.style.width = Math.round(startWidth + delta) + 'px';
+                if (nextTh) {
+                    nextTh.style.width = Math.round(startNextWidth - delta) + 'px';
+                }
+            }
+            function onUp() {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+                delete handle.dataset.dragging;
+                handle.style.background = idleBg;
+                document.body.style.cursor = '';
+                // Persist both widths — dragged column and its right neighbour.
+                const final = parseInt(th.style.width, 10);
+                if (Number.isFinite(final) && final > 0) {
+                    localStorage.setItem(STAGE2_COL_LS_PREFIX + key, String(final));
+                }
+                if (nextTh && nextKey) {
+                    const finalNext = parseInt(nextTh.style.width, 10);
+                    if (Number.isFinite(finalNext) && finalNext > 0) {
+                        localStorage.setItem(STAGE2_COL_LS_PREFIX + nextKey, String(finalNext));
+                    }
+                }
+                // Suppress the spurious click event the browser is about
+                // to dispatch on the <th> (lowest common ancestor of
+                // mousedown-on-handle and mouseup-elsewhere). Without
+                // this, every drag triggers a sort.
+                stage2ResizeJustHappened = true;
+                setTimeout(() => { stage2ResizeJustHappened = false; }, 250);
+            }
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        });
+        th.appendChild(handle);
+    });
+}
+
+attachStage2ColumnResizers();
+
+// Lock the natural column widths the first time the Stage 2 table is
+// actually visible. We try right now (covers the case where the panel
+// is already expanded by default), and also hook into the panel's open
+// event so the lock fires on first expansion. ResizeObserver picks up
+// any layout that arrives via stylesheet load or font swap.
+lockStage2ColumnWidths();
+(function watchStage2Visibility() {
+    const panelBody = document.getElementById('stage2-panel-body');
+    if (!panelBody) return;
+    // Hook the toggle: any click on the Stage 2 header re-tries the lock.
+    const panel = panelBody.closest('[data-collapsible-panel]');
+    if (panel) {
+        const header = panel.querySelector('[data-panel-header]');
+        if (header) {
+            header.addEventListener('click', () => {
+                // Defer one frame so the panel body has actually
+                // un-hidden by the time we measure.
+                requestAnimationFrame(lockStage2ColumnWidths);
+            });
+        }
+    }
+    // Also watch for any size change on the body — covers async data
+    // arrival, font swaps, viewport resize, etc. Bails out once locked.
+    if (typeof ResizeObserver !== 'undefined') {
+        const obs = new ResizeObserver(() => {
+            if (stage2WidthsLocked) {
+                obs.disconnect();
+                return;
+            }
+            lockStage2ColumnWidths();
+        });
+        obs.observe(panelBody);
+    }
+})();
 
 initCollapsiblePanels();
 hydrateRecentRunsLastStarted();
@@ -829,7 +1051,7 @@ async function loadShortlist() {
     empty.classList.add('hidden');
     for (const job of jobs) {
         const card = document.createElement('div');
-        card.className = 'bg-white/5 rounded-xl border border-white/10';
+        card.className = 'job-card bg-white/5 rounded-xl border border-white/10';
         const cvLink = job.cv_html_url
             ? `<a class="underline" target="_blank" href="${job.cv_html_url}">cv.html</a>`
             : '<span class="text-purple-200">no CV</span>';
@@ -874,10 +1096,33 @@ async function loadShortlist() {
                 <span class="text-sm italic text-purple-200" title="run \`jobbot rescore --backfill\` to rescore against the tailored CV + cover letter">tailored rescore pending</span>
             `;
         }
+        // Application-status pill. Visible only when the row already has
+        // an application on file, so a glance at the shortlist tells the
+        // user which postings still need a real send.
+        let appliedPill = '';
+        if (job.applied_state) {
+            const cls = job.applied_state === 'applied'
+                ? 'bg-emerald-500/30 border-emerald-300/40 text-emerald-100'
+                : job.applied_state === 'dry_run'
+                    ? 'bg-amber-400/25 border-amber-300/40 text-amber-100'
+                    : 'bg-red-500/25 border-red-300/40 text-red-100';
+            const label = job.applied_state === 'applied'
+                ? '✓ applied'
+                : job.applied_state === 'dry_run'
+                    ? 'dry-run sent'
+                    : job.applied_state === 'needs_review'
+                        ? '⚠ needs review'
+                        : '✗ apply failed';
+            const titleAttr = job.applied_at
+                ? `${label.replace(/[✓✗⚠] /, '')} — ${escapeHtml(job.applied_at)}`
+                : label;
+            appliedPill = `<span class="text-xs px-2 py-1 rounded border ${cls}" title="${titleAttr}">${label}</span>`;
+        }
         card.innerHTML = `
             <button class="w-full text-left p-4 flex flex-wrap gap-4 items-baseline hover:bg-white/10" data-id="${job.id}">
                 ${scorePillsHtml}
                 <span class="font-semibold flex-1 min-w-[16rem]">${escapeHtml(job.title)} <span class="text-purple-200 font-normal">@ ${escapeHtml(job.company)}</span></span>
+                ${appliedPill}
                 <span class="text-xs px-2 py-1 bg-white/10 rounded">${escapeHtml(job.source)}</span>
                 <span class="text-xs px-2 py-1 bg-white/10 rounded" title="seniority">${escapeHtml(job.seniority || '—')}</span>
                 <span class="text-xs px-2 py-1 bg-white/10 rounded" title="salary">${escapeHtml(job.salary_text || '—')}</span>
@@ -897,7 +1142,18 @@ async function loadShortlist() {
                     }</div>
                 </div>
                 <div class="text-sm">
-                    <div class="text-purple-200 mb-1">Posting</div>
+                    <div class="text-purple-200 mb-1">Application package</div>
+                    <div class="flex flex-wrap gap-3">
+                        ${job.package_html_url
+                            ? `<a class="underline font-semibold text-emerald-200" target="_blank" href="${job.package_html_url}">📄 polished package (HTML)</a>`
+                            : '<span class="text-purple-300">no package html</span>'}
+                        ${job.package_pdf_url
+                            ? `<a class="underline font-semibold text-emerald-200" target="_blank" href="${job.package_pdf_url}">📎 polished package (PDF)</a>`
+                            : ''}
+                    </div>
+                </div>
+                <div class="text-sm">
+                    <div class="text-purple-200 mb-1">Posting + raw outputs</div>
                     <div class="flex flex-wrap gap-3">
                         <a class="underline" target="_blank" href="${job.url || '#'}">open posting</a>
                         ${cvLink}
@@ -956,9 +1212,16 @@ loadShortlist();
 // Subject line parsed from the persisted .eml on disk, proof-ladder
 // level (L0–L5), status, and an "Audit" cell that links to the .eml
 // so the operator can inspect what actually left the mailbox.
+// Legacy read-only applications-table renderer. Kept callable so any
+// external code still invoking loadApplications() doesn't break, but
+// the visible Stage 4 surface is now the CRM card view rendered by
+// loadOutboundPipeline() further down. We early-return when the
+// hidden back-compat tbody is empty (which is the post-refactor norm)
+// so we don't fire a redundant /api/applications fetch on every page
+// load.
 async function loadApplications() {
     const tbody = document.getElementById('applications-body');
-    if (!tbody) return;
+    if (!tbody || tbody.closest('table').classList.contains('hidden')) return;
     let res;
     try {
         res = await fetch('/api/applications');
@@ -1080,7 +1343,7 @@ function renderOutboundCard(a) {
         </button>`).join('');
 
     return `
-      <div class="rounded-xl border border-white/10 bg-white/5 p-4" data-job-id="${escapeHtml(a.job_id)}" data-bucket="${bucket}">
+      <div class="job-card rounded-xl border border-white/10 bg-white/5 p-4" data-job-id="${escapeHtml(a.job_id)}" data-bucket="${bucket}">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-baseline gap-2">

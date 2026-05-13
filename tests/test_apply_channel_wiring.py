@@ -110,15 +110,16 @@ def test_stage2_template_renders_apply_via_column(tmp_path: Path, monkeypatch) -
     client = _load_legacy_dashboard_module().app.test_client()
     html = client.get("/").get_data(as_text=True)
 
+    # "Apply via" survives as a label inside the stacked Where cell's
+    # tooltip (the column header itself is now just "Where" with a sort
+    # key of `company`).
     assert "Apply via" in html
     assert "applyChannelCell(job)" in html
-    # Click-to-sort wired on column headers
-    assert 'data-stage1-sort="apply_channel"' in html
     assert "stage1SortRows" in html
-    # 11 columns total (Score, Title, Company, Portal, Apply via,
-    # Description Scraped, Expected Salary, Seniority, Scoring Reason,
-    # Disagree, Link)
-    assert 'colspan="11"' in html
+    # 7 columns total (Score, Title, Where, Details, Scoring Reason,
+    # Disagree, Link) — Company/Portal/Apply via collapsed into Where;
+    # Salary/Seniority/Description Scraped collapsed into Details.
+    assert 'colspan="7"' in html
 
 
 def test_stage2_apply_via_cell_keeps_icon_and_label_on_one_line(
@@ -131,7 +132,11 @@ def test_stage2_apply_via_cell_keeps_icon_and_label_on_one_line(
     client = _load_legacy_dashboard_module().app.test_client()
     html = client.get("/").get_data(as_text=True)
 
-    assert '<td class="py-3 whitespace-nowrap">${applyChannelCell(job)}</td>' in html
+    # applyChannelCell still produces the icon+label pill on one line. It
+    # is now invoked inside whereCell (stacked Where column) rather than
+    # rendered directly in its own <td>.
+    assert "applyChannelCell(job)" in html
+    assert "function whereCell" in html
     assert 'class="inline-flex items-center gap-1 whitespace-nowrap text-purple-300"' in html
     assert '<span aria-hidden="true">🌐</span><span>external</span>' in html
 

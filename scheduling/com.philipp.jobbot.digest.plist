@@ -6,22 +6,22 @@
   <key>Label</key>
   <string>com.philipp.jobbot.digest</string>
 
-  <!-- Replace /Users/phillyvanilly/Library/Application Support/Claude/local-agent-mode-sessions/111a669f-c216-411d-91c3-917f2e319ff5/cff23f1b-5c33-4c40-8e81-453be39aed7d/local_689a4dfe-aec0-4bc0-9d4e-e487822539fe/outputs/job-bot below. -->
+  <!-- Replace /Users/phillyvanilly/job_bot below. -->
   <key>WorkingDirectory</key>
-  <string>/Users/phillyvanilly/Library/Application Support/Claude/local-agent-mode-sessions/111a669f-c216-411d-91c3-917f2e319ff5/cff23f1b-5c33-4c40-8e81-453be39aed7d/local_689a4dfe-aec0-4bc0-9d4e-e487822539fe/outputs/job-bot</string>
+  <string>/Users/phillyvanilly/job_bot</string>
 
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/phillyvanilly/Library/Application Support/Claude/local-agent-mode-sessions/111a669f-c216-411d-91c3-917f2e319ff5/cff23f1b-5c33-4c40-8e81-453be39aed7d/local_689a4dfe-aec0-4bc0-9d4e-e487822539fe/outputs/job-bot/.venv-1/bin/python</string>
+    <string>/Users/phillyvanilly/job_bot/.venv-1/bin/python</string>
     <string>-m</string>
     <string>jobbot</string>
     <string>digest</string>
   </array>
 
   <key>StandardOutPath</key>
-  <string>/Users/phillyvanilly/Library/Application Support/Claude/local-agent-mode-sessions/111a669f-c216-411d-91c3-917f2e319ff5/cff23f1b-5c33-4c40-8e81-453be39aed7d/local_689a4dfe-aec0-4bc0-9d4e-e487822539fe/outputs/job-bot/logs/digest.out.log</string>
+  <string>/Users/phillyvanilly/job_bot/logs/digest.out.log</string>
   <key>StandardErrorPath</key>
-  <string>/Users/phillyvanilly/Library/Application Support/Claude/local-agent-mode-sessions/111a669f-c216-411d-91c3-917f2e319ff5/cff23f1b-5c33-4c40-8e81-453be39aed7d/local_689a4dfe-aec0-4bc0-9d4e-e487822539fe/outputs/job-bot/logs/digest.err.log</string>
+  <string>/Users/phillyvanilly/job_bot/logs/digest.err.log</string>
 
   <!-- Daily at 08:30 -->
   <key>StartCalendarInterval</key>

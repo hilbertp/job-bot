@@ -16,7 +16,6 @@ and the rest of the run continues.
 """
 from __future__ import annotations
 
-import re
 import shutil
 from pathlib import Path
 from typing import Callable
@@ -327,6 +326,43 @@ when tailoring per job — it will NEVER invent claims you don't put here.
     path.write_text(body)
 
 
+def _copy_profile_artifact(
+    source_raw: str,
+    *,
+    corpus_kind: str,
+    primary: bool = False,
+) -> Path | None:
+    """Copy an optional onboarding artifact into data/corpus.
+
+    The wizard asks for paths to the user's real CV and a finished cover
+    letter because scoring/generation quality depends on those source
+    documents. Blank paths are allowed so a newcomer can finish setup and add
+    them later via `jobbot profile add`.
+    """
+    source_raw = (source_raw or "").strip()
+    if not source_raw:
+        return None
+
+    src = Path(source_raw).expanduser()
+    if not src.is_file():
+        print(f"  !  skipped missing artifact: {src}")
+        return None
+
+    dest_dir = DATA_DIR / "corpus" / corpus_kind
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    dest_name = src.name
+    if primary and not dest_name.startswith("PRIMARY_"):
+        dest_name = f"PRIMARY_{dest_name}"
+    dest = dest_dir / dest_name
+    if dest.exists() and not _confirm_overwrite(dest):
+        print(f"  ⏭  kept existing {dest.relative_to(REPO_ROOT)}")
+        return None
+
+    shutil.copy2(src, dest)
+    print(f"  ✓  imported {dest.relative_to(REPO_ROOT)}")
+    return dest
+
+
 def run() -> int:
     """Drive the wizard. Returns 0 on success, 1 if the user aborted."""
     print()
@@ -490,6 +526,21 @@ def run() -> int:
         written.append(path)
         print(f"  ✓  wrote {path.relative_to(REPO_ROOT)}")
 
+    imported: list[Path] = []
+    cv_import = _copy_profile_artifact(
+        answers.get("primary_cv_path", ""),
+        corpus_kind="cvs",
+        primary=True,
+    )
+    if cv_import:
+        imported.append(cv_import)
+    cl_import = _copy_profile_artifact(
+        answers.get("cover_letter_path", ""),
+        corpus_kind="cover_letters",
+    )
+    if cl_import:
+        imported.append(cl_import)
+
     # Final instructions
     print()
     print("─" * 64)
@@ -504,6 +555,11 @@ def run() -> int:
     print()
     print(" 3. Open data/base_cv.md and replace the stub content with your real CV.")
     print("    Keep it 1–3 pages of plain Markdown.")
+    if not imported:
+        print()
+        print(" 4. Add your real source documents:")
+        print("    jobbot profile add /path/to/cv.md --kind cvs --primary")
+        print("    jobbot profile add /path/to/cover-letter.md --kind cover_letters")
     print()
     if answers.get("cv_ingested") or answers.get("cl_ingested"):
         print(" 4. Compile your profile baseline from the ingested CV / cover letter:")

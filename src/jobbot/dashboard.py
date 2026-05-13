@@ -144,22 +144,21 @@ def _count_interviewed(conn) -> int:
 
 
 def compute_funnel(conn) -> list[dict]:
-    """Return the 5-stage outcome funnel for the top dashboard strip.
+    """Return the 4-stage outcome funnel for the top dashboard strip.
 
-    Each stage carries the absolute count and the percent of total jobs.
-    The Total card has no percentage badge because it is the denominator.
-    Stages and their SQL — the user's brief, with schema-mapped columns:
+    The all-time `Total` card was dropped because the meaningful "what was
+    scraped" number lives in the run-scoped Stage 1 panel; carrying both at
+    the top of the page was confusing. Stages and their SQL:
 
-      Total        seen_jobs                            COUNT(*)
       Suitable     seen_jobs.score >= 70                COUNT(*)
       Tailored     seen_jobs.output_dir IS NOT NULL     COUNT(*)
       Applied      applications.submitted = 1           COUNT(*)
       Interviewed  applications.proof_level >= 4        COUNT(*) — M5
 
-    `cannot_score:*` rows count toward Total but not toward Suitable,
-    because `score IS NULL` for them — exactly what the user wants.
+    Percentages are omitted: with no Total denominator there is no
+    consistent base, and the absolute counts already convey the funnel
+    shape.
     """
-    total = conn.execute("SELECT COUNT(*) FROM seen_jobs").fetchone()[0]
     suitable = conn.execute(
         "SELECT COUNT(*) FROM seen_jobs WHERE score >= 70"
     ).fetchone()[0]
@@ -172,27 +171,22 @@ def compute_funnel(conn) -> list[dict]:
     interviewed = _count_interviewed(conn)
 
     stages: list[tuple[str, int, str | None]] = [
-        ("Total", total, None),
         ("Suitable", suitable, None),
         ("Tailored", tailored, None),
         ("Applied", applied, None),
         ("Interviewed", interviewed, "M5"),
     ]
 
-    out: list[dict] = []
-    for label, count, badge in stages:
-        if label == "Total" or total == 0:
-            pct_of_total: float | None = None
-        else:
-            pct_of_total = round(100.0 * count / total, 1)
-        out.append({
+    return [
+        {
             "label": label,
             "count": count,
-            "pct_of_total": pct_of_total,
-            "percentage_color": _percentage_color(pct_of_total),
+            "pct_of_total": None,
+            "percentage_color": _percentage_color(None),
             "pending_milestone": badge,
-        })
-    return out
+        }
+        for label, count, badge in stages
+    ]
 
 
 def compute_activity_today(conn, *, now: datetime | None = None) -> dict:
@@ -1102,14 +1096,16 @@ def api_shortlist():
     with connect() as conn:
         cur = conn.execute(
             """
-            SELECT id, title, company, source, status, score, score_reason,
-                   url, output_dir, raw_json,
-                   description_full, description_word_count,
-                   seniority, salary_text, apply_email,
-                   score_tailored, score_tailored_reason
-            FROM seen_jobs
-            WHERE score IS NOT NULL AND score >= ?
-            ORDER BY score DESC, first_seen_at DESC
+            SELECT s.id, s.title, s.company, s.source, s.status, s.score, s.score_reason,
+                   s.url, s.output_dir, s.raw_json,
+                   s.description_full, s.description_word_count,
+                   s.seniority, s.salary_text, s.apply_email,
+                   s.score_tailored, s.score_tailored_reason,
+                   a.submitted, a.status, a.attempted_at, a.dry_run
+            FROM seen_jobs s
+            LEFT JOIN applications a ON a.job_id = s.id
+            WHERE s.score IS NOT NULL AND s.score >= ?
+            ORDER BY s.score DESC, s.first_seen_at DESC
             """,
             (min_score,),
         )
@@ -1128,6 +1124,7 @@ def api_shortlist():
 
         cv_md = cover_letter_md = ""
         cv_html_path = cl_html_path = None
+        package_html_path = package_pdf_path = None
         if r[8]:
             out = Path(r[8])
             cv_md_path = out / "cv.md"
@@ -1146,6 +1143,10 @@ def api_shortlist():
                 cv_html_path = str(out / "cv.html")
             if (out / "cover_letter.html").exists():
                 cl_html_path = str(out / "cover_letter.html")
+            if (out / "application_package.html").exists():
+                package_html_path = str(out / "application_package.html")
+            if (out / "application_package.pdf").exists():
+                package_pdf_path = str(out / "application_package.pdf")
 
         score_base = r[5]
         score_tailored = r[15]
@@ -1167,6 +1168,21 @@ def api_shortlist():
             apply_url_raw = None
         channel = apply_channel(apply_email=r[14], apply_url=apply_url_raw)
         ats_name = apply_channel_ats_name(apply_url_raw) if channel == "form" else None
+        # Application state (LEFT JOIN — None if never attempted).
+        # `submitted`=1 means a real send (or dry-run write of the .eml)
+        # actually happened. `status` is the JobStatus name ('applied',
+        # 'applied_dry_run', 'apply_needs_review', 'apply_failed', etc.).
+        applied_submitted = bool(r[17]) if r[17] is not None else False
+        application_status = r[18]
+        applied_at = r[19]
+        applied_dry_run = bool(r[20]) if r[20] is not None else False
+        applied_state = (
+            "applied"            if applied_submitted and not applied_dry_run
+            else "dry_run"        if applied_submitted and applied_dry_run
+            else "needs_review"   if application_status == "apply_needs_review"
+            else "failed"         if application_status == "apply_failed"
+            else None
+        )
         jobs.append({
             "id": r[0],
             "title": r[1],
@@ -1189,11 +1205,21 @@ def api_shortlist():
             "cover_letter_md": cover_letter_md,
             "cv_html_url": f"/shortlist/{r[0]}/cv.html" if cv_html_path else None,
             "cover_letter_html_url": f"/shortlist/{r[0]}/cover_letter.html" if cl_html_path else None,
+            # The polished, editorial application package — what gets
+            # attached to the outbound email. Linking it from the Stage 3
+            # card so the user can review the *final* artefact rather
+            # than digging through output/ on disk.
+            "package_html_url": f"/shortlist/{r[0]}/application_package.html" if package_html_path else None,
+            "package_pdf_url": f"/shortlist/{r[0]}/application_package.pdf" if package_pdf_path else None,
             # Stage-3 rescore (tailored CV + CL substituted into the scoring prompt).
             # `score_tailored` is None until the rescore runs against this job.
             "score_tailored": score_tailored,
             "tailored_reason": r[16] or "",
             "score_delta": score_delta,
+            # Application status — let the Stage 3 card show "applied"
+            # so the user doesn't accidentally double-submit.
+            "applied_state": applied_state,
+            "applied_at": applied_at,
         })
 
     return jsonify({"min_score": min_score, "count": len(jobs), "jobs": jobs})
@@ -1207,7 +1233,11 @@ def shortlist_doc(job_id: str, filename: str):
     fixed allowlist of filenames so we can't be tricked into serving
     arbitrary files via path traversal.
     """
-    if filename not in {"cv.html", "cover_letter.html", "cv.md", "cover_letter.md"}:
+    if filename not in {
+        "cv.html", "cover_letter.html", "cv.md", "cover_letter.md",
+        "application_package.html", "application_package.pdf",
+        "cv.pdf", "cover_letter.pdf",
+    }:
         abort(404)
     with connect() as conn:
         cur = conn.execute("SELECT output_dir FROM seen_jobs WHERE id = ?", (job_id,))
@@ -1223,7 +1253,12 @@ def shortlist_doc(job_id: str, filename: str):
     if not target.exists():
         abort(404)
     from flask import send_file
-    mime = "text/html" if filename.endswith(".html") else "text/markdown"
+    if filename.endswith(".pdf"):
+        mime = "application/pdf"
+    elif filename.endswith(".html"):
+        mime = "text/html"
+    else:
+        mime = "text/markdown"
     return send_file(str(target), mimetype=mime)
 
 
@@ -1375,8 +1410,10 @@ def api_rescore_with_feedback(job_id: str):
 
     from .config import load_secrets
     from .models import JobPosting
-    from .profile import append_user_fact, load_profile
-    from .scoring import CannotScore, llm_score
+    from .profile import append_user_fact, apply_profile_patch, load_profile
+    from .scoring import (
+        CannotScore, extract_profile_updates_from_feedback, llm_score,
+    )
     from .state import update_user_feedback_rescore
 
     payload = flask_request.get_json(silent=True) or {}
@@ -1432,13 +1469,31 @@ def api_rescore_with_feedback(job_id: str):
             score=result.score, reason=result.reason or "",
         )
 
-    # Persist the feedback as a durable candidate fact. Failure here is
-    # logged but non-fatal — the rescore itself already landed.
-    fact_persisted = True
+    # Second LLM pass: distill the comment into structured profile updates
+    # (skills, durable facts, preference flags). This is what makes the
+    # feedback durable beyond this one job: future scoring runs will see
+    # the canonicalized skill/fact, not just a raw quote.
+    profile_updates: dict = {}
+    extraction_error: str | None = None
     try:
-        append_user_fact(feedback)
-    except Exception:
-        fact_persisted = False
+        patch = extract_profile_updates_from_feedback(
+            feedback, profile, secrets, job_id=job_id,
+        )
+        if patch:
+            profile_updates = apply_profile_patch(patch)
+    except Exception as e:
+        extraction_error = str(e)
+
+    # Fallback: if the extractor returned no structured user_facts AND the
+    # apply step didn't add any facts, still keep the raw comment around in
+    # user_facts as an audit trail (the previous behaviour).
+    fact_persisted = bool(profile_updates.get("added_facts"))
+    if not fact_persisted:
+        try:
+            append_user_fact(feedback)
+            fact_persisted = True
+        except Exception:
+            fact_persisted = False
 
     delta = (result.score - score_before) if score_before is not None else None
     return jsonify({
@@ -1449,6 +1504,8 @@ def api_rescore_with_feedback(job_id: str):
         "delta": delta,
         "reason": result.reason,
         "fact_persisted": fact_persisted,
+        "profile_updates": profile_updates,
+        "extraction_error": extraction_error,
     })
 
 

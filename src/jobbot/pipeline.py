@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import traceback
-import inspect
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import structlog
@@ -12,10 +11,13 @@ import structlog
 from .applier import apply_to_job
 from .config import Config, Secrets
 from .enrichment.runner import enrich_new_postings
-from .generators import generate_application_package, generate_documents
+from .generators import (
+    generate_application_package,
+    generate_documents,  # noqa: F401 - public monkeypatch seam for older tests/tools.
+)
 from .models import JobPosting, JobStatus
 from .notify import send_digest, send_failure_alert
-from .profile import Profile, load_base_cv, load_profile
+from .profile import load_base_cv, load_profile
 from .scoring import CannotScore, llm_score, llm_score_tailored, passes_heuristic
 from .scrapers import REGISTRY
 from .state import (
@@ -27,6 +29,24 @@ from .state import (
 )
 
 log = structlog.get_logger()
+
+RECENT_POSTING_DAYS = 7
+
+
+def _is_recent_posting(job: JobPosting, *, now: datetime) -> bool:
+    """Return whether a posting should be considered for this run.
+
+    Some portals do not expose a reliable posting timestamp. Those rows stay
+    in the pipeline so the detail-body and scoring gates can judge them. When
+    a timestamp is present, the user's journey treats anything older than the
+    last seven days as stale and not worth persisting.
+    """
+    if job.posted_at is None:
+        return True
+    posted_at = job.posted_at
+    if posted_at.tzinfo is None:
+        posted_at = posted_at.replace(tzinfo=timezone.utc)
+    return posted_at >= now - timedelta(days=RECENT_POSTING_DAYS)
 
 
 def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
@@ -41,6 +61,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
     n_fetched = n_new = n_generated = n_applied = 0
     n_enriched = n_enrichment_failed = 0
     n_filtered = n_scored = n_below_threshold = n_score_failed = 0
+    n_stale_postings = 0
     n_cannot_score = 0
     blocker_counts: Counter[str] = Counter()
     score_values: list[int] = []
@@ -60,6 +81,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                     "duplicates_or_seen_before": max(0, n_fetched - n_new),
                     "enriched": n_enriched,
                     "enrichment_failed": n_enrichment_failed,
+                    "stale_postings": n_stale_postings,
                     "filtered": n_filtered,
                     "cannot_score": n_cannot_score,
                     "scored": n_scored,
@@ -128,7 +150,17 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                     },
                 )
                 try:
-                    fetched = scraper.fetch(query)
+                    fetched_raw = scraper.fetch(query)
+                    fetched = [
+                        job for job in fetched_raw
+                        if _is_recent_posting(job, now=started)
+                    ]
+                    stale_count = len(fetched_raw) - len(fetched)
+                    if stale_count:
+                        n_stale_postings += stale_count
+                        blocker_counts[
+                            f"posting older than {RECENT_POSTING_DAYS} days"
+                        ] += stale_count
                     for job in fetched:
                         all_fetched_by_id[job.id] = job
                     n_fetched += len(fetched)
@@ -313,7 +345,8 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
         # CV + cover letter. Lower-ranked shortlist entries still flow through
         # the loop so they appear in the digest/dashboard, but with docs
         # skipped (the `score < generate_docs_above_score` branch handles
-        # that). User controls run frequency; there is no daily cap.
+        # that). User controls run frequency; there is no daily cap. The
+        # cap is configurable via config.digest.generate_top_n (default 5).
         to_generate.sort(key=lambda triple: triple[1], reverse=True)
         top_n = config.digest.generate_top_n
         if top_n > 0 and len(to_generate) > top_n:
@@ -487,6 +520,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 "duplicates_or_seen_before": max(0, n_fetched - n_new),
                 "enriched": n_enriched,
                 "enrichment_failed": n_enrichment_failed,
+                "stale_postings": n_stale_postings,
                 "filtered": n_filtered,
                 "cannot_score": n_cannot_score,
                 "scored": n_scored,
