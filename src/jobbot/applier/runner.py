@@ -120,7 +120,27 @@ def apply_to_job(
                                confirmation_url=confirmation_url)
 
         except Exception as e:  # noqa: BLE001
-            return ApplyResult(status=JobStatus.APPLY_FAILED, error=str(e))
+            # ALWAYS try to capture a post-failure screenshot so the user
+            # has evidence of what state the page was in at the moment of
+            # error. Without this, a submit click that fired but then
+            # timed out on a post-click wait looks identical to a submit
+            # click that never happened — and we have no way to tell the
+            # user "your application probably went through, here's what
+            # the success page looked like". The screenshot may overwrite
+            # the pre-submit one, which is acceptable: the post-failure
+            # state is strictly more diagnostic.
+            failure_screenshot = None
+            try:
+                if docs and docs.output_dir:
+                    failure_screenshot = str(Path(docs.output_dir) / "apply_failure.png")
+                    page.screenshot(path=failure_screenshot, full_page=True)
+            except Exception:
+                pass
+            return ApplyResult(
+                status=JobStatus.APPLY_FAILED,
+                error=str(e),
+                screenshot_path=failure_screenshot,
+            )
         finally:
             ctx.close()
             browser.close()
