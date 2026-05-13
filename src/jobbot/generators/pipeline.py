@@ -465,9 +465,17 @@ def _call_sonnet(
     job_id: str | None = None,
 ) -> str:
     model = "claude-sonnet-4-6"
+    # max_tokens=4096: the unified application_package output covers cover
+    # letter + full CV (6+ roles) + opus-style sections (Why X, AI-native
+    # stack, Technical environment, Side project, How I would work,
+    # Honest framing, Languages). At 2000 tokens the CV was truncating
+    # mid-sentence inside the second Professional Experience entry. The
+    # opus reference PDF runs ~3500 words of output; 4096 tokens leaves
+    # comfortable headroom without inflating cost meaningfully (Sonnet
+    # output tokens dominate cost, but the per-job add is ~$0.03).
     msg = client.messages.create(
         model=model,
-        max_tokens=2000,
+        max_tokens=4096,
         system=system_prompt,
         messages=[{"role": "user", "content": user_payload}],
     )

@@ -1314,8 +1314,15 @@ def api_applications():
             eml_path = None
             sent_subject = None
             sent_to = r["apply_email"]
+            # Document links the user can click for post-send review.
+            # Stage 4 needs these so the user can see EXACTLY what was
+            # sent (matching the CV + CL + package attached to the email),
+            # not the most-recent on-disk version of those files.
+            cv_pdf_url = cl_pdf_url = package_pdf_url = None
+            cv_html_url = cl_html_url = package_html_url = None
             if r["output_dir"]:
-                p = Path(r["output_dir"]) / "application.eml"
+                out_dir = Path(r["output_dir"])
+                p = out_dir / "application.eml"
                 if p.exists():
                     eml_path = str(p)
                     try:
@@ -1326,6 +1333,21 @@ def api_applications():
                             sent_to = eml_to
                     except Exception:
                         pass
+                # Resolve doc links — same allowlist + path-traversal-safe
+                # route as the shortlist endpoint uses (`/shortlist/<id>/<f>`).
+                # Reusing that route keeps the surface area small.
+                if (out_dir / "cv.pdf").exists():
+                    cv_pdf_url = f"/shortlist/{r['job_id']}/cv.pdf"
+                if (out_dir / "cover_letter.pdf").exists():
+                    cl_pdf_url = f"/shortlist/{r['job_id']}/cover_letter.pdf"
+                if (out_dir / "application_package.pdf").exists():
+                    package_pdf_url = f"/shortlist/{r['job_id']}/application_package.pdf"
+                if (out_dir / "cv.html").exists():
+                    cv_html_url = f"/shortlist/{r['job_id']}/cv.html"
+                if (out_dir / "cover_letter.html").exists():
+                    cl_html_url = f"/shortlist/{r['job_id']}/cover_letter.html"
+                if (out_dir / "application_package.html").exists():
+                    package_html_url = f"/shortlist/{r['job_id']}/application_package.html"
 
             rows_out.append({
                 "job_id": r["job_id"],
@@ -1351,6 +1373,13 @@ def api_applications():
                 "url": r["url"],
                 "has_eml": eml_path is not None,
                 # Don't expose the absolute path — the eml route gates it.
+                # Doc links — let the user review what was actually sent.
+                "cv_pdf_url": cv_pdf_url,
+                "cl_pdf_url": cl_pdf_url,
+                "package_pdf_url": package_pdf_url,
+                "cv_html_url": cv_html_url,
+                "cl_html_url": cl_html_url,
+                "package_html_url": package_html_url,
             })
     return jsonify(rows_out)
 
