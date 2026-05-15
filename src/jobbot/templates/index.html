@@ -1052,12 +1052,14 @@ async function loadShortlist() {
     for (const job of jobs) {
         const card = document.createElement('div');
         card.className = 'job-card bg-white/5 rounded-xl border border-white/10';
-        const cvLink = job.cv_html_url
-            ? `<a class="underline" target="_blank" href="${job.cv_html_url}">cv.html</a>`
-            : '<span class="text-purple-200">no CV</span>';
-        const clLink = job.cover_letter_html_url
-            ? `<a class="underline" target="_blank" href="${job.cover_letter_html_url}">cover_letter.html</a>`
-            : '<span class="text-purple-200">no CL</span>';
+        const cvLinks = [];
+        if (job.cv_pdf_url) cvLinks.push(`<a class="underline font-semibold text-emerald-200" target="_blank" href="${job.cv_pdf_url}">📎 cv.pdf</a>`);
+        if (job.cv_html_url) cvLinks.push(`<a class="underline" target="_blank" href="${job.cv_html_url}">cv.html</a>`);
+        const cvLink = cvLinks.length ? cvLinks.join(' ') : '<span class="text-purple-200">no CV</span>';
+        const clLinks = [];
+        if (job.cover_letter_pdf_url) clLinks.push(`<a class="underline font-semibold text-emerald-200" target="_blank" href="${job.cover_letter_pdf_url}">📎 cover_letter.pdf</a>`);
+        if (job.cover_letter_html_url) clLinks.push(`<a class="underline" target="_blank" href="${job.cover_letter_html_url}">cover_letter.html</a>`);
+        const clLink = clLinks.length ? clLinks.join(' ') : '<span class="text-purple-200">no CL</span>';
         const reasonAttr = escapeHtml(job.reason || '');
         // Before/after match-score block. `score` is the base score (primary
         // CV in the prompt). `score_tailored` is the rescore using the tailored
