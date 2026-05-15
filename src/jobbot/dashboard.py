@@ -1124,6 +1124,7 @@ def api_shortlist():
 
         cv_md = cover_letter_md = ""
         cv_html_path = cl_html_path = None
+        cv_pdf_path = cl_pdf_path = None
         package_html_path = package_pdf_path = None
         if r[8]:
             out = Path(r[8])
@@ -1143,6 +1144,10 @@ def api_shortlist():
                 cv_html_path = str(out / "cv.html")
             if (out / "cover_letter.html").exists():
                 cl_html_path = str(out / "cover_letter.html")
+            if (out / "cv.pdf").exists():
+                cv_pdf_path = str(out / "cv.pdf")
+            if (out / "cover_letter.pdf").exists():
+                cl_pdf_path = str(out / "cover_letter.pdf")
             if (out / "application_package.html").exists():
                 package_html_path = str(out / "application_package.html")
             if (out / "application_package.pdf").exists():
@@ -1205,6 +1210,8 @@ def api_shortlist():
             "cover_letter_md": cover_letter_md,
             "cv_html_url": f"/shortlist/{r[0]}/cv.html" if cv_html_path else None,
             "cover_letter_html_url": f"/shortlist/{r[0]}/cover_letter.html" if cl_html_path else None,
+            "cv_pdf_url": f"/shortlist/{r[0]}/cv.pdf" if cv_pdf_path else None,
+            "cover_letter_pdf_url": f"/shortlist/{r[0]}/cover_letter.pdf" if cl_pdf_path else None,
             # The polished, editorial application package — what gets
             # attached to the outbound email. Linking it from the Stage 3
             # card so the user can review the *final* artefact rather
