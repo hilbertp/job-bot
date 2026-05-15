@@ -193,18 +193,37 @@ def apply_to_job(
                                    dry_run=True, screenshot_path=screenshot_path,
                                    needs_review_reason="dry-run mode")
 
-            # SUPERVISED MODE — the bot pre-fills, the human clicks Send and
-            # handles any CAPTCHA / login. We poll the page state until we
-            # see a success indicator OR the timeout fires. The user is
-            # interacting with a visible browser window all the while.
+            # SUPERVISED MODE — "watch the bot do everything" semantics.
+            # The bot fills the form AND clicks Send. The user is watching
+            # the visible Chrome window and only intervenes if a CAPTCHA
+            # or other gate appears (in which case they solve it in-window;
+            # the bot's success-polling will detect when the page advances
+            # to a thank-you state and record APPLY_SUBMITTED).
+            #
+            # Earlier this mode pre-filled but did NOT click Send; user
+            # corrected the design on 2026-05-15: *"i dont send my self,
+            # the bot needs to send while i watch"*.
             if supervised:
                 timeout_s = config.apply.supervised_timeout_seconds
                 print(
                     f"\n  ⏳ SUPERVISED: form pre-filled at {page.url}.\n"
-                    f"     Switch to the Chrome window, review, solve any\n"
-                    f"     CAPTCHA, and click Send/Submit yourself.\n"
+                    f"     The bot is about to click Send. Watch the Chrome\n"
+                    f"     window — if a CAPTCHA appears, solve it in-place;\n"
+                    f"     the bot will detect the success page and finish.\n"
                     f"     Polling for success up to {timeout_s}s ...\n"
                 )
+                # Bot clicks Send. Any post-click wait inside the adapter
+                # already tolerates timeouts via the success-text wait.
+                try:
+                    confirmation_url = adapter.submit(page)
+                except Exception as submit_err:
+                    # Submit may raise if the button selector misses or
+                    # the page state is unexpected — surface the error
+                    # but keep polling: the user might still be able to
+                    # click Send manually inside the visible window.
+                    print(f"     ! adapter.submit raised: {submit_err}")
+                    confirmation_url = page.url
+
                 import time as _time
                 deadline = _time.monotonic() + timeout_s
                 final_verdict = "unknown"
@@ -229,9 +248,11 @@ def apply_to_job(
                 return ApplyResult(
                     status=JobStatus.APPLY_NEEDS_REVIEW,
                     needs_review_reason=(
-                        "supervised timeout reached without a success "
-                        "indicator on the page. If you DID submit, check "
-                        "your email for confirmation; otherwise re-run."
+                        "supervised: bot clicked Send but no success "
+                        "indicator appeared within the timeout. If a "
+                        "CAPTCHA is on screen and you can solve it, do "
+                        "so — the polling stopped but the page may still "
+                        "complete. Otherwise re-run."
                     ),
                     screenshot_path=screenshot_path,
                     confirmation_url=confirmation_url,
