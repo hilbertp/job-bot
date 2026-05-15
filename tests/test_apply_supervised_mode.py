@@ -64,25 +64,36 @@ def test_runner_branches_on_supervised_flag():
     )
 
 
-def test_runner_supervised_does_not_call_adapter_submit():
-    """The supervised path must NOT call `adapter.submit(page)` — the
-    user does that click manually in the visible browser. If a refactor
-    accidentally re-introduces the auto-click, supervised mode stops
-    being supervised."""
+def test_runner_supervised_clicks_submit_and_polls_for_success():
+    """Supervised mode = "watch the bot do everything." The bot fills,
+    the bot clicks Send, the user just watches. If a CAPTCHA appears,
+    the user solves it in the visible window during the post-submit
+    polling window — the bot detects the eventual success page.
+
+    Earlier this mode skipped the submit click and waited for the
+    human; user corrected the design on 2026-05-15: *"i dont send my
+    self, the bot needs to send while i watch"*.
+    """
     from jobbot.applier import runner as runner_mod
     src = inspect.getsource(runner_mod)
-    # Find the supervised block (between the `if supervised:` marker and
-    # the next `confirmation_url = adapter.submit(page)` line, which is
-    # the headless path's submit call).
-    sup_marker = src.index("if supervised:")
-    headless_submit = src.index("confirmation_url = adapter.submit(page)", sup_marker)
-    supervised_block = src[sup_marker:headless_submit]
-    assert "adapter.submit" not in supervised_block, (
-        "supervised mode must not call adapter.submit — the human is "
-        "responsible for the final click"
+    # Slice the supervised block. The marker line is `if supervised:`
+    # (there are two — the early branch for browser launch + the
+    # post-fill branch); we want the SECOND one (the submit-and-poll
+    # block). The headless path's own `adapter.submit` call is the
+    # next occurrence after the supervised block ends.
+    first_if = src.index("if supervised:")
+    second_if = src.index("if supervised:", first_if + 1)
+    end_of_block = src.index("\n            # ", second_if + 1)
+    block = src[second_if:end_of_block]
+    # Bot must call adapter.submit inside the supervised block.
+    assert "adapter.submit" in block, (
+        "supervised mode now drives the submit click itself — the bot "
+        "fills AND clicks Send while the user watches"
     )
-    # And the supervised block must poll for success.
-    assert "_verify_post_submit" in supervised_block, (
-        "supervised mode must poll _verify_post_submit to detect when "
-        "the human-driven submission lands"
+    # Bot must poll for success (so a CAPTCHA-blocked submit is not
+    # incorrectly recorded as APPLY_SUBMITTED).
+    assert "_verify_post_submit" in block, (
+        "supervised mode must poll _verify_post_submit after the click "
+        "so a CAPTCHA wall or unknown post-submit state surfaces as "
+        "NEEDS_REVIEW instead of being falsely claimed as submitted"
     )
