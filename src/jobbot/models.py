@@ -21,6 +21,12 @@ class JobStatus(str, Enum):  # str-mixin for sqlite/JSON compatibility, works on
     APPLY_SUBMITTED = "apply_submitted"
     APPLY_NEEDS_REVIEW = "apply_needs_review"
     APPLY_FAILED = "apply_failed"
+    # Listing was pulled from the market after we scored it. The apply
+    # URL no longer reaches the application form (redirects to a generic
+    # careers index, returns 403/404, or shows an empty results page).
+    # Surfaced in the dashboard with an ⏱ "expired" pill so the user
+    # knows to move on instead of trying to apply.
+    LISTING_EXPIRED = "listing_expired"
     EMPLOYER_RECEIVED = "employer_received"
     WAITING_RESPONSE = "waiting_response"
     REJECTED = "rejected"

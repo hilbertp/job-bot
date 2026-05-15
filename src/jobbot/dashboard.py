@@ -1182,8 +1182,15 @@ def api_shortlist():
         application_status = r[18]
         applied_at = r[19]
         applied_dry_run = bool(r[20]) if r[20] is not None else False
+        # `r[4]` = seen_jobs.status. LISTING_EXPIRED is set by the runner
+        # (or a periodic check) when the apply_url no longer reaches a
+        # job form — the role was pulled. Surface as a dedicated state
+        # so the Stage 3 card shows an ⏱ pill, distinct from "applied"
+        # / "needs review" / "failed".
+        seen_status = r[4]
         applied_state = (
-            "applied"            if applied_submitted and not applied_dry_run
+            "expired"            if seen_status == "listing_expired"
+            else "applied"        if applied_submitted and not applied_dry_run
             else "dry_run"        if applied_submitted and applied_dry_run
             else "needs_review"   if application_status == "apply_needs_review"
             else "failed"         if application_status == "apply_failed"

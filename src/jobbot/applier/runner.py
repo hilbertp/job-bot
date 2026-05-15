@@ -76,6 +76,55 @@ def _verify_post_submit(page) -> str:
     return "unknown"
 
 
+# URL path patterns that indicate a job listing was pulled. When the
+# apply_url redirects to one of these (or matches one of them directly),
+# the listing is no longer accepting applications. Consensys's Greenhouse
+# 'jobs/{id}' page redirects to `consensys.io/open-roles` once a role
+# closes; same pattern with `/careers`, `/jobs/search`, `/positions`,
+# generic 404 pages, etc.
+_EXPIRED_URL_PATTERNS = (
+    "/open-roles",
+    "/openings",
+    "/careers/index",
+    "/jobs/search",
+    "/jobs/all",
+    "/job-search",
+    "/job-not-found",
+    "/job_expired",
+    "expired",
+    "no-longer-available",
+    "404",
+)
+
+
+def _is_expired_listing(final_url: str, response_status: int) -> tuple[bool, str]:
+    """Return (is_expired, reason) for a listing whose apply_url no longer
+    resolves to an application form. Two signals:
+
+      1. HTTP 403 / 404 / 410 on the apply_url (the job was deleted).
+      2. The URL after redirects lands on a known "generic" path —
+         /open-roles, /careers/index, /jobs/search, etc. — meaning the
+         specific posting redirected to the company's hiring index.
+
+    Both signals are strong; if either fires the runner should NOT try
+    to fill any form and should mark the row LISTING_EXPIRED so the
+    dashboard surfaces an ⏱ pill.
+    """
+    if response_status in (403, 404, 410):
+        return True, f"HTTP {response_status} from apply_url"
+    if final_url:
+        lower = final_url.lower()
+        for needle in _EXPIRED_URL_PATTERNS:
+            if needle in lower:
+                # Avoid false positives on /jobs/{id} URLs that legitimately
+                # contain the substring 'jobs' — we require a generic
+                # PATH segment, not a numeric job-id suffix.
+                if needle == "404" and "/404" not in lower:
+                    continue
+                return True, f"apply_url redirected to a generic page ({final_url})"
+    return False, ""
+
+
 def _load_adapters():
     """Lazy — only when auto-apply actually runs (avoids Playwright import cost).
 
@@ -122,6 +171,26 @@ def apply_to_job(
     except ImportError:
         return ApplyResult(status=JobStatus.APPLY_NEEDS_REVIEW,
                            needs_review_reason="playwright not installed; run `playwright install chromium`")
+
+    # PRE-FLIGHT: is the listing still live? An HTTP HEAD against the
+    # apply_url is cheap and saves us launching Chromium / consuming a
+    # supervised slot when the role has been pulled. Detects 403 / 404 /
+    # 410 directly, and redirect-to-generic-careers via the final URL.
+    try:
+        import httpx
+        with httpx.Client(follow_redirects=True, timeout=10) as client:
+            head = client.head(str(job.apply_url))
+            expired, reason = _is_expired_listing(str(head.url), head.status_code)
+            if expired:
+                return ApplyResult(
+                    status=JobStatus.LISTING_EXPIRED,
+                    needs_review_reason=f"listing expired — {reason}",
+                )
+    except Exception:
+        # Network blip on the HEAD shouldn't kill the apply; only mark
+        # expired when we have positive evidence. Carry on to the
+        # browser launch.
+        pass
 
     captcha = get_captcha_solver(secrets, config)
     otp = OtpFetcher(secrets, config)
@@ -170,6 +239,17 @@ def apply_to_job(
             # same behaviour for static/inline forms.
             page.goto(str(job.apply_url), wait_until="domcontentloaded", timeout=30_000)
             page.wait_for_timeout(1500)  # let SPA framework settle
+
+            # POST-NAVIGATE EXPIRED CHECK — some ATSes redirect via JS
+            # after the initial HTML loads (Greenhouse 7551395 → consensys.io/open-roles).
+            # The HEAD-based pre-flight catches HTTP-level redirects; this
+            # catches the JS-level ones.
+            expired_now, expired_reason = _is_expired_listing(page.url, 200)
+            if expired_now:
+                return ApplyResult(
+                    status=JobStatus.LISTING_EXPIRED,
+                    needs_review_reason=f"listing expired — {expired_reason}",
+                )
 
             adapter = next((a for a in ADAPTERS if a.matches(str(job.apply_url), page)), None)
             if adapter is None:
