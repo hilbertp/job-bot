@@ -1,4 +1,4 @@
-"""2Captcha — paid solver service. ~$2.99 per 1000 reCAPTCHAs."""
+"""2Captcha, paid solver service. ~$2.99 per 1000 reCAPTCHAs."""
 from __future__ import annotations
 
 import time

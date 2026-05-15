@@ -2,11 +2,11 @@
 
 Two callers come through here:
 
-  1. `parse_posting_salary(text)` — scan the job description for any
+  1. `parse_posting_salary(text)`, scan the job description for any
      stated salary range the EMPLOYER published. Returns a normalised
      `(low, high, currency, period)` tuple or `None` if nothing matched.
 
-  2. `apply_salary_for(job, profile)` — the resolver the adapters call.
+  2. `apply_salary_for(job, profile)`, the resolver the adapters call.
      Decides what number to write into the form's salary field:
        - If the posting stated a range → use the LOW END in the posting's
          own currency (so we match the field's expected unit and don't
@@ -52,7 +52,7 @@ class ApplySalary:
         return round(self.amount_per_year / 12)
 
     def for_yearly_field(self) -> str:
-        """e.g. '166000 USD/year' — for free-text salary fields."""
+        """e.g. '166000 USD/year', for free-text salary fields."""
         return f"{self.amount_per_year} {self.currency}/year"
 
     def for_monthly_field(self) -> int:
@@ -108,9 +108,16 @@ def parse_posting_salary(text: str) -> ParsedSalary | None:
         return None
     t = text
 
-    # 1) "$166K - $208K" / "€80K – €100K" / "USD 100,000 - 150,000"
+    # 1) "$166K - $208K" / "€80K – €100K" / "$166K — $208K" / "USD 100,000 - 150,000"
+    # The character class includes hyphen-minus, en-dash, em-dash, "to".
+    # These are RECOGNISERS of separator characters in posting text — the
+    # em-dash here is read, not written, so the "never generate em-dashes"
+    # rule doesn't apply. The previous em-dash sweep stripped this and
+    # broke single-amount parsing because the comma got mis-treated as a
+    # range separator inside "150,000".
+    _SEP = "[-–—]|\\sto\\s"
     for pat in (
-        re.compile(rf"({_CUR_BEFORE})\s*{_MONEY}\s*[-–—to]+\s*(?:{_CUR_BEFORE})?\s*{_MONEY}", re.IGNORECASE),
+        re.compile(rf"({_CUR_BEFORE})\s*{_MONEY}\s*(?:{_SEP})\s*(?:{_CUR_BEFORE})?\s*{_MONEY}", re.IGNORECASE),
     ):
         m = pat.search(t)
         if m:
@@ -122,7 +129,7 @@ def parse_posting_salary(text: str) -> ParsedSalary | None:
             return ParsedSalary(low, high, cur, _detect_period(t, m.start(), m.end()))
 
     # 2) "80,000 - 100,000 EUR / year"
-    pat = re.compile(rf"{_MONEY}\s*[-–—to]+\s*{_MONEY}\s+({_CUR_AFTER})", re.IGNORECASE)
+    pat = re.compile(rf"{_MONEY}\s*(?:{_SEP})\s*{_MONEY}\s+({_CUR_AFTER})", re.IGNORECASE)
     m = pat.search(t)
     if m:
         cur = _CURRENCY_SYMBOL.get(m.group(5).upper(), m.group(5).upper())
@@ -146,7 +153,7 @@ def parse_posting_salary(text: str) -> ParsedSalary | None:
 def _detect_period(text: str, span_start: int, span_end: int) -> str:
     """Look at the words around the salary span to classify year vs month.
 
-    Default to 'year' — the dominant convention in job postings. Only
+    Default to 'year', the dominant convention in job postings. Only
     flip to 'month' when explicit ('per month', '/mo', etc.) within ~50
     chars of the matched figure.
     """
@@ -171,7 +178,7 @@ def apply_salary_for(
     if parsed is not None:
         # Use the employer's LOW END in the employer's own currency.
         # If they quoted monthly, annualise so the ApplySalary contract
-        # always carries a yearly number — adapters that want monthly
+        # always carries a yearly number, adapters that want monthly
         # call `.for_monthly_field()`.
         amount_year = parsed.low * 12 if parsed.period == "month" else parsed.low
         return ApplySalary(

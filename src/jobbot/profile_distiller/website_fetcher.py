@@ -9,10 +9,10 @@ considered static; we don't auto-refresh on every distiller run.
 Behavior:
 - Start at https://true-north.berlin and crawl same-domain links breadth-first.
 - Skip non-HTML resources (.pdf, images, .css, .js).
-- Convert each HTML page to Markdown via markdownify (or html2text — Copilot's
+- Convert each HTML page to Markdown via markdownify (or html2text, Copilot's
   pick).
 - Write to `data/corpus/website/<slug>.md`. Slug = sanitized URL path.
-- Overwrite existing files unconditionally — the website is the source of truth.
+- Overwrite existing files unconditionally, the website is the source of truth.
 - Be polite: 1-second delay between requests, real User-Agent.
 - Cap at 50 pages per run to avoid surprises.
 - Print a summary: N pages fetched, total bytes.

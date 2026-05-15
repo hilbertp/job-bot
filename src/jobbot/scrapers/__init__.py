@@ -1,4 +1,4 @@
-"""Scrapers — one module per source. All implement BaseScraper.fetch()."""
+"""Scrapers, one module per source. All implement BaseScraper.fetch()."""
 from .base import BaseScraper, SearchQuery
 from .registry import REGISTRY, get_scraper
 

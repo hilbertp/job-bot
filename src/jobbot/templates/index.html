@@ -23,7 +23,7 @@
             <h3 class="text-[11px] uppercase font-semibold tracking-wider text-purple-200">{{ stage.label }}</h3>
             {% if stage.pending_milestone %}
             <span class="text-[10px] font-semibold tracking-wide bg-purple-400/30 border border-purple-200/40 text-purple-100 px-1.5 py-0.5 rounded"
-                  title="Pending Milestone — count will stay 0 until {{ stage.pending_milestone }} ships."
+                  title="Pending Milestone, count will stay 0 until {{ stage.pending_milestone }} ships."
                   data-funnel-pending-milestone="{{ stage.pending_milestone }}">{{ stage.pending_milestone }}</span>
             {% endif %}
         </div>
@@ -43,8 +43,8 @@
         <div class="flex flex-wrap items-baseline gap-3">
             <h2 class="text-xl font-bold">Stage 1: Hits per Portal</h2>
             <div class="text-xs text-purple-200 flex flex-wrap gap-4">
-                <span>Hits <span id="stage1-total-hits" class="text-purple-100 font-semibold">—</span></span>
-                <span>Portals <span id="stage1-portals-count" class="text-purple-100 font-semibold">—</span></span>
+                <span>Hits <span id="stage1-total-hits" class="text-purple-100 font-semibold">,</span></span>
+                <span>Portals <span id="stage1-portals-count" class="text-purple-100 font-semibold">,</span></span>
             </div>
         </div>
         <span class="text-base text-purple-100 select-none" data-panel-toggle aria-controls="stage1-panel-body" aria-expanded="false" aria-hidden="true">
@@ -68,8 +68,8 @@
                 <tfoot>
                     <tr id="portal-counts-total" class="border-t border-white/20 font-semibold">
                         <td class="pt-3">Total</td>
-                        <td class="pt-3">—</td>
-                        <td class="pt-3">—</td>
+                        <td class="pt-3">,</td>
+                        <td class="pt-3">,</td>
                     </tr>
                 </tfoot>
             </table>
@@ -82,8 +82,8 @@
         <div class="flex flex-wrap items-baseline gap-3">
             <h2 class="text-xl font-bold">Stage 2: PO / PM Shortlist</h2>
             <div class="text-xs text-purple-200 flex flex-wrap gap-4">
-                <span><span id="stage2-row-count" class="text-purple-100 font-semibold">—</span> rows</span>
-                <span>Top score <span id="stage2-top-score" class="text-purple-100 font-semibold">—</span></span>
+                <span><span id="stage2-row-count" class="text-purple-100 font-semibold">,</span> rows</span>
+                <span>Top score <span id="stage2-top-score" class="text-purple-100 font-semibold">,</span></span>
             </div>
         </div>
         <span class="text-base text-purple-100 select-none" data-panel-toggle aria-controls="stage2-panel-body" aria-expanded="false" aria-hidden="true">
@@ -98,8 +98,8 @@
                     <tr class="text-purple-200 border-b border-white/10">
                         <th class="pb-2 whitespace-nowrap relative" data-col-key="score" data-stage1-sort="score">Score</th>
                         <th class="pb-2 relative" data-col-key="title" data-stage1-sort="title">Position Title</th>
-                        <th class="pb-2 whitespace-nowrap relative" data-col-key="where" data-stage1-sort="company" title="Company · Portal · Apply via — stacked. Click to sort by company.">Where</th>
-                        <th class="pb-2 whitespace-nowrap relative" data-col-key="details" data-stage1-sort="expected_salary" title="Salary · Seniority · Description scraped — stacked. Click to sort by salary.">Details</th>
+                        <th class="pb-2 whitespace-nowrap relative" data-col-key="where" data-stage1-sort="company" title="Company · Portal · Apply via, stacked. Click to sort by company.">Where</th>
+                        <th class="pb-2 whitespace-nowrap relative" data-col-key="details" data-stage1-sort="expected_salary" title="Salary · Seniority · Description scraped, stacked. Click to sort by salary.">Details</th>
                         <th class="pb-2 w-full relative" data-col-key="reason">Scoring Reason</th>
                         <th class="pb-2 whitespace-nowrap relative" data-col-key="disagree">Disagree?</th>
                         <th class="pb-2 whitespace-nowrap" data-col-key="link">Link</th>
@@ -118,9 +118,9 @@
         <div class="flex flex-wrap items-baseline gap-3">
             <h2 class="text-xl font-bold">Stage 3: Tailored Shortlist (score ≥ 70)</h2>
             <div class="text-xs text-purple-200 flex flex-wrap gap-4">
-                <span><span id="stage3-job-count" class="text-purple-100 font-semibold">—</span> jobs</span>
-                <span><span id="stage3-rescored-count" class="text-purple-100 font-semibold">—</span> rescored</span>
-                <span>Avg Δ <span id="stage3-avg-delta" class="text-purple-100 font-semibold">—</span></span>
+                <span><span id="stage3-job-count" class="text-purple-100 font-semibold">,</span> jobs</span>
+                <span><span id="stage3-rescored-count" class="text-purple-100 font-semibold">,</span> rescored</span>
+                <span>Avg Δ <span id="stage3-avg-delta" class="text-purple-100 font-semibold">,</span></span>
             </div>
         </div>
         <span class="text-base text-purple-100 select-none" data-panel-toggle aria-controls="stage3-panel-body" aria-expanded="false" aria-hidden="true">
@@ -140,9 +140,9 @@
                 <option value="company">Company</option>
                 <option value="source">Portal</option>
             </select>
-            <button id="shortlist-sort-dir" type="button" aria-label="toggle sort direction" class="bg-white/10 border border-white/20 rounded px-2 py-1 hover:bg-white/20" data-dir="desc" title="descending — click to flip">▼ desc</button>
+            <button id="shortlist-sort-dir" type="button" aria-label="toggle sort direction" class="bg-white/10 border border-white/20 rounded px-2 py-1 hover:bg-white/20" data-dir="desc" title="descending, click to flip">▼ desc</button>
         </div>
-        <div id="shortlist-empty" class="hidden py-3 text-purple-200">No jobs at score ≥ 70 yet — re-run the pipeline.</div>
+        <div id="shortlist-empty" class="hidden py-3 text-purple-200">No jobs at score ≥ 70 yet, re-run the pipeline.</div>
         <div id="shortlist-body" class="space-y-3"></div>
     </div>
 </section>
@@ -181,9 +181,9 @@
                 <div class="text-2xl font-bold">{{ outcome_counts.interview }}</div>
             </div>
         </div>
-        <p class="text-sm text-purple-100 mb-3">Every application on file — bot-sent and manually-marked. Filter by bucket; click a state pill on a card to advance the proof ladder (received → replied → interview / rejected / bounced). Click <span class="font-mono">.eml</span> to inspect the exact message that left the mailbox.</p>
+        <p class="text-sm text-purple-100 mb-3">Every application on file, bot-sent and manually-marked. Filter by bucket; click a state pill on a card to advance the proof ladder (received → replied → interview / rejected / bounced). Click <span class="font-mono">.eml</span> to inspect the exact message that left the mailbox.</p>
         <div class="flex flex-wrap items-center gap-2 text-xs mb-4" data-outbound-filters>
-            <span id="outbound-pipeline-count" class="text-purple-200 mr-2">— applications</span>
+            <span id="outbound-pipeline-count" class="text-purple-200 mr-2">, applications</span>
             <button data-filter="all"        class="px-2 py-1 rounded bg-white/20 text-purple-100 hover:bg-white/30">All</button>
             <button data-filter="waiting"    class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">⏳ Waiting</button>
             <button data-filter="received"   class="px-2 py-1 rounded bg-white/10 text-purple-200 hover:bg-white/20">📨 Received</button>
@@ -276,7 +276,7 @@ function setPanelExpanded(button, body, expanded) {
     body.classList.toggle('hidden', !expanded);
     button.setAttribute('aria-expanded', String(expanded));
     button.title = expanded ? 'Collapse panel' : 'Expand panel';
-    // Mirror the toggle state onto the header itself — the header carries
+    // Mirror the toggle state onto the header itself, the header carries
     // role="button" + tabindex=0 so screen readers and keyboard users see
     // it as the primary control. The inner chevron button stays as a
     // visual affordance and its click bubbles up to the header handler.
@@ -306,7 +306,7 @@ function initCollapsiblePanels() {
         };
         if (header) {
             // The whole header is the click + keyboard target. The chevron
-            // button stays decorative — its clicks bubble up to this handler,
+            // button stays decorative, its clicks bubble up to this handler,
             // so we never double-fire.
             header.addEventListener('click', toggle);
             header.addEventListener('keydown', (e) => {
@@ -339,9 +339,9 @@ function formatElapsed(sec) {
 }
 
 function formatAgo(ts) {
-    if (!ts) return '—';
+    if (!ts) return ',';
     const finishedMs = Date.parse(ts);
-    if (Number.isNaN(finishedMs)) return '—';
+    if (Number.isNaN(finishedMs)) return ',';
     const ageSec = Math.max(0, Math.floor((Date.now() - finishedMs) / 1000));
     if (ageSec < 60) return 'just now';
     if (ageSec < 3600) return `${Math.floor(ageSec / 60)}m ago`;
@@ -372,8 +372,8 @@ function updateStage1HeaderBadges(hits) {
     if (!totalEl || !portalsEl) return;
     const perPortal = (hits && hits.per_portal) || {};
     const portalsUsed = Object.values(perPortal).filter(n => Number(n) > 0).length;
-    totalEl.textContent = hits && typeof hits.total === 'number' ? hits.total : '—';
-    portalsEl.textContent = portalsUsed || (Object.keys(perPortal).length || '—');
+    totalEl.textContent = hits && typeof hits.total === 'number' ? hits.total : ',';
+    portalsEl.textContent = portalsUsed || (Object.keys(perPortal).length || ',');
 }
 
 async function loadStage1Data() {
@@ -432,7 +432,7 @@ async function loadStage1Data() {
     if (rowCountEl) rowCountEl.textContent = shortlist.length;
     if (topScoreEl) {
         const scored = shortlist.map(j => j.score).filter(s => typeof s === 'number');
-        topScoreEl.textContent = scored.length ? Math.max(...scored) : '—';
+        topScoreEl.textContent = scored.length ? Math.max(...scored) : ',';
     }
     if (!shortlist.length) {
         tbody.innerHTML = '<tr><td colspan="7" class="py-3">No PO/PM titles in latest run.</td></tr>';
@@ -448,9 +448,9 @@ async function loadStage1Data() {
             return `<span class="text-green-300" title="full body scraped from detail page">✓ yes${wc}</span>`;
         }
         if (job.description_scraped === false) {
-            return '<span class="text-amber-300" title="detail page fetch produced no usable body — see logs">✗ no</span>';
+            return '<span class="text-amber-300" title="detail page fetch produced no usable body, see logs">✗ no</span>';
         }
-        return '<span class="text-purple-200" title="row predates enrichment phase">—</span>';
+        return '<span class="text-purple-200" title="row predates enrichment phase">,</span>';
     }
 
     function whereCell(job) {
@@ -458,7 +458,7 @@ async function loadStage1Data() {
         // in one column. The Scoring Reason cell next to it is multi-line
         // anyway, so we eat its vertical space rather than steal three
         // columns' worth of horizontal width.
-        const company = (job.company || '—').replace(/"/g, '&quot;');
+        const company = (job.company || ',').replace(/"/g, '&quot;');
         const portal = (job.source || '').replace(/"/g, '&quot;');
         const channel = applyChannelCell(job);
         return `
@@ -518,7 +518,7 @@ async function loadStage1Data() {
     // 4-axis pill row + a one-line narrative.
     //
     // Output format matches the user-spec:
-    //   `Role 82 | Skills 85 | Location 25 | Seniority 78 — <reason>`
+    //   `Role 82 | Skills 85 | Location 25 | Seniority 78, <reason>`
     //
     // When status is 'filtered' OR score < 70 (didn't make shortlist),
     // the narrative is prefixed "Discarded:" so a false negative jumps
@@ -531,7 +531,7 @@ async function loadStage1Data() {
         const status = (job.status || '').toLowerCase();
 
         // Strip the legacy "role=X, skills=Y, location=Z, seniority=W;" prefix
-        // from the reason text — the structured pills above will surface those.
+        // from the reason text, the structured pills above will surface those.
         const cleanReason = reason
             .replace(/^role\s*=\s*\d+\s*,\s*skills\s*=\s*\d+\s*,\s*location\s*=\s*\d+\s*,\s*seniority\s*=\s*\d+\s*;?\s*/i, '')
             .trim();
@@ -563,9 +563,9 @@ async function loadStage1Data() {
 
         const titleAttr = (reason || '').replace(/"/g, '&quot;');
         if (!pills && !narrativeWithPrefix) {
-            return '<span class="text-purple-300">—</span>';
+            return '<span class="text-purple-300">,</span>';
         }
-        const dash = (pills && narrativeWithPrefix) ? '<span class="text-purple-400 mx-2">—</span>' : '';
+        const dash = (pills && narrativeWithPrefix) ? '<span class="text-purple-400 mx-2">,</span>' : '';
         const narrativeHtml = narrativeWithPrefix
             ? `<span class="text-purple-200" title="${titleAttr}">${narrativeWithPrefix}</span>`
             : '';
@@ -574,7 +574,7 @@ async function loadStage1Data() {
 
     function scoreCell(job) {
         const s = job.score;
-        if (s === null || s === undefined) return '<span class="text-purple-200">—</span>';
+        if (s === null || s === undefined) return '<span class="text-purple-200">,</span>';
         const status = (job.status || '').toLowerCase();
         if (status === 'scraped') return '<span class="text-purple-200" title="awaiting scoring">pending</span>';
         if (status === 'filtered') return `<span class="text-red-300" title="${(job.reason || 'heuristic filter').replace(/"/g, '&quot;')}">filtered</span>`;
@@ -597,7 +597,7 @@ async function loadStage1Data() {
         // submits, JS calls /api/jobs/<id>/rescore-with-feedback and the
         // row's score cell flips to "old → new" on success.
         const jobId = (job.id || '').replace(/"/g, '&quot;');
-        if (!jobId) return '<span class="text-purple-400">—</span>';
+        if (!jobId) return '<span class="text-purple-400">,</span>';
         const existing = (job.user_feedback || '').replace(/"/g, '&quot;');
         const placeholder = "what did the bot miss?";
         const buttonLabel = existing ? "edit comment" : "comment";
@@ -701,7 +701,7 @@ function wireDisagreeButtons(root) {
                 const learnedSuffix = learned.length
                     ? ` learned: ${learned.join('; ')}`
                     : (body.fact_persisted ? ' fact saved.' : ' (no profile update.)');
-                statusEl.textContent = `rescored: ${body.score_before ?? '—'} → ${body.score_after}${arrow}.${learnedSuffix}`;
+                statusEl.textContent = `rescored: ${body.score_before ?? ','} → ${body.score_after}${arrow}.${learnedSuffix}`;
                 statusEl.className = 'text-green-300';
                 // Reload the panel so the score cell + sort reflect the new score.
                 if (typeof loadStage1Data === 'function') {
@@ -721,7 +721,7 @@ function wireDisagreeButtons(root) {
 // Stage 2 column sort: any th with data-stage1-sort toggles between asc/desc
 // on that key. Channel sort orders by automatability (email→form→external→manual).
 // Default to score-descending so the highest-fit jobs land at the top on
-// every page load — the main reason a user opens this panel.
+// every page load, the main reason a user opens this panel.
 let stage1SortKey = 'score';
 let stage1SortDir = -1; // 1 = ascending, -1 = descending
 const APPLY_CHANNEL_ORDER = { email: 0, form: 1, external: 2, manual: 3 };
@@ -752,7 +752,7 @@ function stage1SortRows(rows) {
 
 function paintStage1SortArrow() {
     // Manage the arrow as a dedicated <span data-sort-arrow> child so we
-    // never touch the <th>'s textContent — that wipes the entire DOM
+    // never touch the <th>'s textContent, that wipes the entire DOM
     // subtree, which kills siblings like the resize handle.
     document.querySelectorAll('th[data-stage1-sort]').forEach(other => {
         const existing = other.querySelector('[data-sort-arrow]');
@@ -776,7 +776,7 @@ function paintStage1SortArrow() {
 
 // When the user drags a resize handle, mouseup happens outside the
 // handle (often outside the <th> entirely), so the synthesized `click`
-// fires on the lowest common ancestor — the <th> itself — and would
+// fires on the lowest common ancestor, the <th> itself, and would
 // trigger a spurious sort. The resizer's onUp sets this flag for a
 // short window; the sort handler bails out while it's set.
 let stage2ResizeJustHappened = false;
@@ -820,7 +820,7 @@ paintStage1SortArrow();
 // visible, we capture those natural widths, apply them as inline styles,
 // and switch the table to `table-fixed`. Why: in `table-auto`, setting
 // `style.width` on a <th> with `whitespace-nowrap` content is treated as
-// a preferred *minimum* — the column refuses to shrink below content
+// a preferred *minimum*, the column refuses to shrink below content
 // width, so dragging the handle visually does nothing. With
 // `table-fixed`, widths are strictly respected and resize works in both
 // directions.
@@ -878,7 +878,7 @@ function attachStage2ColumnResizers() {
         });
         // Block the synthesized click after mouseup from bubbling up to
         // the <th>'s sort handler. mousedown's stopPropagation only
-        // stops mousedown — click is a separate event that still fires.
+        // stops mousedown, click is a separate event that still fires.
         handle.addEventListener('click', (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
@@ -923,7 +923,7 @@ function attachStage2ColumnResizers() {
                 delete handle.dataset.dragging;
                 handle.style.background = idleBg;
                 document.body.style.cursor = '';
-                // Persist both widths — dragged column and its right neighbour.
+                // Persist both widths, dragged column and its right neighbour.
                 const final = parseInt(th.style.width, 10);
                 if (Number.isFinite(final) && final > 0) {
                     localStorage.setItem(STAGE2_COL_LS_PREFIX + key, String(final));
@@ -971,7 +971,7 @@ lockStage2ColumnWidths();
             });
         }
     }
-    // Also watch for any size change on the body — covers async data
+    // Also watch for any size change on the body, covers async data
     // arrival, font swaps, viewport resize, etc. Bails out once locked.
     if (typeof ResizeObserver !== 'undefined') {
         const obs = new ResizeObserver(() => {
@@ -994,7 +994,7 @@ function escapeHtml(s) {
 }
 
 // Stage 3 shortlist sort state. "tailored_or_score" picks the tailored
-// rescore when present, else falls back to the base score — i.e. "best
+// rescore when present, else falls back to the base score, i.e. "best
 // known fit", which is what the user usually wants to see at the top.
 let shortlistSortKey = 'tailored_or_score';
 let shortlistSortDir = -1;
@@ -1041,7 +1041,7 @@ async function loadShortlist() {
             const sign = avg > 0 ? '+' : '';
             avgDeltaEl.textContent = `${sign}${avg.toFixed(1)}`;
         } else {
-            avgDeltaEl.textContent = '—';
+            avgDeltaEl.textContent = ',';
         }
     }
     if (!jobs.length) {
@@ -1065,19 +1065,19 @@ async function loadShortlist() {
         // CV in the prompt). `score_tailored` is the rescore using the tailored
         // CV + cover letter the generator just produced. `score_delta` is the
         // lift; positive = tailoring helps.
-        const baseScore = job.score ?? '—';
+        const baseScore = job.score ?? ',';
         const tailoredScore = job.score_tailored;
         const delta = job.score_delta;
         const hasTailored = tailoredScore !== null && tailoredScore !== undefined;
         // Once a tailored score exists, the base score is no longer the current
-        // best estimate of fit — strike it through so the eye lands on the new
+        // best estimate of fit, strike it through so the eye lands on the new
         // (tailored) number. Before tailoring, the base score is the only
         // signal and stays unstruck.
         const baseScoreClasses = hasTailored
             ? 'text-2xl font-bold text-purple-300/70 line-through decoration-2'
             : 'text-2xl font-bold text-green-300';
         const baseScoreTitle = hasTailored
-            ? 'pre-tailoring base score (primary CV) — superseded by the tailored score'
+            ? 'pre-tailoring base score (primary CV), superseded by the tailored score'
             : 'base score (primary CV)';
         let scorePillsHtml = `<span class="${baseScoreClasses}" title="${baseScoreTitle}">${baseScore}</span>`;
         if (hasTailored) {
@@ -1108,12 +1108,16 @@ async function loadShortlist() {
             // "needs your attention" (red). User feedback 2026-05-15:
             // "if its gone, mark with expired pill in stage 3 and move
             // to next project".
+            // Pill colour scheme per user feedback 2026-05-15:
+            //   applied → BLUE (committed, awaiting reply)
+            //   expired → YELLOW (informational, role is gone)
+            //   dry_run / needs_review / failed → unchanged tones
             const cls = job.applied_state === 'applied'
-                ? 'bg-emerald-500/30 border-emerald-300/40 text-emerald-100'
+                ? 'bg-blue-500/30 border-blue-300/40 text-blue-100'
                 : job.applied_state === 'dry_run'
                     ? 'bg-amber-400/25 border-amber-300/40 text-amber-100'
                     : job.applied_state === 'expired'
-                        ? 'bg-zinc-500/30 border-zinc-400/40 text-zinc-100'
+                        ? 'bg-yellow-400/30 border-yellow-300/50 text-yellow-100'
                         : 'bg-red-500/25 border-red-300/40 text-red-100';
             const label = job.applied_state === 'applied'
                 ? '✓ applied'
@@ -1125,12 +1129,12 @@ async function loadShortlist() {
                             ? '⚠ needs review'
                             : '✗ apply failed';
             const titleAttr = job.applied_at
-                ? `${label.replace(/[✓✗⚠⏱] /, '')} — ${escapeHtml(job.applied_at)}`
+                ? `${label.replace(/[✓✗⚠⏱] /, '')}, ${escapeHtml(job.applied_at)}`
                 : label;
             appliedPill = `<span class="text-xs px-2 py-1 rounded border ${cls}" title="${titleAttr}">${label}</span>`;
         }
         // Inline apply-route chip. The header surfaces ONLY a route that
-        // the user can actually click — never a paywalled aggregator URL.
+        // the user can actually click, never a paywalled aggregator URL.
         // The server-side `usable_apply_route()` decides between:
         //   - "url":     canonical employer URL → green "↗ open posting"
         //   - "email":   real apply email      → blue "📧 apply via email"
@@ -1144,33 +1148,51 @@ async function loadShortlist() {
             const email = escapeHtml(job.apply_route_value);
             postingLink = `<a class="text-xs px-2 py-1 rounded bg-blue-500/20 border border-blue-400/30 text-blue-100 hover:bg-blue-500/30 underline-offset-2 hover:underline whitespace-nowrap" href="mailto:${email}" title="${email}">📧 apply via ${email}</a>`;
         } else {
-            // "missing" — no usable apply route on file. Show a red flag
+            // "missing", no usable apply route on file. Show a red flag
             // instead of a misleading green link.
             const reason = escapeHtml(job.apply_route_value || 'no apply_url and no apply_email on file');
-            postingLink = `<span class="text-xs px-2 py-1 rounded bg-red-500/25 border border-red-400/40 text-red-100 whitespace-nowrap" title="${reason}">⚠ no apply route — needs research</span>`;
+            postingLink = `<span class="text-xs px-2 py-1 rounded bg-red-500/25 border border-red-400/40 text-red-100 whitespace-nowrap" title="${reason}">⚠ no apply route, needs research</span>`;
+        }
+        // "Posted N days ago" badge, rendered before the apply-route chip
+        // so the user immediately sees how old the listing is. Uses
+        // posted_at when available, else first_seen_at (~scrape day).
+        let postedBadge = '';
+        if (job.posted_days_ago !== null && job.posted_days_ago !== undefined) {
+            const d = job.posted_days_ago;
+            const label = d === 0 ? 'today' : d === 1 ? 'yesterday' : `${d}d ago`;
+            // Slight color shading: fresh (<= 3 days) is green-tinted;
+            // 4-7 days is neutral; > 7 days gets a faded look so very
+            // old listings visually de-emphasise themselves.
+            const tone = d <= 3
+                ? 'bg-emerald-500/15 border-emerald-300/30 text-emerald-100'
+                : d <= 7
+                    ? 'bg-white/5 border-white/10 text-purple-100'
+                    : 'bg-white/5 border-white/10 text-purple-300';
+            postedBadge = `<span class="text-xs px-2 py-1 rounded border ${tone} whitespace-nowrap" title="posted ${d} day(s) ago">posted ${label}</span>`;
         }
         card.innerHTML = `
             <div role="button" tabindex="0" class="w-full text-left p-4 flex flex-wrap gap-4 items-baseline hover:bg-white/10 cursor-pointer" data-card-header data-id="${job.id}">
                 ${scorePillsHtml}
                 <span class="font-semibold flex-1 min-w-[16rem]">${escapeHtml(job.title)} <span class="text-purple-200 font-normal">@ ${escapeHtml(job.company)}</span></span>
+                ${postedBadge}
                 ${appliedPill}
                 ${postingLink}
                 <span class="text-xs px-2 py-1 bg-white/10 rounded">${escapeHtml(job.source)}</span>
-                <span class="text-xs px-2 py-1 bg-white/10 rounded" title="seniority">${escapeHtml(job.seniority || '—')}</span>
-                <span class="text-xs px-2 py-1 bg-white/10 rounded" title="salary">${escapeHtml(job.salary_text || '—')}</span>
+                <span class="text-xs px-2 py-1 bg-white/10 rounded" title="seniority">${escapeHtml(job.seniority || ',')}</span>
+                <span class="text-xs px-2 py-1 bg-white/10 rounded" title="salary">${escapeHtml(job.salary_text || ',')}</span>
                 <span class="text-xs text-purple-200" title="${reasonAttr}">why fit ▾</span>
             </div>
             <div class="hidden border-t border-white/10 p-4 space-y-4" data-body>
                 <div class="text-sm">
                     <div class="text-purple-200 mb-1">Reason (base CV)</div>
-                    <div>${escapeHtml(job.reason || '—')}</div>
+                    <div>${escapeHtml(job.reason || ',')}</div>
                 </div>
                 <div class="text-sm">
                     <div class="text-purple-200 mb-1">Reason (tailored CV + CL)</div>
                     <div>${
                         tailoredScore !== null && tailoredScore !== undefined
-                            ? escapeHtml(job.tailored_reason || '—')
-                            : '<span class="italic text-purple-200">tailored rescore pending — run `jobbot rescore --backfill`</span>'
+                            ? escapeHtml(job.tailored_reason || ',')
+                            : '<span class="italic text-purple-200">tailored rescore pending, run `jobbot rescore --backfill`</span>'
                     }</div>
                 </div>
                 <div class="text-sm">
@@ -1243,7 +1265,7 @@ if (shortlistSortDirBtn) {
         const asc = shortlistSortDir === 1;
         shortlistSortDirBtn.setAttribute('data-dir', asc ? 'asc' : 'desc');
         shortlistSortDirBtn.textContent = asc ? '▲ asc' : '▼ desc';
-        shortlistSortDirBtn.title = (asc ? 'ascending' : 'descending') + ' — click to flip';
+        shortlistSortDirBtn.title = (asc ? 'ascending' : 'descending') + ', click to flip';
         loadShortlist();
     });
 }
@@ -1299,8 +1321,8 @@ async function loadApplications() {
         );
         const auditCell = a.has_eml
             ? `<a class="underline text-purple-100" target="_blank" href="/applications/${encodeURIComponent(a.job_id)}/application.eml" title="Download the persisted .eml for full audit">.eml</a>`
-            : '<span class="text-purple-300" title="No .eml on disk for this row (e.g. manually-marked)">—</span>';
-        const toText = a.to || '—';
+            : '<span class="text-purple-300" title="No .eml on disk for this row (e.g. manually-marked)">,</span>';
+        const toText = a.to || ',';
         const subjectEsc = String(subject).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const tr = document.createElement('tr');
         tr.className = 'border-b border-white/5';
@@ -1324,7 +1346,7 @@ async function loadApplications() {
 loadApplications();
 
 // =========================================================
-// Outbound Pipeline (CRM view) — top-of-dashboard panel
+// Outbound Pipeline (CRM view), top-of-dashboard panel
 // =========================================================
 //
 // Renders one card per application from /api/applications.
@@ -1337,7 +1359,7 @@ loadApplications();
 //   L5 (rejected)     → grey
 //
 // Action buttons POST to /api/applications/<id>/transition with
-// {state: "..."} — the server appends to proof_evidence and updates
+// {state: "..."}, the server appends to proof_evidence and updates
 // proof_level / response_type / status as needed. On success the
 // card re-renders in place.
 
@@ -1378,8 +1400,7 @@ function renderOutboundCard(a) {
         ? `<a class="underline" target="_blank" href="/applications/${encodeURIComponent(a.job_id)}/application.eml">view .eml</a>`
         : '<span class="text-purple-300">no .eml</span>';
 
-    // Action buttons (state transitions). We always show all 5 transitions —
-    // the operator may want to override the bot's signals.
+    // Action buttons (state transitions). We always show all 5 transitions, // the operator may want to override the bot's signals.
     const actions = ['received', 'replied', 'interview', 'rejected', 'bounced'];
     const actionBtns = actions.map(s => `
         <button data-action="${s}" data-job-id="${escapeHtml(a.job_id)}"
@@ -1436,7 +1457,7 @@ function renderSentDocLinks(a) {
         links.push(`<a class="underline" target="_blank" href="${a.cl_html_url}">cover_letter.html</a>`);
     }
     if (!links.length) {
-        return '<div class="text-xs text-purple-300 mt-1">(no docs on disk — likely a manually-marked row)</div>';
+        return '<div class="text-xs text-purple-300 mt-1">(no docs on disk, likely a manually-marked row)</div>';
     }
     return `<div class="text-xs text-purple-100 mt-1 flex flex-wrap gap-3">${links.join('')}</div>`;
 }
@@ -1502,7 +1523,7 @@ document.querySelectorAll('[data-outbound-filters] [data-filter]').forEach(btn =
     });
 });
 
-// Action buttons — delegate from the panel body so dynamically rendered
+// Action buttons, delegate from the panel body so dynamically rendered
 // cards keep working without re-binding.
 document.getElementById('outbound-pipeline-body').addEventListener('click', async ev => {
     const btn = ev.target.closest('button[data-action]');
@@ -1521,7 +1542,7 @@ document.getElementById('outbound-pipeline-body').addEventListener('click', asyn
 });
 
 loadOutboundPipeline();
-// Light auto-refresh — picks up inbox-scan transitions / new sends in flight
+// Light auto-refresh, picks up inbox-scan transitions / new sends in flight
 setInterval(loadOutboundPipeline, 30000);
 
 document.getElementById('run-pipeline-btn').addEventListener('click', async () => {

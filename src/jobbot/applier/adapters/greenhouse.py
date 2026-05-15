@@ -17,7 +17,7 @@ field schemas:
 
 The adapter handles both, prefers the modern path, and never throws
 on missing optional fields (phone / cover_letter / custom questions).
-The runner enforces dry-run vs. submit at the outer level — `submit()`
+The runner enforces dry-run vs. submit at the outer level, `submit()`
 is only invoked when the runner has confirmed it's allowed to click.
 """
 from __future__ import annotations
@@ -58,7 +58,7 @@ class GreenhouseAdapter:
                 # racing to mount the form.
                 page.locator("#first_name, input[name='job_application[first_name]']").first.wait_for(timeout=10_000)
         except Exception:
-            pass  # fall through — the inline / legacy form may already be visible
+            pass  # fall through, the inline / legacy form may already be visible
 
         # Try modern selectors first, fall back to legacy. `fill_if` skips
         # silently when neither locator matches so we never block on a
@@ -75,7 +75,7 @@ class GreenhouseAdapter:
         self._fill_if(page,
                       ["#phone", "input[name='job_application[phone]']"],
                       p.get("phone", ""))
-        # City/state location — the modern form has a separate
+        # City/state location, the modern form has a separate
         # candidate-location input; legacy doesn't always.
         self._fill_if(page, ["#candidate-location"],
                       f"{p.get('location', {}).get('city', '')}, "
@@ -159,7 +159,7 @@ class GreenhouseAdapter:
     ) -> None:
         """Walk every `#question_<numeric>` input on the page, read its
         label, and fill from profile where the heuristic gives a high
-        confidence match. Anything ambiguous is left blank — the user
+        confidence match. Anything ambiguous is left blank, the user
         can complete it manually before the submit step.
 
         Salary is resolved via `apply_salary_for(job.description, …)`
@@ -179,7 +179,7 @@ class GreenhouseAdapter:
 
         prefs = profile.preferences
         p = profile.personal
-        # Resolve the salary once per page — same number reused if there
+        # Resolve the salary once per page, same number reused if there
         # are multiple salary fields on the form.
         anchor_eur = int(prefs.get("application_salary_eur_year") or 125_000)
         salary = apply_salary_for(job.description or "", anchor_eur)

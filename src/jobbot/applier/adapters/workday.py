@@ -1,4 +1,4 @@
-"""Workday — large enterprise ATS, multi-step flow. Hardest to automate.
+"""Workday, large enterprise ATS, multi-step flow. Hardest to automate.
 
 Workday tenants live at <company>.myworkdayjobs.com and require:
   - account creation (often) or sign-in via email link
@@ -23,12 +23,12 @@ class WorkdayAdapter:
         return "myworkdayjobs.com" in url
 
     def fill(self, page: "Page", job: JobPosting, profile: Profile, docs: GeneratedDocs) -> None:
-        # Require account — Workday always needs one; if signup visible, bail.
+        # Require account, Workday always needs one; if signup visible, bail.
         if page.locator("text=Create Account, text=Sign In").count() > 0:
-            raise NotImplementedError("Workday login/signup wall — needs human")
+            raise NotImplementedError("Workday login/signup wall, needs human")
 
         p = profile.personal
-        # Step 1 — Personal info (selectors stable across most tenants)
+        # Step 1, Personal info (selectors stable across most tenants)
         _fill_if_present(page, "[data-automation-id='legalNameSection_firstName']",
                          p["full_name"].split()[0])
         _fill_if_present(page, "[data-automation-id='legalNameSection_lastName']",

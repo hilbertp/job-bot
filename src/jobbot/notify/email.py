@@ -22,7 +22,7 @@ def _send(secrets: Secrets, subject: str, html: str, attachments: list[Path] | N
     msg["From"] = secrets.gmail_address
     msg["To"] = secrets.notify_to
     msg["Subject"] = subject
-    msg.set_content("This message is HTML-only — please view in an HTML-capable client.")
+    msg.set_content("This message is HTML-only, please view in an HTML-capable client.")
     msg.add_alternative(html, subtype="html")
 
     for path in attachments or []:
@@ -44,7 +44,7 @@ def send_digest(secrets: Secrets, matches: list[dict], errors: list[dict],
                 cannot_score: list[dict] | None = None) -> None:
     """matches:      [{job, score, reason, output_dir, apply_status, apply_screenshot, cover_letter_html}]
     errors:        [{source, error}]
-    cannot_score:  [{job, status, reason}] — PRD §7.5 FR-SCO-01 refusal rows."""
+    cannot_score:  [{job, status, reason}], PRD §7.5 FR-SCO-01 refusal rows."""
     tmpl = _env.get_template("digest.html.j2")
     html = tmpl.render(
         matches=matches, errors=errors, run_started=run_started, n=len(matches),

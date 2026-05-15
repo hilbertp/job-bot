@@ -20,7 +20,7 @@ class Secrets(BaseModel):
     captcha_api_key: str = ""
     imap_host: str = "imap.gmail.com"
     imap_port: int = 993
-    # PRD §7.7 — outbound application channel uses a dedicated business
+    # PRD §7.7, outbound application channel uses a dedicated business
     # mailbox at hilbert@true-north.berlin (NOT the Gmail digest address).
     # All four fields must be set together for the email channel to send;
     # if any is missing, the channel forces dry-run regardless of config.
@@ -28,7 +28,7 @@ class Secrets(BaseModel):
     truenorth_smtp_port: int = 587
     truenorth_smtp_user: str = ""
     truenorth_smtp_pass: str = ""
-    # IMAP for the outbound mailbox — the inbox scanner reads replies +
+    # IMAP for the outbound mailbox, the inbox scanner reads replies +
     # bounces here and auto-advances the dashboard cards. Same login as
     # SMTP on IONOS; defaults to imap.ionos.de:993.
     truenorth_imap_host: str = "imap.ionos.de"
@@ -41,11 +41,11 @@ class ApplyConfig(BaseModel):
     per_run_limit: int = 5
     screener_min_confidence: float = 0.8
     # Supervised mode: launch a VISIBLE Chrome/Brave window using a
-    # persistent profile, fill the form, but do NOT click submit — the
+    # persistent profile, fill the form, but do NOT click submit, the
     # human is in the loop for that final click + any CAPTCHA / 2FA / login
     # wall. Cookies persist across runs in `user_data_dir` so the second
     # visit to the same site looks like a returning user (bot-detection
-    # is much less likely to fire). Default off — preserves the legacy
+    # is much less likely to fire). Default off, preserves the legacy
     # headless behaviour for backwards compat.
     supervised: bool = False
     # Where Playwright's persistent context stores cookies, cache,
@@ -77,7 +77,7 @@ class DigestConfig(BaseModel):
     # postings per run get tailored CV + cover letter generation. Everything
     # else above `generate_docs_above_score` stays in the shortlist (visible
     # in the digest + dashboard) without burning LLM calls. User controls
-    # how often they trigger a run — there is no daily cap.
+    # how often they trigger a run, there is no daily cap.
     generate_top_n: int = 5
 
 
@@ -97,7 +97,7 @@ class Config(BaseModel):
     output_dir: str = "output"
     # Path (relative to repo root) to a pre-designed static CV PDF. When this
     # file exists, the generator skips per-job CV tailoring and attaches this
-    # PDF as-is — the cover letter remains tailored. Set to None / empty to
+    # PDF as-is, the cover letter remains tailored. Set to None / empty to
     # restore per-job Markdown→HTML→PDF tailoring.
     cv_pdf_path: str | None = "data/general CV.pdf"
     digest: DigestConfig = Field(default_factory=DigestConfig)

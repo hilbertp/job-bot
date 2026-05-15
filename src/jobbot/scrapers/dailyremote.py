@@ -1,4 +1,4 @@
-"""dailyremote.com — HTML listings (JSON-LD ItemList) + JSON-LD detail pages.
+"""dailyremote.com, HTML listings (JSON-LD ItemList) + JSON-LD detail pages.
 
 The listings page hides company names behind a "[Unlock with Premium]"
 placeholder; the real company comes from the detail page's JobPosting JSON-LD,
@@ -59,7 +59,7 @@ class DailyRemoteScraper(BaseScraper):
     source = "dailyremote"
 
     def fetch(self, query: SearchQuery) -> list[JobPosting]:
-        # query example: {"q": "product manager"} — passes through to the
+        # query example: {"q": "product manager"}, passes through to the
         # site's search parameter, which returns ~20 results per call.
         q = (query.get("q") or "").strip()
         params = {"search": q} if q else {}

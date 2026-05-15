@@ -345,10 +345,10 @@ def test_score_prompt_does_not_over_penalize_transferable_pm_domain_gaps() -> No
     encoded by the soft/hard domain-gap split in the calibration block."""
     prompt = PROMPT_PATH.read_text()
 
-    assert "Domain gap — soft case" in prompt
+    assert "Domain gap, soft case" in prompt
     assert "treat the gap as manageable" in prompt
     assert "Transferable B2B SaaS" in prompt
-    assert "Domain gap — hard case" in prompt
+    assert "Domain gap, hard case" in prompt
     assert "required, mandatory, core, central, essential" in prompt
     assert "should usually score 85+" in prompt
     assert "\"ideally\", \"preferred\", \"nice to have\", \"bonus\", or \"plus\"" in prompt

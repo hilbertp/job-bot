@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         /* =========================================================
-           DESIGN TOKENS — JobBot "Modern" (dark zinc + emerald)
+           DESIGN TOKENS, JobBot "Modern" (dark zinc + emerald)
            ========================================================= */
         :root {
             color-scheme: dark;
@@ -84,7 +84,7 @@
         a.underline:hover { text-decoration-color: var(--accent); }
 
         /* =========================================================
-           LAYOUT — sidebar + main content
+           LAYOUT, sidebar + main content
            ========================================================= */
         .layout {
             display: grid;
@@ -217,7 +217,7 @@
         }
 
         /* Funnel/metric cards on dashboard. The colored top-stripe ranks
-           a stage at a glance — emerald = total, then through the funnel. */
+           a stage at a glance, emerald = total, then through the funnel. */
         .funnel-card,
         .metric-card {
             position: relative; overflow: hidden;
@@ -259,7 +259,7 @@
         }
 
         /* =========================================================
-           SKIN — map legacy purple/white Tailwind classes onto tokens.
+           SKIN, map legacy purple/white Tailwind classes onto tokens.
            Lets the existing index.html keep its inline utilities while
            the design changes around it.
            ========================================================= */
@@ -324,8 +324,7 @@
         .border-zinc-400\/50 { border-color: rgba(113,113,122,0.40) !important; }
         .border-green-400\/50 { border-color: rgba(52,211,153,0.35) !important; }
 
-        /* Opacity-modifier variants picked up by Tailwind CDN —
-           need explicit overrides because the slash creates a new class. */
+        /* Opacity-modifier variants picked up by Tailwind CDN, need explicit overrides because the slash creates a new class. */
         .bg-white\/15 { background-color: rgba(255,255,255,0.06) !important; }
         .bg-emerald-300\/80 {
             background: linear-gradient(90deg, #10b981 0%, #34d399 100%) !important;
@@ -336,8 +335,7 @@
         .text-purple-300\/70 { color: var(--subtle) !important; }
         .text-amber-100\/90  { color: var(--warn) !important; }
 
-        /* Stat values rendered as bare <strong>X</strong> in run-detail —
-           give them tabular numerals + soft accent so they read like
+        /* Stat values rendered as bare <strong>X</strong> in run-detail, give them tabular numerals + soft accent so they read like
            proper metric cards even without a class. */
         .surface-panel strong,
         .metric-card strong,
@@ -357,7 +355,7 @@
         button:not(:disabled):hover { transform: translateY(-1px); }
         button:disabled { cursor: not-allowed; opacity: 0.5; }
 
-        /* Primary CTA — Run pipeline */
+        /* Primary CTA, Run pipeline */
         #run-pipeline-btn {
             color: #052e16 !important;
             background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important;
@@ -369,7 +367,7 @@
             box-shadow: 0 10px 24px rgba(16,185,129,0.28);
         }
 
-        /* Secondary — Export */
+        /* Secondary, Export */
         #export-json-btn {
             color: var(--text-1) !important;
             background: var(--bg-1) !important;
@@ -487,9 +485,9 @@
 
             <div class="sidebar-foot" id="sidebar-last-run" aria-live="polite">
                 <strong>Last run</strong>
-                <div class="kv"><span>status</span><span id="sidebar-last-run-status">—</span></div>
-                <div class="kv"><span>when</span><span id="sidebar-last-run-when">—</span></div>
-                <div class="kv"><span>fetched → tailored</span><span id="sidebar-last-run-flow">—</span></div>
+                <div class="kv"><span>status</span><span id="sidebar-last-run-status">,</span></div>
+                <div class="kv"><span>when</span><span id="sidebar-last-run-when">,</span></div>
+                <div class="kv"><span>fetched → tailored</span><span id="sidebar-last-run-flow">,</span></div>
             </div>
         </aside>
 
@@ -514,7 +512,7 @@
                     el.textContent = v;
                     if (cls) el.className = cls;
                 };
-                setText('sidebar-last-run-when', r.timestamp_display || '—');
+                setText('sidebar-last-run-when', r.timestamp_display || ',');
                 setText('sidebar-last-run-flow', `${r.n_fetched ?? 0} → ${r.n_generated ?? 0}`);
                 if (r.n_errors > 0) setText('sidebar-last-run-status', `${r.n_errors} err`, 'status-err');
                 else if ((r.n_applied ?? 0) > 0) setText('sidebar-last-run-status', 'applied', 'status-ok');

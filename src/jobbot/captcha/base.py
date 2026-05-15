@@ -21,7 +21,7 @@ class CaptchaSolver(Protocol):
 
 
 class NullSolver:
-    """Used when no captcha provider is configured. Always returns failure — application
+    """Used when no captcha provider is configured. Always returns failure, application
     will be marked needs-review."""
     name = "null"
 

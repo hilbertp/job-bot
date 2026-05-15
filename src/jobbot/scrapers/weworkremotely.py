@@ -1,4 +1,4 @@
-"""weworkremotely.com — official RSS per category. Easiest source; start here."""
+"""weworkremotely.com, official RSS per category. Easiest source; start here."""
 from __future__ import annotations
 
 import feedparser
@@ -46,7 +46,7 @@ class WeWorkRemotelyScraper(BaseScraper):
 
         Implementation note: prefer the same httpx + selectolax stack as
         ``fetch``; reuse _HEADERS and respect a per-call rate limit (≥1s sleep
-        after the request). On 429/999, log and return None — do not retry.
+        after the request). On 429/999, log and return None, do not retry.
         """
         headers = {
             "User-Agent": (
@@ -67,7 +67,7 @@ class WeWorkRemotelyScraper(BaseScraper):
         # WWR's current page wraps the actual job body in
         # `<section class="lis-container__job">`. The old class-name
         # candidates (`listing-container`, `listing-show-container`,
-        # `article`, `main`) match nothing on the live site — when they
+        # `article`, `main`) match nothing on the live site, when they
         # miss, fetch_detail returns None and the RSS-feed `summary` is
         # left in place, which is the "Related Jobs" sidebar text. That
         # gave every WWR row a 215-word garbage body that scored badly

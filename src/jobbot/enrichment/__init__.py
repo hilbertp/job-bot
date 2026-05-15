@@ -1,4 +1,4 @@
-"""enrichment — between scrape and score, fetch the full posting body and
+"""enrichment, between scrape and score, fetch the full posting body and
 extract structured signals (seniority, salary, apply email).
 
 PRD §7.3 (Enrichment).

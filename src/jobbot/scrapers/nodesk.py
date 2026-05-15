@@ -1,4 +1,4 @@
-"""nodesk.co — official RSS at /remote-jobs/index.xml plus HTML detail pages.
+"""nodesk.co, official RSS at /remote-jobs/index.xml plus HTML detail pages.
 
 RSS items use the title format "Position Title at Company"; the description in
 the feed is a one-line teaser, so fetch_detail pulls the full body from the
@@ -40,7 +40,7 @@ class NoDeskScraper(BaseScraper):
     source = "nodesk"
 
     def fetch(self, query: SearchQuery) -> list[JobPosting]:
-        # query example: {"q": "product"} — case-insensitive substring filter on
+        # query example: {"q": "product"}, case-insensitive substring filter on
         # the title. Empty query returns every feed item.
         needle = (query.get("q") or "").strip().lower()
         feed = feedparser.parse(_FEED_URL)

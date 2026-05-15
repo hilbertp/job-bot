@@ -59,7 +59,7 @@ async function loadRuns() {
     if (countEl) countEl.textContent = `${rows.length} run${rows.length === 1 ? '' : 's'}`;
     tbody.innerHTML = '';
     if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="9" class="py-6 px-5 text-purple-300">No runs yet — trigger one from the dashboard.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="py-6 px-5 text-purple-300">No runs yet, trigger one from the dashboard.</td></tr>';
         return;
     }
     for (const run of rows) {
@@ -76,7 +76,7 @@ async function loadRuns() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td class="py-3 px-5"><a class="underline font-mono text-purple-100" href="/runs/${run.id}" title="${run.timestamp || ''}">#${run.id}</a></td>
-            <td class="py-3 px-3 text-purple-200">${run.timestamp_display || run.timestamp || '—'}</td>
+            <td class="py-3 px-3 text-purple-200">${run.timestamp_display || run.timestamp || ','}</td>
             <td class="py-3 px-3"><span class="run-status ${statusCls}">${statusText}</span></td>
             <td class="py-3 px-3 text-right num">${fetched}</td>
             <td class="py-3 px-3 text-right num">${newCount}</td>

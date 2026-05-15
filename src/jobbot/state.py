@@ -487,11 +487,11 @@ def record_application(conn: sqlite3.Connection, job_id: str, result) -> None:
 
 def jobs_with_submitted_application(conn: sqlite3.Connection) -> set[str]:
     """Return the set of job_ids that already have a real submitted
-    application on file — bot OR manual mark. The pipeline must consult
+    application on file, bot OR manual mark. The pipeline must consult
     this set BEFORE every auto-apply attempt to avoid double-sending.
 
     Counts only rows with `submitted = 1`. Dry-run rows (submitted = 0,
-    dry_run = 1) deliberately do NOT count — those are queued previews,
+    dry_run = 1) deliberately do NOT count, those are queued previews,
     not confirmed sends."""
     rows = conn.execute(
         "SELECT DISTINCT job_id FROM applications WHERE submitted = 1"
@@ -500,7 +500,7 @@ def jobs_with_submitted_application(conn: sqlite3.Connection) -> set[str]:
 
 
 # Allowed CRM transitions and the proof_level + response_type they imply.
-# `bounced` is special — it flips submitted=0 and status=apply_failed so the
+# `bounced` is special, it flips submitted=0 and status=apply_failed so the
 # row is treated as a failed send, not a successful one waiting for a reply.
 _TRANSITIONS = {
     "received":  {"proof_level": 2, "response_type": "acknowledged"},
@@ -590,7 +590,7 @@ def transition_application(
     )
 
     # Keep seen_jobs.status in sync for the dashboard funnel + "already
-    # applied" guard. Bounces drop the row out of "applied" — operators
+    # applied" guard. Bounces drop the row out of "applied", operators
     # may want to re-try via a different channel.
     new_seen_status = (
         JobStatus.APPLY_FAILED.value if new_state == "bounced"
@@ -971,7 +971,7 @@ def jobs_needing_enrichment(conn: sqlite3.Connection) -> list[JobPosting]:
 
 
 def jobs_needing_backfill(conn: sqlite3.Connection, min_words: int, limit: int) -> list[JobPosting]:
-    """Rows whose body is missing or shorter than `min_words` — sorted oldest
+    """Rows whose body is missing or shorter than `min_words`, sorted oldest
     first so backfill steadily drains the long tail of pre-enrichment rows
     without thrashing the most recent ones. The CLI caps `limit` per
     invocation to keep the work bounded.
@@ -1034,8 +1034,7 @@ def scrub_stale_scores(conn: sqlite3.Connection) -> int:
 def jobs_needing_base_rescore(
     conn: sqlite3.Connection, limit: int,
 ) -> list[JobPosting]:
-    """Rows that pass the preconditions but never received a base score —
-    typically because they pre-date the scorer's enrichment gate, or
+    """Rows that pass the preconditions but never received a base score, typically because they pre-date the scorer's enrichment gate, or
     `scrub_stale_scores` just nulled a previously-bogus score.
 
     Returns hydrated JobPosting objects with `description` swapped in from
@@ -1082,7 +1081,7 @@ def force_clear_base_scores(conn: sqlite3.Connection) -> tuple[int, int]:
       - SCORED / BELOW_THRESHOLD rows are downgraded to SCRAPED so the
         existing rescore queue picks them up.
       - Later-stage rows (GENERATED, APPLY_*, EMPLOYER_*, REJECTED,
-        INTERVIEW_INVITED) keep their status — we don't want to undo
+        INTERVIEW_INVITED) keep their status, we don't want to undo
         downstream pipeline progress just to refresh a score. Their score
         gets re-set in place by the force rescore loop.
 
@@ -1120,7 +1119,7 @@ def jobs_needing_base_rescore_force(
 ) -> list[tuple[JobPosting, str]]:
     """Force-mode counterpart to `jobs_needing_base_rescore`. Returns every
     row passing the preconditions (real body, scraped, >=100 words) with a
-    NULL base score, regardless of status — except FILTERED, which the
+    NULL base score, regardless of status, except FILTERED, which the
     heuristic rejected for non-CV reasons and should never reach the LLM.
 
     Returns (job, current_status) tuples so the caller can decide whether
@@ -1160,8 +1159,7 @@ def update_base_score_only(
     a late-stage row without demoting its status.
 
     Accepts optional `breakdown` (structured per-axis sub-scores) and
-    `discard_reason`. When None, the corresponding columns are NOT touched
-    — important on force-rescore loops where one row's failure shouldn't
+    `discard_reason`. When None, the corresponding columns are NOT touched, important on force-rescore loops where one row's failure shouldn't
     wipe a previous row's good breakdown. Pass an empty dict / "" to
     explicitly clear instead."""
     scored_at = _now() if score is not None else None
@@ -1237,7 +1235,7 @@ def apply_channel(
     - form:     `apply_url` matches a known ATS (greenhouse / lever /
                 workday / smartrecruiters / personio).
     - external: `apply_url` is present but isn't a known ATS.
-    - manual:   neither email nor URL — needs human handling.
+    - manual:   neither email nor URL, needs human handling.
 
     Accepts a sqlite3.Row (or any mapping with 'apply_email'/'apply_url'
     keys) OR kwargs. The row form is convenient for digest/dashboard
@@ -1267,7 +1265,7 @@ def apply_channel(
 
 # Domains that gate full job content / apply behind a paywall, premium
 # tier, or mandatory login. A URL on one of these is NOT a valid apply
-# route — the user click will land on a wall, not the application form.
+# route, the user click will land on a wall, not the application form.
 # Per feedback memory `feedback_no_paywalled_apply_links.md` (2026-05-15):
 # *"when i click the link, and its behind a paywall, you have failed."*
 _PAYWALLED_HOSTS = (
@@ -1280,7 +1278,7 @@ _PAYWALLED_HOSTS = (
 def is_paywalled_apply_url(url: str | None) -> bool:
     """Return True when `url` points at an aggregator / login-walled host
     that doesn't surface the actual application form to anonymous users.
-    Case-insensitive substring match — covers de.linkedin.com,
+    Case-insensitive substring match, covers de.linkedin.com,
     www.xing.com, etc."""
     if not url:
         return False
@@ -1294,9 +1292,9 @@ def usable_apply_route(
 ) -> tuple[str, str | None]:
     """Resolve the apply route a user can ACTUALLY click. Returns one of:
 
-      - ("email", "careers@...")    — show as 📧 apply via email
-      - ("url",   "https://...")    — show as ↗ open posting (canonical URL)
-      - ("missing", "<reason>")     — show as ⚠ no usable apply route
+      - ("email", "careers@..."), show as 📧 apply via email
+      - ("url",   "https://..."), show as ↗ open posting (canonical URL)
+      - ("missing", "<reason>"), show as ⚠ no usable apply route
 
     The route is "missing" when:
       - both fields are empty/None, OR

@@ -194,7 +194,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
 
         # 2) Enrich postings missing a body fetch: every freshly-scraped job
         # in this run, plus every seen_jobs row where description_scraped IS
-        # NULL (scraped before enrichment was wired in — dedup would otherwise
+        # NULL (scraped before enrichment was wired in, dedup would otherwise
         # exclude them forever). Capped per run to keep first-launch bounded.
         to_enrich_by_id: dict[str, JobPosting] = dict(all_fetched_by_id)
         for stale in jobs_needing_enrichment(conn):
@@ -208,7 +208,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
         # 3) Score (heuristic → LLM)
         # Retry pending scraped jobs from previous runs as well, so transient
         # LLM/network failures do not leave jobs stuck in "scraped" forever.
-        # `to_score` values are (job, description_scraped) — the flag must be
+        # `to_score` values are (job, description_scraped), the flag must be
         # propagated to the scorer per PRD §7.5 FR-SCO-01.
         to_score: dict[str, tuple[JobPosting, bool]] = {
             j.id: (j, True) for j in enrichment.enriched_jobs
@@ -341,7 +341,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 failed=n_cannot_score + n_score_failed,
             )
 
-        # 4) Generate — only the top-N highest-scoring postings get tailored
+        # 4) Generate, only the top-N highest-scoring postings get tailored
         # CV + cover letter. Lower-ranked shortlist entries still flow through
         # the loop so they appear in the digest/dashboard, but with docs
         # skipped (the `score < generate_docs_above_score` branch handles
@@ -372,7 +372,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
             # PRD §7.7 FR-APP-01: derive the application channel per match so
             # the digest + dashboard can show '📧 email / 🔗 Greenhouse / etc.'
             # apply_email lives only in seen_jobs (enrichment column), so we
-            # do one tiny SELECT per match — cheap and avoids threading the
+            # do one tiny SELECT per match, cheap and avoids threading the
             # enrichment result through the pipeline.
             apply_email_row = conn.execute(
                 "SELECT apply_email FROM seen_jobs WHERE id = ?", (job.id,),
@@ -437,7 +437,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
             })
 
             # 4b) Rescore the posting using the tailored CV + cover letter
-            # so the dashboard can show "did tailoring lift the fit?" — a
+            # so the dashboard can show "did tailoring lift the fit?", a
             # measurement-only call. Persisted to a parallel column;
             # the original `score` is unchanged. A failure here is logged
             # but does NOT abort the application step that follows.
@@ -462,7 +462,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
             src_cfg = config.sources.get(job.source)
             if src_cfg and src_cfg.auto_submit and n_applied < config.apply.per_run_limit:
                 # Never re-apply to a job that already has a real submitted
-                # application on file — bot OR manual mark. This is the
+                # application on file, bot OR manual mark. This is the
                 # primary foot-gun guard; without it, every run would
                 # re-send to the same employer.
                 already_applied = jobs_with_submitted_application(conn)

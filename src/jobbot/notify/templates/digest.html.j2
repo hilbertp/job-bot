@@ -86,7 +86,7 @@
 {% for m in generated %}
 <div class="job">
   <div class="job-head">
-    <div><strong>{{ m.job.title }}</strong> — {{ m.job.company }}
+    <div><strong>{{ m.job.title }}</strong>, {{ m.job.company }}
          {% if m.job.location %}· {{ m.job.location }}{% endif %}</div>
     <span class="score">Score {{ m.score }}</span>{{ channel_pill(m) }}
   </div>
@@ -115,7 +115,7 @@
 {% for m in manual %}
 <div class="job">
   <div class="job-head">
-    <div><strong>{{ m.job.title }}</strong> — {{ m.job.company }}
+    <div><strong>{{ m.job.title }}</strong>, {{ m.job.company }}
          {% if m.job.location %}· {{ m.job.location }}{% endif %}</div>
     <span class="score">Score {{ m.score }}</span>{{ channel_pill(m) }}
   </div>
@@ -132,11 +132,11 @@
 
 {% if cannot_score %}
 <h2>Cannot score ({{ cannot_score|length }})</h2>
-<p class="meta">These postings could not be scored — a hard precondition for scoring was not met. Reason shown verbatim; no numeric score is implied.</p>
+<p class="meta">These postings could not be scored, a hard precondition for scoring was not met. Reason shown verbatim; no numeric score is implied.</p>
 {% for c in cannot_score %}
 <div class="job">
   <div class="job-head">
-    <div><strong>{{ c.job.title }}</strong> — {{ c.job.company }}
+    <div><strong>{{ c.job.title }}</strong>, {{ c.job.company }}
          {% if c.job.location %}· {{ c.job.location }}{% endif %}</div>
     <span class="score" style="background:#fef2f2;color:#b91c1c;">{{ c.status }}</span>
   </div>
