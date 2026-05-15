@@ -127,13 +127,39 @@ def apply_to_job(
     otp = OtpFetcher(secrets, config)
     ADAPTERS = _load_adapters()
 
+    supervised = bool(config.apply.supervised)
+
     with sync_playwright() as pw:
-        browser = pw.chromium.launch(headless=True)
-        ctx = browser.new_context(
-            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15",
-            viewport={"width": 1280, "height": 900},
-        )
-        page = ctx.new_page()
+        if supervised:
+            # Persistent-context launch with the user's dedicated profile:
+            # cookies/cache survive across runs so the 2nd visit to a site
+            # looks like a returning user. Non-headless so the human can
+            # eyeball + intervene (CAPTCHA, 2FA, login wall). The init
+            # script papers over the most obvious automation tell —
+            # `navigator.webdriver` defaulting to `true` under Playwright.
+            user_data_dir = (
+                config.apply.user_data_dir
+                or str(Path.home() / ".jobbot" / "chrome-profile")
+            )
+            Path(user_data_dir).mkdir(parents=True, exist_ok=True)
+            ctx = pw.chromium.launch_persistent_context(
+                user_data_dir=user_data_dir,
+                headless=False,
+                viewport={"width": 1280, "height": 900},
+                args=["--disable-blink-features=AutomationControlled"],
+            )
+            ctx.add_init_script(
+                "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+            )
+            page = ctx.pages[0] if ctx.pages else ctx.new_page()
+            browser = None  # nothing to close; ctx.close() handles it in finally
+        else:
+            browser = pw.chromium.launch(headless=True)
+            ctx = browser.new_context(
+                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15",
+                viewport={"width": 1280, "height": 900},
+            )
+            page = ctx.new_page()
 
         try:
             # `networkidle` is too strict for SPA-heavy ATSes (Recruitee fires
@@ -166,6 +192,50 @@ def apply_to_job(
                 return ApplyResult(status=JobStatus.APPLY_NEEDS_REVIEW,
                                    dry_run=True, screenshot_path=screenshot_path,
                                    needs_review_reason="dry-run mode")
+
+            # SUPERVISED MODE — the bot pre-fills, the human clicks Send and
+            # handles any CAPTCHA / login. We poll the page state until we
+            # see a success indicator OR the timeout fires. The user is
+            # interacting with a visible browser window all the while.
+            if supervised:
+                timeout_s = config.apply.supervised_timeout_seconds
+                print(
+                    f"\n  ⏳ SUPERVISED: form pre-filled at {page.url}.\n"
+                    f"     Switch to the Chrome window, review, solve any\n"
+                    f"     CAPTCHA, and click Send/Submit yourself.\n"
+                    f"     Polling for success up to {timeout_s}s ...\n"
+                )
+                import time as _time
+                deadline = _time.monotonic() + timeout_s
+                final_verdict = "unknown"
+                while _time.monotonic() < deadline:
+                    try:
+                        v = _verify_post_submit(page)
+                    except Exception:
+                        v = "unknown"
+                    if v == "success":
+                        final_verdict = "success"; break
+                    _time.sleep(3)
+                # Capture the final state regardless of outcome.
+                page.screenshot(path=screenshot_path, full_page=True)
+                confirmation_url = page.url
+                if final_verdict == "success":
+                    return ApplyResult(
+                        status=JobStatus.APPLY_SUBMITTED,
+                        submitted=True,
+                        screenshot_path=screenshot_path,
+                        confirmation_url=confirmation_url,
+                    )
+                return ApplyResult(
+                    status=JobStatus.APPLY_NEEDS_REVIEW,
+                    needs_review_reason=(
+                        "supervised timeout reached without a success "
+                        "indicator on the page. If you DID submit, check "
+                        "your email for confirmation; otherwise re-run."
+                    ),
+                    screenshot_path=screenshot_path,
+                    confirmation_url=confirmation_url,
+                )
 
             confirmation_url = adapter.submit(page)
 
@@ -244,8 +314,18 @@ def apply_to_job(
                 screenshot_path=failure_screenshot,
             )
         finally:
-            ctx.close()
-            browser.close()
+            try:
+                ctx.close()
+            except Exception:
+                pass
+            # `browser` is None in supervised mode (persistent context owns
+            # its own browser process). Headless mode keeps the explicit
+            # browser reference so we can close it here.
+            if browser is not None:
+                try:
+                    browser.close()
+                except Exception:
+                    pass
 
 
 def _sender_for(adapter_name: str) -> str:
