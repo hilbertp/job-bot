@@ -1120,15 +1120,26 @@ async function loadShortlist() {
                 : label;
             appliedPill = `<span class="text-xs px-2 py-1 rounded border ${cls}" title="${titleAttr}">${label}</span>`;
         }
-        // Inline posting link as a chip in the card header. Surfaces the
-        // employer URL at-a-glance (Stage 3 click-to-expand was hiding
-        // it inside the body). `<a>` can't legally nest inside `<button>`,
-        // so the header is a `<div role="button">` with a delegated
-        // click handler that ignores clicks landing on a link or its
-        // descendants.
-        const postingLink = job.url
-            ? `<a class="text-xs px-2 py-1 rounded bg-emerald-500/20 border border-emerald-400/30 text-emerald-100 hover:bg-emerald-500/30 underline-offset-2 hover:underline whitespace-nowrap" target="_blank" rel="noopener" href="${escapeHtml(job.url)}" title="${escapeHtml(job.url)}">↗ open posting</a>`
-            : '';
+        // Inline apply-route chip. The header surfaces ONLY a route that
+        // the user can actually click — never a paywalled aggregator URL.
+        // The server-side `usable_apply_route()` decides between:
+        //   - "url":     canonical employer URL → green "↗ open posting"
+        //   - "email":   real apply email      → blue "📧 apply via email"
+        //   - "missing": no usable route       → red ⚠ "needs research"
+        // Per feedback memory `feedback_no_paywalled_apply_links.md`.
+        let postingLink = '';
+        if (job.apply_route_kind === 'url' && job.apply_route_value) {
+            const url = escapeHtml(job.apply_route_value);
+            postingLink = `<a class="text-xs px-2 py-1 rounded bg-emerald-500/20 border border-emerald-400/30 text-emerald-100 hover:bg-emerald-500/30 underline-offset-2 hover:underline whitespace-nowrap" target="_blank" rel="noopener" href="${url}" title="${url}">↗ open posting</a>`;
+        } else if (job.apply_route_kind === 'email' && job.apply_route_value) {
+            const email = escapeHtml(job.apply_route_value);
+            postingLink = `<a class="text-xs px-2 py-1 rounded bg-blue-500/20 border border-blue-400/30 text-blue-100 hover:bg-blue-500/30 underline-offset-2 hover:underline whitespace-nowrap" href="mailto:${email}" title="${email}">📧 apply via ${email}</a>`;
+        } else {
+            // "missing" — no usable apply route on file. Show a red flag
+            // instead of a misleading green link.
+            const reason = escapeHtml(job.apply_route_value || 'no apply_url and no apply_email on file');
+            postingLink = `<span class="text-xs px-2 py-1 rounded bg-red-500/25 border border-red-400/40 text-red-100 whitespace-nowrap" title="${reason}">⚠ no apply route — needs research</span>`;
+        }
         card.innerHTML = `
             <div role="button" tabindex="0" class="w-full text-left p-4 flex flex-wrap gap-4 items-baseline hover:bg-white/10 cursor-pointer" data-card-header data-id="${job.id}">
                 ${scorePillsHtml}
