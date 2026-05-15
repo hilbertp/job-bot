@@ -40,6 +40,24 @@ class ApplyConfig(BaseModel):
     confirm_each: bool = False
     per_run_limit: int = 5
     screener_min_confidence: float = 0.8
+    # Supervised mode: launch a VISIBLE Chrome/Brave window using a
+    # persistent profile, fill the form, but do NOT click submit — the
+    # human is in the loop for that final click + any CAPTCHA / 2FA / login
+    # wall. Cookies persist across runs in `user_data_dir` so the second
+    # visit to the same site looks like a returning user (bot-detection
+    # is much less likely to fire). Default off — preserves the legacy
+    # headless behaviour for backwards compat.
+    supervised: bool = False
+    # Where Playwright's persistent context stores cookies, cache,
+    # extensions. Default is `~/.jobbot/chrome-profile` (resolved at
+    # use-time so the path adapts to the running user's $HOME). The
+    # directory is created on first use; subsequent runs reuse the
+    # same cookies and fingerprint.
+    user_data_dir: str = ""
+    # Max time the supervised runner waits for the user to click Send
+    # and the page to show a success-indicator. 10 min is generous for
+    # solving a CAPTCHA; reducing it makes the runner give up faster.
+    supervised_timeout_seconds: int = 600
 
 
 class OtpConfig(BaseModel):
