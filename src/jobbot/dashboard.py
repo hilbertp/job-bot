@@ -14,6 +14,7 @@ from .config import REPO_ROOT
 from .models import JobStatus
 from .state import (
     apply_channel, apply_channel_ats_name, connect, mark_run_stopped,
+    usable_apply_route,
     llm_usage_summary, request_run_control, run_control_state,
     run_stage_progress,
 )
@@ -1206,6 +1207,15 @@ def api_shortlist():
             "apply_url": apply_url_raw,
             "apply_channel": channel,
             "apply_channel_ats_name": ats_name,
+            # Resolved apply route: ('email', addr) | ('url', canonical) |
+            # ('missing', reason). The Stage 3 card uses this to decide
+            # whether to render a green "↗ open posting" chip OR a red
+            # "⚠ no usable apply route — needs research" flag. Stops the
+            # dashboard from misleading the user with paywalled aggregator
+            # links (dailyremote / linkedin / xing). Per feedback memory
+            # `feedback_no_paywalled_apply_links.md`.
+            "apply_route_kind": usable_apply_route(r[14], apply_url_raw)[0],
+            "apply_route_value": usable_apply_route(r[14], apply_url_raw)[1],
             "cv_md": cv_md,
             "cover_letter_md": cover_letter_md,
             "cv_html_url": f"/shortlist/{r[0]}/cv.html" if cv_html_path else None,
