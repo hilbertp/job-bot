@@ -1,4 +1,4 @@
-"""Xing — DACH professional network. Plain HTML scrape via httpx (no Playwright).
+"""Xing, DACH professional network. Plain HTML scrape via httpx (no Playwright).
 
 The /jobs/search page renders enough server-side that httpx + selectolax works.
 Confirmed 2026-05.
@@ -103,7 +103,7 @@ class XingScraper(BaseScraper):
 
         Implementation note: prefer the same httpx + selectolax stack as
         ``fetch``; reuse _HEADERS and respect a per-call rate limit (≥1s sleep
-        after the request). On 429/999, log and return None — do not retry.
+        after the request). On 429/999, log and return None, do not retry.
         """
         try:
             r = httpx.get(str(job.url), headers=_HEADERS, timeout=20, follow_redirects=True)

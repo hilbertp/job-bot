@@ -65,7 +65,7 @@ def _parse_score_breakdown(
     Prefers the structured JSON column (new rows). Falls back to parsing
     the legacy "role=X, skills=Y, location=Z, seniority=W" prefix that
     used to be embedded in score_reason (old rows). Returns None when
-    neither source has data — the dashboard shows "—" in that case."""
+    neither source has data, the dashboard shows "," in that case."""
     if breakdown_json:
         try:
             obj = json.loads(breakdown_json)
@@ -154,7 +154,7 @@ def compute_funnel(conn) -> list[dict]:
       Suitable     seen_jobs.score >= 70                COUNT(*)
       Tailored     seen_jobs.output_dir IS NOT NULL     COUNT(*)
       Applied      applications.submitted = 1           COUNT(*)
-      Interviewed  applications.proof_level >= 4        COUNT(*) — M5
+      Interviewed  applications.proof_level >= 4        COUNT(*), M5
 
     Percentages are omitted: with no Total denominator there is no
     consistent base, and the absolute counts already convey the funnel
@@ -575,7 +575,7 @@ def run_detail_page(run_id: int):
         "started_at": row[1],
         "started_at_display": _format_readable_time(row[1]),
         "finished_at": row[2],
-        "finished_at_display": _format_readable_time(row[2]) if row[2] else "—",
+        "finished_at_display": _format_readable_time(row[2]) if row[2] else ",",
         "n_fetched": row[3],
         "n_new": row[4],
         "n_generated": row[5],
@@ -658,6 +658,24 @@ def _parse_iso(ts: str | None) -> datetime | None:
         return None
 
 
+def _posted_days_ago(first_seen_iso: str | None, posted_at_iso: str | None) -> int | None:
+    """Return integer days since the posting first appeared. Prefers
+    the posting's own posted_at (more accurate when scrapers extract
+    it); falls back to our first_seen_at (within 24h of real post date
+    for daily-running scrapers).
+
+    Returns None when neither timestamp is parseable, so the UI can
+    render a "?" or omit the badge entirely."""
+    candidate = posted_at_iso or first_seen_iso
+    dt = _parse_iso(candidate) if candidate else None
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    delta = datetime.now(tz=timezone.utc) - dt
+    return max(0, delta.days)
+
+
 def _format_readable_time(ts: str | None) -> str:
     """Human display for ISO timestamps stored in the DB.
 
@@ -666,7 +684,7 @@ def _format_readable_time(ts: str | None) -> str:
     """
     dt = _parse_iso(ts)
     if dt is None:
-        return "—"
+        return ","
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     local_dt = dt.astimezone()
@@ -777,8 +795,8 @@ def _description_counts_by_source(conn, *, ids: list[str] | None = None,
                                   since: str | None = None) -> dict[str, dict[str, float | int]]:
     """Group seen_jobs by source and count rows with non-empty descriptions.
 
-    Either `ids` (an explicit id list — used when the run summary recorded
-    fetched_ids) or `since` (a started_at timestamp — used for in-progress
+    Either `ids` (an explicit id list, used when the run summary recorded
+    fetched_ids) or `since` (a started_at timestamp, used for in-progress
     runs) must be provided. Returns the per-source breakdown shape the
     portal-hits API ships to the dashboard.
     """
@@ -1010,7 +1028,7 @@ def _infer_current_stage(per_portal_total: int, stages: dict) -> str:
     pipeline writes to its summary, derived from seen_jobs when the
     summary hasn't been persisted yet.
 
-    Order matters — pipeline.py runs them in this sequence and each step
+    Order matters, pipeline.py runs them in this sequence and each step
     is gated by the previous one completing.
     """
     fetched = int(stages.get("fetched", per_portal_total) or 0)
@@ -1046,7 +1064,7 @@ def api_latest_run_portal_hits():
     Reads `per_source_fetched` from the run's summary_json when the run has
     finished and recorded its summary. For in-progress runs (or older rows
     that predate per_source_fetched), falls back to counting `seen_jobs`
-    inserted since the run's `started_at` — keeping the table populated as
+    inserted since the run's `started_at`, keeping the table populated as
     the pipeline streams rows in. The response carries `in_progress` and
     `elapsed_sec` so the client can decide whether to keep polling.
     """
@@ -1102,7 +1120,8 @@ def api_shortlist():
                    s.description_full, s.description_word_count,
                    s.seniority, s.salary_text, s.apply_email,
                    s.score_tailored, s.score_tailored_reason,
-                   a.submitted, a.status, a.attempted_at, a.dry_run
+                   a.submitted, a.status, a.attempted_at, a.dry_run,
+                   s.first_seen_at
             FROM seen_jobs s
             LEFT JOIN applications a ON a.job_id = s.id
             WHERE s.score IS NOT NULL AND s.score >= ?
@@ -1161,9 +1180,9 @@ def api_shortlist():
             if (score_base is not None and score_tailored is not None)
             else None
         )
-        # PRD §7.7 FR-APP-01 application channel — derived (no schema change).
+        # PRD §7.7 FR-APP-01 application channel, derived (no schema change).
         # Only `apply_url` (from raw_json) is considered, not the listing url
-        # column — the spec is about how to *submit* an application, and the
+        # column, the spec is about how to *submit* an application, and the
         # listing URL is just the display page.
         apply_url_raw: str | None = None
         try:
@@ -1174,7 +1193,7 @@ def api_shortlist():
             apply_url_raw = None
         channel = apply_channel(apply_email=r[14], apply_url=apply_url_raw)
         ats_name = apply_channel_ats_name(apply_url_raw) if channel == "form" else None
-        # Application state (LEFT JOIN — None if never attempted).
+        # Application state (LEFT JOIN, None if never attempted).
         # `submitted`=1 means a real send (or dry-run write of the .eml)
         # actually happened. `status` is the JobStatus name ('applied',
         # 'applied_dry_run', 'apply_needs_review', 'apply_failed', etc.).
@@ -1184,7 +1203,7 @@ def api_shortlist():
         applied_dry_run = bool(r[20]) if r[20] is not None else False
         # `r[4]` = seen_jobs.status. LISTING_EXPIRED is set by the runner
         # (or a periodic check) when the apply_url no longer reaches a
-        # job form — the role was pulled. Surface as a dedicated state
+        # job form, the role was pulled. Surface as a dedicated state
         # so the Stage 3 card shows an ⏱ pill, distinct from "applied"
         # / "needs review" / "failed".
         seen_status = r[4]
@@ -1217,7 +1236,7 @@ def api_shortlist():
             # Resolved apply route: ('email', addr) | ('url', canonical) |
             # ('missing', reason). The Stage 3 card uses this to decide
             # whether to render a green "↗ open posting" chip OR a red
-            # "⚠ no usable apply route — needs research" flag. Stops the
+            # "⚠ no usable apply route, needs research" flag. Stops the
             # dashboard from misleading the user with paywalled aggregator
             # links (dailyremote / linkedin / xing). Per feedback memory
             # `feedback_no_paywalled_apply_links.md`.
@@ -1229,7 +1248,7 @@ def api_shortlist():
             "cover_letter_html_url": f"/shortlist/{r[0]}/cover_letter.html" if cl_html_path else None,
             "cv_pdf_url": f"/shortlist/{r[0]}/cv.pdf" if cv_pdf_path else None,
             "cover_letter_pdf_url": f"/shortlist/{r[0]}/cover_letter.pdf" if cl_pdf_path else None,
-            # The polished, editorial application package — what gets
+            # The polished, editorial application package, what gets
             # attached to the outbound email. Linking it from the Stage 3
             # card so the user can review the *final* artefact rather
             # than digging through output/ on disk.
@@ -1240,10 +1259,17 @@ def api_shortlist():
             "score_tailored": score_tailored,
             "tailored_reason": r[16] or "",
             "score_delta": score_delta,
-            # Application status — let the Stage 3 card show "applied"
+            # Application status, let the Stage 3 card show "applied"
             # so the user doesn't accidentally double-submit.
             "applied_state": applied_state,
             "applied_at": applied_at,
+            # "Posted N days ago" badge in the Stage 3 card. We prefer
+            # the posting's own posted_at (in raw_json) when present,
+            # otherwise fall back to the first time WE saw it. Both are
+            # approximations; first_seen_at is usually within 24h of
+            # the real post date for daily scrapes.
+            "posted_days_ago": _posted_days_ago(r[21], payload.get("posted_at")
+                                                if isinstance(payload, dict) else None),
         })
 
     return jsonify({"min_score": min_score, "count": len(jobs), "jobs": jobs})
@@ -1288,7 +1314,7 @@ def shortlist_doc(job_id: str, filename: str):
 
 @app.route("/api/applications")
 def api_applications():
-    """One row per row in the applications table — for the Stage 4 panel's
+    """One row per row in the applications table, for the Stage 4 panel's
     transparency view. Joins seen_jobs for title/company/score/output_dir
     and parses the per-job application.eml on disk for the exact subject
     that went out. Returns rows ordered most-recent-first."""
@@ -1357,7 +1383,7 @@ def api_applications():
                             sent_to = eml_to
                     except Exception:
                         pass
-                # Resolve doc links — same allowlist + path-traversal-safe
+                # Resolve doc links, same allowlist + path-traversal-safe
                 # route as the shortlist endpoint uses (`/shortlist/<id>/<f>`).
                 # Reusing that route keeps the surface area small.
                 if (out_dir / "cv.pdf").exists():
@@ -1396,8 +1422,8 @@ def api_applications():
                 "confirmation_url": r["confirmation_url"],
                 "url": r["url"],
                 "has_eml": eml_path is not None,
-                # Don't expose the absolute path — the eml route gates it.
-                # Doc links — let the user review what was actually sent.
+                # Don't expose the absolute path, the eml route gates it.
+                # Doc links, let the user review what was actually sent.
                 "cv_pdf_url": cv_pdf_url,
                 "cl_pdf_url": cl_pdf_url,
                 "package_pdf_url": package_pdf_url,
@@ -1414,7 +1440,7 @@ def api_application_transition(job_id: str):
 
     Body: {"state": "received"|"replied"|"interview"|"rejected"|"bounced",
            "note": "optional free text"}
-    The endpoint is intentionally idempotent w.r.t. each click — the
+    The endpoint is intentionally idempotent w.r.t. each click, the
     transition is appended to proof_evidence with a timestamp, so an
     operator can mark "received" then later mark "replied" without
     losing the earlier signal.
@@ -1449,7 +1475,7 @@ def api_rescore_with_feedback(job_id: str):
     Behavior:
       1. Reconstruct the JobPosting from `raw_json` in seen_jobs.
       2. Load profile + secrets fresh so any prior feedback is included.
-      3. Call llm_score(..., user_feedback=<comment>) — the scorer
+      3. Call llm_score(..., user_feedback=<comment>), the scorer
          injects the comment into the prompt as an extra section.
       4. Persist the new score + the feedback text to seen_jobs
          (leaves the original `score` column untouched so the UI can
@@ -1490,7 +1516,7 @@ def api_rescore_with_feedback(job_id: str):
     if not raw_json:
         return jsonify({
             "ok": False,
-            "error": "job has no raw_json — cannot reconstruct posting",
+            "error": "job has no raw_json, cannot reconstruct posting",
         }), 409
 
     try:
@@ -1564,8 +1590,7 @@ def api_rescore_with_feedback(job_id: str):
 
 @app.route("/applications/<job_id>/application.eml")
 def application_eml(job_id: str):
-    """Serve the persisted .eml for a sent (or attempted) application —
-    audit trail viewer. Path-traversal-safe: we look up the per-job
+    """Serve the persisted .eml for a sent (or attempted) application, audit trail viewer. Path-traversal-safe: we look up the per-job
     output_dir from the DB and only serve the exact `application.eml`
     inside it. Browsers will offer the .eml as a download; recruiters
     never see this route."""
@@ -1673,11 +1698,11 @@ def api_latest_run_jobs():
             description_scraped_raw = r[8]
             description_scraped: bool | None
             if description_scraped_raw is None:
-                description_scraped = None  # unknown — predates enrichment
+                description_scraped = None  # unknown, predates enrichment
             else:
                 description_scraped = bool(description_scraped_raw)
 
-            # PRD §7.7 FR-APP-01 application channel — derived (no schema change).
+            # PRD §7.7 FR-APP-01 application channel, derived (no schema change).
             # apply_url comes from raw_json only; the listing url column is for
             # viewing, not submitting.
             apply_url_raw: str | None = None
@@ -1693,7 +1718,7 @@ def api_latest_run_jobs():
             # Structured per-axis breakdown for the Scoring Reason column.
             # New rows have score_breakdown_json populated; older rows only
             # have the "role=X, skills=Y, ..." prefix embedded in
-            # score_reason — both paths produce the same dict.
+            # score_reason, both paths produce the same dict.
             breakdown = _parse_score_breakdown(r[11], r[5])
             jobs.append({
                 "id": r[13],

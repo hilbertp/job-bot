@@ -7,8 +7,8 @@ Public API:
     load_corpus(root: Path) -> CorpusBundle
 
 CorpusBundle structure:
-    primary_cv        : str             — extracted plaintext of PRIMARY_*
-    other_cvs         : list[CorpusDoc] — non-primary CVs (path + plaintext)
+    primary_cv        : str, extracted plaintext of PRIMARY_*
+    other_cvs         : list[CorpusDoc], non-primary CVs (path + plaintext)
     cover_letters     : list[CorpusDoc]
     website_pages     : list[CorpusDoc]
 

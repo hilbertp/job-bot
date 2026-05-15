@@ -4,7 +4,7 @@ PRD §7.8 FR-OUT-03.
 
 Two passes:
 
-1. **IMAP walk** — connect to TRUENORTH_IMAP_HOST with TRUENORTH_SMTP_USER/PASS
+1. **IMAP walk**, connect to TRUENORTH_IMAP_HOST with TRUENORTH_SMTP_USER/PASS
    (same creds work on IONOS). For each UNREAD message in INBOX, classify:
 
       bounce        → flips the matching application to apply_failed
@@ -19,7 +19,7 @@ Two passes:
    intervention. Messages we successfully matched are marked \\Seen;
    anything else stays unread for the human to handle.
 
-2. **No-bounce-24h pass** — any L1 application sent ≥24h ago that did
+2. **No-bounce-24h pass**, any L1 application sent ≥24h ago that did
    NOT bounce in pass 1 gets advanced to L2 ("no bounce detected").
 
 The scanner is read-only-friendly: when TRUENORTH_SMTP_* creds are
@@ -57,7 +57,7 @@ def _decode(raw: str | None) -> str:
         return raw.strip()
 
 
-# Bounce / auto-reply detection — kept as compiled regexes so the scanner
+# Bounce / auto-reply detection, kept as compiled regexes so the scanner
 # stays cheap on inboxes with hundreds of messages.
 _BOUNCE_FROM_RE = re.compile(
     r"(mailer-daemon|postmaster|mail.?delivery|mail.?delivery.subsystem|"
@@ -173,7 +173,7 @@ def _match_application(
         if len(candidates) == 1:
             return candidates[0], "sender_domain"
         # If multiple sent applications share a domain, we can't
-        # disambiguate without more signal — skip rather than guess.
+        # disambiguate without more signal, skip rather than guess.
 
     return None, ""
 
@@ -272,7 +272,7 @@ def scan_inbox(conn, secrets: Secrets, config: Config) -> dict:
         sent_by_email[addr] = a["job_id"]
         sent_by_domain.setdefault(addr.split("@", 1)[-1], []).append(a["job_id"])
 
-    # Pass 1 — IMAP walk
+    # Pass 1, IMAP walk
     bounced_ids: set[str] = set()
     matched_ids: set[str] = set()
     imap = _imap_connect(secrets)
@@ -313,7 +313,7 @@ def scan_inbox(conn, secrets: Secrets, config: Config) -> dict:
                     counts["rejections"] += 1
                 elif new_state == "replied":
                     counts["human_replies"] += 1
-                # Mark as Seen — we only flag what we matched, leaving
+                # Mark as Seen, we only flag what we matched, leaving
                 # the rest of the inbox untouched for the human.
                 try:
                     imap.store(uid, "+FLAGS", "\\Seen")
@@ -326,7 +326,7 @@ def scan_inbox(conn, secrets: Secrets, config: Config) -> dict:
             except Exception:
                 pass
 
-    # Pass 2 — advance L1 apps older than 24h that did NOT bounce.
+    # Pass 2, advance L1 apps older than 24h that did NOT bounce.
     waiting_candidates = conn.execute(
         "SELECT job_id FROM applications "
         "WHERE submitted = 1 "

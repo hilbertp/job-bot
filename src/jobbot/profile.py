@@ -73,7 +73,7 @@ def append_user_fact(
     as a durable fact about the candidate so ALL future scoring runs
     pick it up (not just the one job being rescored).
 
-    Idempotent — duplicate facts (case-insensitive, whitespace-collapsed)
+    Idempotent, duplicate facts (case-insensitive, whitespace-collapsed)
     are not appended a second time.
 
     The write is performed against the RAW user-edited `profile.yaml`
@@ -88,7 +88,7 @@ def append_user_fact(
 
     p = profile_path or REPO_ROOT / "data" / "profile.yaml"
     if not p.exists():
-        # Don't silently fall back to profile.example.yaml — that would write
+        # Don't silently fall back to profile.example.yaml, that would write
         # the user's private fact into a shipped example file.
         raise FileNotFoundError(f"profile.yaml not found at {p}")
 
@@ -103,7 +103,7 @@ def append_user_fact(
         return " ".join(s.split()).casefold()
 
     if _normalize(fact) in {_normalize(str(f)) for f in facts if f}:
-        return p  # already present — no-op
+        return p  # already present, no-op
 
     facts.append(fact)
     data["user_facts"] = facts
@@ -123,7 +123,7 @@ def apply_profile_patch(
       - "add_to_must_have_skills": list[str]
       - "add_to_nice_to_have_skills": list[str]
       - "add_to_user_facts": list[str]
-      - "preference_updates": dict[str, Any] — only writes keys already
+      - "preference_updates": dict[str, Any], only writes keys already
         present on the profile's preferences dict (no schema drift).
 
     Returns a summary of what was *actually* applied (after dedup/skipping
@@ -215,8 +215,7 @@ def load_primary_cv(corpus_root: Path | None = None) -> str:
 
     Supports .pdf / .docx / .md / .txt via the same readers as corpus_loader.
     Raises FileNotFoundError if zero or multiple PRIMARY_ files exist, or if
-    the file is unreadable. The scorer catches this and refuses to score —
-    callers must never see a silent fallback to a thinner profile.
+    the file is unreadable. The scorer catches this and refuses to score, callers must never see a silent fallback to a thinner profile.
     """
     from .profile_distiller.corpus_loader import (
         CorpusError, SUPPORTED_SUFFIXES, _read_doc,
@@ -234,7 +233,7 @@ def load_primary_cv(corpus_root: Path | None = None) -> str:
     ]
     if not candidates:
         raise FileNotFoundError(
-            f"no PRIMARY_ CV in {cvs_dir} — add exactly one PRIMARY_* file "
+            f"no PRIMARY_ CV in {cvs_dir}, add exactly one PRIMARY_* file "
             f"(.pdf/.docx/.md/.txt)"
         )
     if len(candidates) > 1:

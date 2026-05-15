@@ -1,4 +1,4 @@
-"""workingnomads.com — public JSON API at /api/exposed_jobs/."""
+"""workingnomads.com, public JSON API at /api/exposed_jobs/."""
 from __future__ import annotations
 
 import httpx
@@ -26,7 +26,7 @@ class WorkingNomadsScraper(BaseScraper):
     source = "working_nomads"
 
     def fetch(self, query: SearchQuery) -> list[JobPosting]:
-        # query example: {"q": "product manager"} — filters title/description/tags
+        # query example: {"q": "product manager"}, filters title/description/tags
         # substring (case-insensitive). Empty query returns every listing.
         needle = (query.get("q") or "").strip().lower()
         try:

@@ -109,7 +109,7 @@ def test_subject_template_de_uses_bewerbung_als() -> None:
 
 def test_subject_template_en_uses_application_with_name() -> None:
     assert _subject(_job_en(), _profile()) == (
-        "Application: Senior Product Manager — Philipp Hilbert"
+        "Application: Senior Product Manager, Philipp Hilbert"
     )
 
 

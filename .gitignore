@@ -54,3 +54,6 @@ logs/
 Thumbs.db
 *.swp
 *.swo
+
+# Claude Code worktrees + session files
+.claude/

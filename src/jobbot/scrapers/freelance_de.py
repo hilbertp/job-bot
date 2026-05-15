@@ -1,4 +1,4 @@
-"""freelance.de — HTML scrape (no public RSS). Use httpx + selectolax. Be polite."""
+"""freelance.de, HTML scrape (no public RSS). Use httpx + selectolax. Be polite."""
 from __future__ import annotations
 
 import time
@@ -29,7 +29,7 @@ class FreelanceDeScraper(BaseScraper):
         except Exception:
             return []  # log + return empty per BaseScraper contract
 
-        # NOTE: selectors below are a placeholder — verify against real markup
+        # NOTE: selectors below are a placeholder, verify against real markup
         # before enabling in production. freelance.de may change layout.
         tree = HTMLParser(r.text)
         out: list[JobPosting] = []
@@ -64,6 +64,6 @@ class FreelanceDeScraper(BaseScraper):
 
         Implementation note: prefer the same httpx + selectolax stack as
         ``fetch``; reuse _HEADERS and respect a per-call rate limit (≥1s sleep
-        after the request). On 429/999, log and return None — do not retry.
+        after the request). On 429/999, log and return None, do not retry.
         """
         raise NotImplementedError("Copilot to implement per PRD §7.3 FR-ENR-01")

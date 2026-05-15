@@ -99,7 +99,7 @@ async function loadJobs(status) {
     }
     tbody.innerHTML = rows.map(job => {
         const score = job.score;
-        const scoreText = score === null || score === undefined ? '—' : score;
+        const scoreText = score === null || score === undefined ? ',' : score;
         const statusCls = `status-${(job.status || '').replace(/-/g, '_')}`;
         return `
             <tr>
@@ -107,8 +107,8 @@ async function loadJobs(status) {
                 <td class="py-3 px-3"><a class="underline" target="_blank" href="${escapeHtml(job.url || '#')}">${escapeHtml(job.title || '')}</a></td>
                 <td class="py-3 px-3 text-purple-200">${escapeHtml(job.company || '')}</td>
                 <td class="py-3 px-3 text-purple-300 text-xs">${escapeHtml(job.location || '')}</td>
-                <td class="py-3 px-3"><span class="status-cell ${statusCls}">${escapeHtml(job.status || '—')}</span></td>
-                <td class="py-3 px-3 text-xs text-purple-200 max-w-xl truncate" title="${escapeHtml(job.score_reason || '')}">${escapeHtml(job.score_reason || '—')}</td>
+                <td class="py-3 px-3"><span class="status-cell ${statusCls}">${escapeHtml(job.status || ',')}</span></td>
+                <td class="py-3 px-3 text-xs text-purple-200 max-w-xl truncate" title="${escapeHtml(job.score_reason || '')}">${escapeHtml(job.score_reason || ',')}</td>
                 <td class="py-3 px-3"><a class="underline text-purple-200" target="_blank" href="${escapeHtml(job.url || '#')}">open ↗</a></td>
             </tr>
         `;

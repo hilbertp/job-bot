@@ -1,4 +1,4 @@
-"""StepStone (DACH) — plain HTML scrape via httpx. No Playwright needed.
+"""StepStone (DACH), plain HTML scrape via httpx. No Playwright needed.
 
 The /jobs/<query>/in-<location> pages render fully server-side with stable
 data-at attributes. Confirmed working with httpx + selectolax 2026-05.
@@ -93,7 +93,7 @@ class StepstoneScraper(BaseScraper):
 
         Implementation note: prefer the same httpx + selectolax stack as
         ``fetch``; reuse _HEADERS and respect a per-call rate limit (≥1s sleep
-        after the request). On 429/999, log and return None — do not retry.
+        after the request). On 429/999, log and return None, do not retry.
         """
         match = _JOB_ID_RE.search(str(job.url))
         detail_url = f"{BASE}/job/{match.group(1)}" if match else str(job.url)

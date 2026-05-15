@@ -1,6 +1,6 @@
 """Recruitee-hosted application forms (`{org}.recruitee.com/o/{slug}`).
 
-Recruitee is a common European ATS — used by GTO Wizard and many other
+Recruitee is a common European ATS, used by GTO Wizard and many other
 mid-size European tech companies. Layout pattern (verified live against
 `gtowizard.recruitee.com/o/product-manager-3`):
 
@@ -8,9 +8,9 @@ mid-size European tech companies. Layout pattern (verified live against
   tab** must be clicked to reveal the form (button id of the form
   `tabs--*--tab--1` with visible text "Application" or "Apply").
 - Core fields:
-  - `input[name='candidate.name']`         — full name (one field, not split)
-  - `input[name='candidate.email']`        — email
-  - `input[name='candidate.cv']` (type=file) — CV upload (REQUIRED, * marker)
+  - `input[name='candidate.name']`, full name (one field, not split)
+  - `input[name='candidate.email']`, email
+  - `input[name='candidate.cv']` (type=file), CV upload (REQUIRED, * marker)
   - No standard cover-letter slot.
 - Per-posting custom questions:
   `input[name='candidate.openQuestionAnswers.<numeric-id>.content']`
@@ -23,7 +23,7 @@ mid-size European tech companies. Layout pattern (verified live against
   `submit()` step tries a handful of selectors in order.
 
 The adapter never throws on missing optional fields and never clicks
-submit on its own — the runner's outer dry-run gate decides.
+submit on its own, the runner's outer dry-run gate decides.
 """
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ class RecruiteeAdapter:
 
         # Reveal the form: Recruitee posts open on "Job details"; the form
         # lives under the sibling "Application" / "Apply" tab. Clicking it
-        # is idempotent — if we're already on it, nothing changes.
+        # is idempotent, if we're already on it, nothing changes.
         for sel in [
             "button:has-text('Application')",
             "button:has-text('Apply')",
@@ -68,7 +68,7 @@ class RecruiteeAdapter:
             except Exception:
                 continue
 
-        # Core fields — single full-name input (not split), email, CV.
+        # Core fields, single full-name input (not split), email, CV.
         self._fill_if(page, "input[name='candidate.name']", p["full_name"])
         self._fill_if(page, "input[name='candidate.email']", p["email"])
         if "phone" in p:
@@ -155,7 +155,7 @@ class RecruiteeAdapter:
         `candidate.openQuestionAnswers.<id>.content`. We pull the label
         text for each, match heuristically against profile fields, and
         fill what we can confidently answer. Anything we don't recognise
-        is left blank — Recruitee will surface a validation error on
+        is left blank, Recruitee will surface a validation error on
         submit and the user can complete it manually."""
         try:
             questions = page.evaluate("""() => {

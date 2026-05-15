@@ -1,4 +1,4 @@
-"""Shared data models. Keep these small and stable — most of the codebase touches them."""
+"""Shared data models. Keep these small and stable, most of the codebase touches them."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -56,7 +56,7 @@ class ScoreResult(BaseModel):
     reason: str
     # Structured per-axis sub-scores (role / skills / location / seniority).
     # Persisted to seen_jobs.score_breakdown_json so the dashboard can render
-    # "Role 82 | Skills 85 | Location 25 | Seniority 78 — ..." without having
+    # "Role 82 | Skills 85 | Location 25 | Seniority 78, ..." without having
     # to parse the embedded prefix out of the freeform `reason` text.
     breakdown: dict | None = None
     # Filled in by the LLM (or the heuristic filter) when the row is being
@@ -76,7 +76,7 @@ class GeneratedDocs(BaseModel):
     # Unified opus-style application package: single PDF containing the
     # bespoke "Why <company>" / "AI-native stack" / "How I would work" /
     # cover letter (I) / curriculum vitae (II) sections. When set, this is
-    # the preferred attachment for the email channel — cv_pdf and
+    # the preferred attachment for the email channel, cv_pdf and
     # cover_letter_pdf are kept as fallbacks for ATS web forms that require
     # separate uploads.
     application_package_md: str | None = None

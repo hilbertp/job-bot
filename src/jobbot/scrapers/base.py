@@ -24,7 +24,7 @@ class BaseScraper(Protocol):
         Implementations should:
         - timeout aggressively (e.g. 20s per request)
         - identify with a real User-Agent
-        - return [] on transient failure rather than raising — log via structlog
+        - return [] on transient failure rather than raising, log via structlog
         - raise only on programmer errors (bad query shape)
         """
         ...

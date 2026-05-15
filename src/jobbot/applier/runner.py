@@ -28,8 +28,7 @@ _SUCCESS_TEXT_NEEDLES = (
 )
 
 # Selectors for common CAPTCHA implementations. If any of these is
-# present AFTER the submit click, the application is NOT submitted —
-# the candidate is at a bot-detection wall and needs to finish manually.
+# present AFTER the submit click, the application is NOT submitted, # the candidate is at a bot-detection wall and needs to finish manually.
 _CAPTCHA_SELECTORS = (
     ".g-recaptcha",
     ".h-captcha",
@@ -46,7 +45,7 @@ def _verify_post_submit(page) -> str:
     """Inspect the post-submit page state and return one of:
       - "captcha":  a CAPTCHA wall is up; submission is NOT complete.
       - "success":  a recognised success-indicator text was found.
-      - "unknown":  page changed but we can't tell — surface to user.
+      - "unknown":  page changed but we can't tell, surface to user.
 
     The runner uses this to refuse claiming APPLY_SUBMITTED on weak
     signals (URL change alone, click-didn't-raise alone). Documented in
@@ -54,7 +53,7 @@ def _verify_post_submit(page) -> str:
     incident on 2026-05-13 where a Recruitee captcha was mistaken for
     a successful submission.
     """
-    # CAPTCHA wins over success-text — if a CAPTCHA is on the page,
+    # CAPTCHA wins over success-text, if a CAPTCHA is on the page,
     # the application is NOT actually submitted regardless of what
     # other text might be visible.
     for sel in _CAPTCHA_SELECTORS:
@@ -102,8 +101,7 @@ def _is_expired_listing(final_url: str, response_status: int) -> tuple[bool, str
     resolves to an application form. Two signals:
 
       1. HTTP 403 / 404 / 410 on the apply_url (the job was deleted).
-      2. The URL after redirects lands on a known "generic" path —
-         /open-roles, /careers/index, /jobs/search, etc. — meaning the
+      2. The URL after redirects lands on a known "generic" path, /open-roles, /careers/index, /jobs/search, etc., meaning the
          specific posting redirected to the company's hiring index.
 
     Both signals are strong; if either fires the runner should NOT try
@@ -117,7 +115,7 @@ def _is_expired_listing(final_url: str, response_status: int) -> tuple[bool, str
         for needle in _EXPIRED_URL_PATTERNS:
             if needle in lower:
                 # Avoid false positives on /jobs/{id} URLs that legitimately
-                # contain the substring 'jobs' — we require a generic
+                # contain the substring 'jobs', we require a generic
                 # PATH segment, not a numeric job-id suffix.
                 if needle == "404" and "/404" not in lower:
                     continue
@@ -126,7 +124,7 @@ def _is_expired_listing(final_url: str, response_status: int) -> tuple[bool, str
 
 
 def _load_adapters():
-    """Lazy — only when auto-apply actually runs (avoids Playwright import cost).
+    """Lazy, only when auto-apply actually runs (avoids Playwright import cost).
 
     Order matters: more-specific adapters first, GenericAdapter last as
     the dry-run-only fallback. Recruitee is listed before Generic so the
@@ -152,7 +150,7 @@ def apply_to_job(
     secrets: Secrets, config: Config,
 ) -> ApplyResult:
     # Route to the email channel first when the enrichment step extracted
-    # a careers/jobs/bewerbung mailbox from the posting — sending an email
+    # a careers/jobs/bewerbung mailbox from the posting, sending an email
     # is simpler and more reliable than driving a web form, and matches
     # PRD §7.7 FR-APP-02. The email channel itself enforces dry-run when
     # SMTP creds are missing, so this is safe even before the operator
@@ -165,7 +163,7 @@ def apply_to_job(
         return ApplyResult(status=JobStatus.APPLY_NEEDS_REVIEW,
                            needs_review_reason="no apply_url on posting")
 
-    # Lazy import — only required for sources where auto_submit is true.
+    # Lazy import, only required for sources where auto_submit is true.
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
@@ -184,7 +182,7 @@ def apply_to_job(
             if expired:
                 return ApplyResult(
                     status=JobStatus.LISTING_EXPIRED,
-                    needs_review_reason=f"listing expired — {reason}",
+                    needs_review_reason=f"listing expired, {reason}",
                 )
     except Exception:
         # Network blip on the HEAD shouldn't kill the apply; only mark
@@ -204,8 +202,7 @@ def apply_to_job(
             # cookies/cache survive across runs so the 2nd visit to a site
             # looks like a returning user. Non-headless so the human can
             # eyeball + intervene (CAPTCHA, 2FA, login wall). The init
-            # script papers over the most obvious automation tell —
-            # `navigator.webdriver` defaulting to `true` under Playwright.
+            # script papers over the most obvious automation tell, # `navigator.webdriver` defaulting to `true` under Playwright.
             user_data_dir = (
                 config.apply.user_data_dir
                 or str(Path.home() / ".jobbot" / "chrome-profile")
@@ -240,7 +237,7 @@ def apply_to_job(
             page.goto(str(job.apply_url), wait_until="domcontentloaded", timeout=30_000)
             page.wait_for_timeout(1500)  # let SPA framework settle
 
-            # POST-NAVIGATE EXPIRED CHECK — some ATSes redirect via JS
+            # POST-NAVIGATE EXPIRED CHECK, some ATSes redirect via JS
             # after the initial HTML loads (Greenhouse 7551395 → consensys.io/open-roles).
             # The HEAD-based pre-flight catches HTTP-level redirects; this
             # catches the JS-level ones.
@@ -248,7 +245,7 @@ def apply_to_job(
             if expired_now:
                 return ApplyResult(
                     status=JobStatus.LISTING_EXPIRED,
-                    needs_review_reason=f"listing expired — {expired_reason}",
+                    needs_review_reason=f"listing expired, {expired_reason}",
                 )
 
             adapter = next((a for a in ADAPTERS if a.matches(str(job.apply_url), page)), None)
@@ -273,7 +270,7 @@ def apply_to_job(
                                    dry_run=True, screenshot_path=screenshot_path,
                                    needs_review_reason="dry-run mode")
 
-            # SUPERVISED MODE — "watch the bot do everything" semantics.
+            # SUPERVISED MODE, "watch the bot do everything" semantics.
             # The bot fills the form AND clicks Send. The user is watching
             # the visible Chrome window and only intervenes if a CAPTCHA
             # or other gate appears (in which case they solve it in-window;
@@ -288,7 +285,7 @@ def apply_to_job(
                 print(
                     f"\n  ⏳ SUPERVISED: form pre-filled at {page.url}.\n"
                     f"     The bot is about to click Send. Watch the Chrome\n"
-                    f"     window — if a CAPTCHA appears, solve it in-place;\n"
+                    f"     window, if a CAPTCHA appears, solve it in-place;\n"
                     f"     the bot will detect the success page and finish.\n"
                     f"     Polling for success up to {timeout_s}s ...\n"
                 )
@@ -298,7 +295,7 @@ def apply_to_job(
                     confirmation_url = adapter.submit(page)
                 except Exception as submit_err:
                     # Submit may raise if the button selector misses or
-                    # the page state is unexpected — surface the error
+                    # the page state is unexpected, surface the error
                     # but keep polling: the user might still be able to
                     # click Send manually inside the visible window.
                     print(f"     ! adapter.submit raised: {submit_err}")
@@ -331,7 +328,7 @@ def apply_to_job(
                         "supervised: bot clicked Send but no success "
                         "indicator appeared within the timeout. If a "
                         "CAPTCHA is on screen and you can solve it, do "
-                        "so — the polling stopped but the page may still "
+                        "so, the polling stopped but the page may still "
                         "complete. Otherwise re-run."
                     ),
                     screenshot_path=screenshot_path,
@@ -351,11 +348,11 @@ def apply_to_job(
                 page.click("button[type=submit]")
                 confirmation_url = page.url
 
-            # Capture the post-submit state regardless of outcome — this
+            # Capture the post-submit state regardless of outcome, this
             # is the screenshot the user reviews in Stage 4.
             page.screenshot(path=screenshot_path, full_page=True)
 
-            # POST-SUBMIT VERIFICATION — a URL change or HTTP 200 is NOT
+            # POST-SUBMIT VERIFICATION, a URL change or HTTP 200 is NOT
             # proof of submission. We confirm only when the receiving
             # platform shows positive evidence (a success indicator on the
             # post-submit page) AND there's no CAPTCHA wall blocking the
@@ -397,7 +394,7 @@ def apply_to_job(
             # has evidence of what state the page was in at the moment of
             # error. Without this, a submit click that fired but then
             # timed out on a post-click wait looks identical to a submit
-            # click that never happened — and we have no way to tell the
+            # click that never happened, and we have no way to tell the
             # user "your application probably went through, here's what
             # the success page looked like". The screenshot may overwrite
             # the pre-submit one, which is acceptable: the post-failure

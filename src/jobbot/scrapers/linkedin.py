@@ -1,4 +1,4 @@
-"""LinkedIn — public guest jobs endpoint (HTML).
+"""LinkedIn, public guest jobs endpoint (HTML).
 
 The /jobs-guest/jobs/api/seeMoreJobPostings/search endpoint returns ~10 clean
 SSR job cards per page without authentication. We page through it to collect
@@ -7,12 +7,12 @@ search page.
 
 Card descriptions are tiny (~150 chars). For meaningful match scoring we also
 expose `fetch_detail(job)`, which hits /jobs-guest/jobs/api/jobPosting/<id> and
-returns the full description plus criteria (seniority, employment type) — also
+returns the full description plus criteria (seniority, employment type), also
 unauthenticated.
 
 Limits:
 - LinkedIn rate-limits aggressively. Keep queries sparse (≥3s between calls).
-- NEVER enable auto_submit on this source — Easy Apply automation is forbidden
+- NEVER enable auto_submit on this source, Easy Apply automation is forbidden
   by LinkedIn's User Agreement.
 """
 from __future__ import annotations
@@ -44,7 +44,7 @@ _HEADERS = {
 BASE = "https://www.linkedin.com"
 
 # How many guest-API pages to fetch per query (each returns ~10 cards).
-# Keep this conservative — LinkedIn issues 429/999 above ~5 pages/min.
+# Keep this conservative, LinkedIn issues 429/999 above ~5 pages/min.
 _PAGES_PER_QUERY = 3
 
 
@@ -126,7 +126,7 @@ class LinkedInScraper(BaseScraper):
     def fetch_detail(self, job: JobPosting) -> JobPosting | None:
         """Fetch the full job posting and return a JobPosting with enriched description.
 
-        Uses /jobs-guest/jobs/api/jobPosting/<id> — same unauth endpoint as the
+        Uses /jobs-guest/jobs/api/jobPosting/<id>, same unauth endpoint as the
         card listing. Returns None if the detail page can't be parsed.
         """
         m = re.search(r"/jobs/view/[^/]*?(\d{6,})", str(job.url)) or re.search(

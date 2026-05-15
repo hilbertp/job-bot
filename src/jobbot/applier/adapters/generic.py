@@ -1,4 +1,4 @@
-"""Heuristic fallback for unrecognized forms — best-effort field matching by name/label."""
+"""Heuristic fallback for unrecognized forms, best-effort field matching by name/label."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -30,5 +30,5 @@ class GenericAdapter:
                 pass
 
     def submit(self, page: "Page") -> str:
-        # Don't auto-click in generic mode — too risky. Caller will dry-run only.
+        # Don't auto-click in generic mode, too risky. Caller will dry-run only.
         raise NotImplementedError("generic adapter is dry-run only")

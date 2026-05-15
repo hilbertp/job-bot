@@ -1,10 +1,9 @@
 """Two-stage matcher: cheap heuristic prefilter, then Claude Sonnet for the survivors.
 
 PRD §7.5 FR-SCO-01..05. The scorer enforces three hard preconditions before
-calling the LLM. If any fail, it raises `CannotScore` with the reason —
-callers persist this as a `cannot_score:*` status instead of a numeric score:
+calling the LLM. If any fail, it raises `CannotScore` with the reason, callers persist this as a `cannot_score:*` status instead of a numeric score:
   1. enrichment ran AND the body it stored is >= MIN_BODY_WORDS (100).
-     A long *listing-card* description is not enough — a posting can carry
+     A long *listing-card* description is not enough, a posting can carry
      a 250-word teaser on the search page while its detail body was never
      fetched. The caller must therefore pass `description_scraped=True`
      explicitly, and word_count is recomputed against `job.description`.
@@ -13,7 +12,7 @@ callers persist this as a `cannot_score:*` status instead of a numeric score:
 
 Cost note: this routes to claude-sonnet-4-6 (max_tokens=800). At expected
 volume (~120 postings/day) that's ~€150-200/mo of LLM spend versus ~€40/mo
-on the prior Haiku setup — roughly 5x per call. The user explicitly
+on the prior Haiku setup, roughly 5x per call. The user explicitly
 approved this trade-off in exchange for substantially more accurate
 scoring, since Haiku was clustering most matches in a narrow 60-80 band
 and missing real signal in the top tier.
@@ -56,7 +55,7 @@ class CannotScore(Exception):
         self.reason = reason
 
 # Deal-breaker keywords describing role seniority. When the job *title* clearly
-# signals a senior+ role, these are scoped to the title only — a "Junior Team
+# signals a senior+ role, these are scoped to the title only, a "Junior Team
 # Lead" hiring contact in the body of a Senior PM posting should not filter it.
 _SENIORITY_DEAL_BREAKERS = {
     "junior", "jr", "jr.",
@@ -109,7 +108,7 @@ def passes_heuristic(job: JobPosting, profile: Profile) -> tuple[bool, str]:
     title_is_senior = bool(_SENIOR_TITLE_RE.search(job.title or ""))
 
     # Deal-breaker keywords. Seniority-related keywords are scoped to the title
-    # only when the title signals a senior+ role — see _SENIORITY_DEAL_BREAKERS.
+    # only when the title signals a senior+ role, see _SENIORITY_DEAL_BREAKERS.
     for kw in profile.deal_breakers.get("keywords", []):
         kw_norm = (kw or "").strip().lower()
         scope = title_lower if (kw_norm in _SENIORITY_DEAL_BREAKERS and title_is_senior) else text
@@ -169,7 +168,7 @@ def _build_user_message(
         "preferences": profile.preferences,
         "deal_breakers": profile.deal_breakers,
     }
-    # Use yaml.safe_dump for sections 2/3 — model parses YAML reliably and it
+    # Use yaml.safe_dump for sections 2/3, model parses YAML reliably and it
     # reads better in the prompt than escaped JSON.
     compiled_yaml = yaml.safe_dump(compiled, sort_keys=False, allow_unicode=True).strip()
     hard_prefs_yaml = yaml.safe_dump(hard_prefs, sort_keys=False, allow_unicode=True).strip()
@@ -331,7 +330,7 @@ def llm_score_tailored(
     phase: str = "tailored_rescore",
 ) -> ScoreResult:
     """Score the posting AGAIN using the tailored CV + cover letter the
-    generator produced for it. Returns a ScoreResult — does not touch the
+    generator produced for it. Returns a ScoreResult, does not touch the
     DB. Caller persists via `update_score_tailored`.
 
     The tailored CV replaces the base-CV slot (section 1 of the prompt),
@@ -340,7 +339,7 @@ def llm_score_tailored(
     "(tailored)" so the model knows it's evaluating an actual submission
     rather than the candidate's background.
 
-    No body-length precondition here — by definition the caller is invoking
+    No body-length precondition here, by definition the caller is invoking
     this after Stage-3 generation succeeded, so the body must already pass.
     """
     if not (tailored_cv_md or "").strip():
@@ -377,7 +376,7 @@ def llm_score(
     `description_scraped` is required and reflects the row's enrichment
     state: True only when the scraper's `fetch_detail` returned a real
     body. A listing-card snippet that happens to be 200+ words still
-    fails the gate when this flag is False — the scorer must never trust
+    fails the gate when this flag is False, the scorer must never trust
     a body the enrichment phase did not vouch for.
 
     `user_feedback`, when set, is injected as an extra prompt section
@@ -390,7 +389,7 @@ def llm_score(
     """
     if not description_scraped:
         raise CannotScore(
-            "no_body: description_scraped flag is false — enrichment "
+            "no_body: description_scraped flag is false, enrichment "
             "never returned a real body for this posting"
         )
 
@@ -442,7 +441,7 @@ What each field is FOR (this is the most important rule):
   will mention by name (e.g. "product manager", "product owner",
   "product"). Personal skill claims, methodologies, tool names, and PM
   jargon ("JTBD interviews", "roadmap ownership", "Python", "AWS") do
-  NOT belong here — they would silently filter out real fits.
+  NOT belong here, they would silently filter out real fits.
   When in doubt, put it in `nice_to_have_skills` or `user_facts`.
 
 - `nice_to_have_skills` is a tag list the scorer uses as positive signal
@@ -451,7 +450,7 @@ What each field is FOR (this is the most important rule):
   all go HERE.
 
 - `user_facts` captures durable narrative facts that don't compress to
-  a single skill tag — e.g. "Has 6 years of B2B SaaS PM experience",
+  a single skill tag, e.g. "Has 6 years of B2B SaaS PM experience",
   "Open to relocating to Munich". One short sentence each.
 
 - `preference_updates` keys must match existing fields in the candidate's
@@ -465,7 +464,7 @@ Other rules:
   what the model already saw ("but it IS a PM role", "wtf").
 - DROP claims that contradict a hard legal/regulatory fact (e.g. "I
   qualify for US security clearance" when the candidate has stated they
-  are an EU citizen with no US ties — that's wishful, not a profile fact).
+  are an EU citizen with no US ties, that's wishful, not a profile fact).
 - NEVER add an LLM model name with a version number (no "GPT-4o",
   "GPT-5", "Claude 3.5", "Gemini 1.5"). Use plain "GPT" / "Claude" /
   "Gemini" if naming the model is necessary at all.
@@ -485,7 +484,7 @@ def extract_profile_updates_from_feedback(
     """Second LLM pass over a disagree-and-rescore comment that turns it
     into structured profile updates. Returns a (possibly empty) dict.
 
-    Failure modes (network, parse error, etc.) raise — the caller should
+    Failure modes (network, parse error, etc.) raise, the caller should
     treat extraction as best-effort and not block the rescore.
     """
     client = Anthropic(api_key=secrets.anthropic_api_key)

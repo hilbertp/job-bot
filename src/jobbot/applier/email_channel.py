@@ -8,13 +8,13 @@ Public entrypoint:
 
 Subject template, language-aware:
     DE → "Bewerbung als <Title>"
-    EN → "Application: <Title> — <Candidate Name>"
+    EN → "Application: <Title>, <Candidate Name>"
 
 Body = the cover letter, plain-text + HTML alternatives.
 Attachments = `cv.pdf` + `cover_letter.pdf` from `docs.output_dir`.
 
 SMTP creds come from secrets (TRUENORTH_SMTP_*). Never use Gmail for
-outbound applications — Gmail is reserved for the digest + fallback only.
+outbound applications, Gmail is reserved for the digest + fallback only.
 
 Safety rails:
 - If config.apply.dry_run is true → write the rendered .eml to
@@ -64,7 +64,7 @@ def _subject(job: JobPosting, profile: Profile) -> str:
     if lang == "de":
         return f"Bewerbung als {title}".strip()
     name = (profile.personal or {}).get("full_name", "").strip()
-    return f"Application: {title} — {name}".rstrip(" —")
+    return f"Application: {title}, {name}".rstrip(" ,")
 
 
 def _from_address(secrets: Secrets) -> str:
@@ -96,7 +96,7 @@ def _build_message(
     # Prefer the unified opus-style application package (one polished PDF
     # with cover letter as Section I and CV as Section II). Fall back to
     # the separate cv.pdf + cover_letter.pdf when the package didn't render
-    # — recruiters get something either way.
+    #, recruiters get something either way.
     if docs.application_package_pdf and Path(docs.application_package_pdf).exists():
         attachments: list[tuple[str, str]] = [
             ("application_package.pdf", docs.application_package_pdf),
@@ -128,7 +128,7 @@ def send_email_application(
     secrets: Secrets,
     config: Config,
 ) -> ApplyResult:
-    """Send the application email — or save a dry-run .eml for review."""
+    """Send the application email, or save a dry-run .eml for review."""
     if not job.apply_email:
         return ApplyResult(
             status=JobStatus.APPLY_NEEDS_REVIEW,
@@ -148,12 +148,12 @@ def send_email_application(
         eml_path.write_bytes(bytes(msg))
         if forced_dry and not config.apply.dry_run:
             reason = (
-                "email_channel: smtp_creds_missing — review application.eml; "
+                "email_channel: smtp_creds_missing, review application.eml; "
                 f"set {', '.join(missing)} in .env to enable live send"
             )
         else:
             reason = (
-                "email_channel: dry_run — review application.eml before "
+                "email_channel: dry_run, review application.eml before "
                 "flipping config.apply.dry_run=false"
             )
         return ApplyResult(

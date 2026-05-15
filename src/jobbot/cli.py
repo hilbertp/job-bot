@@ -114,7 +114,7 @@ def cmd_db_status(_args) -> int:
     status = db_lock_status()
     color = "red" if status.locked else "green"
     state = "LOCKED" if status.locked else "available"
-    console.print(f"[{color}]{state}[/{color}] — {status.detail}")
+    console.print(f"[{color}]{state}[/{color}], {status.detail}")
     if status.holders:
         table = Table(title="processes with the DB file open")
         table.add_column("pid"); table.add_column("command")
@@ -153,7 +153,7 @@ def cmd_apply(args) -> int:
 
 
 def cmd_mark_applied(args) -> int:
-    """Mark a job as already applied to (outside the bot — LinkedIn UI,
+    """Mark a job as already applied to (outside the bot, LinkedIn UI,
     in-person, recruiter call). The pipeline's apply step will skip this
     job on every subsequent run."""
     from .state import mark_application_manually
@@ -170,7 +170,7 @@ def cmd_mark_applied(args) -> int:
                                   channel=args.channel)
     console.print(
         f"[green]marked as applied[/green]: {row['title']} @ {row['company']} "
-        f"({args.job_id}) — future pipeline runs will skip this job."
+        f"({args.job_id}), future pipeline runs will skip this job."
     )
     if args.note:
         console.print(f"  note: {args.note}")
@@ -202,14 +202,14 @@ def cmd_enrich_backfill(args) -> int:
     with connect() as conn:
         candidates = jobs_needing_backfill(conn, min_words=MIN_BODY_WORDS, limit=cap)
         if not candidates:
-            console.print("nothing to backfill — every row has body >= "
+            console.print("nothing to backfill, every row has body >= "
                           f"{MIN_BODY_WORDS} words.")
             return 0
         console.print(f"backfilling {len(candidates)} rows (cap {cap}, "
                       f"floor {MIN_BODY_WORDS} words)...")
         report = enrich_new_postings(candidates, conn, registry=REGISTRY)
 
-    table = Table(title="enrichment backfill — per-source success rate")
+    table = Table(title="enrichment backfill, per-source success rate")
     table.add_column("source")
     table.add_column("attempted", justify="right")
     table.add_column("succeeded", justify="right")
@@ -220,7 +220,7 @@ def cmd_enrich_backfill(args) -> int:
         s = report.per_source_success.get(source, 0)
         f = report.per_source_failure.get(source, 0)
         attempted = s + f
-        rate = f"{(100 * s / attempted):.0f}%" if attempted else "—"
+        rate = f"{(100 * s / attempted):.0f}%" if attempted else ","
         table.add_row(source, str(attempted), str(s), str(f), rate)
     console.print(table)
     console.print(f"total: attempted={report.n_attempted}, "
@@ -230,7 +230,7 @@ def cmd_enrich_backfill(args) -> int:
 
 def cmd_rescore_backfill(args) -> int:
     """Re-score historical Stage-3 jobs whose tailored CV + cover letter are
-    on disk but never went through the tailored rescore — usually rows that
+    on disk but never went through the tailored rescore, usually rows that
     were generated before the rescorer was wired into the pipeline.
 
     For each candidate row, reads cv.md + cover_letter.md from its output
@@ -270,17 +270,17 @@ def cmd_rescore_backfill(args) -> int:
         candidates = jobs_needing_tailored_rescore(conn, limit=cap)
         if not candidates:
             console.print(
-                "nothing to backfill — every generated row already has a "
+                "nothing to backfill, every generated row already has a "
                 "tailored score."
             )
             return 0
 
         console.print(
-            f"rescoring {len(candidates)} generated row(s) — "
+            f"rescoring {len(candidates)} generated row(s), "
             f"~1 LLM call each (cap {cap})..."
         )
 
-        table = Table(title="tailored rescore — backfill")
+        table = Table(title="tailored rescore, backfill")
         table.add_column("source"); table.add_column("title")
         table.add_column("base", justify="right")
         table.add_column("tailored", justify="right")
@@ -341,7 +341,7 @@ def _cmd_rescore_base(args) -> int:
     With `--force`, additionally null every existing base score first and
     re-evaluate every eligible row (used when the evaluator or CV source
     changed and historical scores no longer reflect reality). Late-stage
-    rows (generated / apply_* / etc.) keep their pipeline status — only
+    rows (generated / apply_* / etc.) keep their pipeline status, only
     the score column is refreshed.
 
     Invoked via `jobbot rescore --base [--force]`. Bounded by --limit so a
@@ -402,16 +402,16 @@ def _cmd_rescore_base(args) -> int:
             ]
         if not candidates_with_status:
             console.print(
-                "nothing to rescore — every eligible row already has a base score."
+                "nothing to rescore, every eligible row already has a base score."
             )
             return 0
 
         console.print(
             f"rescoring {len(candidates_with_status)} row(s) with Sonnet + "
-            f"PRIMARY_ CV — ~1 LLM call each (cap {cap})..."
+            f"PRIMARY_ CV, ~1 LLM call each (cap {cap})..."
         )
 
-        table = Table(title="base rescore — Sonnet + PRIMARY_ CV")
+        table = Table(title="base rescore, Sonnet + PRIMARY_ CV")
         table.add_column("source"); table.add_column("title")
         table.add_column("score", justify="right")
         table.add_column("status", justify="right")
@@ -428,15 +428,15 @@ def _cmd_rescore_base(args) -> int:
                     new_status = JobStatus.CANNOT_SCORE_NO_BASE_CV
                 else:
                     new_status = JobStatus.CANNOT_SCORE_NO_BODY
-                # Never demote a late-stage row to cannot_score — refresh the
+                # Never demote a late-stage row to cannot_score, refresh the
                 # reason column but keep its pipeline status. Otherwise the
                 # standard cannot_score downgrade is correct.
                 if current_status in overwritable_statuses:
                     update_status(conn, job.id, new_status, score=None, reason=reason)
-                    table.add_row(job.source, (job.title or "")[:50], "—", new_status.value)
+                    table.add_row(job.source, (job.title or "")[:50], ",", new_status.value)
                 else:
                     update_base_score_only(conn, job.id, score=None, reason=reason)
-                    table.add_row(job.source, (job.title or "")[:50], "—", current_status)
+                    table.add_row(job.source, (job.title or "")[:50], ",", current_status)
                 n_cannot += 1
                 continue
             except Exception as e:
@@ -605,7 +605,7 @@ def main(argv: list[str] | None = None) -> int:
              "re-evaluate every eligible row against Sonnet + the current "
              "CV. Used after the evaluator or CV source changes. SCORED/"
              "BELOW_THRESHOLD rows fall back to SCRAPED; later-stage rows "
-             "(generated, apply_*, etc.) keep their status — only the score "
+             "(generated, apply_*, etc.) keep their status, only the score "
              "is refreshed.",
     )
     rescore.set_defaults(fn=cmd_rescore_backfill)

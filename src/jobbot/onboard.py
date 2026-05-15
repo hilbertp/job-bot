@@ -42,7 +42,7 @@ def _prompt(label: str, default: str = "", *, required: bool = False) -> str:
         value = raw if raw else default
         if value or not required:
             return value
-        print("    (required — please enter a value)")
+        print("    (required, please enter a value)")
 
 
 def _prompt_yn(label: str, default: bool = False) -> bool:
@@ -72,7 +72,7 @@ def _prompt_int(label: str, default: int) -> int:
 def _confirm_overwrite(path: Path) -> bool:
     if not path.exists():
         return True
-    return _prompt_yn(f"{path.relative_to(REPO_ROOT)} already exists — overwrite?", default=False)
+    return _prompt_yn(f"{path.relative_to(REPO_ROOT)} already exists, overwrite?", default=False)
 
 
 def _expand_user_path(raw: str) -> Path:
@@ -100,7 +100,7 @@ def _ingest_corpus_file(
     name = f"PRIMARY_{src.name}" if primary else src.name
     dest = dest_dir / name
     if dest.exists() and not _prompt_yn(
-        f"    {dest.relative_to(REPO_ROOT)} already exists — overwrite?",
+        f"    {dest.relative_to(REPO_ROOT)} already exists, overwrite?",
         default=False,
     ):
         print(f"    ⏭  kept existing {dest.relative_to(REPO_ROOT)}")
@@ -134,16 +134,16 @@ def _yaml_escape(s: str) -> str:
 def _write_env(answers: dict, path: Path) -> None:
     body = f"""# Copy edited from .env.example by `jobbot init`.
 
-# Anthropic — REQUIRED. Get a key at https://console.anthropic.com/settings/keys
+# Anthropic, REQUIRED. Get a key at https://console.anthropic.com/settings/keys
 ANTHROPIC_API_KEY=sk-ant-PASTE-YOUR-KEY-HERE
 
-# Gmail (App Password — NOT your normal password)
+# Gmail (App Password, NOT your normal password)
 # Generate at: https://myaccount.google.com/apppasswords
 GMAIL_ADDRESS={answers["gmail_address"]}
 GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
 NOTIFY_TO={answers["notify_to"]}
 
-# Captcha solver (optional — only needed if you enable web-form auto-apply)
+# Captcha solver (optional, only needed if you enable web-form auto-apply)
 CAPTCHA_PROVIDER=twocaptcha
 CAPTCHA_API_KEY=
 
@@ -151,7 +151,7 @@ CAPTCHA_API_KEY=
 IMAP_HOST=imap.gmail.com
 IMAP_PORT=993
 
-# Outbound application email — fill in only when you're ready to send
+# Outbound application email, fill in only when you're ready to send
 # real applications. Until then the email channel stays in dry-run mode.
 TRUENORTH_SMTP_HOST=
 TRUENORTH_SMTP_PORT=587
@@ -252,14 +252,14 @@ sources:
 {queries_yaml}
   linkedin:
     enabled: true
-    auto_submit: false        # NEVER enable this — LinkedIn ToS forbids auto-apply
+    auto_submit: false        # NEVER enable this, LinkedIn ToS forbids auto-apply
     queries:
 {queries_yaml}
   weworkremotely:
     enabled: true
     auto_submit: false
     queries:
-      - category: remote-programming-jobs   # WWR uses categories, not free text — edit this
+      - category: remote-programming-jobs   # WWR uses categories, not free text, edit this
   dailyremote:
     enabled: true
     auto_submit: false
@@ -289,19 +289,19 @@ def _write_base_cv(answers: dict, path: Path) -> None:
 REPLACE THIS PARAGRAPH with your real summary. One paragraph, max 4 sentences.
 Lead with the 1–2 facts most relevant to the roles you're targeting
 ({", ".join(answers["target_roles"])}). The LLM uses this as the hook
-when tailoring per job — it will NEVER invent claims you don't put here.
+when tailoring per job, it will NEVER invent claims you don't put here.
 
 ## Experience
 
-### Most recent role — Company name
+### Most recent role, Company name
 
 *City · YYYY – present*
 
 - Replace with a concrete accomplishment, ideally with a metric.
-- Replace with another bullet — verb-first, past tense.
+- Replace with another bullet, verb-first, past tense.
 - Three to five bullets per role works well.
 
-### Previous role — Company name
+### Previous role, Company name
 
 *City · YYYY – YYYY*
 
@@ -317,7 +317,7 @@ when tailoring per job — it will NEVER invent claims you don't put here.
 
 ## Education
 
-**Highest qualification** — Institution, YYYY
+**Highest qualification**, Institution, YYYY
 
 ## Languages
 
@@ -367,7 +367,7 @@ def run() -> int:
     """Drive the wizard. Returns 0 on success, 1 if the user aborted."""
     print()
     print("─" * 64)
-    print(" jobbot init — let's set up your personal job-search profile.")
+    print(" jobbot init, let's set up your personal job-search profile.")
     print("─" * 64)
     print()
     print(" Every question has a default in [brackets]. Press Enter to accept.")
@@ -395,7 +395,7 @@ def run() -> int:
     print()
     print(" 3. Email accounts")
     print("    The Gmail account is what sends you the daily digest.")
-    print("    It is NOT used for outbound applications — those go through")
+    print("    It is NOT used for outbound applications, those go through")
     print("    a separate business SMTP you can configure later.")
     answers["gmail_address"] = _prompt("Your Gmail address", default=answers["personal_email"])
     answers["notify_to"] = _prompt("Send the digest to", default=answers["gmail_address"])
@@ -458,7 +458,7 @@ def run() -> int:
     while True:
         cv_path_raw = _prompt("Path to your CV", default="")
         if not cv_path_raw:
-            print("    ⏭  no CV provided — drop one in data/corpus/cvs/ later")
+            print("    ⏭  no CV provided, drop one in data/corpus/cvs/ later")
             break
         src = _expand_user_path(cv_path_raw)
         if not src.exists() or not src.is_file():
@@ -490,7 +490,7 @@ def run() -> int:
     while True:
         cl_path_raw = _prompt("Path to a cover letter", default="")
         if not cl_path_raw:
-            print("    ⏭  no cover letter provided — drop one in data/corpus/cover_letters/ later")
+            print("    ⏭  no cover letter provided, drop one in data/corpus/cover_letters/ later")
             break
         src = _expand_user_path(cl_path_raw)
         if not src.exists() or not src.is_file():

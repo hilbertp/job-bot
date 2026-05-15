@@ -12,7 +12,7 @@ Regex prefilter (catches ~80% with no LLM cost):
                               "weiterverfolgen", "moving forward with other",
                               "wish you the best", "no longer considering"
 
-If both fire (rare — interview-after-rejection), prefer interview.
+If both fire (rare, interview-after-rejection), prefer interview.
 If neither fires and the message is from a company we've applied to,
 fall back to LLM with a short JSON-output prompt.
 
