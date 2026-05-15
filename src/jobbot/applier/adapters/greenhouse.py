@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 
 from ...models import GeneratedDocs, JobPosting
 from ...profile import Profile
+from ..salary import apply_salary_for
 
 
 class GreenhouseAdapter:
@@ -103,7 +104,7 @@ class GreenhouseAdapter:
         # <label>. We do heuristic matching against the label text and
         # fill from profile where there's a confident match; questions
         # we don't recognise are left blank for the user to fill.
-        self._fill_custom_questions(page, profile)
+        self._fill_custom_questions(page, profile, job)
 
     def submit(self, page: "Page") -> str:
         # Modern submit is a <button> with text "Submit application" near
@@ -153,11 +154,18 @@ class GreenhouseAdapter:
             except Exception:
                 continue
 
-    def _fill_custom_questions(self, page: "Page", profile: Profile) -> None:
+    def _fill_custom_questions(
+        self, page: "Page", profile: Profile, job: JobPosting,
+    ) -> None:
         """Walk every `#question_<numeric>` input on the page, read its
         label, and fill from profile where the heuristic gives a high
         confidence match. Anything ambiguous is left blank — the user
-        can complete it manually before the submit step."""
+        can complete it manually before the submit step.
+
+        Salary is resolved via `apply_salary_for(job.description, …)`
+        which prefers the employer's stated low-end when the JD names a
+        range, else falls back to the candidate's profile anchor.
+        """
         try:
             questions = page.evaluate("""() => {
                 return [...document.querySelectorAll("input[id^='question_'], textarea[id^='question_']")]
@@ -171,6 +179,10 @@ class GreenhouseAdapter:
 
         prefs = profile.preferences
         p = profile.personal
+        # Resolve the salary once per page — same number reused if there
+        # are multiple salary fields on the form.
+        anchor_eur = int(prefs.get("application_salary_eur_year") or 125_000)
+        salary = apply_salary_for(job.description or "", anchor_eur)
         for q in questions:
             label_lc = (q.get("label") or "").lower()
             value = ""
@@ -180,9 +192,7 @@ class GreenhouseAdapter:
                 value = (p.get("links", {}).get("website")
                          or p.get("links", {}).get("github", ""))
             elif "salary" in label_lc:
-                rng = prefs.get("desired_salary_eur", {})
-                if isinstance(rng, dict) and rng.get("min"):
-                    value = f"{rng['min']}-{rng.get('max', '')} EUR/year"
+                value = salary.for_yearly_field()
             elif "city" in label_lc or "state" in label_lc or "located" in label_lc:
                 loc = p.get("location", {})
                 value = f"{loc.get('city', '')}, {loc.get('country', '')}".strip(", ")

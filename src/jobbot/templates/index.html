@@ -1103,20 +1103,29 @@ async function loadShortlist() {
         // user which postings still need a real send.
         let appliedPill = '';
         if (job.applied_state) {
+            // Pill colour + label per state. `expired` (LISTING_EXPIRED)
+            // is grey so it reads as "no longer actionable" rather than
+            // "needs your attention" (red). User feedback 2026-05-15:
+            // "if its gone, mark with expired pill in stage 3 and move
+            // to next project".
             const cls = job.applied_state === 'applied'
                 ? 'bg-emerald-500/30 border-emerald-300/40 text-emerald-100'
                 : job.applied_state === 'dry_run'
                     ? 'bg-amber-400/25 border-amber-300/40 text-amber-100'
-                    : 'bg-red-500/25 border-red-300/40 text-red-100';
+                    : job.applied_state === 'expired'
+                        ? 'bg-zinc-500/30 border-zinc-400/40 text-zinc-100'
+                        : 'bg-red-500/25 border-red-300/40 text-red-100';
             const label = job.applied_state === 'applied'
                 ? '✓ applied'
                 : job.applied_state === 'dry_run'
                     ? 'dry-run sent'
-                    : job.applied_state === 'needs_review'
-                        ? '⚠ needs review'
-                        : '✗ apply failed';
+                    : job.applied_state === 'expired'
+                        ? '⏱ expired'
+                        : job.applied_state === 'needs_review'
+                            ? '⚠ needs review'
+                            : '✗ apply failed';
             const titleAttr = job.applied_at
-                ? `${label.replace(/[✓✗⚠] /, '')} — ${escapeHtml(job.applied_at)}`
+                ? `${label.replace(/[✓✗⚠⏱] /, '')} — ${escapeHtml(job.applied_at)}`
                 : label;
             appliedPill = `<span class="text-xs px-2 py-1 rounded border ${cls}" title="${titleAttr}">${label}</span>`;
         }

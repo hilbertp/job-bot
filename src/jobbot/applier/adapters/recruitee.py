@@ -186,16 +186,21 @@ class RecruiteeAdapter:
                 loc = p.get("location", {})
                 value = f"{loc.get('city', '')}, {loc.get('country', '')}".strip(", ")
             elif "salary" in label_lc:
-                rng = prefs.get("desired_salary_eur", {})
-                if isinstance(rng, dict) and rng.get("min"):
-                    if q["type"] == "number":
-                        # Monthly figure — Recruitee number fields often ask
-                        # for monthly EUR. Divide annual by 12 and round to
-                        # the nearest hundred for readability.
-                        monthly = (rng["min"] // 100) * 100 // 12 * 100
-                        value = str(int(rng["min"] / 12))
-                    else:
-                        value = f"{rng['min']}-{rng.get('max', '')} EUR/year"
+                # Use the apply-time salary resolver: prefers the
+                # employer's stated low-end when the JD names a range,
+                # else falls back to the candidate's profile anchor
+                # (default 125_000 EUR/year). For numeric-only monthly
+                # fields (Recruitee's pattern) we divide by 12 and emit
+                # the integer; for free-text fields we emit a string
+                # with the currency + period.
+                from ..salary import apply_salary_for
+                anchor_eur = int(prefs.get("application_salary_eur_year") or 125_000)
+                salary = apply_salary_for(job.description or "", anchor_eur)
+                monthly_hint = "month" in label_lc or "monatlich" in label_lc
+                if q["type"] == "number" or monthly_hint:
+                    value = str(salary.for_monthly_field())
+                else:
+                    value = salary.for_yearly_field()
             elif "notice" in label_lc:
                 value = f"{prefs.get('notice_period_weeks', 4)} weeks"
             elif "sponsor" in label_lc or "visa" in label_lc:
