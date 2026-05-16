@@ -185,6 +185,45 @@ def cmd_dashboard(_args) -> int:
     return 0
 
 
+def cmd_housekeep(args) -> int:
+    """HEAD-probe every live shortlist row; mark dead apply URLs as
+    listing_expired so they exit the shortlist and surface the yellow
+    expired pill in Stage 3. The pipeline calls the same routine after
+    scoring; this CLI is for ad-hoc cleanup between runs."""
+    from .housekeep import housekeep_shortlist
+
+    min_score = int(getattr(args, "min_score", 70))
+    dry_run = bool(getattr(args, "dry_run", False))
+    with connect() as conn:
+        report = housekeep_shortlist(conn, min_score=min_score, dry_run=dry_run)
+
+    verb = "would mark" if dry_run else "marked"
+    console.print(
+        f"[bold]housekeep[/bold] scanned {report.scanned} live shortlist row(s) "
+        f"(score >= {min_score}); {verb} [yellow]{report.marked_expired}[/yellow] "
+        f"as listing_expired"
+    )
+    if report.expired_rows:
+        table = Table(title="expired listings")
+        table.add_column("score")
+        table.add_column("title @ company", max_width=60)
+        table.add_column("source")
+        table.add_column("reason", max_width=60)
+        for row in report.expired_rows:
+            score = f"{row['score']}/{row['score_tailored'] or '-'}"
+            table.add_row(
+                score, f"{row['title']} @ {row['company']}",
+                row["source"], row["reason"],
+            )
+        console.print(table)
+    if report.network_errors:
+        console.print(
+            f"[yellow]{report.network_errors}[/yellow] row(s) failed the HEAD "
+            "probe (network), left unchanged."
+        )
+    return 0
+
+
 def cmd_enrich_backfill(args) -> int:
     """PRD §7.3 FR-ENR-04 + §7.5 FR-SCO-01: backfill body text for rows that
     were scraped before enrichment was wired in, or that came back below the
@@ -554,6 +593,17 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("scan-inbox", help="Scan inbox for application outcomes.").set_defaults(fn=cmd_scan_inbox)
     sub.add_parser("inbox-scan", help="Alias for scan-inbox.").set_defaults(fn=cmd_scan_inbox)
     sub.add_parser("apply", help="Run the scheduled apply pipeline pass.").set_defaults(fn=cmd_apply)
+
+    housekeep = sub.add_parser(
+        "housekeep",
+        help="HEAD-probe live shortlist rows and mark dead apply URLs as "
+             "listing_expired. Same probe runs in-pipeline after scoring.",
+    )
+    housekeep.add_argument("--dry-run", action="store_true",
+                           help="Report what would be marked without writing.")
+    housekeep.add_argument("--min-score", type=int, default=70,
+                           help="Only probe rows with score >= this (default 70).")
+    housekeep.set_defaults(fn=cmd_housekeep)
 
     mark = sub.add_parser(
         "mark-applied",

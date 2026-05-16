@@ -33,6 +33,24 @@ class JobStatus(str, Enum):  # str-mixin for sqlite/JSON compatibility, works on
     INTERVIEW_INVITED = "interview_invited"
 
 
+# Statuses where rescoring or re-enriching would clobber legitimate
+# downstream state. The pipeline must skip these rows when it builds its
+# scoring queue. Otherwise a still-listed posting that's already been
+# applied-to / marked-expired gets reset to SCORED on the next run when
+# the scraper re-discovers it.
+TERMINAL_STATUSES = frozenset({
+    JobStatus.APPLY_QUEUED.value,
+    JobStatus.APPLY_SUBMITTED.value,
+    JobStatus.APPLY_NEEDS_REVIEW.value,
+    JobStatus.APPLY_FAILED.value,
+    JobStatus.LISTING_EXPIRED.value,
+    JobStatus.EMPLOYER_RECEIVED.value,
+    JobStatus.WAITING_RESPONSE.value,
+    JobStatus.REJECTED.value,
+    JobStatus.INTERVIEW_INVITED.value,
+})
+
+
 class JobPosting(BaseModel):
     id: str = Field(..., description="Stable hash of source+url")
     source: str
