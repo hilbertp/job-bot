@@ -78,17 +78,18 @@ def _verify_post_submit(page) -> str:
 from ..expiry import is_expired_listing as _is_expired_listing  # noqa: F401
 
 
-def _load_adapters():
+def _load_adapters(*, anthropic_api_key: str | None = None):
     """Lazy, only when auto-apply actually runs (avoids Playwright import cost).
 
-    Order matters: more-specific adapters first, GenericAdapter last as
-    the dry-run-only fallback. Recruitee is listed before Generic so the
-    GTO-Wizard-style postings get the real adapter; everything truly
-    unknown still falls through to Generic.
+    Order matters: more-specific adapters first, then LLMFillAdapter as
+    the smart universal fallback for unknown ATSes (scope-recruiting.de,
+    TeamTailor, custom German Mittelstand forms), then GenericAdapter as
+    the absolute last-resort dry-run for pages where LLMFill failed too.
     """
     from .adapters.generic import GenericAdapter
     from .adapters.greenhouse import GreenhouseAdapter
     from .adapters.lever import LeverAdapter
+    from .adapters.llm_fill import LLMFillAdapter
     from .adapters.recruitee import RecruiteeAdapter
     from .adapters.workday import WorkdayAdapter
     return [
@@ -96,6 +97,7 @@ def _load_adapters():
         LeverAdapter(),
         WorkdayAdapter(),
         RecruiteeAdapter(),
+        LLMFillAdapter(anthropic_api_key=anthropic_api_key),
         GenericAdapter(),
     ]
 
@@ -147,7 +149,7 @@ def apply_to_job(
 
     captcha = get_captcha_solver(secrets, config)
     otp = OtpFetcher(secrets, config)
-    ADAPTERS = _load_adapters()
+    ADAPTERS = _load_adapters(anthropic_api_key=secrets.anthropic_api_key)
 
     supervised = bool(config.apply.supervised)
 
