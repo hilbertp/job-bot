@@ -95,6 +95,17 @@ def _make_config(
     )
 
 
+def _stub_housekeep(monkeypatch, pipeline):
+    """Disable the in-pipeline housekeep probe in tests. Fixture URLs
+    (example.com/jobs/<id>) return 404, which would otherwise demote
+    every scored row to listing_expired."""
+    from jobbot.housekeep import HousekeepReport
+    monkeypatch.setattr(
+        pipeline, "housekeep_shortlist",
+        lambda *_a, **_kw: HousekeepReport(0, 0, 0, 0, 0, [], []),
+    )
+
+
 def _stub_pipeline(monkeypatch, pipeline, *, fake_scraper, llm_score_result, profile=None):
     """Apply the common offline monkeypatches and return for assertion."""
     monkeypatch.setattr(pipeline, "REGISTRY", {"fake": fake_scraper})
@@ -103,6 +114,7 @@ def _stub_pipeline(monkeypatch, pipeline, *, fake_scraper, llm_score_result, pro
     monkeypatch.setattr(pipeline, "passes_heuristic", lambda _job, _profile: (True, ""))
     monkeypatch.setattr(pipeline, "send_digest", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(pipeline, "llm_score", lambda *_a, **_kw: llm_score_result)
+    _stub_housekeep(monkeypatch, pipeline)
 
 
 # =============================================================================
@@ -699,6 +711,7 @@ def test_pipeline_writes_both_score_and_score_tailored_when_generation_runs(
         pipeline, "llm_score_tailored",
         lambda *_a, **_kw: ScoreResult(score=93, reason="tailored lift"),
     )
+    _stub_housekeep(monkeypatch, pipeline)
 
     # Redirect generation output into the tmp dir so we don't pollute output/.
     config = _make_config(generate_above=80)
@@ -742,6 +755,7 @@ def test_api_shortlist_exposes_tailored_score_fields(tmp_path: Path, monkeypatch
         pipeline, "llm_score_tailored",
         lambda *_a, **_kw: ScoreResult(score=93, reason="tailored"),
     )
+    _stub_housekeep(monkeypatch, pipeline)
     config = _make_config(generate_above=80)
     config.output_dir = str(tmp_path / "out")
     monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)
@@ -835,6 +849,7 @@ def test_shortlist_doc_route_serves_existing_html(tmp_path: Path, monkeypatch) -
         pipeline, "llm_score_tailored",
         lambda *_a, **_kw: ScoreResult(score=93, reason="tailored"),
     )
+    _stub_housekeep(monkeypatch, pipeline)
     config = _make_config(generate_above=80)
     config.output_dir = str(tmp_path / "out")
     monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)
@@ -872,6 +887,7 @@ def test_shortlist_doc_route_rejects_filenames_outside_allowlist(
         pipeline, "llm_score_tailored",
         lambda *_a, **_kw: ScoreResult(score=93, reason="tailored"),
     )
+    _stub_housekeep(monkeypatch, pipeline)
     config = _make_config(generate_above=80)
     config.output_dir = str(tmp_path / "out")
     monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)

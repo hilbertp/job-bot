@@ -139,6 +139,14 @@ def _patch_pipeline(
     monkeypatch.setattr(pipeline, "send_digest", lambda *_a, **_kw: None)
     monkeypatch.setattr(pipeline, "generate_documents", _fake_generate_documents)
     monkeypatch.setattr(pipeline, "generate_application_package", _fake_generate_documents)
+    # The pipeline runs housekeep_shortlist after scoring to demote dead
+    # listings. Test fixtures use example.com/jobs/<id> URLs that return
+    # 404 → would be marked listing_expired. Stub it out for tests.
+    from jobbot.housekeep import HousekeepReport
+    monkeypatch.setattr(
+        pipeline, "housekeep_shortlist",
+        lambda *_a, **_kw: HousekeepReport(0, 0, 0, 0, 0, [], []),
+    )
 
     reject_ids = heuristic_reject_ids or set()
 

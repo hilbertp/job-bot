@@ -15,7 +15,8 @@ from .generators import (
     generate_application_package,
     generate_documents,  # noqa: F401 - public monkeypatch seam for older tests/tools.
 )
-from .models import JobPosting, JobStatus
+from .housekeep import housekeep_shortlist
+from .models import TERMINAL_STATUSES, JobPosting, JobStatus
 from .notify import send_digest, send_failure_alert
 from .profile import load_base_cv, load_profile
 from .scoring import CannotScore, llm_score, llm_score_tailored, passes_heuristic
@@ -231,6 +232,30 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
             except Exception as e:
                 errors.append({"source": row["source"], "error": f"decode: {e}"})
 
+        # Guard against re-scoring rows that already reached a terminal
+        # status. Without this, a still-listed posting that was previously
+        # marked listing_expired (or apply_submitted / employer_received /
+        # rejected / etc.) gets clobbered back to SCORED the next time the
+        # scraper finds it on the source board. `INSERT OR IGNORE` in
+        # upsert_new keeps the seen_jobs row stable, but the in-memory
+        # JobPosting still flows through enrichment → to_score → the
+        # unconditional `update_status(JobStatus.SCORED, ...)` at the end
+        # of the scoring loop. Skipping these IDs at the source preserves
+        # the downstream state.
+        if to_score:
+            placeholders = ",".join("?" * len(to_score))
+            existing = dict(conn.execute(
+                f"SELECT id, status FROM seen_jobs WHERE id IN ({placeholders})",
+                list(to_score.keys()),
+            ).fetchall())
+            n_terminal_skipped = 0
+            for jid in list(to_score.keys()):
+                if existing.get(jid) in TERMINAL_STATUSES:
+                    del to_score[jid]
+                    n_terminal_skipped += 1
+            if n_terminal_skipped:
+                log.info("scoring_skip_terminal", count=n_terminal_skipped)
+
         to_generate: list[tuple[JobPosting, int, str]] = []
         score_candidates = list(to_score.values())[: config.max_jobs_per_run]
         update_run_stage_progress(
@@ -340,6 +365,25 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 completed=n_scored + n_below_threshold + n_filtered + n_cannot_score,
                 failed=n_cannot_score + n_score_failed,
             )
+
+        # 3.5) Housekeep: probe every live shortlist row's apply URL and
+        # demote dead postings to listing_expired BEFORE Stage 3 wastes
+        # generation cost on a role that's been pulled. The probe is the
+        # same one the apply runner uses (HEAD + redirect-to-generic
+        # detection), just batched. Demoted rows are dropped from
+        # to_generate so they never reach the generation loop.
+        try:
+            hk_report = housekeep_shortlist(conn, min_score=config.score_threshold)
+            if hk_report.marked_expired:
+                expired_ids = {r["id"] for r in hk_report.expired_rows}
+                to_generate = [t for t in to_generate if t[0].id not in expired_ids]
+                log.info(
+                    "housekeep_marked_expired",
+                    scanned=hk_report.scanned,
+                    marked=hk_report.marked_expired,
+                )
+        except Exception as e:
+            log.warning("housekeep_failed", error=str(e))
 
         # 4) Generate, only the top-N highest-scoring postings get tailored
         # CV + cover letter. Lower-ranked shortlist entries still flow through
