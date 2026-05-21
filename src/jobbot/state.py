@@ -359,6 +359,7 @@ def update_enrichment(
     apply_email: str | None,
     company: str | None = None,
     posted_at: str | None = None,
+    apply_url: str | None = None,
 ) -> None:
     """Persist enrichment fields for a posting and keep raw_json description in sync.
 
@@ -387,6 +388,11 @@ def update_enrichment(
         # found one; never clobber a date the listing already supplied.
         if posted_at and not payload.get("posted_at"):
             payload["posted_at"] = posted_at
+        # Apply-path research resolved a canonical employer URL to replace
+        # the paywalled aggregator link. Overwrite so the dashboard apply
+        # route and the applier both use the real URL.
+        if apply_url:
+            payload["apply_url"] = apply_url
 
     base_sql = (
         "UPDATE seen_jobs SET description_full = ?, description_scraped = ?, "

@@ -5,6 +5,8 @@ max_jobs_per_run: 200         # safety cap on LLM spend
 salary_floor_eur_year: 0      # drop postings whose STATED top pay < this (EUR/yr); 0 disables
 freelance_sources: []         # sources with hourly comp, exempt from the annual floor
 freelance_hourly_floor_eur: 0 # min freelance rate EUR/hr for those sources; 0 disables
+apply_research_enabled: false # web-search canonical apply URL for paywalled rows (adds LLM+search cost)
+apply_research_max_per_run: 50 # cap researched rows/run when enabled
 output_dir: output            # relative to repo root
 
 # Path to a pre-designed static CV PDF used for outgoing applications.

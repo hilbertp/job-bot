@@ -111,6 +111,14 @@ class Config(BaseModel):
     # freelance source whose stated rate is below this are filtered;
     # postings that state no rate pass through. 0 disables.
     freelance_hourly_floor_eur: float = 0.0
+    # Apply-path research: during enrichment, for rows whose only apply
+    # link is a paywalled aggregator, web-search for the canonical
+    # employer apply URL (one Anthropic web_search call per researched
+    # row). Off by default; adds per-row LLM + search cost. The per-run
+    # cap bounds spend/latency. Rows that already have a usable
+    # non-paywalled route are skipped.
+    apply_research_enabled: bool = False
+    apply_research_max_per_run: int = 50
     # Path (relative to repo root) to a pre-designed static CV PDF. When this
     # file exists, the generator skips per-job CV tailoring and attaches this
     # PDF as-is, the cover letter remains tailored. Set to None / empty to
