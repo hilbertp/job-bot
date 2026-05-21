@@ -150,6 +150,58 @@ def parse_posting_salary(text: str) -> ParsedSalary | None:
     return None
 
 
+# Rough FX conversion to EUR for the salary-floor comparison. These are
+# deliberately approximate, the floor filter only needs to decide whether
+# the TOP of a stated range is clearly below the candidate's floor, not to
+# do precise currency math. Update if rates drift materially.
+_FX_TO_EUR = {
+    "EUR": 1.0,
+    "USD": 0.92,
+    "GBP": 1.17,
+    "CHF": 1.05,
+}
+
+
+def annualised_top_eur(parsed: ParsedSalary) -> int:
+    """Top of the stated range, normalised to EUR per year.
+
+    Uses the HIGH end so we only ever flag a posting when even its best
+    case is below floor; a range like EUR 80k to 100k (top above floor)
+    stays in play because it is negotiable into acceptable territory.
+    """
+    top = parsed.high
+    if parsed.period == "month":
+        top *= 12
+    return int(round(top * _FX_TO_EUR.get(parsed.currency, 1.0)))
+
+
+def posting_below_salary_floor(
+    description: str, floor_eur_year: int,
+) -> tuple[bool, str]:
+    """Return (is_below, reason) for a posting whose STATED salary tops out
+    below `floor_eur_year`.
+
+    Rules:
+      - floor <= 0 disables the check (returns False).
+      - A posting with no parseable salary returns False, we never filter
+        on unknown comp, only on a stated range that is clearly too low.
+      - Otherwise compare the annualised EUR top of the range to the floor.
+    """
+    if floor_eur_year <= 0:
+        return False, ""
+    parsed = parse_posting_salary(description or "")
+    if parsed is None:
+        return False, ""
+    top_eur = annualised_top_eur(parsed)
+    if top_eur < floor_eur_year:
+        return True, (
+            f"salary_below_floor: stated top {top_eur} EUR/year "
+            f"({parsed.high} {parsed.currency}/{parsed.period}) "
+            f"< floor {floor_eur_year} EUR/year"
+        )
+    return False, ""
+
+
 def _detect_period(text: str, span_start: int, span_end: int) -> str:
     """Look at the words around the salary span to classify year vs month.
 

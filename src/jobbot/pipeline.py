@@ -9,6 +9,7 @@ from typing import Any
 import structlog
 
 from .applier import apply_to_job
+from .applier.salary import posting_below_salary_floor
 from .config import Config, Secrets
 from .enrichment.runner import enrich_new_postings
 from .generators import (
@@ -290,6 +291,24 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                     skipped=n_filtered,
                 )
                 blocker_counts[reason or "filtered by heuristic"] += 1
+                continue
+            # Salary-floor filter: if the posting STATES a range whose top
+            # end is below the configured EUR/year floor, drop it before
+            # spending an LLM scoring call (and any downstream generation).
+            # Postings with no stated salary pass through untouched.
+            below_floor, floor_reason = posting_below_salary_floor(
+                job.description, config.salary_floor_eur_year,
+            )
+            if below_floor:
+                update_status(conn, job.id, JobStatus.FILTERED,
+                              reason=floor_reason, discard_reason=floor_reason)
+                n_filtered += 1
+                update_run_stage_progress(
+                    conn, run_id, "scoring",
+                    completed=n_scored + n_below_threshold + n_filtered + n_cannot_score,
+                    skipped=n_filtered,
+                )
+                blocker_counts["salary below floor"] += 1
                 continue
             try:
                 result = llm_score(

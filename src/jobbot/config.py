@@ -95,6 +95,13 @@ class Config(BaseModel):
     score_threshold: int = 70
     max_jobs_per_run: int = 50
     output_dir: str = "output"
+    # Hard salary floor in EUR/year. When a posting STATES a salary range
+    # whose top end (after currency + period normalisation to EUR/year)
+    # falls below this number, the row is filtered out before LLM scoring,
+    # so we never spend scoring/generation cycles on a role that pays well
+    # under the candidate's level. Postings that state no salary are left
+    # alone (we don't penalise unknown comp). 0 disables the filter.
+    salary_floor_eur_year: int = 0
     # Path (relative to repo root) to a pre-designed static CV PDF. When this
     # file exists, the generator skips per-job CV tailoring and attaches this
     # PDF as-is, the cover letter remains tailored. Set to None / empty to
