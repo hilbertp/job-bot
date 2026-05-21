@@ -119,6 +119,11 @@ class Config(BaseModel):
     # non-paywalled route are skipped.
     apply_research_enabled: bool = False
     apply_research_max_per_run: int = 50
+    # When False (default), the generation step REUSES an existing CV +
+    # cover letter on disk instead of re-calling the LLM, so daily runs
+    # don't re-spend on profiles already produced. Set True to force
+    # regeneration (e.g. after updating the base CV or prompts).
+    regenerate_existing_docs: bool = False
     # Path (relative to repo root) to a pre-designed static CV PDF. When this
     # file exists, the generator skips per-job CV tailoring and attaches this
     # PDF as-is, the cover letter remains tailored. Set to None / empty to
