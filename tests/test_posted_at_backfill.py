@@ -151,8 +151,8 @@ def test_discovery_endpoint_buckets_by_posting_date(tmp_path, monkeypatch):
     payload = client.get("/api/discovery?days=7&weeks=4").get_json()
 
     by_day = {d["date"]: d for d in payload["per_day"]}
-    assert by_day[d_today]["found"] == 2
-    assert by_day[d_today]["shortlist"] == 1     # only 'a' (b is expired)
+    assert by_day[d_today]["scanned"] == 2
+    assert by_day[d_today]["matches"] == 1       # only 'a' (b is expired)
     assert by_day[d_today]["real_date_pct"] == 100  # both a,b have posted_at
-    assert by_day[d_yest]["found"] == 1          # 'c' via first_seen proxy
+    assert by_day[d_yest]["scanned"] == 1        # 'c' via first_seen proxy
     assert by_day[d_yest]["real_date_pct"] == 0  # proxy, no real posted_at

@@ -620,12 +620,12 @@ def api_discovery():
     first_seen_at as a scrape-date proxy).
 
     Returns, for the last `days` days and last `weeks` weeks:
-      - total found in that bucket
-      - how many became a live shortlist row (score >= 70, not terminal)
-      - what fraction of the bucket used a real posted_at vs the proxy
-
-    The proxy fraction lets the UI flag buckets that are scrape-date
-    estimates (older rows pre-dating posted_at capture) vs real dates.
+      - `matches`: PO/PM postings that cleared the salary floor and scored
+        >= 70 and aren't yet applied/expired. This is the headline number,
+        raw scrape volume is noise.
+      - `scanned`: raw rows found in that bucket (funnel volume / context).
+      - `real_date_pct`: fraction of the bucket using a real posted_at vs
+        the scrape-date proxy.
     """
     from flask import request
     import json as _json
@@ -696,8 +696,13 @@ def api_discovery():
         d = (today - timedelta(days=i)).isoformat()
         per_day.append({
             "date": d,
-            "found": day_found.get(d, 0),
-            "shortlist": day_short.get(d, 0),
+            # `matches` is the headline metric the user cares about: a
+            # PO/PM posting whose salary cleared the floor and whose
+            # profile-fit score is >= 70 and isn't yet applied/expired.
+            # `scanned` is the raw funnel volume (mostly noise), kept for
+            # context / conversion rate.
+            "matches": day_short.get(d, 0),
+            "scanned": day_found.get(d, 0),
             "real_date_pct": (
                 round(100 * day_real.get(d, 0) / day_found[d]) if day_found.get(d) else 0
             ),
@@ -707,8 +712,8 @@ def api_discovery():
     all_weeks = sorted(set(week_found), reverse=True)[:weeks]
     per_week = [{
         "week": wk,
-        "found": week_found.get(wk, 0),
-        "shortlist": week_short.get(wk, 0),
+        "matches": week_short.get(wk, 0),
+        "scanned": week_found.get(wk, 0),
         "real_date_pct": (
             round(100 * week_real.get(wk, 0) / week_found[wk]) if week_found.get(wk) else 0
         ),
