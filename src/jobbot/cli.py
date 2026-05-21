@@ -185,6 +185,53 @@ def cmd_dashboard(_args) -> int:
     return 0
 
 
+def cmd_backfill_posted_at(args) -> int:
+    """Backfill `posted_at` for already-enriched rows that pre-date the
+    scraper posting-date capture. Re-fetches the detail page (JSON-LD
+    `datePosted`) for sources we can recover dates from, then writes the
+    date into raw_json. RSS / LinkedIn sources are excluded, their feeds
+    only carry recent items so an old row's date is unrecoverable."""
+    from .scrapers import REGISTRY
+    from .state import jobs_needing_posted_at_backfill, set_posted_at
+
+    # Sources whose detail pages expose schema.org datePosted.
+    BACKFILLABLE = ("dailyremote", "xing", "stepstone")
+    limit = int(getattr(args, "limit", 300) or 300)
+
+    with connect() as conn:
+        jobs = jobs_needing_posted_at_backfill(conn, BACKFILLABLE, limit=limit)
+        console.print(
+            f"backfilling posted_at for {len(jobs)} row(s) from "
+            f"{', '.join(BACKFILLABLE)} (re-fetching detail pages)..."
+        )
+        n_ok = n_nodate = n_failed = 0
+        for job in jobs:
+            scraper = REGISTRY.get(job.source)
+            fetch_detail = getattr(scraper, "fetch_detail", None) if scraper else None
+            if not callable(fetch_detail):
+                n_failed += 1
+                continue
+            try:
+                enriched = fetch_detail(job)
+            except Exception:
+                enriched = None
+            if enriched is None:
+                n_failed += 1  # detail page gone (expired) or fetch error
+                continue
+            if enriched.posted_at is not None:
+                set_posted_at(conn, job.id, enriched.posted_at.isoformat())
+                n_ok += 1
+            else:
+                n_nodate += 1
+        conn.commit()
+
+    console.print(
+        f"[green]done[/green]: {n_ok} dated, {n_nodate} had no datePosted, "
+        f"{n_failed} detail-fetch failed (likely expired)."
+    )
+    return 0
+
+
 def cmd_housekeep(args) -> int:
     """HEAD-probe every live shortlist row; mark dead apply URLs as
     listing_expired so they exit the shortlist and surface the yellow
@@ -604,6 +651,16 @@ def main(argv: list[str] | None = None) -> int:
     housekeep.add_argument("--min-score", type=int, default=70,
                            help="Only probe rows with score >= this (default 70).")
     housekeep.set_defaults(fn=cmd_housekeep)
+
+    backfill_pa = sub.add_parser(
+        "backfill-posted-at",
+        help="Re-fetch detail pages for already-enriched JSON-LD-source rows "
+             "(dailyremote/xing/stepstone) and backfill posted_at from "
+             "schema.org datePosted.",
+    )
+    backfill_pa.add_argument("--limit", type=int, default=300,
+                             help="Max rows to backfill in this run (default 300).")
+    backfill_pa.set_defaults(fn=cmd_backfill_posted_at)
 
     mark = sub.add_parser(
         "mark-applied",
