@@ -102,6 +102,15 @@ class Config(BaseModel):
     # under the candidate's level. Postings that state no salary are left
     # alone (we don't penalise unknown comp). 0 disables the filter.
     salary_floor_eur_year: int = 0
+    # Sources whose comp is hourly (freelance projects), not an annual
+    # salary. These are EXEMPT from salary_floor_eur_year (a "800 EUR/Tag"
+    # day-rate would otherwise be misread as 800 EUR/year and wrongly
+    # dropped). Instead they're held to `freelance_hourly_floor_eur`.
+    freelance_sources: list[str] = Field(default_factory=list)
+    # Minimum acceptable freelance rate in EUR/hour. Postings on a
+    # freelance source whose stated rate is below this are filtered;
+    # postings that state no rate pass through. 0 disables.
+    freelance_hourly_floor_eur: float = 0.0
     # Path (relative to repo root) to a pre-designed static CV PDF. When this
     # file exists, the generator skips per-job CV tailoring and attaches this
     # PDF as-is, the cover letter remains tailored. Set to None / empty to

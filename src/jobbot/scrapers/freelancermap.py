@@ -6,6 +6,7 @@ Confirmed 2026-05.
 from __future__ import annotations
 
 import random
+import re
 import time
 from urllib.parse import urlencode
 
@@ -17,6 +18,21 @@ from ..models import JobPosting
 from .base import BaseScraper, SearchQuery, stable_id
 
 log = structlog.get_logger()
+
+# freelancermap's public board search is a JS/auth-walled React app: the
+# server-rendered projektboerse.html ignores the `query` param and returns
+# an unfiltered firehose of every trade (construction, SAP, sales, ...).
+# Since we can't filter server-side without an API key, we gate to product
+# roles by TITLE here so only Product Owner / Product Manager freelance
+# projects enter the funnel. EN + DE variants.
+_PRODUCT_TITLE_RE = re.compile(
+    r"\b("
+    r"product\s*owner|product\s*manager|product\s*lead|"
+    r"produkt\s*owner|produkt\s*manager|produktverantwortlich|"
+    r"po\b|pm\b|cpo"
+    r")",
+    re.IGNORECASE,
+)
 
 _UA = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) "
@@ -63,6 +79,12 @@ class FreelancermapScraper(BaseScraper):
             full = f"{BASE}{href}"
             title = a.text(strip=True)
             if len(title) < 6:  # filter empty/icon links
+                continue
+            # Title-gate: freelancermap's search is unfilterable, so only
+            # admit Product Owner / Product Manager projects. Everything
+            # else (the SAP/construction/sales firehose) is dropped here
+            # before it wastes a scrape row + enrichment slot.
+            if not _PRODUCT_TITLE_RE.search(title):
                 continue
             out.append(JobPosting(
                 id=stable_id(self.source, full),
