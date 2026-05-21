@@ -92,18 +92,36 @@ def test_canonical_url_returns_url_route():
     assert value.endswith("5210076008")
 
 
-def test_paywalled_url_alone_returns_missing():
-    """The single most important assertion. dailyremote / linkedin /
-    xing URLs are NOT valid apply routes; when that's all we have,
-    the route is 'missing'."""
-    for paywalled in (
-        "https://dailyremote.com/remote-job/product-manager-1",
+def test_hard_paywall_url_alone_returns_missing():
+    """dailyremote is a HARD paywall: the apply form is gated, so a
+    dailyremote URL with no email fallback is 'missing' until apply-path
+    research resolves a canonical employer URL."""
+    kind, reason = usable_apply_route(
+        None, "https://dailyremote.com/remote-job/product-manager-1")
+    assert kind == "missing"
+    assert "paywall" in reason.lower()
+
+
+def test_soft_wall_url_is_a_usable_route():
+    """LinkedIn / Xing are SOFT walls: you can apply with a free account,
+    so the link IS a usable apply route (not 'missing'). Apply-path
+    research upgrades these to the employer ATS when it can, but the link
+    is the fallback. Per user 2026-05-21: 'linkedin always have a apply route'."""
+    for soft in (
         "https://de.linkedin.com/jobs/view/product-owner-at-acme-12345",
         "https://www.xing.com/jobs/berlin-product-manager-12345",
     ):
-        kind, reason = usable_apply_route(None, paywalled)
-        assert kind == "missing", f"paywalled {paywalled!r} should be 'missing'"
-        assert "paywalled" in reason.lower()
+        kind, value = usable_apply_route(None, soft)
+        assert kind == "url", f"soft-wall {soft!r} should be a usable url"
+        assert value == soft
+
+
+def test_is_paywalled_still_true_for_soft_walls_as_research_trigger():
+    """is_paywalled_apply_url stays True for soft walls so apply-path
+    research still fires on them (to upgrade to a canonical URL)."""
+    assert is_paywalled_apply_url("https://de.linkedin.com/jobs/view/x-1") is True
+    assert is_paywalled_apply_url("https://www.xing.com/jobs/x-1") is True
+    assert is_paywalled_apply_url("https://dailyremote.com/remote-job/x-1") is True
 
 
 def test_paywalled_url_with_email_falls_back_to_email():
