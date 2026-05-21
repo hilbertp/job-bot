@@ -138,13 +138,39 @@ def test_does_not_match_when_page_has_no_inputs():
 
 
 # ---------------------------------------------------------------------------
-# submit() is dry-run only in v1
+# submit() clicks the form's send button end-to-end (per user directive:
+# "i dont submit! you submit")
 # ---------------------------------------------------------------------------
 
-def test_submit_raises_so_supervised_human_clicks_send():
+def test_submit_clicks_first_enabled_send_button():
+    clicked = {}
+    def _locator(sel):
+        loc = MagicMock()
+        first = MagicMock()
+        # Only the real submit button is present + enabled.
+        is_submit = sel == "button[type=submit]"
+        first.count.return_value = 1 if is_submit else 0
+        first.is_visible.return_value = True
+        first.is_disabled.return_value = False
+        first.text_content.return_value = "Send application"
+        first.click.side_effect = lambda **kw: clicked.setdefault("sel", sel)
+        loc.first = first
+        return loc
+    page = MagicMock()
+    page.locator = MagicMock(side_effect=_locator)
+    page.url = "https://x.io/apply/confirmation"
     a = LLMFillAdapter(anthropic_api_key="x")
-    with pytest.raises(NotImplementedError):
-        a.submit(MagicMock())
+    url = a.submit(page)
+    assert clicked["sel"] == "button[type=submit]"
+    assert url == "https://x.io/apply/confirmation"
+
+
+def test_submit_raises_when_no_button_found():
+    page = MagicMock()
+    page.locator.return_value.first.count.return_value = 0
+    a = LLMFillAdapter(anthropic_api_key="x")
+    with pytest.raises(RuntimeError):
+        a.submit(page)
 
 
 # ---------------------------------------------------------------------------

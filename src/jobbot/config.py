@@ -58,6 +58,15 @@ class ApplyConfig(BaseModel):
     # and the page to show a success-indicator. 10 min is generous for
     # solving a CAPTCHA; reducing it makes the runner give up faster.
     supervised_timeout_seconds: int = 600
+    # Chrome DevTools Protocol endpoint of the user's REAL browser
+    # (Brave launched with --remote-debugging-port=9222). When set, the
+    # runner ATTACHES to that browser via connect_over_cdp instead of
+    # launching a fresh Playwright Chromium, so applies run inside the
+    # user's logged-in session, real cookies, real fingerprint, human
+    # history. This defeats bot-detection / CAPTCHAs that flag the empty
+    # "Chrome for Testing" profile. Also settable via the CDP_URL env var.
+    # Empty = fall back to supervised/headless launch.
+    cdp_url: str = ""
 
 
 class OtpConfig(BaseModel):

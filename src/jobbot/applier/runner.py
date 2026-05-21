@@ -1,6 +1,7 @@
 """Top-level apply flow: pick adapter → fill → handle captcha/OTP → optionally submit."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from ..captcha import get_captcha_solver
@@ -151,10 +152,29 @@ def apply_to_job(
     otp = OtpFetcher(secrets, config)
     ADAPTERS = _load_adapters(anthropic_api_key=secrets.anthropic_api_key)
 
-    supervised = bool(config.apply.supervised)
+    cdp_url = config.apply.cdp_url or os.environ.get("CDP_URL", "")
+    # CDP attach implies supervised semantics: the apply runs in the
+    # user's visible real browser, the bot fills + submits and polls for
+    # the success page while the user watches and can solve any CAPTCHA.
+    supervised = bool(config.apply.supervised) or bool(cdp_url)
 
     with sync_playwright() as pw:
-        if supervised:
+        cdp_browser = None  # set when attached to the user's real browser
+        if cdp_url:
+            # Attach to the user's REAL browser (Brave launched with
+            # --remote-debugging-port=9222). Runs the apply inside their
+            # logged-in session, real cookies + fingerprint + history, so
+            # bot-detection and CAPTCHAs that flag an empty automation
+            # profile don't fire. We reuse their existing browser context
+            # (where the cookies live) and open a fresh tab in it.
+            cdp_browser = pw.chromium.connect_over_cdp(cdp_url)
+            ctx = (
+                cdp_browser.contexts[0] if cdp_browser.contexts
+                else cdp_browser.new_context()
+            )
+            page = ctx.new_page()
+            browser = None
+        elif supervised:
             # Persistent-context launch with the user's dedicated profile:
             # cookies/cache survive across runs so the 2nd visit to a site
             # looks like a returning user. Non-headless so the human can
@@ -369,18 +389,30 @@ def apply_to_job(
                 screenshot_path=failure_screenshot,
             )
         finally:
-            try:
-                ctx.close()
-            except Exception:
-                pass
-            # `browser` is None in supervised mode (persistent context owns
-            # its own browser process). Headless mode keeps the explicit
-            # browser reference so we can close it here.
-            if browser is not None:
+            if cdp_browser is not None:
+                # Attached to the user's real browser: NEVER close their
+                # context or browser, just the tab we opened, and detach.
                 try:
-                    browser.close()
+                    page.close()
                 except Exception:
                     pass
+                try:
+                    cdp_browser.close()  # disconnects CDP, leaves Brave running
+                except Exception:
+                    pass
+            else:
+                try:
+                    ctx.close()
+                except Exception:
+                    pass
+                # `browser` is None in supervised mode (persistent context
+                # owns its own browser process). Headless mode keeps the
+                # explicit browser reference so we can close it here.
+                if browser is not None:
+                    try:
+                        browser.close()
+                    except Exception:
+                        pass
 
 
 def _sender_for(adapter_name: str) -> str:

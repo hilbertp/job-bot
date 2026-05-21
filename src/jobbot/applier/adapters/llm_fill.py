@@ -56,19 +56,45 @@ log = structlog.get_logger()
 
 
 # Selectors clicked before the first scrape to reveal forms gated by
-# an "Apply" button (TeamTailor, scope-recruiting.de, Greenhouse v2 etc.).
-# Idempotent: if no button matches, nothing happens.
+# an "Apply" button (TeamTailor, scope-recruiting.de, Greenhouse v2,
+# Personio "Apply for this job", etc.). Both <button> and <a> variants
+# since ATSes render the CTA either way. Idempotent: if no button
+# matches, nothing happens.
 _REVEAL_SELECTORS = (
+    "button:has-text('Apply for this job')",   # Personio
+    "a:has-text('Apply for this job')",        # Personio (link variant)
     "button:has-text('Apply now')",
     "button:has-text('Apply for this position')",
+    "a:has-text('Apply for this position')",
     "button:has-text('Apply')",
+    "a:has-text('Apply')",
     "button[aria-label='Apply']",
     "button:has-text('Bewerbung abschicken')",
-    "button:has-text('Bewerben')",
+    "button:has-text('Auf diese Stelle bewerben')",  # Personio (DE)
+    "a:has-text('Auf diese Stelle bewerben')",
     "button:has-text('Jetzt bewerben')",
+    "a:has-text('Jetzt bewerben')",
+    "button:has-text('Bewerben')",
+    "a:has-text('Bewerben')",
     "button:has-text('Bewerbung starten')",
     "a:has-text('Apply now')",
-    "a:has-text('Bewerben')",
+)
+
+# Submit / send buttons, EN + DE. Tried in order; first enabled+visible
+# match is clicked. type=submit last as a catch-all.
+_SUBMIT_SELECTORS = (
+    "button:has-text('Send application')",
+    "button:has-text('Submit application')",
+    "button:has-text('Bewerbung absenden')",
+    "button:has-text('Bewerbung abschicken')",
+    "button:has-text('Jetzt bewerben')",
+    "button:has-text('Absenden')",
+    "button:has-text('Senden')",
+    "button:has-text('Submit')",
+    "button:has-text('Send')",
+    "button:has-text('Bewerben')",
+    "button[type=submit]",
+    "input[type=submit]",
 )
 
 
@@ -89,11 +115,23 @@ class LLMFillAdapter:
     # ------------------------------------------------------------------
 
     def matches(self, url: str, page: "Page") -> bool:  # noqa: ARG002
-        """Match any page that has at least one input or textarea.
-        GenericAdapter still acts as the absolute fallback if even that
-        check fails (no form on page at all)."""
+        """Match a page that has form fields OR an apply-reveal button.
+
+        The reveal-button case is critical: on Personio / TeamTailor /
+        scope-recruiting.de the form is gated behind "Apply for this job"
+        and the JD page has NO inputs yet. Adapter selection happens
+        before fill() clicks reveal, so without this check the runner
+        would fall through to GenericAdapter (which can't reveal or
+        submit) and the apply stalls at the JD page. GenericAdapter
+        remains the absolute fallback for pages with neither."""
         try:
-            return page.locator("input, textarea, select").count() > 0
+            if page.locator("input, textarea, select").count() > 0:
+                return True
+            for sel in _REVEAL_SELECTORS:
+                loc = page.locator(sel)
+                if loc.count() > 0:
+                    return True
+            return False
         except Exception:
             return False
 
@@ -131,15 +169,24 @@ class LLMFillAdapter:
             if file_mapping is not None:
                 self._apply_mapping(page, file_mapping)
 
-    def submit(self, page: "Page") -> str:  # noqa: ARG002
-        # v1: never auto-submit; the runner falls back to supervised wait
-        # so the human eyeballs the filled form before clicking Send.
-        # Future: re-enable once we have positive-evidence telemetry on
-        # successful submits via this adapter.
-        raise NotImplementedError(
-            "llm_fill adapter is fill-only in v1; submit requires "
-            "supervised human click"
-        )
+    def submit(self, page: "Page") -> str:
+        """Click the form's submit/send button and return the post-click
+        URL. The bot submits end-to-end (per the user's directive); the
+        runner then verifies a real success indicator before claiming
+        the application was sent."""
+        for sel in _SUBMIT_SELECTORS:
+            try:
+                loc = page.locator(sel).first
+                if loc.count() > 0 and loc.is_visible() and not loc.is_disabled():
+                    txt = (loc.text_content(timeout=1_500) or "").strip()
+                    loc.click(timeout=8_000)
+                    log.info("llm_fill_submit_clicked", selector=sel, text=txt[:40])
+                    page.wait_for_timeout(4_000)
+                    return page.url
+            except Exception as e:
+                log.warning("llm_fill_submit_try_failed", selector=sel, error=str(e)[:80])
+                continue
+        raise RuntimeError("llm_fill: no enabled submit button found")
 
     # ------------------------------------------------------------------
     # Internals
@@ -160,16 +207,25 @@ class LLMFillAdapter:
     def _scrape_fields(
         self, page: "Page", *, only_files: bool = False,
     ) -> list[dict[str, Any]]:
-        """Pull every visible form field with enough context for the LLM
-        to map it. Hidden fields, csrf tokens, and zero-size offscreen
-        inputs are filtered out (offsetParent === null)."""
-        filter_expr = (
-            "el.type === 'file'" if only_files
-            else "el.type !== 'hidden'"
-        )
+        """Pull form fields with enough context for the LLM to map them.
+
+        For non-file fields we require visibility (offsetParent !== null)
+        to skip csrf tokens and offscreen junk. For FILE inputs we do NOT
+        require visibility: ATSes (Personio, Greenhouse, ...) hide the
+        real `<input type=file>` behind a styled "Add file" button, so the
+        input is offscreen by design. Playwright's set_input_files works
+        on a hidden input directly, so we include them."""
+        if only_files:
+            select_expr = (
+                "[...document.querySelectorAll(\"input[type=file]\")]"
+            )
+        else:
+            select_expr = (
+                "[...document.querySelectorAll('input, textarea, select')]"
+                ".filter(el => el.offsetParent !== null && el.type !== 'hidden')"
+            )
         return page.evaluate(f"""() => {{
-            const els = [...document.querySelectorAll('input, textarea, select')]
-                .filter(el => el.offsetParent !== null && {filter_expr});
+            const els = {select_expr};
             return els.map(el => {{
                 const lab = el.labels && el.labels[0] ? el.labels[0].textContent.trim() : null;
                 const options = el.tagName === 'SELECT'
@@ -184,6 +240,8 @@ class LLMFillAdapter:
                     label: lab,
                     required: el.required || false,
                     options: options,
+                    accept: el.getAttribute ? (el.getAttribute('accept') || null) : null,
+                    checked: el.type === 'checkbox' ? !!el.checked : null,
                 }};
             }});
         }}""")
@@ -284,8 +342,8 @@ field to a value the runner will write into it.
 - Website:  {(p.get('links') or {{}}).get('website')}
 - Salary expectation (EUR/year): {salary_anchor_eur}
 - Visa / authorization: EU citizen, German national, no sponsorship required
-- Earliest start: within 4 weeks of an offer
-- Notice period: {prefs.get('notice_period_weeks', 4)} weeks
+- Earliest start / availability: ASAP, immediately, ab sofort (always the
+  earliest option, do not enter a multi-week notice)
 
 # Job context
 
@@ -302,27 +360,39 @@ field to a value the runner will write into it.
 # Mapping rules
 
 1. Build a CSS selector for each field that uniquely identifies it.
-   Preferred order: `#<id>` > `[name='<name>']` > `[placeholder='<placeholder>']`.
+   Preferred order: `[name='<name>']` > `[id='<id>']` > `[placeholder='<placeholder>']`.
+   Use the ATTRIBUTE form `[id='...']`, NOT `#id`, because ATS ids often
+   contain ':' or '.' which break a `#id` selector. For a file input that
+   is the only CV upload on the page, `input[type=file]` is also fine.
 2. For text/email/tel/textarea inputs: set `kind` to `"text"` and `value` to
    the string to fill.
 3. For SELECT inputs: set `kind` to `"select_option"` and `value` to the
    option's `value` attribute (NOT its visible text). Pick the option
    that best matches the candidate. For gender selects use `"diverse"`
    or equivalent if available, else leave the field unmapped.
-4. For file inputs (only in second pass): set `kind` to `"file"` and
-   `value` to the absolute path of cv.pdf or cover_letter.pdf depending
-   on what the doc-type label / select implies.
-5. SKIP a field by NOT including it in `fills` if you cannot confidently
+4. For file inputs: set `kind` to `"file"` and `value` to the absolute
+   path of cv.pdf or cover_letter.pdf depending on what the doc-type
+   label / select implies. ONLY map a file input whose `accept` attribute
+   includes pdf (or is empty/unset). NEVER upload a PDF to an input that
+   only accepts images (accept contains png/jpg/jpeg), that is an avatar/
+   photo field, leave it unmapped.
+5. For CHECKBOX inputs (type=checkbox): if it is a required consent /
+   privacy / GDPR / "I agree" / data-processing checkbox, set `kind` to
+   `"checkbox"` and `value` to `"true"` so the submit button enables.
+   Leave optional marketing opt-ins unmapped.
+6. AVAILABILITY / earliest start date / notice period: always answer with
+   the EARLIEST possible, "ASAP" (or "Sofort" / "Ab sofort" in German,
+   "immediately"). Do NOT enter a multi-week notice period.
+7. SKIP a field by NOT including it in `fills` if you cannot confidently
    map it. NEVER fabricate values (do not invent a street address, a
    birthday, a postal code, or a phone number the profile doesn't have).
-6. Detect form language from labels/placeholders. If German, write German
-   values for free-text fields like "earliest start" (e.g. "innerhalb
-   von 4 Wochen"). Salary stays numeric.
-7. NEVER write em-dashes (—) in any text value. Use commas, periods, or
+8. Detect form language from labels/placeholders. If German, write German
+   values for free-text fields. Salary stays numeric.
+9. NEVER write em-dashes in any text value. Use commas, periods, or
    hyphens. This is a hard rule, the user has been bitten by it before.
-8. Salary fields: write the EUR anchor as plain integer (e.g. "125000"),
-   no currency symbol, no thousands separator, unless the placeholder
-   explicitly hints at a different format.
+10. Salary fields: write the EUR anchor as plain integer (e.g. "125000"),
+    no currency symbol, no thousands separator, unless the placeholder
+    explicitly hints at a different format.
 
 # Output format
 
@@ -331,7 +401,8 @@ Return ONLY valid JSON. No markdown fences, no commentary. Schema:
 {{
   "fills": [
     {{"selector": "#first_name", "value": "Philipp", "kind": "text"}},
-    {{"selector": "[name='gender']", "value": "diverse", "kind": "select_option"}}
+    {{"selector": "[name='gender']", "value": "diverse", "kind": "select_option"}},
+    {{"selector": "#consent", "value": "true", "kind": "checkbox"}}
   ],
   "language_detected": "de"
 }}
@@ -359,6 +430,13 @@ Return ONLY valid JSON. No markdown fences, no commentary. Schema:
                     loc.select_option(value=str(val), timeout=5_000)
                 elif kind == "file":
                     loc.set_input_files(str(val), timeout=5_000)
+                elif kind == "checkbox":
+                    # Tick consent/privacy boxes so submit enables.
+                    want = str(val).lower() in ("true", "1", "yes", "on")
+                    if want and not loc.is_checked():
+                        loc.check(timeout=5_000)
+                    elif not want and loc.is_checked():
+                        loc.uncheck(timeout=5_000)
                 else:
                     log.warning("llm_fill_unknown_kind", kind=kind)
             except Exception as e:
