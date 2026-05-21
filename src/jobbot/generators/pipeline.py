@@ -625,6 +625,45 @@ def _strip_section_heading(md: str) -> str:
     return _SECTION_HEADING_RE.sub("", md, count=1).lstrip()
 
 
+def load_existing_docs(output_dir: str | None) -> GeneratedDocs | None:
+    """Re-hydrate a GeneratedDocs from a previously-written output dir so
+    the pipeline can REUSE a CV + cover letter instead of paying the LLM
+    to regenerate them. Returns None if the dir is missing or the two
+    required Markdown files aren't both present (in which case the caller
+    regenerates).
+
+    Cheap: reads the files already on disk, no LLM call.
+    """
+    if not output_dir:
+        return None
+    d = Path(output_dir)
+    cv_md_p = d / "cv.md"
+    cl_md_p = d / "cover_letter.md"
+    if not (cv_md_p.exists() and cl_md_p.exists()):
+        return None
+
+    def _read(name: str) -> str:
+        p = d / name
+        return p.read_text() if p.exists() else ""
+
+    def _path_or_none(name: str) -> str | None:
+        p = d / name
+        return str(p) if p.exists() else None
+
+    return GeneratedDocs(
+        cv_md=cv_md_p.read_text(),
+        cv_html=_read("cv.html"),
+        cover_letter_md=cl_md_p.read_text(),
+        cover_letter_html=_read("cover_letter.html"),
+        output_dir=str(d),
+        cv_pdf=_path_or_none("cv.pdf"),
+        cover_letter_pdf=_path_or_none("cover_letter.pdf"),
+        application_package_md=(_read("application_package.md") or None),
+        application_package_html=(_read("application_package.html") or None),
+        application_package_pdf=_path_or_none("application_package.pdf"),
+    )
+
+
 def generate_application_package(
     job: JobPosting, profile: Profile, base_cv: str,
     secrets: Secrets, config: Config,

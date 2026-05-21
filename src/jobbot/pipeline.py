@@ -15,6 +15,7 @@ from .enrichment.runner import enrich_new_postings
 from .generators import (
     generate_application_package,
     generate_documents,  # noqa: F401 - public monkeypatch seam for older tests/tools.
+    load_existing_docs,
 )
 from .housekeep import housekeep_shortlist
 from .models import TERMINAL_STATUSES, JobPosting, JobStatus
@@ -194,11 +195,15 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                         },
                     )
 
-        # 2) Enrich postings missing a body fetch: every freshly-scraped job
-        # in this run, plus every seen_jobs row where description_scraped IS
-        # NULL (scraped before enrichment was wired in, dedup would otherwise
-        # exclude them forever). Capped per run to keep first-launch bounded.
-        to_enrich_by_id: dict[str, JobPosting] = dict(all_fetched_by_id)
+        # 2) Enrich postings missing a body fetch: genuinely NEW rows this
+        # run, plus older seen_jobs rows where description_scraped IS NULL.
+        # Crucially we do NOT re-enrich rows we've already enriched on a
+        # prior run, re-scraping returns them in all_fetched_by_id every
+        # day, and re-fetching their detail page (plus re-running apply-path
+        # research and, downstream, re-scoring + re-generating) is pure
+        # waste. `all_new` is the upsert's genuinely-new set;
+        # jobs_needing_enrichment covers rows still missing a body.
+        to_enrich_by_id: dict[str, JobPosting] = {j.id: j for j in all_new}
         for stale in jobs_needing_enrichment(conn):
             to_enrich_by_id.setdefault(stale.id, stale)
         cap = config.enrichment.per_run_cap
@@ -479,57 +484,101 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 )
                 continue
 
-            try:
-                # Prefer the unified opus-style application package so the
-                # email channel attaches a single polished PDF. CV + CL PDFs
-                # are still produced as ATS form-upload fallbacks.
-                docs = generate_application_package(
-                    job, profile, base_cv, secrets, config, run_id=run_id,
-                )
-                update_status(conn, job.id, JobStatus.GENERATED, output_dir=docs.output_dir)
-                n_generated += 1
-                update_run_stage_progress(
-                    conn, run_id, "generation",
-                    completed=n_generated,
-                )
-            except Exception as e:
-                log.exception("generate_failed", job_id=job.id)
-                errors.append({"source": job.source, "error": f"generate: {e}"})
-                generation_failed += 1
-                update_run_stage_progress(
-                    conn, run_id, "generation",
-                    completed=n_generated,
-                    failed=generation_failed,
-                    skipped=generation_skipped,
-                )
-                continue
+            # Idempotency: reuse an existing CV + cover letter from a prior
+            # run instead of paying the LLM to regenerate identical docs.
+            # The output_dir column holds the last-generated location;
+            # if cv.md + cover_letter.md are still on disk we reuse them.
+            # `regenerate_existing_docs` forces a fresh build (e.g. after
+            # the base CV or prompts change). This is the fix for daily
+            # runs re-spending on already-done profiles.
+            prior_dir_row = conn.execute(
+                "SELECT output_dir, score_tailored FROM seen_jobs WHERE id = ?",
+                (job.id,),
+            ).fetchone()
+            prior_dir = prior_dir_row["output_dir"] if prior_dir_row else None
+            reused_docs = (
+                None if config.regenerate_existing_docs
+                else load_existing_docs(prior_dir)
+            )
 
-            entry.update({
-                "output_dir": docs.output_dir,
-                "cover_letter_html": docs.cover_letter_html,
-            })
+            if reused_docs is not None:
+                docs = reused_docs
+                update_status(conn, job.id, JobStatus.GENERATED, output_dir=docs.output_dir)
+                generation_skipped += 1
+                log.info("generation_reused_existing", job_id=job.id, dir=docs.output_dir)
+                entry.update({
+                    "output_dir": docs.output_dir,
+                    "cover_letter_html": docs.cover_letter_html,
+                })
+                # Carry forward the tailored score from the prior run; no
+                # need to pay for a rescore of unchanged docs.
+                if prior_dir_row and prior_dir_row["score_tailored"] is not None:
+                    entry["score_tailored"] = prior_dir_row["score_tailored"]
+                    entry["score_delta"] = prior_dir_row["score_tailored"] - score
+                update_run_stage_progress(
+                    conn, run_id, "generation",
+                    completed=n_generated, skipped=generation_skipped,
+                    failed=generation_failed,
+                )
+                # Fall through to the auto-apply block with the reused docs.
+                _skip_tailored_rescore = True
+            else:
+                _skip_tailored_rescore = False
+                try:
+                    # Prefer the unified opus-style application package so the
+                    # email channel attaches a single polished PDF. CV + CL PDFs
+                    # are still produced as ATS form-upload fallbacks.
+                    docs = generate_application_package(
+                        job, profile, base_cv, secrets, config, run_id=run_id,
+                    )
+                    update_status(conn, job.id, JobStatus.GENERATED, output_dir=docs.output_dir)
+                    n_generated += 1
+                    update_run_stage_progress(
+                        conn, run_id, "generation",
+                        completed=n_generated,
+                    )
+                except Exception as e:
+                    log.exception("generate_failed", job_id=job.id)
+                    errors.append({"source": job.source, "error": f"generate: {e}"})
+                    generation_failed += 1
+                    update_run_stage_progress(
+                        conn, run_id, "generation",
+                        completed=n_generated,
+                        failed=generation_failed,
+                        skipped=generation_skipped,
+                    )
+                    continue
+
+            if not reused_docs:
+                entry.update({
+                    "output_dir": docs.output_dir,
+                    "cover_letter_html": docs.cover_letter_html,
+                })
 
             # 4b) Rescore the posting using the tailored CV + cover letter
             # so the dashboard can show "did tailoring lift the fit?", a
             # measurement-only call. Persisted to a parallel column;
             # the original `score` is unchanged. A failure here is logged
             # but does NOT abort the application step that follows.
-            try:
-                if stopped := _continue_or_stop():
-                    return stopped
-                tailored = llm_score_tailored(
-                    job, profile, secrets,
-                    tailored_cv_md=docs.cv_md,
-                    tailored_cover_letter_md=docs.cover_letter_md,
-                    run_id=run_id,
-                    phase="tailored_rescore",
-                )
-                update_score_tailored(conn, job.id, tailored.score, tailored.reason)
-                entry["score_tailored"] = tailored.score
-                entry["tailored_reason"] = tailored.reason
-                entry["score_delta"] = tailored.score - score
-            except Exception as e:
-                log.warning("score_tailored_failed", job_id=job.id, error=str(e))
+            # Skipped when we reused existing docs (the tailored score is
+            # already on file and the docs are unchanged).
+            if not _skip_tailored_rescore:
+                try:
+                    if stopped := _continue_or_stop():
+                        return stopped
+                    tailored = llm_score_tailored(
+                        job, profile, secrets,
+                        tailored_cv_md=docs.cv_md,
+                        tailored_cover_letter_md=docs.cover_letter_md,
+                        run_id=run_id,
+                        phase="tailored_rescore",
+                    )
+                    update_score_tailored(conn, job.id, tailored.score, tailored.reason)
+                    entry["score_tailored"] = tailored.score
+                    entry["tailored_reason"] = tailored.reason
+                    entry["score_delta"] = tailored.score - score
+                except Exception as e:
+                    log.warning("score_tailored_failed", job_id=job.id, error=str(e))
 
             # 5) Auto-apply (opt-in per source)
             src_cfg = config.sources.get(job.source)

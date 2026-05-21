@@ -7,6 +7,7 @@ freelance_sources: []         # sources with hourly comp, exempt from the annual
 freelance_hourly_floor_eur: 0 # min freelance rate EUR/hr for those sources; 0 disables
 apply_research_enabled: false # web-search canonical apply URL for paywalled rows (adds LLM+search cost)
 apply_research_max_per_run: 50 # cap researched rows/run when enabled
+regenerate_existing_docs: false # false = reuse CV/CL already on disk (cheaper); true = always rebuild
 output_dir: output            # relative to repo root
 
 # Path to a pre-designed static CV PDF used for outgoing applications.
