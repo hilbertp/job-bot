@@ -154,6 +154,10 @@ def enrich_new_postings(
             salary_text=salary_match.group(0) if salary_match else None,
             apply_email=apply_email,
             company=enriched.company,
+            posted_at=(
+                enriched.posted_at.isoformat()
+                if enriched.posted_at is not None else None
+            ),
         )
 
         if description_scraped:
