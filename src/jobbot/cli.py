@@ -232,6 +232,77 @@ def cmd_backfill_posted_at(args) -> int:
     return 0
 
 
+def cmd_research_apply_routes(args) -> int:
+    """Retroactively resolve canonical apply URLs for existing shortlist
+    rows still stuck on a paywalled aggregator. Apply-path research only
+    runs on newly-enriched rows during the pipeline, so rows scored
+    before the feature landed never got upgraded. This sweeps them."""
+    import json as _json
+    from .applier.salary import posting_below_salary_floor  # noqa: F401 (warm import)
+    from .enrichment.apply_research import research_apply_url
+    from .state import is_paywalled_apply_url
+
+    secrets = load_secrets()
+    limit = int(getattr(args, "limit", 50) or 50)
+    min_score = int(getattr(args, "min_score", 70))
+
+    with connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, title, company, apply_email, raw_json
+            FROM seen_jobs
+            WHERE score IS NOT NULL AND score >= ?
+              AND status NOT IN ('listing_expired','apply_submitted','apply_failed',
+                                 'apply_needs_review','apply_queued','employer_received',
+                                 'waiting_response','rejected','interview_invited')
+            ORDER BY score DESC
+            """,
+            (min_score,),
+        ).fetchall()
+
+        candidates = []
+        for r in rows:
+            raw = _json.loads(r["raw_json"]) if r["raw_json"] else {}
+            url = raw.get("apply_url")
+            if r["apply_email"]:
+                continue  # has an email route already
+            if is_paywalled_apply_url(url):
+                candidates.append((r, url))
+
+        console.print(
+            f"researching canonical apply URLs for {min(len(candidates), limit)} "
+            f"of {len(candidates)} paywalled shortlist row(s)..."
+        )
+        n_ok = n_none = 0
+        cache: dict[tuple, str | None] = {}
+        for r, url in candidates[:limit]:
+            key = (r["company"], r["title"])
+            if key in cache:
+                resolved = cache[key]
+            else:
+                resolved, note = research_apply_url(
+                    r["company"], r["title"], url, secrets)
+                cache[key] = resolved
+                console.print(
+                    f"  {'[green]ok[/green]' if resolved else '[yellow]--[/yellow]'} "
+                    f"{(r['title'] or '')[:45]} @ {r['company']}: {note}"
+                )
+            if resolved:
+                raw = _json.loads(r["raw_json"]) if r["raw_json"] else {}
+                raw["apply_url"] = resolved
+                conn.execute("UPDATE seen_jobs SET raw_json = ? WHERE id = ?",
+                             (_json.dumps(raw), r["id"]))
+                n_ok += 1
+            else:
+                n_none += 1
+        conn.commit()
+
+    console.print(
+        f"[green]done[/green]: resolved {n_ok}, unresolved {n_none}."
+    )
+    return 0
+
+
 def cmd_sweep_salary_floor(args) -> int:
     """Retroactively apply the salary/rate floor to already-scored rows.
 
@@ -733,6 +804,17 @@ def main(argv: list[str] | None = None) -> int:
     sweep_sf.add_argument("--dry-run", action="store_true",
                           help="Report what would be demoted without writing.")
     sweep_sf.set_defaults(fn=cmd_sweep_salary_floor)
+
+    research_ar = sub.add_parser(
+        "research-apply-routes",
+        help="Resolve canonical apply URLs for existing shortlist rows still "
+             "on a paywalled aggregator (web_search per row).",
+    )
+    research_ar.add_argument("--limit", type=int, default=50,
+                             help="Max rows to research in this run (default 50).")
+    research_ar.add_argument("--min-score", type=int, default=70,
+                             help="Only research rows with score >= this (default 70).")
+    research_ar.set_defaults(fn=cmd_research_apply_routes)
 
     mark = sub.add_parser(
         "mark-applied",

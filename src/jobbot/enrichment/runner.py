@@ -165,10 +165,13 @@ def enrich_new_postings(
         # have a usable route, caps per run, caches per company+title.
         resolved_apply_url = None
         if research_enabled and n_researched < research_cap:
-            from ..state import usable_apply_route
+            from ..state import is_paywalled_apply_url
             cur_url = str(enriched.apply_url or enriched.url or "")
-            kind, _ = usable_apply_route(apply_email, cur_url)
-            if kind == "missing":
+            # Research any paywalled row (hard dailyremote OR soft
+            # linkedin/xing) that has no email fallback, to upgrade it to
+            # the canonical employer URL. Soft-wall rows keep their link
+            # as a fallback if research can't resolve one.
+            if not apply_email and is_paywalled_apply_url(cur_url):
                 key = (enriched.company or "", enriched.title or "")
                 if key in research_cache:
                     resolved_apply_url = research_cache[key]

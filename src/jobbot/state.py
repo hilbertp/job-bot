@@ -1330,27 +1330,45 @@ def apply_channel(
     return "manual"
 
 
-# Domains that gate full job content / apply behind a paywall, premium
-# tier, or mandatory login. A URL on one of these is NOT a valid apply
-# route, the user click will land on a wall, not the application form.
-# Per feedback memory `feedback_no_paywalled_apply_links.md` (2026-05-15):
-# *"when i click the link, and its behind a paywall, you have failed."*
-_PAYWALLED_HOSTS = (
+# HARD paywalls: a click lands on a "Unlock with Premium" / "Get Access"
+# wall, the application form is genuinely gated. These are NEVER a usable
+# apply route, the row needs a canonical URL resolved (apply-path
+# research) or it stays "missing".
+# Per `feedback_no_paywalled_apply_links.md`: *"when i click the link,
+# and its behind a paywall, you have failed."*
+_HARD_PAYWALL_HOSTS = (
     "dailyremote.com",
+)
+
+# SOFT walls: login-gated but a real apply path exists for anyone with a
+# free account (LinkedIn Easy Apply / external redirect, Xing apply).
+# Per user 2026-05-21: "linkedin always have a apply route." We prefer
+# the canonical employer URL (apply-path research upgrades these), but
+# the soft-wall link itself is a valid fallback, NOT "no apply route".
+_SOFT_WALL_HOSTS = (
     "linkedin.com",
     "xing.com",
 )
 
 
 def is_paywalled_apply_url(url: str | None) -> bool:
-    """Return True when `url` points at an aggregator / login-walled host
-    that doesn't surface the actual application form to anonymous users.
-    Case-insensitive substring match, covers de.linkedin.com,
-    www.xing.com, etc."""
+    """Return True for hard OR soft walls. Used as the apply-path RESEARCH
+    trigger: any of these should be upgraded to a canonical employer URL
+    when possible. (Display logic in usable_apply_route treats hard vs
+    soft differently.)"""
     if not url:
         return False
     u = str(url).lower()
-    return any(h in u for h in _PAYWALLED_HOSTS)
+    return any(h in u for h in (*_HARD_PAYWALL_HOSTS, *_SOFT_WALL_HOSTS))
+
+
+def is_hard_paywall_url(url: str | None) -> bool:
+    """True only for hard paywalls (dailyremote), where no usable apply
+    route exists until a canonical URL is researched."""
+    if not url:
+        return False
+    u = str(url).lower()
+    return any(h in u for h in _HARD_PAYWALL_HOSTS)
 
 
 def usable_apply_route(
@@ -1360,25 +1378,23 @@ def usable_apply_route(
     """Resolve the apply route a user can ACTUALLY click. Returns one of:
 
       - ("email", "careers@..."), show as 📧 apply via email
-      - ("url",   "https://..."), show as ↗ open posting (canonical URL)
+      - ("url",   "https://..."), show as ↗ open posting
       - ("missing", "<reason>"), show as ⚠ no usable apply route
 
-    The route is "missing" when:
-      - both fields are empty/None, OR
-      - apply_url is on a paywalled aggregator (dailyremote / linkedin /
-        xing) and there's no email fallback.
-
-    Stage 3 / dashboard surfaces should NEVER expose a paywalled URL as
-    a clickable apply link. The "missing" verdict surfaces a warning
-    flag so the user knows manual research is required before they can
-    apply, rather than wasting a click on a broken link.
+    Precedence: a real apply email wins. Otherwise:
+      - a HARD paywall (dailyremote) with no email is "missing", the click
+        hits a wall, so the row needs a researched canonical URL first.
+      - a SOFT wall (linkedin / xing) is a usable "url", you can apply
+        there with a free account. Apply-path research upgrades these to
+        the employer's ATS when it can, but the link is never "no route".
+      - any other non-empty url is "url".
     """
     if apply_email and str(apply_email).strip():
         return ("email", str(apply_email).strip())
     if apply_url and str(apply_url).strip():
         u = str(apply_url).strip()
-        if is_paywalled_apply_url(u):
-            return ("missing", f"apply_url is on a paywalled aggregator ({u})")
+        if is_hard_paywall_url(u):
+            return ("missing", f"apply_url is on a hard paywall ({u})")
         return ("url", u)
     return ("missing", "no apply_url and no apply_email on file")
 
