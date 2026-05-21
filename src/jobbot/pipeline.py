@@ -203,7 +203,10 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
             to_enrich_by_id.setdefault(stale.id, stale)
         cap = config.enrichment.per_run_cap
         to_enrich = list(to_enrich_by_id.values())[:cap]
-        enrichment = enrich_new_postings(to_enrich, conn, registry=REGISTRY, run_id=run_id)
+        enrichment = enrich_new_postings(
+            to_enrich, conn, registry=REGISTRY, run_id=run_id,
+            config=config, secrets=secrets,
+        )
         n_enriched = enrichment.n_succeeded
         n_enrichment_failed = enrichment.n_failed
 

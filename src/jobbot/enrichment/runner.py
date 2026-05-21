@@ -54,14 +54,29 @@ def enrich_new_postings(
     registry: dict[str, object] | None = None,
     *,
     run_id: int | None = None,
+    config=None,
+    secrets=None,
 ) -> EnrichmentReport:
     """Walk new jobs, call each scraper's fetch_detail, persist enrichment cols.
+
+    When `config.apply_research_enabled` and `secrets` are provided, rows
+    whose only apply link is a paywalled aggregator get a web-search pass
+    to resolve the canonical employer apply URL (bounded by
+    `config.apply_research_max_per_run`, results cached per company+title
+    within the run).
 
     Returns counts suitable for the digest's per-source health table.
     """
     report = EnrichmentReport()
 
     scraper_registry = REGISTRY if registry is None else registry
+    # Apply-path research bookkeeping.
+    research_enabled = bool(
+        getattr(config, "apply_research_enabled", False) and secrets is not None
+    )
+    research_cap = int(getattr(config, "apply_research_max_per_run", 0) or 0)
+    n_researched = 0
+    research_cache: dict[tuple[str, str], str | None] = {}
     log.info("enrichment_starting", n_jobs=len(jobs), n_scrapers=len(scraper_registry))
     if run_id is not None:
         update_run_stage_progress(
@@ -144,6 +159,33 @@ def enrich_new_postings(
         # applier can route to the email channel without a DB round-trip.
         enriched.apply_email = apply_email
 
+        # Apply-path research: when the row's only apply link is a
+        # paywalled aggregator (and there's no email fallback), web-search
+        # for the canonical employer apply URL. Skips rows that already
+        # have a usable route, caps per run, caches per company+title.
+        resolved_apply_url = None
+        if research_enabled and n_researched < research_cap:
+            from ..state import usable_apply_route
+            cur_url = str(enriched.apply_url or enriched.url or "")
+            kind, _ = usable_apply_route(apply_email, cur_url)
+            if kind == "missing":
+                key = (enriched.company or "", enriched.title or "")
+                if key in research_cache:
+                    resolved_apply_url = research_cache[key]
+                else:
+                    from .apply_research import research_apply_url
+                    resolved_apply_url, note = research_apply_url(
+                        enriched.company, enriched.title, cur_url, secrets,
+                    )
+                    research_cache[key] = resolved_apply_url
+                    n_researched += 1
+                    log.info(
+                        "apply_research", job_id=job.id,
+                        resolved=bool(resolved_apply_url), note=note,
+                    )
+                if resolved_apply_url:
+                    enriched.apply_url = resolved_apply_url  # type: ignore[assignment]
+
         update_enrichment(
             conn,
             job_id=job.id,
@@ -158,6 +200,7 @@ def enrich_new_postings(
                 enriched.posted_at.isoformat()
                 if enriched.posted_at is not None else None
             ),
+            apply_url=resolved_apply_url,
         )
 
         if description_scraped:
