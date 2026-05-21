@@ -232,6 +232,69 @@ def cmd_backfill_posted_at(args) -> int:
     return 0
 
 
+def cmd_sweep_salary_floor(args) -> int:
+    """Retroactively apply the salary/rate floor to already-scored rows.
+
+    The salary floor (and freelance hourly floor) only act at scoring
+    time, so rows scored before the floor existed can still sit in the
+    shortlist below it. This sweep re-checks every scored, non-terminal
+    row against the configured floor (annual for permanent sources,
+    hourly for freelance_sources) and demotes sub-floor rows to FILTERED
+    so the current match list reflects the floor without waiting for a
+    re-scrape. Never touches applied / expired / other terminal rows."""
+    from .applier.salary import posting_below_hourly_floor, posting_below_salary_floor
+    from .models import TERMINAL_STATUSES, JobStatus
+    from .state import update_status
+
+    config = load_config()
+    dry_run = bool(getattr(args, "dry_run", False))
+    freelance = set(config.freelance_sources or [])
+
+    placeholders = ",".join("?" * len(TERMINAL_STATUSES))
+    with connect() as conn:
+        rows = conn.execute(
+            f"SELECT id, source, title, company, score, status, "
+            f"       COALESCE(description_full, '') AS body "
+            f"FROM seen_jobs "
+            f"WHERE score IS NOT NULL AND status NOT IN ({placeholders}) "
+            f"  AND status != 'filtered'",
+            tuple(TERMINAL_STATUSES),
+        ).fetchall()
+
+        demoted = []
+        for r in rows:
+            if r["source"] in freelance:
+                below, reason = posting_below_hourly_floor(
+                    r["body"], config.freelance_hourly_floor_eur)
+            else:
+                below, reason = posting_below_salary_floor(
+                    r["body"], config.salary_floor_eur_year)
+            if below:
+                demoted.append((r, reason))
+                if not dry_run:
+                    update_status(conn, r["id"], JobStatus.FILTERED,
+                                  discard_reason=reason)
+        if not dry_run:
+            conn.commit()
+
+    verb = "would demote" if dry_run else "demoted"
+    console.print(
+        f"[bold]sweep-salary-floor[/bold] checked {len(rows)} scored row(s); "
+        f"{verb} [yellow]{len(demoted)}[/yellow] below the floor"
+    )
+    if demoted:
+        table = Table(title="below-floor rows")
+        table.add_column("score", justify="right")
+        table.add_column("title @ company", max_width=55)
+        table.add_column("source")
+        table.add_column("reason", max_width=55)
+        for r, reason in demoted:
+            table.add_row(str(r["score"]), f"{r['title']} @ {r['company']}",
+                          r["source"], reason)
+        console.print(table)
+    return 0
+
+
 def cmd_housekeep(args) -> int:
     """HEAD-probe every live shortlist row; mark dead apply URLs as
     listing_expired so they exit the shortlist and surface the yellow
@@ -661,6 +724,15 @@ def main(argv: list[str] | None = None) -> int:
     backfill_pa.add_argument("--limit", type=int, default=300,
                              help="Max rows to backfill in this run (default 300).")
     backfill_pa.set_defaults(fn=cmd_backfill_posted_at)
+
+    sweep_sf = sub.add_parser(
+        "sweep-salary-floor",
+        help="Retroactively demote already-scored rows whose stated pay is "
+             "below the configured floor (annual or freelance-hourly).",
+    )
+    sweep_sf.add_argument("--dry-run", action="store_true",
+                          help="Report what would be demoted without writing.")
+    sweep_sf.set_defaults(fn=cmd_sweep_salary_floor)
 
     mark = sub.add_parser(
         "mark-applied",
