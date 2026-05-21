@@ -6,7 +6,7 @@ import httpx
 from selectolax.parser import HTMLParser
 
 from ..models import JobPosting
-from .base import BaseScraper, SearchQuery, stable_id
+from .base import BaseScraper, SearchQuery, parse_posted_at, stable_id
 
 
 class WeWorkRemotelyScraper(BaseScraper):
@@ -23,6 +23,10 @@ class WeWorkRemotelyScraper(BaseScraper):
             # WWR titles look like "Company: Senior X Developer"
             title_full = e.title
             company, _, title = title_full.partition(":")
+            posted_at = parse_posted_at(
+                getattr(e, "published_parsed", None)
+                or getattr(e, "published", None)
+            )
             out.append(JobPosting(
                 id=stable_id(self.source, link),
                 source=self.source,
@@ -31,6 +35,7 @@ class WeWorkRemotelyScraper(BaseScraper):
                 url=link,
                 apply_url=link,
                 description=getattr(e, "summary", "") or "",
+                posted_at=posted_at,
                 tags=["remote"],
             ))
         return out

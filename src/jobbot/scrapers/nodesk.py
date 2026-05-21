@@ -14,7 +14,7 @@ import structlog
 from selectolax.parser import HTMLParser
 
 from ..models import JobPosting
-from .base import BaseScraper, SearchQuery, stable_id
+from .base import BaseScraper, SearchQuery, parse_posted_at, stable_id
 
 log = structlog.get_logger()
 
@@ -53,6 +53,10 @@ class NoDeskScraper(BaseScraper):
             title, company = _split_title_company(raw_title)
             if needle and needle not in title.lower():
                 continue
+            posted_at = parse_posted_at(
+                getattr(e, "published_parsed", None)
+                or getattr(e, "published", None)
+            )
             out.append(JobPosting(
                 id=stable_id(self.source, link),
                 source=self.source,
@@ -61,6 +65,7 @@ class NoDeskScraper(BaseScraper):
                 url=link,
                 apply_url=link,
                 description=getattr(e, "summary", "") or "",
+                posted_at=posted_at,
                 tags=["remote"],
             ))
         return out

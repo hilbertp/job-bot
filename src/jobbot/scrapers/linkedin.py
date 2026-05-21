@@ -28,7 +28,7 @@ import structlog
 from selectolax.parser import HTMLParser
 
 from ..models import JobPosting
-from .base import BaseScraper, SearchQuery, stable_id
+from .base import BaseScraper, SearchQuery, parse_posted_at, stable_id
 
 log = structlog.get_logger()
 
@@ -108,6 +108,16 @@ class LinkedInScraper(BaseScraper):
                 if jid in seen_ids:
                     continue
                 seen_ids.add(jid)
+                # LinkedIn guest cards carry the posting date in a <time>
+                # element: `datetime="2026-05-15"` attribute when present,
+                # else relative text ("vor 3 Tagen" / "3 days ago").
+                date_el = card.css_first("time")
+                posted_at = None
+                if date_el is not None:
+                    posted_at = parse_posted_at(
+                        date_el.attributes.get("datetime")
+                        or date_el.text(strip=True)
+                    )
                 out.append(JobPosting(
                     id=jid,
                     source=self.source,
@@ -117,6 +127,7 @@ class LinkedInScraper(BaseScraper):
                     url=href,
                     apply_url=href,
                     description=card.text(strip=True)[:2000],
+                    posted_at=posted_at,
                 ))
 
             time.sleep(random.uniform(3.0, 5.0))

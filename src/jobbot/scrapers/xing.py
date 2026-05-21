@@ -17,7 +17,7 @@ import structlog
 from selectolax.parser import HTMLParser
 
 from ..models import JobPosting
-from .base import BaseScraper, SearchQuery, stable_id
+from .base import BaseScraper, SearchQuery, parse_posted_at, stable_id
 
 log = structlog.get_logger()
 
@@ -122,6 +122,7 @@ class XingScraper(BaseScraper):
 
         tree = HTMLParser(r.text)
         description = ""
+        posted_at = None
 
         # Xing job pages include full body in schema.org JSON-LD.
         ld_json = tree.css_first("script[type='application/ld+json']")
@@ -132,6 +133,7 @@ class XingScraper(BaseScraper):
                     raw = str(payload.get("description", ""))
                     description = re.sub(r"<[^>]+>", " ", html.unescape(raw))
                     description = " ".join(description.split())
+                    posted_at = parse_posted_at(payload.get("datePosted"))
             except Exception:
                 description = ""
 
@@ -146,4 +148,7 @@ class XingScraper(BaseScraper):
 
         if len(description.split()) < 100:
             return None
-        return job.model_copy(update={"description": description[:12000]})
+        return job.model_copy(update={
+            "description": description[:12000],
+            "posted_at": posted_at,
+        })

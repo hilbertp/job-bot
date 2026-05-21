@@ -17,7 +17,7 @@ import structlog
 from selectolax.parser import HTMLParser
 
 from ..models import JobPosting
-from .base import BaseScraper, SearchQuery, stable_id
+from .base import BaseScraper, SearchQuery, parse_posted_at, stable_id
 
 log = structlog.get_logger()
 
@@ -138,4 +138,5 @@ class DailyRemoteScraper(BaseScraper):
         return job.model_copy(update={
             "description": description[:12000],
             "company": company or "Unknown",
+            "posted_at": parse_posted_at(posting.get("datePosted")),
         })

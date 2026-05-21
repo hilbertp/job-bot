@@ -358,6 +358,7 @@ def update_enrichment(
     salary_text: str | None,
     apply_email: str | None,
     company: str | None = None,
+    posted_at: str | None = None,
 ) -> None:
     """Persist enrichment fields for a posting and keep raw_json description in sync.
 
@@ -379,6 +380,13 @@ def update_enrichment(
         payload["description"] = description_full or payload.get("description", "")
         if _is_real_company_name(company):
             payload["company"] = company
+        # Persist the posting date discovered on the detail page (JSON-LD
+        # datePosted etc.) so the dashboard's "posted N days ago" badge and
+        # the discovery-by-posting-date report read a real date instead of
+        # falling back to first_seen_at. Only overwrite when we actually
+        # found one; never clobber a date the listing already supplied.
+        if posted_at and not payload.get("posted_at"):
+            payload["posted_at"] = posted_at
 
     base_sql = (
         "UPDATE seen_jobs SET description_full = ?, description_scraped = ?, "

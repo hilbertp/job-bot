@@ -17,7 +17,7 @@ import structlog
 from selectolax.parser import HTMLParser
 
 from ..models import JobPosting
-from .base import BaseScraper, SearchQuery, stable_id
+from .base import BaseScraper, SearchQuery, parse_posted_at, stable_id
 
 log = structlog.get_logger()
 
@@ -115,6 +115,7 @@ class StepstoneScraper(BaseScraper):
 
         tree = HTMLParser(r.text)
         description = ""
+        posted_at = None
 
         # StepStone's /job/<id> page reliably exposes full text in JSON-LD.
         ld_json = tree.css_first("script[type='application/ld+json']")
@@ -125,6 +126,7 @@ class StepstoneScraper(BaseScraper):
                     raw = str(payload.get("description", ""))
                     description = re.sub(r"<[^>]+>", " ", html.unescape(raw))
                     description = " ".join(description.split())
+                    posted_at = parse_posted_at(payload.get("datePosted"))
             except Exception:
                 description = ""
 
@@ -139,4 +141,7 @@ class StepstoneScraper(BaseScraper):
 
         if len(description.split()) < 100:
             return None
-        return job.model_copy(update={"description": description[:12000]})
+        return job.model_copy(update={
+            "description": description[:12000],
+            "posted_at": posted_at,
+        })
