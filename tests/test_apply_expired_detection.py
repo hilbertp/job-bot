@@ -14,7 +14,7 @@ Per user feedback:
 """
 from __future__ import annotations
 
-from jobbot.applier.runner import _is_expired_listing
+from jobbot.applier.runner import _is_expired_by_text, _is_expired_listing
 
 
 # ---------------------------------------------------------------------------
@@ -111,4 +111,74 @@ def test_company_careers_subpath_with_job_id_NOT_expired():
     )
     # 'jobs/12345' is fine; the test is that 'careers' alone isn't enough
     # to trip the detector when a specific job id follows.
+    assert expired is False
+
+
+# ---------------------------------------------------------------------------
+# Inline-banner (HTTP 200, no redirect) signals — text-based detection
+# ---------------------------------------------------------------------------
+# Real-world driver: 2026-05-21, the Accesa SmartRecruiters posting returned
+# HTTP 200 with no redirect but rendered "Sorry, this job has expired." The
+# URL/status checks above can't see that; `_is_expired_by_text` scans the
+# rendered body text so the runner skips instead of trying to fill a form.
+
+def test_smartrecruiters_expired_banner_means_expired():
+    """The Accesa regression: 200 page whose body says the job expired."""
+    body = (
+        "Accesa\nSenior Product Manager\n"
+        "Sorry, this job has expired.\n"
+        "See other openings"
+    )
+    expired, reason = _is_expired_by_text(body)
+    assert expired is True
+    assert "expir" in reason.lower()
+
+
+def test_no_longer_accepting_applications_means_expired():
+    expired, _ = _is_expired_by_text(
+        "We are no longer accepting applications for this role."
+    )
+    assert expired is True
+
+
+def test_position_has_been_filled_means_expired():
+    expired, _ = _is_expired_by_text(
+        "Update: this position has been filled. Thank you for your interest."
+    )
+    assert expired is True
+
+
+def test_german_expired_banner_means_expired():
+    expired, _ = _is_expired_by_text(
+        "Diese Stelle ist leider nicht mehr verfügbar."
+    )
+    assert expired is True
+
+
+def test_german_bewerbungsfrist_abgelaufen_means_expired():
+    expired, _ = _is_expired_by_text(
+        "Hinweis: Die Bewerbungsfrist ist abgelaufen."
+    )
+    assert expired is True
+
+
+def test_text_match_is_case_insensitive():
+    expired, _ = _is_expired_by_text("THIS JOB HAS EXPIRED")
+    assert expired is True
+
+
+def test_live_application_form_text_is_NOT_expired():
+    """A normal live apply form's body copy must not trip the detector."""
+    body = (
+        "Apply for Senior Product Manager\n"
+        "First name\nLast name\nEmail\nUpload your CV\n"
+        "We received your application once you submit this form.\n"
+        "Submit application"
+    )
+    expired, _ = _is_expired_by_text(body)
+    assert expired is False
+
+
+def test_empty_body_is_NOT_expired():
+    expired, _ = _is_expired_by_text("")
     assert expired is False

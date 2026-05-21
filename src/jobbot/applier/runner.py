@@ -76,6 +76,7 @@ def _verify_post_submit(page) -> str:
     return "unknown"
 
 
+from ..expiry import is_expired_by_text as _is_expired_by_text  # noqa: F401
 from ..expiry import is_expired_listing as _is_expired_listing  # noqa: F401
 
 
@@ -223,6 +224,25 @@ def apply_to_job(
                 return ApplyResult(
                     status=JobStatus.LISTING_EXPIRED,
                     needs_review_reason=f"listing expired, {expired_reason}",
+                )
+
+            # POST-NAVIGATE TEXT EXPIRED CHECK, some ATSes keep the posting
+            # URL alive after a role closes and serve a HTTP-200 page with an
+            # inline "this job has expired" banner instead of redirecting or
+            # 404ing (SmartRecruiters did this on the Accesa posting,
+            # 2026-05-21). The URL/status checks above can't see that, so scan
+            # the rendered body text before picking an adapter / filling.
+            try:
+                body_text = page.evaluate(
+                    "() => document.body ? document.body.innerText : ''"
+                )
+            except Exception:
+                body_text = ""
+            expired_txt, expired_txt_reason = _is_expired_by_text(body_text)
+            if expired_txt:
+                return ApplyResult(
+                    status=JobStatus.LISTING_EXPIRED,
+                    needs_review_reason=f"listing expired, {expired_txt_reason}",
                 )
 
             adapter = next((a for a in ADAPTERS if a.matches(str(job.apply_url), page)), None)
