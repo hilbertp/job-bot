@@ -202,6 +202,63 @@ def posting_below_salary_floor(
     return False, ""
 
 
+# Freelance hourly/daily rate, e.g. "80 €/Std", "80 EUR/h", "800 €/Tag",
+# "90/hour", "700 EUR / day". Captures the number and the unit so we can
+# normalise day-rates to an hourly figure.
+_RATE_RE = re.compile(
+    r"(\d{1,4}(?:[.,]\d{1,2})?)\s*"
+    r"(?:€|eur|euro)?\s*(?:/|pro|per|p\.?)?\s*"
+    r"(std|stunde|stunden|hour|hours|hr|h|tag|tage|day|days|d)\b",
+    re.IGNORECASE,
+)
+# Hours per freelance day, used to convert a day-rate to an hourly rate.
+_HOURS_PER_DAY = 8
+
+
+def parse_hourly_rate_eur(text: str) -> float | None:
+    """Best-effort hourly rate in EUR from a freelance project body.
+
+    Handles hourly (€/Std, /h, /hour) and daily (€/Tag, /day) rates;
+    day rates are divided by an 8h day. Returns None when no rate is
+    stated (freelancermap often shows "auf Anfrage"), in which case the
+    caller does not filter, same convention as the annual floor.
+    """
+    if not text:
+        return None
+    best: float | None = None
+    for m in _RATE_RE.finditer(text):
+        num = float(m.group(1).replace(",", "."))
+        unit = m.group(2).lower()
+        if unit.startswith(("tag", "day", "d")):
+            num = num / _HOURS_PER_DAY
+        # Ignore implausible matches (e.g. "8 h" experience years); a real
+        # freelance rate is at least 20 EUR/h.
+        if num < 20:
+            continue
+        if best is None or num > best:
+            best = num
+    return best
+
+
+def posting_below_hourly_floor(
+    description: str, floor_eur_hour: float,
+) -> tuple[bool, str]:
+    """Return (is_below, reason) for a freelance posting whose stated rate
+    is below `floor_eur_hour`. No stated rate -> not filtered (same as the
+    annual floor's unknown-comp rule)."""
+    if floor_eur_hour <= 0:
+        return False, ""
+    rate = parse_hourly_rate_eur(description or "")
+    if rate is None:
+        return False, ""
+    if rate < floor_eur_hour:
+        return True, (
+            f"rate_below_floor: stated ~{rate:.0f} EUR/h "
+            f"< floor {floor_eur_hour:.0f} EUR/h"
+        )
+    return False, ""
+
+
 def _detect_period(text: str, span_start: int, span_end: int) -> str:
     """Look at the words around the salary span to classify year vs month.
 

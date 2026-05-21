@@ -9,7 +9,7 @@ from typing import Any
 import structlog
 
 from .applier import apply_to_job
-from .applier.salary import posting_below_salary_floor
+from .applier.salary import posting_below_hourly_floor, posting_below_salary_floor
 from .config import Config, Secrets
 from .enrichment.runner import enrich_new_postings
 from .generators import (
@@ -292,13 +292,20 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 )
                 blocker_counts[reason or "filtered by heuristic"] += 1
                 continue
-            # Salary-floor filter: if the posting STATES a range whose top
-            # end is below the configured EUR/year floor, drop it before
-            # spending an LLM scoring call (and any downstream generation).
-            # Postings with no stated salary pass through untouched.
-            below_floor, floor_reason = posting_below_salary_floor(
-                job.description, config.salary_floor_eur_year,
-            )
+            # Salary-floor filter: drop a posting before the LLM scoring
+            # call when its pay is clearly below the candidate's floor.
+            # Freelance sources (freelancermap) quote hourly/daily rates,
+            # not an annual salary, so they're held to the hourly floor;
+            # everything else uses the annual floor. Postings that state no
+            # pay pass through untouched. Done pre-LLM to save spend.
+            if job.source in (config.freelance_sources or []):
+                below_floor, floor_reason = posting_below_hourly_floor(
+                    job.description, config.freelance_hourly_floor_eur,
+                )
+            else:
+                below_floor, floor_reason = posting_below_salary_floor(
+                    job.description, config.salary_floor_eur_year,
+                )
             if below_floor:
                 update_status(conn, job.id, JobStatus.FILTERED,
                               reason=floor_reason, discard_reason=floor_reason)
