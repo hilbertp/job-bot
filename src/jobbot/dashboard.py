@@ -613,6 +613,110 @@ def runs_page():
     return render_template("runs.html")
 
 
+@app.route("/api/discovery")
+def api_discovery():
+    """Discovery overview: new prospect jobs found per day and per ISO week,
+    bucketed by POSTING DATE (posted_at when the scraper captured it, else
+    first_seen_at as a scrape-date proxy).
+
+    Returns, for the last `days` days and last `weeks` weeks:
+      - total found in that bucket
+      - how many became a live shortlist row (score >= 70, not terminal)
+      - what fraction of the bucket used a real posted_at vs the proxy
+
+    The proxy fraction lets the UI flag buckets that are scrape-date
+    estimates (older rows pre-dating posted_at capture) vs real dates.
+    """
+    from flask import request
+    import json as _json
+
+    try:
+        days = max(1, min(int(request.args.get("days", 21)), 120))
+    except ValueError:
+        days = 21
+    try:
+        weeks = max(1, min(int(request.args.get("weeks", 8)), 26))
+    except ValueError:
+        weeks = 8
+
+    _TERMINAL = (
+        "listing_expired", "apply_submitted", "apply_failed",
+        "apply_needs_review", "apply_queued", "employer_received",
+        "waiting_response", "rejected", "interview_invited",
+    )
+
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT status, score, first_seen_at, raw_json FROM seen_jobs"
+        ).fetchall()
+
+    from collections import defaultdict
+    day_found = defaultdict(int)
+    day_short = defaultdict(int)
+    day_real = defaultdict(int)
+    week_found = defaultdict(int)
+    week_short = defaultdict(int)
+    week_real = defaultdict(int)
+
+    for r in rows:
+        posted_iso = None
+        raw = r["raw_json"]
+        if raw:
+            try:
+                payload = _json.loads(raw)
+                if isinstance(payload, dict):
+                    posted_iso = payload.get("posted_at")
+            except _json.JSONDecodeError:
+                pass
+        eff = _parse_iso(posted_iso) or _parse_iso(r["first_seen_at"])
+        if eff is None:
+            continue
+        if eff.tzinfo is None:
+            eff = eff.replace(tzinfo=timezone.utc)
+        day = eff.date().isoformat()
+        iso_y, iso_w, _ = eff.isocalendar()
+        wk = f"{iso_y}-W{iso_w:02d}"
+        is_real = bool(posted_iso)
+        is_short = (
+            r["score"] is not None and r["score"] >= 70
+            and r["status"] not in _TERMINAL
+        )
+        day_found[day] += 1
+        week_found[wk] += 1
+        if is_real:
+            day_real[day] += 1
+            week_real[wk] += 1
+        if is_short:
+            day_short[day] += 1
+            week_short[wk] += 1
+
+    today = datetime.now(tz=timezone.utc).date()
+    per_day = []
+    for i in range(days):
+        d = (today - timedelta(days=i)).isoformat()
+        per_day.append({
+            "date": d,
+            "found": day_found.get(d, 0),
+            "shortlist": day_short.get(d, 0),
+            "real_date_pct": (
+                round(100 * day_real.get(d, 0) / day_found[d]) if day_found.get(d) else 0
+            ),
+        })
+
+    # Weeks: sort all observed weeks desc, take the most recent `weeks`.
+    all_weeks = sorted(set(week_found), reverse=True)[:weeks]
+    per_week = [{
+        "week": wk,
+        "found": week_found.get(wk, 0),
+        "shortlist": week_short.get(wk, 0),
+        "real_date_pct": (
+            round(100 * week_real.get(wk, 0) / week_found[wk]) if week_found.get(wk) else 0
+        ),
+    } for wk in all_weeks]
+
+    return jsonify({"per_day": per_day, "per_week": per_week})
+
+
 @app.route("/api/pipeline-funnel")
 def api_pipeline_funnel():
     """Get pipeline funnel breakdown showing job attrition at each stage."""

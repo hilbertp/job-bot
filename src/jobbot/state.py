@@ -958,6 +958,59 @@ def llm_usage_summary(conn: sqlite3.Connection, run_id: int) -> dict:
     return {"totals": totals, "phases": phases}
 
 
+def jobs_needing_posted_at_backfill(
+    conn: sqlite3.Connection, sources: tuple[str, ...], limit: int = 300,
+) -> list[JobPosting]:
+    """Rows whose raw_json has no `posted_at` yet, restricted to sources we
+    can backfill by re-fetching the detail page (JSON-LD `datePosted`).
+
+    RSS / LinkedIn rows are excluded by the caller's `sources` allow-list
+    because their feeds only carry recent items, an old row's date can't be
+    recovered. Ordered most-recent-first so a capped run backfills the
+    freshest (still-live) listings before older ones that may 404.
+    """
+    placeholders = ",".join("?" * len(sources))
+    rows = conn.execute(
+        f"SELECT raw_json FROM seen_jobs "
+        f"WHERE raw_json IS NOT NULL AND description_scraped = 1 "
+        f"  AND source IN ({placeholders}) "
+        f"ORDER BY first_seen_at DESC LIMIT ?",
+        (*sources, limit),
+    ).fetchall()
+    out: list[JobPosting] = []
+    for row in rows:
+        try:
+            payload = json.loads(row["raw_json"])
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if isinstance(payload, dict) and payload.get("posted_at"):
+            continue  # already has a date, skip
+        try:
+            out.append(JobPosting.model_validate_json(row["raw_json"]))
+        except Exception:
+            continue
+    return out
+
+
+def set_posted_at(conn: sqlite3.Connection, job_id: str, posted_at_iso: str) -> None:
+    """Persist a backfilled posting date into the row's raw_json without
+    disturbing any other field. No-op if the row already has one."""
+    row = conn.execute("SELECT raw_json FROM seen_jobs WHERE id = ?", (job_id,)).fetchone()
+    if not row:
+        return
+    try:
+        payload = json.loads(row["raw_json"]) if row["raw_json"] else {}
+    except json.JSONDecodeError:
+        payload = {}
+    if not isinstance(payload, dict) or payload.get("posted_at"):
+        return
+    payload["posted_at"] = posted_at_iso
+    conn.execute(
+        "UPDATE seen_jobs SET raw_json = ? WHERE id = ?",
+        (json.dumps(payload), job_id),
+    )
+
+
 def jobs_needing_enrichment(conn: sqlite3.Connection) -> list[JobPosting]:
     """Re-hydrate JobPosting objects for rows where description_scraped IS NULL.
 
