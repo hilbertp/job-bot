@@ -41,10 +41,10 @@
 <section id="discovery-panel" class="bg-white/10 rounded-2xl border border-white/20 mb-8 overflow-hidden" data-collapsible-panel>
     <div class="flex w-full flex-wrap items-start justify-between gap-3 cursor-pointer select-none px-6 py-5 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="discovery-panel-body" aria-expanded="false" aria-label="Toggle Discovery: new prospects per day and week" title="Expand panel">
         <div class="flex flex-wrap items-baseline gap-3">
-            <h2 class="text-xl font-bold">Discovery: New Prospects Found</h2>
+            <h2 class="text-xl font-bold">Discovery: Matches Found</h2>
             <div class="text-xs text-purple-200 flex flex-wrap gap-4">
-                <span>This week <span id="discovery-week-found" class="text-purple-100 font-semibold">,</span> found</span>
-                <span><span id="discovery-week-shortlist" class="text-purple-100 font-semibold">,</span> shortlist</span>
+                <span>This week <span id="discovery-week-matches" class="text-emerald-200 font-semibold">,</span> matches</span>
+                <span class="text-purple-300">(<span id="discovery-week-scanned" class="font-semibold">,</span> scanned)</span>
             </div>
         </div>
         <span class="text-base text-purple-100 select-none" data-panel-toggle aria-controls="discovery-panel-body" aria-expanded="false" aria-hidden="true">
@@ -52,7 +52,7 @@
         </span>
     </div>
     <div id="discovery-panel-body" class="hidden px-6 pb-6" data-panel-body>
-        <p class="text-sm text-purple-100 mb-4">New prospect jobs by <strong>posting date</strong> (the employer's published date when the scraper captured it, else scrape date as a proxy). The "real date" column shows what share of each bucket used a true posting date vs the proxy. Shortlist = scored &ge; 70 and still open.</p>
+        <p class="text-sm text-purple-100 mb-4"><strong>Matches</strong> by <strong>posting date</strong>: a PO/PM posting whose salary cleared the floor and whose profile-fit score is &ge; 70 and isn't yet applied or expired. Scanned (muted) is the raw funnel volume, kept only for context. Posting date is the employer's published date when the scraper captured it, else scrape date (the "real date" column shows that share).</p>
         <div class="grid md:grid-cols-2 gap-6">
             <div>
                 <h3 class="text-sm font-semibold text-purple-100 mb-2">Per day (last 14)</h3>
@@ -61,8 +61,8 @@
                         <thead>
                             <tr class="text-purple-200 border-b border-white/10">
                                 <th class="pb-2">Date</th>
-                                <th class="pb-2 text-right">Found</th>
-                                <th class="pb-2 text-right">Shortlist</th>
+                                <th class="pb-2 text-right">Matches</th>
+                                <th class="pb-2 text-right text-purple-400">Scanned</th>
                                 <th class="pb-2 text-right">Real date</th>
                             </tr>
                         </thead>
@@ -79,8 +79,8 @@
                         <thead>
                             <tr class="text-purple-200 border-b border-white/10">
                                 <th class="pb-2">Week</th>
-                                <th class="pb-2 text-right">Found</th>
-                                <th class="pb-2 text-right">Shortlist</th>
+                                <th class="pb-2 text-right">Matches</th>
+                                <th class="pb-2 text-right text-purple-400">Scanned</th>
                                 <th class="pb-2 text-right">Real date</th>
                             </tr>
                         </thead>
@@ -453,13 +453,19 @@ async function loadDiscovery() {
     const realTone = (pct) => pct >= 67 ? 'text-emerald-200'
         : pct >= 34 ? 'text-yellow-200' : 'text-purple-300';
 
+    // Matches lead (bold emerald); scanned is muted context. Rows with a
+    // match get a subtle highlight so the eye lands on productive days.
+    const matchCell = (n) => n > 0
+        ? `<td class="py-1.5 text-right font-bold text-emerald-200">${n}</td>`
+        : `<td class="py-1.5 text-right text-purple-400">0</td>`;
+
     const dayBody = document.getElementById('discovery-day-body');
     if (dayBody) {
         dayBody.innerHTML = (payload.per_day || []).map(d => `
-            <tr class="border-b border-white/5">
+            <tr class="border-b border-white/5 ${d.matches > 0 ? 'bg-emerald-500/5' : ''}">
                 <td class="py-1.5">${d.date}</td>
-                <td class="py-1.5 text-right font-semibold">${d.found}</td>
-                <td class="py-1.5 text-right text-emerald-200">${d.shortlist}</td>
+                ${matchCell(d.matches)}
+                <td class="py-1.5 text-right text-purple-400">${d.scanned}</td>
                 <td class="py-1.5 text-right ${realTone(d.real_date_pct)}" title="share with a real posting date vs scrape-date proxy">${d.real_date_pct}%</td>
             </tr>`).join('') || '<tr><td colspan="4" class="py-3 text-purple-300">no data</td></tr>';
     }
@@ -467,20 +473,20 @@ async function loadDiscovery() {
     const weekBody = document.getElementById('discovery-week-body');
     if (weekBody) {
         weekBody.innerHTML = (payload.per_week || []).map(w => `
-            <tr class="border-b border-white/5">
+            <tr class="border-b border-white/5 ${w.matches > 0 ? 'bg-emerald-500/5' : ''}">
                 <td class="py-1.5">${w.week}</td>
-                <td class="py-1.5 text-right font-semibold">${w.found}</td>
-                <td class="py-1.5 text-right text-emerald-200">${w.shortlist}</td>
+                ${matchCell(w.matches)}
+                <td class="py-1.5 text-right text-purple-400">${w.scanned}</td>
                 <td class="py-1.5 text-right ${realTone(w.real_date_pct)}" title="share with a real posting date vs scrape-date proxy">${w.real_date_pct}%</td>
             </tr>`).join('') || '<tr><td colspan="4" class="py-3 text-purple-300">no data</td></tr>';
     }
 
-    // Header badges = the most recent week's totals.
+    // Header badges = the most recent week's totals, matches lead.
     const wk = (payload.per_week || [])[0];
-    const wf = document.getElementById('discovery-week-found');
-    const ws = document.getElementById('discovery-week-shortlist');
-    if (wf) wf.textContent = wk ? wk.found : '0';
-    if (ws) ws.textContent = wk ? wk.shortlist : '0';
+    const wm = document.getElementById('discovery-week-matches');
+    const wsc = document.getElementById('discovery-week-scanned');
+    if (wm) wm.textContent = wk ? wk.matches : '0';
+    if (wsc) wsc.textContent = wk ? wk.scanned : '0';
 }
 
 async function loadStage1Data() {
