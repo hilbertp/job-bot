@@ -81,10 +81,13 @@ _REVEAL_SELECTORS = (
 )
 
 # Submit / send buttons, EN + DE. Tried in order; first enabled+visible
-# match is clicked. type=submit last as a catch-all.
+# match is clicked. type=submit / input[type=submit] are last-resort
+# catch-alls guarded by a text blacklist (see _is_non_submit_button).
 _SUBMIT_SELECTORS = (
     "button:has-text('Send application')",
     "button:has-text('Submit application')",
+    "button:has-text('Submit your application')",
+    "button:has-text('Complete application')",
     "button:has-text('Bewerbung absenden')",
     "button:has-text('Bewerbung abschicken')",
     "button:has-text('Jetzt bewerben')",
@@ -95,6 +98,31 @@ _SUBMIT_SELECTORS = (
     "button:has-text('Bewerben')",
     "button[type=submit]",
     "input[type=submit]",
+)
+
+# "Next / Continue" selectors for multi-step forms (join.com, Workable,
+# Personio, custom). Clicked in order when no submit button is found;
+# up to _MAX_NEXT_STEPS advances before giving up.
+_NEXT_STEP_SELECTORS = (
+    "button:has-text('Next')",
+    "button:has-text('Weiter')",
+    "button:has-text('Continue')",
+    "button:has-text('Fortfahren')",
+    "button:has-text('Nächster Schritt')",
+    "button:has-text('Next step')",
+    "button[data-qa='next-button']",
+    "button[data-testid='next-button']",
+    "button.next",
+)
+_MAX_NEXT_STEPS = 6  # safety cap to avoid infinite loops
+
+# Texts that disqualify a button[type=submit] catch-all match: these are
+# login / search / generic form submits, NOT application-send buttons.
+_NON_SUBMIT_TEXT_RE = __import__("re").compile(
+    r"^(log\s*in|sign\s*in|sign\s*up|register|create\s*account|search|"
+    r"subscribe|newsletter|send\s*message|contact\s*us|reset|forgot|"
+    r"save|cancel|back|close|delete|remove|upload|download)$",
+    __import__("re").IGNORECASE,
 )
 
 
@@ -143,6 +171,10 @@ class LLMFillAdapter:
             log.warning("llm_fill_no_api_key", note="ANTHROPIC_API_KEY unset; skipping")
             return
 
+        # Store context so _fill_current_page can re-use it during
+        # multi-step navigation without threading extra args through submit().
+        self._current_fill_ctx = (job, profile, docs)
+
         self._reveal_form(page)
         fields = self._scrape_fields(page)
         # Single-choice questions rendered as a row of <button>s (Ashby
@@ -182,27 +214,100 @@ class LLMFillAdapter:
                 self._apply_mapping(page, file_mapping)
 
     def submit(self, page: "Page") -> str:
-        """Click the form's submit/send button and return the post-click
-        URL. The bot submits end-to-end (per the user's directive); the
-        runner then verifies a real success indicator before claiming
-        the application was sent."""
-        for sel in _SUBMIT_SELECTORS:
-            try:
-                loc = page.locator(sel).first
-                if loc.count() > 0 and loc.is_visible() and not loc.is_disabled():
+        """Click the form's submit/send button and return the post-click URL.
+
+        Multi-step forms (join.com, Workable, etc.) gate the final submit
+        behind one or more "Next / Weiter" pages. We walk through up to
+        _MAX_NEXT_STEPS pages: on each step, first try the submit selectors;
+        if none match, look for a Next button and advance. If we're still on
+        a new page after clicking Next, re-run fill() to populate any new
+        fields before trying submit again.
+
+        The `button[type=submit]` catch-all is guarded by _NON_SUBMIT_TEXT_RE
+        so it never fires on Login / Search / Sign-up buttons.
+        """
+        for step in range(_MAX_NEXT_STEPS + 1):
+            # --- try submit selectors on the current page ---
+            for sel in _SUBMIT_SELECTORS:
+                try:
+                    loc = page.locator(sel).first
+                    if loc.count() == 0 or not loc.is_visible():
+                        continue
+                    if loc.is_disabled():
+                        continue
                     txt = (loc.text_content(timeout=1_500) or "").strip()
+                    # Guard the type=submit catch-all against non-apply buttons
+                    if sel in ("button[type=submit]", "input[type=submit]"):
+                        if _NON_SUBMIT_TEXT_RE.match(txt):
+                            log.debug(
+                                "llm_fill_submit_skip_non_apply",
+                                selector=sel, text=txt[:40],
+                            )
+                            continue
                     loc.click(timeout=8_000)
                     log.info("llm_fill_submit_clicked", selector=sel, text=txt[:40])
                     page.wait_for_timeout(4_000)
                     return page.url
-            except Exception as e:
-                log.warning("llm_fill_submit_try_failed", selector=sel, error=str(e)[:80])
-                continue
+                except Exception as e:
+                    log.warning("llm_fill_submit_try_failed", selector=sel,
+                                error=str(e)[:80])
+                    continue
+
+            if step >= _MAX_NEXT_STEPS:
+                break
+
+            # --- no submit found: try advancing to the next step ---
+            advanced = False
+            for nsel in _NEXT_STEP_SELECTORS:
+                try:
+                    loc = page.locator(nsel).first
+                    if loc.count() == 0 or not loc.is_visible() or loc.is_disabled():
+                        continue
+                    txt = (loc.text_content(timeout=1_500) or "").strip()
+                    loc.click(timeout=5_000)
+                    page.wait_for_timeout(2_000)
+                    log.info("llm_fill_next_step_clicked",
+                             step=step + 1, selector=nsel, text=txt[:30])
+                    # Re-fill any new fields that appeared on this step
+                    try:
+                        self._fill_current_page(page)
+                    except Exception as e:
+                        log.warning("llm_fill_step_fill_failed",
+                                    step=step + 1, error=str(e)[:80])
+                    advanced = True
+                    break
+                except Exception:
+                    continue
+
+            if not advanced:
+                break  # no next button either — give up
+
         raise RuntimeError("llm_fill: no enabled submit button found")
 
     # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------
+
+    def _fill_current_page(self, page: "Page") -> None:
+        """Re-scrape and fill fields visible on the current form step.
+
+        Called after advancing to a new step in a multi-step form so any
+        newly revealed fields get populated before the submit attempt.
+        Uses the same job/profile/docs context stored on the instance by
+        fill() — callers must have called fill() first.
+        """
+        if not hasattr(self, "_current_fill_ctx"):
+            return  # called outside a fill() context; skip silently
+        job, profile, docs = self._current_fill_ctx
+        fields = self._scrape_fields(page)
+        button_groups = self._scrape_button_groups(page)
+        radio_groups = self._scrape_radio_groups(page)
+        all_fields = fields + button_groups + radio_groups
+        if not all_fields:
+            return
+        mapping = self._ask_claude(all_fields, job, profile, docs)
+        if mapping is not None:
+            self._apply_mapping(page, mapping)
 
     def _reveal_form(self, page: "Page") -> None:
         """Click any apply-button that gates the form. Idempotent."""
