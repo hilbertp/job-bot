@@ -190,7 +190,9 @@ def test_fill_applies_mapping_from_claude(tmp_path, monkeypatch):
     a = LLMFillAdapter(anthropic_api_key="x")
     page = MagicMock()
     # First scrape: procilon shape. Second scrape (file inputs): empty.
-    page.evaluate.side_effect = [PROCILON_FIELDS, []]
+    # evaluate calls in order: scrape fields, button-groups (none),
+    # radio-groups (none), second-pass file scrape (none).
+    page.evaluate.side_effect = [PROCILON_FIELDS, [], [], []]
     page.locator.return_value.count.return_value = 0  # no reveal button found
 
     # Each locator(sel).first returns a fresh mock with .count()=1 and
@@ -252,7 +254,9 @@ def test_fill_tolerates_bad_json_from_claude(tmp_path):
     crash the apply attempt."""
     a = LLMFillAdapter(anthropic_api_key="x")
     page = MagicMock()
-    page.evaluate.side_effect = [PROCILON_FIELDS, []]
+    # evaluate calls in order: scrape fields, button-groups (none),
+    # radio-groups (none), second-pass file scrape (none).
+    page.evaluate.side_effect = [PROCILON_FIELDS, [], [], []]
     page.locator.return_value.count.return_value = 0
 
     fake_msg = _mock_claude_response("not json at all, sorry")
@@ -268,7 +272,9 @@ def test_fill_strips_markdown_fences_around_json(tmp_path):
     The adapter should still parse the inner JSON."""
     a = LLMFillAdapter(anthropic_api_key="x")
     page = MagicMock()
-    page.evaluate.side_effect = [PROCILON_FIELDS, []]
+    # evaluate calls in order: scrape fields, button-groups (none),
+    # radio-groups (none), second-pass file scrape (none).
+    page.evaluate.side_effect = [PROCILON_FIELDS, [], [], []]
 
     locators_called: list[tuple[str, str, str]] = []
     def _locator(sel):
@@ -301,7 +307,9 @@ def test_fill_second_pass_uploads_files_revealed_by_select(tmp_path):
         "id": "cv-input", "placeholder": None, "label": "CV",
         "required": True, "options": None,
     }]
-    page.evaluate.side_effect = [PROCILON_FIELDS, file_field]
+    # order: scrape fields, button-groups (none), radio-groups (none),
+    # second-pass file scrape.
+    page.evaluate.side_effect = [PROCILON_FIELDS, [], [], file_field]
 
     upload_paths: list[tuple[str, str]] = []
     def _locator(sel):
@@ -338,7 +346,9 @@ def test_fill_per_field_failure_does_not_abort_remaining_mappings(tmp_path):
     gets a partially filled form."""
     a = LLMFillAdapter(anthropic_api_key="x")
     page = MagicMock()
-    page.evaluate.side_effect = [PROCILON_FIELDS, []]
+    # evaluate calls in order: scrape fields, button-groups (none),
+    # radio-groups (none), second-pass file scrape (none).
+    page.evaluate.side_effect = [PROCILON_FIELDS, [], [], []]
 
     filled: list[tuple[str, str]] = []
     def _locator(sel):
