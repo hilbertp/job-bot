@@ -145,11 +145,23 @@ class LLMFillAdapter:
 
         self._reveal_form(page)
         fields = self._scrape_fields(page)
-        if not fields:
+        # Single-choice questions rendered as a row of <button>s (Ashby
+        # Yes/No work-authorization, segmented controls) are invisible to the
+        # input/select scrape, so collect them separately and hand them to
+        # the same mapping pass.
+        button_groups = self._scrape_button_groups(page)
+        radio_groups = self._scrape_radio_groups(page)
+        if button_groups or radio_groups:
+            log.info(
+                "llm_fill_choice_groups_found",
+                buttons=len(button_groups), radios=len(radio_groups),
+            )
+        all_fields = fields + button_groups + radio_groups
+        if not all_fields:
             log.info("llm_fill_no_fields_found", url=page.url)
             return
 
-        mapping = self._ask_claude(fields, job, profile, docs)
+        mapping = self._ask_claude(all_fields, job, profile, docs)
         if mapping is None:
             log.warning("llm_fill_claude_no_mapping", n_fields=len(fields))
             return
@@ -220,9 +232,13 @@ class LLMFillAdapter:
                 "[...document.querySelectorAll(\"input[type=file]\")]"
             )
         else:
+            # Radios are handled as grouped questions by _scrape_radio_groups
+            # (they need their question text + sibling options to be mappable),
+            # so exclude them here to avoid duplicate, context-free entries.
             select_expr = (
                 "[...document.querySelectorAll('input, textarea, select')]"
-                ".filter(el => el.offsetParent !== null && el.type !== 'hidden')"
+                ".filter(el => el.offsetParent !== null"
+                " && el.type !== 'hidden' && el.type !== 'radio')"
             )
         return page.evaluate(f"""() => {{
             const els = {select_expr};
@@ -245,6 +261,144 @@ class LLMFillAdapter:
                 }};
             }});
         }}""")
+
+    def _scrape_button_groups(self, page: "Page") -> list[dict[str, Any]]:
+        """Scrape single-choice questions rendered as a row of <button>s.
+
+        ATSes like Ashby render boolean / single-select custom questions
+        (e.g. "Are you legally authorized to work in Germany?" with Yes / No
+        buttons) as button groups, NOT as <select> or <input type=radio>, so
+        `_scrape_fields` never sees them and the apply stalls on a required
+        field. This finds containers holding 2-6 short-text option buttons,
+        tags each with a `data-jobbot-bg` attribute so the apply step can
+        target it unambiguously, and returns one entry per group with
+        `kind="button_group"`, the group `selector`, the question `label`,
+        and the visible `options`.
+        """
+        try:
+            return page.evaluate(r"""() => {
+              const groups = [];
+              const SKIP = /submit|apply|send|absenden|bewerben|upload|replace|remove|add file|autofill|sign ?in|log ?in|cancel|back|next|continue|previous|close/i;
+              const isOption = (b) => {
+                const t = (b.innerText || "").trim();
+                if (!t || t.length > 40) return false;
+                // The real submit/apply CTA is excluded by SKIP (its text).
+                // We must NOT exclude by type==="submit": a <button> with no
+                // explicit type inside a <form> defaults to type "submit",
+                // and Ashby renders its Yes/No option buttons exactly that
+                // way (they toggle via JS, they don't submit), so a type
+                // check would filter out the very options we need.
+                if (SKIP.test(t)) return false;
+                if (b.offsetParent === null) return false;
+                return true;
+              };
+              const containers = new Set();
+              document.querySelectorAll("button").forEach(b => {
+                if (!isOption(b)) return;
+                let c = b.parentElement;
+                for (let i = 0; i < 4 && c; i++) {
+                  const opts = [...c.querySelectorAll("button")].filter(isOption);
+                  if (opts.length >= 2) { containers.add(c); break; }
+                  c = c.parentElement;
+                }
+              });
+              let idx = 0;
+              containers.forEach(c => {
+                if (c.hasAttribute("data-jobbot-bg")) return;
+                const btns = [...c.querySelectorAll("button")].filter(isOption);
+                if (btns.length < 2 || btns.length > 6) return;
+                const optTexts = btns.map(b => b.innerText.trim());
+                const opts = new Set(optTexts);
+                // The question label is often a SIBLING of the button
+                // container (Ashby: <label> then <div> of Yes/No buttons),
+                // so climb ancestors looking for a <label>/<legend> whose
+                // text isn't one of the options.
+                let label = "";
+                let a = c;
+                for (let i = 0; i < 4 && a && !label; i++) {
+                  const labs = [...a.querySelectorAll("label, legend")]
+                    .map(l => (l.innerText || "").trim())
+                    .filter(t => t && !opts.has(t));
+                  if (labs.length) label = labs[0];
+                  a = a.parentElement;
+                }
+                if (!label) {
+                  const lines = (c.innerText || "").split("\n").map(s => s.trim())
+                    .filter(s => s && !opts.has(s));
+                  label = lines.length ? lines[0] : "";
+                }
+                c.setAttribute("data-jobbot-bg", String(idx));
+                groups.push({
+                  kind: "button_group",
+                  selector: "[data-jobbot-bg='" + idx + "']",
+                  label: label.slice(0, 140),
+                  options: optTexts,
+                });
+                idx++;
+              });
+              return groups;
+            }""")
+        except Exception as e:
+            log.warning("llm_fill_button_group_scrape_failed", error=str(e)[:100])
+            return []
+
+    def _scrape_radio_groups(self, page: "Page") -> list[dict[str, Any]]:
+        """Scrape single-choice questions rendered as native radio inputs.
+
+        `_scrape_fields` skips radios because an individual radio carries
+        only its OPTION label (e.g. "Yes"), not the QUESTION it answers, so
+        the LLM can't tell which group a radio belongs to. Here we group
+        radios by `name`, find the question text (legend / first non-option
+        line), tag the group's common-ancestor container with a
+        `data-jobbot-rg` attribute, and return one entry per group with
+        `kind="radio_group"`, the group `selector`, the question `label`,
+        and the option labels. Covers Ashby work-authorization + EEO
+        questions, and any ATS using radios for single-choice.
+        """
+        try:
+            return page.evaluate(r"""() => {
+              const groups = [];
+              const radios = [...document.querySelectorAll("input[type=radio]")]
+                .filter(r => r.offsetParent !== null);
+              const byName = {};
+              radios.forEach(r => { (byName[r.name] = byName[r.name] || []).push(r); });
+              let idx = 0;
+              Object.keys(byName).forEach(name => {
+                const rs = byName[name];
+                if (!name || rs.length < 2) return;
+                let c = rs[0].parentElement;
+                for (let i = 0; i < 6 && c; i++) {
+                  if (rs.every(r => c.contains(r))) break;
+                  c = c.parentElement;
+                }
+                if (!c || c.hasAttribute("data-jobbot-rg")) return;
+                const optTexts = rs.map(r =>
+                  (r.labels && r.labels[0]) ? r.labels[0].textContent.trim() : ""
+                ).filter(Boolean);
+                if (optTexts.length < 2) return;
+                const optset = new Set(optTexts);
+                let q = "";
+                const legend = c.querySelector("legend");
+                if (legend) q = legend.innerText.trim();
+                if (!q) {
+                  const lines = (c.innerText || "").split("\n").map(s => s.trim())
+                    .filter(s => s && !optset.has(s));
+                  q = lines.length ? lines[0] : "";
+                }
+                c.setAttribute("data-jobbot-rg", String(idx));
+                groups.push({
+                  kind: "radio_group",
+                  selector: "[data-jobbot-rg='" + idx + "']",
+                  label: q.slice(0, 160),
+                  options: optTexts,
+                });
+                idx++;
+              });
+              return groups;
+            }""")
+        except Exception as e:
+            log.warning("llm_fill_radio_group_scrape_failed", error=str(e)[:100])
+            return []
 
     def _ask_claude(
         self,
@@ -393,6 +547,33 @@ field to a value the runner will write into it.
 10. Salary fields: write the EUR anchor as plain integer (e.g. "125000"),
     no currency symbol, no thousands separator, unless the placeholder
     explicitly hints at a different format.
+11. BUTTON-GROUP questions (a field with `kind` already set to
+    `"button_group"`): single-choice questions rendered as a row of
+    buttons (e.g. a Yes/No work-authorization question). To answer one,
+    return an entry with `kind` = `"button_click"`, `selector` = the
+    group's EXACT `selector` value from the field list, and `value` = the
+    EXACT text of the option button to click (one of the listed `options`).
+    Skip the group if you cannot answer it confidently.
+12. WORK AUTHORIZATION / right-to-work questions: the candidate is a German
+    citizen, authorized to work anywhere in the EU/EEA with no sponsorship.
+    - "Authorized to work in <Germany / an EU or EEA country>?" -> Yes.
+    - "Do you require visa sponsorship for <Germany / the EU>?" -> No.
+    - For NON-EU countries (US, UK, Switzerland, Canada, ...), the candidate
+      is NOT currently authorized and WOULD need sponsorship: answer
+      truthfully ("No" to authorized, "Yes" to requires-sponsorship).
+    - Infer the country from the question text, else the job location /
+      company. If still unclear, skip the question.
+13. RADIO-GROUP questions (a field with `kind` already set to
+    `"radio_group"`): single-choice questions rendered as native radios.
+    To answer one, return an entry with `kind` = `"radio_select"`,
+    `selector` = the group's EXACT `selector` value, and `value` = the
+    EXACT text of the option to select (one of the listed `options`). The
+    work-authorization rules in (12) apply to radio groups too.
+14. VOLUNTARY EEO / demographic questions (gender, race/ethnicity, veteran
+    status, disability, "self-identification"): choose a decline option if
+    one exists ("I don't wish to answer", "Decline to self-identify",
+    "Prefer not to say"). If no decline option is offered, SKIP the group.
+    Never guess a demographic value.
 
 # Output format
 
@@ -402,7 +583,9 @@ Return ONLY valid JSON. No markdown fences, no commentary. Schema:
   "fills": [
     {{"selector": "#first_name", "value": "Philipp", "kind": "text"}},
     {{"selector": "[name='gender']", "value": "diverse", "kind": "select_option"}},
-    {{"selector": "#consent", "value": "true", "kind": "checkbox"}}
+    {{"selector": "#consent", "value": "true", "kind": "checkbox"}},
+    {{"selector": "[data-jobbot-bg='0']", "value": "Yes", "kind": "button_click"}},
+    {{"selector": "[data-jobbot-rg='1']", "value": "No", "kind": "radio_select"}}
   ],
   "language_detected": "de"
 }}
@@ -437,6 +620,20 @@ Return ONLY valid JSON. No markdown fences, no commentary. Schema:
                         loc.check(timeout=5_000)
                     elif not want and loc.is_checked():
                         loc.uncheck(timeout=5_000)
+                elif kind == "button_click":
+                    # Single-choice button group: `sel` scopes to the group
+                    # container, `val` is the exact option-button text. Click
+                    # the matching button within the group.
+                    loc.get_by_role(
+                        "button", name=str(val), exact=True
+                    ).first.click(timeout=5_000)
+                elif kind == "radio_select":
+                    # Single-choice radio group: `sel` scopes to the group
+                    # container, `val` is the exact option label. Check the
+                    # matching radio within the group.
+                    loc.get_by_label(
+                        str(val), exact=True
+                    ).first.check(timeout=5_000)
                 else:
                     log.warning("llm_fill_unknown_kind", kind=kind)
             except Exception as e:

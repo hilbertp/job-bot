@@ -121,6 +121,12 @@ def apply_to_job(
         return ApplyResult(status=JobStatus.APPLY_NEEDS_REVIEW,
                            needs_review_reason="no apply_url on posting")
 
+    # Normalize JD-page URLs to the actual form path (Ashby: append
+    # /application) so the adapter lands on the fillable form instead of the
+    # description page (which falls back to the dry-run GenericAdapter).
+    from .apply_url import normalize_apply_url
+    apply_url = normalize_apply_url(str(job.apply_url))
+
     # Lazy import, only required for sources where auto_submit is true.
     try:
         from playwright.sync_api import sync_playwright
@@ -135,7 +141,7 @@ def apply_to_job(
     try:
         import httpx
         with httpx.Client(follow_redirects=True, timeout=10) as client:
-            head = client.head(str(job.apply_url))
+            head = client.head(apply_url)
             expired, reason = _is_expired_listing(str(head.url), head.status_code)
             if expired:
                 return ApplyResult(
@@ -211,7 +217,7 @@ def apply_to_job(
             # the adapter then waits for its specific form input to mount
             # before filling. Net: more reliable across modern ATS hosts,
             # same behaviour for static/inline forms.
-            page.goto(str(job.apply_url), wait_until="domcontentloaded", timeout=30_000)
+            page.goto(apply_url, wait_until="domcontentloaded", timeout=30_000)
             page.wait_for_timeout(1500)  # let SPA framework settle
 
             # POST-NAVIGATE EXPIRED CHECK, some ATSes redirect via JS
@@ -225,7 +231,7 @@ def apply_to_job(
                     needs_review_reason=f"listing expired, {expired_reason}",
                 )
 
-            adapter = next((a for a in ADAPTERS if a.matches(str(job.apply_url), page)), None)
+            adapter = next((a for a in ADAPTERS if a.matches(apply_url, page)), None)
             if adapter is None:
                 return ApplyResult(status=JobStatus.APPLY_NEEDS_REVIEW,
                                    needs_review_reason="no adapter matched")
