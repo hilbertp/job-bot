@@ -34,6 +34,36 @@ EXPIRED_URL_PATTERNS = (
 )
 
 
+# Page-body phrases that mean a posting was pulled / closed. Matched
+# case-insensitively against a short sample of body text from the live page.
+# Checked AFTER navigation so JS-rendered error pages are visible.
+EXPIRED_PAGE_PHRASES = (
+    "job not found",
+    "position closed",
+    "position is closed",
+    "no longer accepting",
+    "this job is no longer",
+    "this position is no longer",
+    "job has been closed",
+    "job has expired",
+    "vacancy has been filled",
+    "posting has expired",
+    "diese stelle ist nicht mehr",  # DE: "this position is no longer"
+    "stelle wurde bereits besetzt",  # DE: "position has been filled"
+    "bewerbungsschluss",  # DE: application deadline passed (sometimes shown)
+)
+
+
+def is_expired_page_text(body_text: str) -> tuple[bool, str]:
+    """Return (is_expired, reason) by checking page body text for known
+    expiry phrases. Caller passes `page.inner_text('body')[:2000]`."""
+    lower = body_text.lower()
+    for phrase in EXPIRED_PAGE_PHRASES:
+        if phrase in lower:
+            return True, f"page text indicates expired listing ({phrase!r})"
+    return False, ""
+
+
 def is_expired_listing(final_url: str, response_status: int) -> tuple[bool, str]:
     """Return (is_expired, reason) for a listing whose apply_url no longer
     resolves to an application form. Two signals:

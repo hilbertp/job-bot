@@ -77,6 +77,7 @@ def _verify_post_submit(page) -> str:
 
 
 from ..expiry import is_expired_listing as _is_expired_listing  # noqa: F401
+from ..expiry import is_expired_page_text as _is_expired_page_text
 
 
 def _load_adapters(*, anthropic_api_key: str | None = None):
@@ -230,6 +231,19 @@ def apply_to_job(
                     status=JobStatus.LISTING_EXPIRED,
                     needs_review_reason=f"listing expired, {expired_reason}",
                 )
+
+            # Page-content expiry check: catches ATS "Job not found" /
+            # "Position Closed" pages served with HTTP 200 (Ashby, Breezy HR).
+            try:
+                body_sample = page.inner_text("body", timeout=3_000)[:2_000]
+                expired_txt, expired_txt_reason = _is_expired_page_text(body_sample)
+                if expired_txt:
+                    return ApplyResult(
+                        status=JobStatus.LISTING_EXPIRED,
+                        needs_review_reason=f"listing expired, {expired_txt_reason}",
+                    )
+            except Exception:
+                pass  # non-fatal; proceed to adapter selection
 
             adapter = next((a for a in ADAPTERS if a.matches(apply_url, page)), None)
             if adapter is None:
