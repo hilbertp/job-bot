@@ -282,6 +282,31 @@ class LLMFillAdapter:
             if not advanced:
                 break  # no next button either — give up
 
+        # Before giving up, detect email-verification / magic-link walls
+        # (join.com sends a "check your inbox" screen after the first step).
+        # These are not failures — the form was filled and the email is sent;
+        # the user just needs to click the link to confirm and submit.
+        try:
+            body = page.inner_text("body", timeout=2_000)[:1_000].lower()
+            if any(p in body for p in (
+                "prüfen deinen posteingang",
+                "check your inbox",
+                "check your email",
+                "sicheren login-link",
+                "magic link",
+                "we sent you",
+                "wir haben dir",
+                "link erneut senden",
+            )):
+                raise RuntimeError(
+                    "llm_fill: magic link / email verification required — "
+                    "check inbox to complete application"
+                )
+        except RuntimeError:
+            raise
+        except Exception:
+            pass
+
         raise RuntimeError("llm_fill: no enabled submit button found")
 
     # ------------------------------------------------------------------
