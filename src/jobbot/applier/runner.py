@@ -92,6 +92,7 @@ def _load_adapters(*, anthropic_api_key: str | None = None):
     from .adapters.greenhouse import GreenhouseAdapter
     from .adapters.lever import LeverAdapter
     from .adapters.llm_fill import LLMFillAdapter
+    from .adapters.personio import PersonioAdapter
     from .adapters.recruitee import RecruiteeAdapter
     from .adapters.workday import WorkdayAdapter
     return [
@@ -99,6 +100,7 @@ def _load_adapters(*, anthropic_api_key: str | None = None):
         LeverAdapter(),
         WorkdayAdapter(),
         RecruiteeAdapter(),
+        PersonioAdapter(),
         LLMFillAdapter(anthropic_api_key=anthropic_api_key),
         GenericAdapter(),
     ]
