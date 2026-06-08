@@ -358,7 +358,6 @@
         <option value="best_score">Best score</option>
         <option value="base_score">Base score</option>
         <option value="delta">Score delta</option>
-        <option value="newest">Newest first</option>
         <option value="date">Posted date</option>
         <option value="title">Title</option>
         <option value="company">Company</option>
@@ -561,13 +560,9 @@ function sortJobs(jobs) {
             case 'delta':
                 va = a.score_delta ?? 0; vb = b.score_delta ?? 0;
                 break;
-            case 'newest':
-                va = Date.parse(a.first_seen_at) || 0;
-                vb = Date.parse(b.first_seen_at) || 0;
-                break;
             case 'date':
-                va = Date.parse(a.first_seen_at) || 0;
-                vb = Date.parse(b.first_seen_at) || 0;
+                va = Date.parse(a.posted_at || a.first_seen_at) || 0;
+                vb = Date.parse(b.posted_at || b.first_seen_at) || 0;
                 break;
             case 'title':
                 va = (a.title || '').toLowerCase();
@@ -752,7 +747,7 @@ function renderActions(job, state) {
 /* ---- render single job card ---- */
 function renderCard(job) {
     const state = actionState(job);
-    const daysAgo = formatDaysAgo(job.first_seen_at);
+    const daysAgo = formatDaysAgo(job.posted_at || job.first_seen_at);
     const source = esc(job.source || '');
     const reason = esc((job.reason || job.score_reason || '').slice(0, 160));
 

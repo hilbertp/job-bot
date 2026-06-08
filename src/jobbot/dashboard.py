@@ -1296,10 +1296,12 @@ def api_shortlist():
         # column, the spec is about how to *submit* an application, and the
         # listing URL is just the display page.
         apply_url_raw: str | None = None
+        posted_at_raw: str | None = None
         try:
             payload = json.loads(r[9] or "{}")
             if isinstance(payload, dict):
                 apply_url_raw = payload.get("apply_url")
+                posted_at_raw = payload.get("posted_at")
         except (json.JSONDecodeError, TypeError):
             apply_url_raw = None
         channel = apply_channel(apply_email=r[14], apply_url=apply_url_raw)
@@ -1374,13 +1376,16 @@ def api_shortlist():
             # so the user doesn't accidentally double-submit.
             "applied_state": applied_state,
             "applied_at": applied_at,
+            # posted_at from raw_json when available; None for sources that
+            # don't expose it. The JS sort falls back to first_seen_at.
+            "posted_at": posted_at_raw,
+            "first_seen_at": r[21],
             # "Posted N days ago" badge in the Stage 3 card. We prefer
             # the posting's own posted_at (in raw_json) when present,
             # otherwise fall back to the first time WE saw it. Both are
             # approximations; first_seen_at is usually within 24h of
             # the real post date for daily scrapes.
-            "posted_days_ago": _posted_days_ago(r[21], payload.get("posted_at")
-                                                if isinstance(payload, dict) else None),
+            "posted_days_ago": _posted_days_ago(r[21], posted_at_raw),
         })
 
     return jsonify({"min_score": min_score, "count": len(jobs), "jobs": jobs})
