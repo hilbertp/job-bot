@@ -28,6 +28,7 @@
 .filter-chip[data-filter="send"].active    { border-color: var(--state-send);    color: var(--state-send); }
 .filter-chip[data-filter="inflight"].active{ border-color: var(--state-inflight);color: var(--state-inflight); }
 .filter-chip[data-filter="strong"].active  { border-color: var(--score-strong-border); color: var(--score-strong-text); }
+.filter-chip[data-filter="skipped"].active { border-color: var(--line-hi); color: var(--muted); }
 .filter-count {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     font-size: 10px; opacity: 0.70;
@@ -82,6 +83,7 @@
 .jc[data-state="inflight"] { border-left-color: var(--state-inflight); }
 .jc[data-state="interview"]{ border-left-color: var(--state-interview); }
 .jc[data-state="closed"]   { border-left-color: var(--state-closed); opacity: 0.60; }
+.jc[data-state="skipped"]  { border-left-color: var(--state-closed); opacity: 0.45; }
 
 /* Card head: state badge + meta */
 .jc-head {
@@ -103,6 +105,7 @@
 .jc[data-state="inflight"]  .jc-state-badge { color: var(--state-inflight); background: var(--state-inflight-bg);border: 1px solid var(--state-inflight-border); }
 .jc[data-state="interview"] .jc-state-badge { color: var(--state-interview);background: var(--state-interview-bg);border: 1px solid var(--state-interview-border); }
 .jc[data-state="closed"]    .jc-state-badge { color: var(--state-closed);   background: var(--state-closed-bg);  border: 1px solid var(--state-closed-border); }
+.jc[data-state="skipped"]  .jc-state-badge { color: var(--subtle);          background: var(--bg-2);             border: 1px solid var(--line-strong); }
 
 .jc-meta {
     font-size: 11px; color: var(--subtle);
@@ -278,6 +281,31 @@
     border: 1px solid var(--line);
 }
 @keyframes shimmer { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
+
+/* ---- Application status strip ---- */
+.jc-status-strip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px 10px;
+    border-top: 1px solid var(--line);
+    flex-wrap: wrap;
+}
+.jc-status-strip-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--subtle); margin-right: 4px;
+}
+.status-btn {
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: transparent; color: var(--subtle);
+    cursor: pointer; transition: all .12s ease;
+}
+.status-btn:hover { border-color: var(--line-hi); color: var(--muted); }
+.status-btn.active-sent      { background: var(--state-send-bg);      color: var(--state-send);      border-color: var(--state-send-border); }
+.status-btn.active-received  { background: var(--state-inflight-bg);  color: var(--state-inflight);  border-color: var(--state-inflight-border); }
+.status-btn.active-waiting   { background: var(--state-inflight-bg);  color: var(--state-inflight);  border-color: var(--state-inflight-border); }
+.status-btn.active-interview { background: var(--state-interview-bg); color: var(--state-interview); border-color: var(--state-interview-border); }
+.status-btn.active-rejected  { background: var(--score-low-bg);       color: var(--score-low-text);  border-color: var(--score-low-border); }
 </style>
 {% endblock %}
 
@@ -311,6 +339,9 @@
     </button>
     <button class="filter-chip" data-filter="all">
         All <span class="filter-count" data-count="all">0</span>
+    </button>
+    <button class="filter-chip" data-filter="skipped">
+        Skipped <span class="filter-count" data-count="skipped">0</span>
     </button>
     <button class="pref-toggle" id="pref-toggle" title="Toggle: hide salary-fail and on-site only">
         <span id="pref-toggle-icon">&#9685;</span>
@@ -381,9 +412,19 @@ const INTERVIEW_ST = new Set(['interview_invited']);
 const CLOSED_ST = new Set(['listing_expired','apply_failed','discarded','filtered']);
 const CLOSED_AS = new Set(['expired','failed']);
 
+/* Map DB status → CRM label (for status strip active state) */
+const STATUS_TO_CRM = {
+    apply_submitted:   'sent',
+    employer_received: 'received',
+    waiting_response:  'waiting',
+    rejected:          'rejected',
+    interview_invited: 'interview',
+};
+
 function actionState(job) {
     const st = (job.status || '').toLowerCase();
     const as = (job.applied_state || '').toLowerCase();
+    if (st === 'skipped') return 'skipped';
     if (INTERVIEW_ST.has(st) || as === 'interview_invited') return 'interview';
     if (CLOSED_ST.has(st) || CLOSED_AS.has(as)) return 'closed';
     if (INFLIGHT_ST.has(st) || INFLIGHT_AS.has(as)) return 'inflight';
@@ -400,6 +441,7 @@ function stateBadgeLabel(state) {
         inflight:  'In flight',
         interview: 'Interview',
         closed:    'Closed',
+        skipped:   'Skipped',
     }[state] || state;
 }
 
@@ -485,6 +527,7 @@ function buckets(job) {
     const state = actionState(job);
     const score = job.score_tailored ?? job.score ?? 0;
     const set = new Set();
+    if (state === 'skipped') { set.add('skipped'); return set; }
     set.add('all');
     if (state === 'decide') set.add('decide');
     if (state === 'send')   set.add('send');
@@ -608,6 +651,22 @@ function renderPkg(job) {
 }
 
 /* ---- render primary action ---- */
+function renderStatusStrip(job) {
+    const current = STATUS_TO_CRM[(job.status || '').toLowerCase()] || null;
+    const steps = [
+        { key: 'sent',      label: 'Sent' },
+        { key: 'received',  label: 'Received' },
+        { key: 'waiting',   label: 'Waiting' },
+        { key: 'interview', label: 'Interview' },
+        { key: 'rejected',  label: 'Rejected' },
+    ];
+    const btns = steps.map(s => {
+        const cls = current === s.key ? `status-btn active-${s.key}` : 'status-btn';
+        return `<button class="${cls}" data-action="set-status" data-status="${s.key}" data-job-id="${esc(job.id)}">${s.label}</button>`;
+    }).join('');
+    return `<div class="jc-status-strip"><span class="jc-status-strip-label">Status</span>${btns}</div>`;
+}
+
 function renderActions(job, state) {
     const postingHref = esc(job.url || '#');
     const openLink = job.url
@@ -616,6 +675,13 @@ function renderActions(job, state) {
     const applyUrl = job.apply_url || job.url || '';
     const applyEmail = job.apply_email || '';
 
+    if (state === 'skipped') {
+        return `
+            <div class="jc-actions">
+                <span class="jc-btn ghost" style="cursor:default;opacity:.5">Skipped</span>
+                <div class="jc-actions-right">${openLink}</div>
+            </div>`;
+    }
     if (state === 'interview') {
         return `
             <div class="jc-actions">
@@ -626,7 +692,7 @@ function renderActions(job, state) {
     if (state === 'inflight') {
         return `
             <div class="jc-actions">
-                <span class="jc-btn primary-inflight" style="cursor:default">&#9992; Applied &mdash; awaiting reply</span>
+                <span class="jc-btn primary-inflight" style="cursor:default">&#9992; Applied</span>
                 <div class="jc-actions-right">${openLink}</div>
             </div>`;
     }
@@ -696,6 +762,7 @@ function renderCard(job) {
                 </div>
             </div>
             ${renderActions(job, state)}
+            ${renderStatusStrip(job)}
         </article>`;
 }
 
@@ -706,14 +773,14 @@ let activeFilter = 'decide';
 /* Restore filter from URL param on load */
 const urlParams = new URLSearchParams(window.location.search);
 const initFilter = urlParams.get('filter');
-if (initFilter && ['decide','send','inflight','strong','new','all'].includes(initFilter)) {
+if (initFilter && ['decide','send','inflight','strong','new','all','skipped'].includes(initFilter)) {
     activeFilter = initFilter;
 }
 
 /* ---- update filter chip counts ---- */
 function updateCounts() {
     const filtered = allJobs.filter(passesPrefs);
-    const counts = { decide:0, send:0, inflight:0, strong:0, new:0, all:0 };
+    const counts = { decide:0, send:0, inflight:0, strong:0, new:0, all:0, skipped:0 };
     filtered.forEach(j => {
         const b = buckets(j);
         for (const k of Object.keys(counts)) if (b.has(k)) counts[k]++;
@@ -742,6 +809,7 @@ function renderQueue() {
             strong: 'No jobs with score &ge;80 in the current set.',
             new:    'No new jobs scraped today.',
             all:    'No jobs found. Run the pipeline to scrape fresh postings.',
+            skipped: 'No skipped jobs.',
         };
         q.innerHTML = `
             <div class="queue-empty">
@@ -776,6 +844,48 @@ function wireCardActions(root) {
                 btn.textContent = 'Network error';
                 btn.disabled = false;
             }
+        });
+    });
+
+    root.querySelectorAll('[data-action="skip"]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const jobId = btn.getAttribute('data-job-id');
+            btn.disabled = true;
+            try {
+                const r = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/skip`, { method: 'POST' });
+                if (r.ok) {
+                    const job = allJobs.find(j => j.id === jobId);
+                    if (job) job.status = 'skipped';
+                    updateCounts();
+                    renderQueue();
+                } else {
+                    btn.disabled = false;
+                }
+            } catch (e) { btn.disabled = false; }
+        });
+    });
+
+    root.querySelectorAll('[data-action="set-status"]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const jobId = btn.getAttribute('data-job-id');
+            const status = btn.getAttribute('data-status');
+            btn.disabled = true;
+            try {
+                const r = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/set-status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status }),
+                });
+                if (r.ok) {
+                    const body = await r.json();
+                    const job = allJobs.find(j => j.id === jobId);
+                    if (job) job.status = body.db_status;
+                    updateCounts();
+                    renderQueue();
+                } else {
+                    btn.disabled = false;
+                }
+            } catch (e) { btn.disabled = false; }
         });
     });
 }
