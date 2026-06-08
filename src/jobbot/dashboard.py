@@ -1577,6 +1577,53 @@ def api_application_transition(job_id: str):
     return jsonify({"ok": True, "job_id": job_id, "state": state})
 
 
+_CRM_STATUSES = {
+    "sent":      "apply_submitted",
+    "received":  "employer_received",
+    "waiting":   "waiting_response",
+    "rejected":  "rejected",
+    "interview": "interview_invited",
+}
+
+
+@app.route("/api/jobs/<job_id>/skip", methods=["POST"])
+def api_skip_job(job_id: str):
+    """Mark a job as skipped — removed from triage, shown only in Skipped filter."""
+    from .models import JobStatus
+    from .state import update_status
+    with connect() as conn:
+        row = conn.execute("SELECT id FROM seen_jobs WHERE id = ?", (job_id,)).fetchone()
+        if not row:
+            return jsonify({"ok": False, "error": f"unknown job {job_id!r}"}), 404
+        update_status(conn, job_id, JobStatus.SKIPPED)
+    return jsonify({"ok": True, "job_id": job_id})
+
+
+@app.route("/api/jobs/<job_id>/set-status", methods=["POST"])
+def api_set_job_status(job_id: str):
+    """Manually set CRM status: sent|received|waiting|rejected|interview."""
+    from flask import request as flask_request
+    from .models import JobStatus
+    from .state import update_status
+
+    payload = flask_request.get_json(silent=True) or {}
+    label = (payload.get("status") or "").strip().lower()
+    db_status = _CRM_STATUSES.get(label)
+    if not db_status:
+        return jsonify({
+            "ok": False,
+            "error": f"unknown status {label!r}",
+            "allowed": list(_CRM_STATUSES),
+        }), 400
+
+    with connect() as conn:
+        row = conn.execute("SELECT id FROM seen_jobs WHERE id = ?", (job_id,)).fetchone()
+        if not row:
+            return jsonify({"ok": False, "error": f"unknown job {job_id!r}"}), 404
+        update_status(conn, job_id, JobStatus(db_status))
+    return jsonify({"ok": True, "job_id": job_id, "status": label, "db_status": db_status})
+
+
 @app.route("/api/jobs/<job_id>/generate", methods=["POST"])
 def api_generate_package(job_id: str):
     """Generate CV + cover letter for a single job on demand."""

@@ -31,6 +31,7 @@ class JobStatus(str, Enum):  # str-mixin for sqlite/JSON compatibility, works on
     WAITING_RESPONSE = "waiting_response"
     REJECTED = "rejected"
     INTERVIEW_INVITED = "interview_invited"
+    SKIPPED = "skipped"                                  # user dismissed from triage queue
 
 
 # Statuses where rescoring or re-enriching would clobber legitimate
@@ -48,6 +49,7 @@ TERMINAL_STATUSES = frozenset({
     JobStatus.WAITING_RESPONSE.value,
     JobStatus.REJECTED.value,
     JobStatus.INTERVIEW_INVITED.value,
+    JobStatus.SKIPPED.value,
 })
 
 
