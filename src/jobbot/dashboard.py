@@ -1577,6 +1577,52 @@ def api_application_transition(job_id: str):
     return jsonify({"ok": True, "job_id": job_id, "state": state})
 
 
+@app.route("/api/jobs/<job_id>/generate", methods=["POST"])
+def api_generate_package(job_id: str):
+    """Generate CV + cover letter for a single job on demand."""
+    from .config import load_config, load_secrets
+    from .generators.pipeline import generate_application_package
+    from .models import JobPosting, JobStatus
+    from .profile import load_base_cv, load_profile
+    from .state import update_status
+
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT raw_json, description_full FROM seen_jobs WHERE id = ?",
+            (job_id,),
+        ).fetchone()
+        if not row:
+            return jsonify({"ok": False, "error": f"unknown job {job_id!r}"}), 404
+
+    if not row["raw_json"]:
+        return jsonify({"ok": False, "error": "job has no raw_json"}), 409
+
+    try:
+        job = JobPosting.model_validate_json(row["raw_json"])
+        if row["description_full"]:
+            job = job.model_copy(update={"description": row["description_full"]})
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"raw_json invalid: {e}"}), 500
+
+    try:
+        profile = load_profile()
+        secrets = load_secrets()
+        config = load_config()
+        base_cv = load_base_cv()
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"config load failed: {e}"}), 500
+
+    try:
+        docs = generate_application_package(job, profile, base_cv, secrets, config)
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+    with connect() as conn:
+        update_status(conn, job_id, JobStatus.GENERATED, output_dir=docs.output_dir)
+
+    return jsonify({"ok": True, "job_id": job_id, "output_dir": docs.output_dir})
+
+
 @app.route("/api/jobs/<job_id>/rescore-with-feedback", methods=["POST"])
 def api_rescore_with_feedback(job_id: str):
     """Stage-2 disagree-and-rescore endpoint (product vision stage 3).
