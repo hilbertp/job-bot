@@ -43,6 +43,37 @@
             --shadow-soft:   0 8px 24px rgba(0, 0, 0, 0.30);
             --shadow-card:   0 12px 32px rgba(0, 0, 0, 0.35);
             --sidebar-w:     240px;
+
+            /* ---- Score colour scale ---- */
+            --score-strong-bg:     rgba(52, 211, 153, 0.13);
+            --score-strong-border: rgba(52, 211, 153, 0.28);
+            --score-strong-text:   #34d399;
+            --score-good-bg:       rgba(56, 189, 248, 0.11);
+            --score-good-border:   rgba(56, 189, 248, 0.25);
+            --score-good-text:     #38bdf8;
+            --score-mid-bg:        rgba(251, 191, 36, 0.10);
+            --score-mid-border:    rgba(251, 191, 36, 0.24);
+            --score-mid-text:      #fbbf24;
+            --score-low-bg:        rgba(251, 113, 133, 0.10);
+            --score-low-border:    rgba(251, 113, 133, 0.22);
+            --score-low-text:      #fb7185;
+
+            /* ---- Action-state colours (job card left-border + badge) ---- */
+            --state-decide:         #fbbf24;
+            --state-decide-bg:      rgba(251, 191, 36, 0.06);
+            --state-decide-border:  rgba(251, 191, 36, 0.18);
+            --state-send:           #38bdf8;
+            --state-send-bg:        rgba(56, 189, 248, 0.06);
+            --state-send-border:    rgba(56, 189, 248, 0.18);
+            --state-inflight:       #34d399;
+            --state-inflight-bg:    rgba(52, 211, 153, 0.06);
+            --state-inflight-border:rgba(52, 211, 153, 0.18);
+            --state-interview:      #a78bfa;
+            --state-interview-bg:   rgba(167, 139, 250, 0.10);
+            --state-interview-border:rgba(167, 139, 250, 0.25);
+            --state-closed:         #52525b;
+            --state-closed-bg:      rgba(113, 113, 122, 0.06);
+            --state-closed-border:  rgba(113, 113, 122, 0.15);
         }
 
         * { box-sizing: border-box; }
@@ -466,28 +497,27 @@
             <div class="sidebar-section-label">Workspace</div>
             <nav class="nav" aria-label="Primary navigation">
                 <a href="/" class="{{ 'active' if request.endpoint == 'index' else '' }}">
-                    <span class="nav-glyph">◆</span><span>Overview</span>
+                    <span class="nav-glyph">&#9670;</span>
+                    <span>Today</span>
+                    <span class="nav-badge" id="nav-badge-new" style="display:none"></span>
                 </a>
                 <a href="/jobs" class="{{ 'active' if request.endpoint == 'jobs_page' else '' }}">
-                    <span class="nav-glyph">◇</span><span>Jobs</span>
+                    <span class="nav-glyph">&#9671;</span><span>Jobs</span>
+                    <span class="nav-badge" id="nav-badge-ready" style="display:none"></span>
+                </a>
+                <a href="/overview" class="{{ 'active' if request.endpoint == 'overview_page' else '' }}">
+                    <span class="nav-glyph">&#9671;</span><span>Overview</span>
                 </a>
                 <a href="/runs" class="{{ 'active' if request.endpoint in ('runs_page', 'run_detail_page') else '' }}">
-                    <span class="nav-glyph">◇</span><span>Runs</span>
+                    <span class="nav-glyph">&#9671;</span><span>Runs</span>
                 </a>
-            </nav>
-
-            <div class="sidebar-section-label">Shortcuts</div>
-            <nav class="nav">
-                <a href="/#stage3-panel"><span class="nav-glyph">◦</span><span>Shortlist</span></a>
-                <a href="/#outbound-pipeline-panel"><span class="nav-glyph">◦</span><span>Outbound CRM</span></a>
-                <a href="/#stage1-panel"><span class="nav-glyph">◦</span><span>Portals</span></a>
             </nav>
 
             <div class="sidebar-foot" id="sidebar-last-run" aria-live="polite">
                 <strong>Last run</strong>
-                <div class="kv"><span>status</span><span id="sidebar-last-run-status">,</span></div>
-                <div class="kv"><span>when</span><span id="sidebar-last-run-when">,</span></div>
-                <div class="kv"><span>fetched → tailored</span><span id="sidebar-last-run-flow">,</span></div>
+                <div class="kv"><span>status</span><span id="sidebar-last-run-status">&mdash;</span></div>
+                <div class="kv"><span>when</span><span id="sidebar-last-run-when">&mdash;</span></div>
+                <div class="kv"><span>fetched &rarr; tailored</span><span id="sidebar-last-run-flow">&mdash;</span></div>
             </div>
         </aside>
 

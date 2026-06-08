@@ -1,0 +1,730 @@
+{% extends 'base.html' %}
+{% block head_extra %}
+<style>
+/* ================================================================
+   TODAY SCREEN
+   ================================================================ */
+
+/* Date header */
+.today-date {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.10em;
+    text-transform: uppercase; color: var(--subtle);
+    margin-bottom: 4px;
+}
+
+/* CTA hero banner — the single most important thing to do */
+.today-hero {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+    padding: 20px 24px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line-strong);
+    background: var(--bg-1);
+    margin-bottom: 24px;
+    transition: border-color .15s;
+}
+.today-hero:hover { border-color: var(--line-hi); }
+.today-hero-empty {
+    border-color: var(--line);
+    background: transparent;
+}
+.today-hero-left { display: flex; flex-direction: column; gap: 4px; }
+.today-hero-count {
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-weight: 700; letter-spacing: -0.03em; line-height: 1;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+.today-hero-count.has-new { color: var(--accent); }
+.today-hero-sub {
+    font-size: 13px; color: var(--muted); line-height: 1.4;
+}
+.today-hero-action {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: var(--radius);
+    font-size: 13px; font-weight: 600;
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+    color: #052e16; border: none; cursor: pointer; white-space: nowrap;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(16,185,129,0.20);
+    transition: box-shadow .15s, transform .12s;
+}
+.today-hero-action:hover {
+    color: #052e16;
+    box-shadow: 0 6px 20px rgba(16,185,129,0.30);
+    transform: translateY(-1px);
+}
+.today-hero-action.secondary {
+    background: var(--bg-2);
+    color: var(--text-1);
+    border: 1px solid var(--line-strong);
+    box-shadow: none;
+}
+.today-hero-action.secondary:hover {
+    background: var(--bg-3);
+    color: var(--text);
+    box-shadow: none;
+}
+
+/* Stage summary chips */
+.stage-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+@media (max-width: 700px) { .stage-strip { grid-template-columns: repeat(2, 1fr); } }
+
+.stage-chip {
+    padding: 16px 18px;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    cursor: pointer; text-decoration: none;
+    transition: border-color .15s, transform .12s;
+    position: relative; overflow: hidden;
+    display: block;
+}
+.stage-chip:hover { border-color: var(--line-strong); transform: translateY(-1px); color: inherit; }
+.stage-chip::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+}
+.stage-chip[data-stage="scraped"]::before  { background: var(--subtle); }
+.stage-chip[data-stage="scored"]::before   { background: var(--score-mid-text); }
+.stage-chip[data-stage="ready"]::before    { background: var(--state-send); }
+.stage-chip[data-stage="inflight"]::before { background: var(--state-inflight); }
+.stage-chip[data-stage="interview"]::before{ background: var(--state-interview); }
+
+.stage-chip-num {
+    font-size: 1.875rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1;
+    color: var(--text); margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+.stage-chip[data-stage="ready"]    .stage-chip-num { color: var(--state-send); }
+.stage-chip[data-stage="inflight"] .stage-chip-num { color: var(--state-inflight); }
+.stage-chip[data-stage="interview"].stage-chip-num { color: var(--state-interview); }
+
+.stage-chip-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted);
+}
+.stage-chip-sub {
+    font-size: 11px; color: var(--subtle); margin-top: 2px;
+}
+
+/* Portal breakdown */
+.portal-row {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    margin-bottom: 24px;
+    align-items: center;
+}
+.portal-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 500;
+    background: var(--bg-2); border: 1px solid var(--line-strong);
+    color: var(--muted);
+}
+.portal-pill .portal-count {
+    color: var(--text-1); font-weight: 700;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+.portal-row-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--subtle);
+    margin-right: 4px;
+}
+
+/* Two-column section grid */
+.today-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+@media (max-width: 860px) { .today-grid { grid-template-columns: 1fr; } }
+
+/* Section card */
+.today-section {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px;
+}
+.today-section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.10em; color: var(--subtle); margin-bottom: 14px;
+}
+
+/* Momentum rows */
+.momentum-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.momentum-label { font-size: 12px; color: var(--muted); width: 68px; flex-shrink: 0; }
+.momentum-bar-track {
+    flex: 1; height: 6px; border-radius: 999px;
+    background: var(--line-strong); overflow: hidden;
+}
+.momentum-bar-fill {
+    height: 100%; border-radius: 999px;
+    background: var(--accent);
+    transition: width .4s ease;
+    min-width: 0;
+}
+.momentum-bar-fill.replies { background: var(--info); }
+.momentum-bar-fill.interviews { background: var(--state-interview); }
+.momentum-num {
+    font-size: 13px; font-weight: 700; color: var(--text);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    width: 28px; text-align: right; flex-shrink: 0;
+}
+
+/* Discovery spark bars */
+.spark-row {
+    display: flex; align-items: flex-end; gap: 3px;
+    height: 40px; margin-top: 4px;
+}
+.spark-day {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 2px;
+}
+.spark-bar {
+    width: 100%; border-radius: 3px 3px 0 0;
+    background: var(--line-strong);
+    min-height: 2px;
+    transition: background .15s;
+}
+.spark-bar.has-matches { background: var(--accent-soft); }
+.spark-bar.today { background: var(--accent); }
+.spark-label {
+    font-size: 9px; color: var(--subtle); letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+/* Recent shortlist preview */
+.mini-job-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+}
+.mini-job-row:last-child { border-bottom: none; padding-bottom: 0; }
+.mini-score {
+    width: 36px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 6px; font-size: 11px; font-weight: 700;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    flex-shrink: 0;
+}
+.mini-score.strong { background: var(--score-strong-bg); color: var(--score-strong-text); border: 1px solid var(--score-strong-border); }
+.mini-score.good   { background: var(--score-good-bg);   color: var(--score-good-text);   border: 1px solid var(--score-good-border); }
+.mini-score.mid    { background: var(--score-mid-bg);    color: var(--score-mid-text);    border: 1px solid var(--score-mid-border); }
+.mini-score.low    { background: var(--score-low-bg);    color: var(--score-low-text);    border: 1px solid var(--score-low-border); }
+.mini-job-info { flex: 1; min-width: 0; }
+.mini-job-title { font-size: 12px; font-weight: 600; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-job-meta  { font-size: 11px; color: var(--subtle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-job-action {
+    font-size: 11px; color: var(--muted); white-space: nowrap;
+    padding: 3px 8px; border-radius: 6px;
+    border: 1px solid var(--line-strong); background: var(--bg-1);
+    text-decoration: none; flex-shrink: 0;
+    transition: color .12s, border-color .12s;
+}
+.mini-job-action:hover { color: var(--text); border-color: var(--line-hi); }
+
+/* Run-in-progress banner */
+#today-run-banner {
+    background: rgba(251,191,36,0.06);
+    border: 1px solid rgba(251,191,36,0.25);
+    color: var(--warn);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    font-size: 12px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 20px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-head">
+    <div>
+        <div class="today-date" id="today-date-label">
+            {{ now.strftime('%A, %-d %B %Y') if now else '' }}
+        </div>
+        <h1 class="page-title">Today</h1>
+    </div>
+    <div class="dashboard-actions">
+        <span id="today-run-status" class="status-text"></span>
+        <button id="today-run-btn"
+                class="px-4 py-2 rounded-lg text-sm font-semibold"
+                style="color:#052e16;background:linear-gradient(135deg,#34d399 0%,#10b981 100%);border:1px solid rgba(52,211,153,0.5);box-shadow:0 4px 14px rgba(16,185,129,0.18);">
+            Run pipeline
+        </button>
+    </div>
+</div>
+
+<!-- Run-in-progress banner -->
+<div id="today-run-banner" class="hidden" role="status" aria-live="polite">
+    <span style="width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block;animation:pulse 1.2s ease-in-out infinite"></span>
+    <span id="today-run-banner-text">Run in progress&hellip;</span>
+    <a id="today-run-banner-link" href="/runs" style="margin-left:auto;text-decoration:underline;color:var(--warn)">view details</a>
+</div>
+
+<!-- Hero CTA -->
+<div class="today-hero" id="today-hero">
+    <div class="today-hero-left">
+        <div class="today-hero-count" id="hero-count">&mdash;</div>
+        <div class="today-hero-sub" id="hero-sub">Loading today&rsquo;s matches&hellip;</div>
+    </div>
+    <a href="/jobs?filter=new" class="today-hero-action" id="hero-cta">Review queue &rarr;</a>
+</div>
+
+<!-- Stage summary chips -->
+<div class="stage-strip" id="stage-strip">
+    <a href="/jobs" class="stage-chip" data-stage="scraped">
+        <div class="stage-chip-num" id="chip-scraped">&mdash;</div>
+        <div class="stage-chip-label">Scraped today</div>
+        <div class="stage-chip-sub" id="chip-scraped-sub">across all portals</div>
+    </a>
+    <a href="/jobs?filter=decide" class="stage-chip" data-stage="scored">
+        <div class="stage-chip-num" id="chip-scored">&mdash;</div>
+        <div class="stage-chip-label">Score &ge;70</div>
+        <div class="stage-chip-sub">needs a decision</div>
+    </a>
+    <a href="/jobs?filter=send" class="stage-chip" data-stage="ready">
+        <div class="stage-chip-num" id="chip-ready">&mdash;</div>
+        <div class="stage-chip-label">Ready to send</div>
+        <div class="stage-chip-sub">package generated</div>
+    </a>
+    <a href="/jobs?filter=inflight" class="stage-chip" data-stage="inflight">
+        <div class="stage-chip-num" id="chip-inflight">&mdash;</div>
+        <div class="stage-chip-label">In flight</div>
+        <div class="stage-chip-sub" id="chip-inflight-sub">applied, awaiting reply</div>
+    </a>
+</div>
+
+<!-- Portal coverage strip -->
+<div class="portal-row" id="portal-row">
+    <span class="portal-row-label">Portals</span>
+    <span id="portal-pills-loading" style="font-size:12px;color:var(--subtle)">loading&hellip;</span>
+</div>
+
+<!-- Two-column section: momentum + top matches -->
+<div class="today-grid">
+
+    <!-- Weekly momentum -->
+    <div class="today-section">
+        <div class="today-section-title">This week</div>
+
+        <div class="momentum-row">
+            <span class="momentum-label">Sent</span>
+            <div class="momentum-bar-track">
+                <div class="momentum-bar-fill" id="bar-sent" style="width:0%"></div>
+            </div>
+            <span class="momentum-num" id="num-sent">0</span>
+        </div>
+        <div class="momentum-row">
+            <span class="momentum-label">Replies</span>
+            <div class="momentum-bar-track">
+                <div class="momentum-bar-fill replies" id="bar-replies" style="width:0%"></div>
+            </div>
+            <span class="momentum-num" id="num-replies">0</span>
+        </div>
+        <div class="momentum-row">
+            <span class="momentum-label">Interviews</span>
+            <div class="momentum-bar-track">
+                <div class="momentum-bar-fill interviews" id="bar-interviews" style="width:0%"></div>
+            </div>
+            <span class="momentum-num" id="num-interviews">0</span>
+        </div>
+
+        <div class="today-section-title" style="margin-top:20px;margin-bottom:8px">Daily matches (7 days)</div>
+        <div class="spark-row" id="spark-row">
+            <span style="font-size:11px;color:var(--subtle)">loading&hellip;</span>
+        </div>
+    </div>
+
+    <!-- Top open matches -->
+    <div class="today-section">
+        <div class="today-section-title">Top open matches</div>
+        <div id="top-matches-list">
+            <span style="font-size:12px;color:var(--subtle)">loading&hellip;</span>
+        </div>
+        <a href="/jobs?filter=decide" style="display:block;margin-top:14px;font-size:12px;color:var(--muted);text-decoration:none;transition:color .12s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">
+            View all in triage queue &rarr;
+        </a>
+    </div>
+
+</div>
+
+<style>
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+</style>
+
+<script>
+(function () {
+    /* ---- helpers ---- */
+    function esc(s) {
+        return String(s ?? '').replace(/[&<>"']/g, c => (
+            {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+        ));
+    }
+    function formatAgo(ts) {
+        if (!ts) return '';
+        const ms = Date.parse(ts);
+        if (isNaN(ms)) return '';
+        const sec = Math.max(0, Math.floor((Date.now() - ms) / 1000));
+        if (sec < 60) return 'just now';
+        if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+        if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
+        return `${Math.floor(sec / 86400)}d ago`;
+    }
+    function scoreClass(s) {
+        if (s == null) return 'low';
+        if (s >= 80) return 'strong';
+        if (s >= 70) return 'good';
+        if (s >= 50) return 'mid';
+        return 'low';
+    }
+    function dayLabel(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        return ['Su','Mo','Tu','We','Th','Fr','Sa'][d.getDay()];
+    }
+
+    /* ---- "last visit" tracking ---- */
+    const LS_KEY = 'jobbot.today.last_visit';
+    const lastVisitTs = localStorage.getItem(LS_KEY);
+    localStorage.setItem(LS_KEY, new Date().toISOString());
+
+    /* ---- sidebar last-run ---- */
+    (async function () {
+        try {
+            const r = await fetch('/api/runs');
+            if (!r.ok) return;
+            const rows = await r.json();
+            if (!rows.length) return;
+            const run = rows[0];
+            const setTxt = (id, v, cls) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.textContent = v;
+                if (cls) el.className = cls;
+            };
+            setTxt('sidebar-last-run-when', run.timestamp_display || '—');
+            setTxt('sidebar-last-run-flow', `${run.n_fetched ?? 0} → ${run.n_generated ?? 0}`);
+            if (run.n_errors > 0) setTxt('sidebar-last-run-status', `${run.n_errors} err`, 'status-err');
+            else if ((run.n_applied ?? 0) > 0) setTxt('sidebar-last-run-status', 'applied', 'status-ok');
+            else setTxt('sidebar-last-run-status', 'completed', 'status-ok');
+        } catch (e) {}
+    })();
+
+    /* ---- run pipeline button ---- */
+    const runBtn = document.getElementById('today-run-btn');
+    const runStatus = document.getElementById('today-run-status');
+    let pollTimer = null;
+
+    async function pollRunStatus() {
+        try {
+            const r = await fetch('/api/latest-run-portal-hits');
+            if (!r.ok) return;
+            const hits = await r.json();
+            const banner = document.getElementById('today-run-banner');
+            const bannerText = document.getElementById('today-run-banner-text');
+            const bannerLink = document.getElementById('today-run-banner-link');
+            if (hits && hits.in_progress && hits.run_id) {
+                banner.classList.remove('hidden');
+                bannerText.textContent = `Run #${hits.run_id} in progress — refreshing every 5s`;
+                bannerLink.href = `/runs/${hits.run_id}`;
+                if (!pollTimer) pollTimer = setInterval(loadAll, 5000);
+            } else {
+                banner.classList.add('hidden');
+                if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+            }
+        } catch (e) {}
+    }
+
+    if (runBtn) {
+        runBtn.addEventListener('click', async () => {
+            runBtn.disabled = true;
+            runStatus.textContent = 'Starting…';
+            try {
+                const r = await fetch('/api/runs/trigger', { method: 'POST' });
+                const body = await r.json().catch(() => ({}));
+                if (!r.ok) {
+                    runStatus.textContent = body.error || `Error ${r.status}`;
+                    runBtn.disabled = false;
+                    return;
+                }
+                runStatus.textContent = '';
+                pollTimer = setInterval(loadAll, 5000);
+                loadAll();
+            } catch (e) {
+                runStatus.textContent = `Error: ${e.message}`;
+                runBtn.disabled = false;
+            }
+        });
+    }
+
+    /* ---- portal coverage strip ---- */
+    function renderPortals(perPortal) {
+        const row = document.getElementById('portal-row');
+        const loading = document.getElementById('portal-pills-loading');
+        if (loading) loading.remove();
+        const sorted = Object.entries(perPortal || {})
+            .sort((a, b) => b[1] - a[1])
+            .filter(([, n]) => n > 0);
+        if (!sorted.length) {
+            row.insertAdjacentHTML('beforeend',
+                '<span style="font-size:12px;color:var(--subtle)">No portals scraped yet</span>');
+            return;
+        }
+        sorted.forEach(([src, cnt]) => {
+            row.insertAdjacentHTML('beforeend', `
+                <span class="portal-pill">
+                    <span>${esc(src)}</span>
+                    <span class="portal-count">${cnt}</span>
+                </span>`);
+        });
+    }
+
+    /* ---- discovery spark chart ---- */
+    function renderSpark(perDay) {
+        const row = document.getElementById('spark-row');
+        if (!row) return;
+        if (!perDay || !perDay.length) {
+            row.innerHTML = '<span style="font-size:11px;color:var(--subtle)">no data</span>';
+            return;
+        }
+        const days = perDay.slice(-7);
+        const maxMatches = Math.max(1, ...days.map(d => d.matches));
+        const todayStr = new Date().toISOString().slice(0, 10);
+        row.innerHTML = days.map(d => {
+            const pct = Math.round((d.matches / maxMatches) * 100);
+            const isToday = d.date === todayStr;
+            const cls = isToday ? 'today' : (d.matches > 0 ? 'has-matches' : '');
+            return `
+                <div class="spark-day" title="${d.date}: ${d.matches} matches">
+                    <div class="spark-bar ${cls}" style="height:${Math.max(3, pct * 0.38)}px"></div>
+                    <div class="spark-label">${dayLabel(d.date)}</div>
+                </div>`;
+        }).join('');
+    }
+
+    /* ---- momentum bars ---- */
+    function renderMomentum(sent, replies, interviews) {
+        const maxVal = Math.max(1, sent, replies, interviews);
+        const setBar = (barId, numId, val, max) => {
+            const bar = document.getElementById(barId);
+            const num = document.getElementById(numId);
+            if (bar) bar.style.width = `${Math.round((val / max) * 100)}%`;
+            if (num) num.textContent = val;
+        };
+        setBar('bar-sent', 'num-sent', sent, maxVal);
+        setBar('bar-replies', 'num-replies', replies, maxVal);
+        setBar('bar-interviews', 'num-interviews', interviews, maxVal);
+    }
+
+    /* ---- hero CTA ---- */
+    function renderHero(newCount, readyCount) {
+        const heroCount = document.getElementById('hero-count');
+        const heroSub = document.getElementById('hero-sub');
+        const heroCta = document.getElementById('hero-cta');
+        const hero = document.getElementById('today-hero');
+
+        if (newCount > 0) {
+            heroCount.textContent = newCount;
+            heroCount.classList.add('has-new');
+            heroSub.textContent = `new PO/PM ${newCount === 1 ? 'match' : 'matches'} since you last checked`;
+            heroCta.textContent = 'Review queue →';
+            heroCta.href = '/jobs?filter=decide';
+            hero.classList.remove('today-hero-empty');
+        } else if (readyCount > 0) {
+            heroCount.textContent = readyCount;
+            heroSub.textContent = `${readyCount === 1 ? 'package' : 'packages'} ready to send — apply link and docs waiting`;
+            heroCta.textContent = 'Send now →';
+            heroCta.href = '/jobs?filter=send';
+            hero.classList.remove('today-hero-empty');
+        } else {
+            heroCount.textContent = 'All clear';
+            heroCount.classList.remove('has-new');
+            heroSub.textContent = 'No new matches since last visit. Run the pipeline to fetch fresh postings.';
+            heroCta.textContent = 'Run pipeline';
+            heroCta.href = '#';
+            heroCta.className = 'today-hero-action secondary';
+            heroCta.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (runBtn) runBtn.click();
+            });
+            hero.classList.add('today-hero-empty');
+        }
+    }
+
+    /* ---- top matches mini-list ---- */
+    function renderTopMatches(jobs) {
+        const list = document.getElementById('top-matches-list');
+        if (!list) return;
+        const open = jobs.filter(j => {
+            const st = (j.status || '').toLowerCase();
+            const as = (j.applied_state || '').toLowerCase();
+            return st !== 'listing_expired' && as !== 'expired'
+                && !['applied', 'apply_submitted', 'dry_run', 'apply_queued',
+                     'employer_received', 'waiting_response', 'rejected',
+                     'interview_invited'].includes(st)
+                && !['applied', 'dry_run', 'failed'].includes(as);
+        });
+        const top = open.slice(0, 6);
+        if (!top.length) {
+            list.innerHTML = '<span style="font-size:12px;color:var(--subtle)">No open matches yet.</span>';
+            return;
+        }
+        list.innerHTML = top.map(j => {
+            const score = j.score_tailored ?? j.score;
+            const cls = scoreClass(score);
+            const scoreLabel = score != null ? score : '?';
+            const meta = [j.company, j.source].filter(Boolean).join(' · ');
+            return `
+                <div class="mini-job-row">
+                    <span class="mini-score ${cls}">${scoreLabel}</span>
+                    <div class="mini-job-info">
+                        <div class="mini-job-title">${esc(j.title || 'Untitled')}</div>
+                        <div class="mini-job-meta">${esc(meta)}</div>
+                    </div>
+                    <a class="mini-job-action" href="/jobs" title="Open in triage queue">open</a>
+                </div>`;
+        }).join('');
+    }
+
+    /* ---- main data load ---- */
+    async function loadAll() {
+        await pollRunStatus();
+
+        const [hitsRes, shortlistRes, discoveryRes, runsRes] = await Promise.allSettled([
+            fetch('/api/latest-run-portal-hits'),
+            fetch('/api/shortlist?min_score=70'),
+            fetch('/api/discovery?days=7&weeks=1'),
+            fetch('/api/runs'),
+        ]);
+
+        /* Portal hits + scraped count */
+        let hits = {};
+        if (hitsRes.status === 'fulfilled' && hitsRes.value.ok) {
+            hits = await hitsRes.value.json();
+        }
+        const scrapedToday = hits.total ?? 0;
+        document.getElementById('chip-scraped').textContent = scrapedToday || '—';
+        const perPortal = hits.per_portal || {};
+        renderPortals(perPortal);
+
+        /* Shortlist: scored, ready, in-flight, new-since-last-visit */
+        let allJobs = [];
+        let readyCount = 0;
+        let inflightCount = 0;
+        let decidableCount = 0;
+        if (shortlistRes.status === 'fulfilled' && shortlistRes.value.ok) {
+            const payload = await shortlistRes.value.json();
+            allJobs = payload.jobs || [];
+
+            const INFLIGHT_STATUSES = new Set([
+                'apply_submitted', 'employer_received', 'waiting_response',
+            ]);
+            const INFLIGHT_STATES = new Set([
+                'applied', 'dry_run',
+            ]);
+            const INTERVIEW_STATUSES = new Set(['interview_invited']);
+
+            allJobs.forEach(j => {
+                const st = (j.status || '').toLowerCase();
+                const as = (j.applied_state || '').toLowerCase();
+                if (INTERVIEW_STATUSES.has(st)) { inflightCount++; return; }
+                if (INFLIGHT_STATUSES.has(st) || INFLIGHT_STATES.has(as)) { inflightCount++; return; }
+                if (st === 'generated' || st === 'tailored') { readyCount++; return; }
+                if (st === 'scored' || st === 'tailored') { decidableCount++; }
+            });
+
+            /* "New since last visit": jobs whose first_seen_at > lastVisitTs */
+            let newCount = 0;
+            if (lastVisitTs) {
+                const cutoff = Date.parse(lastVisitTs);
+                newCount = allJobs.filter(j => {
+                    if (!j.first_seen_at) return false;
+                    return Date.parse(j.first_seen_at) > cutoff;
+                }).length;
+            } else {
+                /* First ever visit: count everything from today */
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                newCount = allJobs.filter(j => {
+                    if (!j.first_seen_at) return false;
+                    return Date.parse(j.first_seen_at) >= todayStart.getTime();
+                }).length;
+            }
+
+            renderHero(newCount, readyCount);
+            renderTopMatches(allJobs);
+
+            /* Nav badge: ready-to-send count */
+            const navBadgeReady = document.getElementById('nav-badge-ready');
+            if (navBadgeReady && readyCount > 0) {
+                navBadgeReady.textContent = readyCount;
+                navBadgeReady.style.display = '';
+            }
+            if (newCount > 0) {
+                const navBadgeNew = document.getElementById('nav-badge-new');
+                if (navBadgeNew) {
+                    navBadgeNew.textContent = newCount;
+                    navBadgeNew.style.display = '';
+                }
+            }
+        }
+
+        document.getElementById('chip-scored').textContent = decidableCount + readyCount || '—';
+        document.getElementById('chip-ready').textContent = readyCount || '—';
+        document.getElementById('chip-inflight').textContent = inflightCount || '—';
+
+        /* Discovery: spark chart + weekly momentum */
+        if (discoveryRes.status === 'fulfilled' && discoveryRes.value.ok) {
+            const disc = await discoveryRes.value.json();
+            renderSpark(disc.per_day || []);
+            const wk = (disc.per_week || [])[0];
+            if (wk) {
+                renderMomentum(wk.matches || 0, 0, 0);
+            }
+        }
+
+        /* Runs: momentum sent/replies */
+        if (runsRes.status === 'fulfilled' && runsRes.value.ok) {
+            const runs = await runsRes.value.json();
+            const weekAgo = Date.now() - 7 * 86400 * 1000;
+            const thisWeekRuns = runs.filter(r => Date.parse(r.timestamp) > weekAgo);
+            const sent = thisWeekRuns.reduce((sum, r) => sum + (r.n_applied || 0), 0);
+            /* replies and interviews not yet in run API; use outcome_counts from index template vars */
+            const repliesEl = document.getElementById('num-replies');
+            const interviewsEl = document.getElementById('num-interviews');
+            const sentEl = document.getElementById('num-sent');
+            if (sentEl) sentEl.textContent = sent;
+            /* Patch bar */
+            const maxVal = Math.max(1, sent, 0, 0);
+            const barSent = document.getElementById('bar-sent');
+            if (barSent) barSent.style.width = `${Math.round((sent / maxVal) * 100)}%`;
+        }
+
+        /* Scraped-today sub-label */
+        const portalsActive = Object.values(perPortal).filter(n => n > 0).length;
+        const scrapedSub = document.getElementById('chip-scraped-sub');
+        if (scrapedSub && portalsActive) scrapedSub.textContent = `${portalsActive} portal${portalsActive !== 1 ? 's' : ''}`;
+    }
+
+    loadAll();
+})();
+</script>
+{% endblock %}

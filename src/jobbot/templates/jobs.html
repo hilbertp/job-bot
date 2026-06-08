@@ -1,4 +1,286 @@
 {% extends 'base.html' %}
+{% block head_extra %}
+<style>
+/* ================================================================
+   JOBS TRIAGE QUEUE  —  card-based redesign
+   ================================================================ */
+
+/* ---- Intent filter bar ---- */
+.filter-bar {
+    display: flex; align-items: center; gap: 8px;
+    flex-wrap: wrap; margin-bottom: 20px;
+}
+.filter-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+    border: 1px solid var(--line-strong);
+    background: var(--bg-1); color: var(--muted);
+    cursor: pointer; transition: all .12s ease;
+    user-select: none;
+}
+.filter-chip:hover { color: var(--text-1); border-color: var(--line-hi); }
+.filter-chip.active {
+    background: var(--surface-strong); color: var(--text);
+    border-color: var(--line-hi);
+}
+.filter-chip[data-filter="decide"].active  { border-color: var(--state-decide);  color: var(--state-decide); }
+.filter-chip[data-filter="send"].active    { border-color: var(--state-send);    color: var(--state-send); }
+.filter-chip[data-filter="inflight"].active{ border-color: var(--state-inflight);color: var(--state-inflight); }
+.filter-chip[data-filter="strong"].active  { border-color: var(--score-strong-border); color: var(--score-strong-text); }
+.filter-count {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; opacity: 0.70;
+}
+
+/* Preference toggle */
+.pref-toggle {
+    margin-left: auto;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 999px;
+    font-size: 11px; font-weight: 500; color: var(--subtle);
+    border: 1px solid var(--line); background: transparent;
+    cursor: pointer; transition: all .12s ease;
+}
+.pref-toggle:hover { color: var(--muted); border-color: var(--line-strong); }
+.pref-toggle.showing-all { color: var(--warn); border-color: var(--state-decide-border); }
+
+/* Sort bar */
+.sort-bar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px; font-size: 12px; color: var(--subtle);
+}
+.sort-select {
+    background: var(--bg-1) !important;
+    border: 1px solid var(--line-strong) !important;
+    border-radius: 8px !important;
+    color: var(--muted) !important;
+    font-size: 12px; padding: 4px 10px;
+}
+.jobs-meta { margin-left: auto; color: var(--subtle); font-size: 12px; }
+
+/* ---- Job queue list ---- */
+#jobs-queue { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---- Job card ---- */
+.jc {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: border-color .15s ease, box-shadow .12s ease;
+}
+.jc:hover {
+    border-color: var(--line-strong);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+}
+
+/* State-specific left-border colours */
+.jc[data-state="decide"]   { border-left-color: var(--state-decide); }
+.jc[data-state="send"]     { border-left-color: var(--state-send); }
+.jc[data-state="inflight"] { border-left-color: var(--state-inflight); }
+.jc[data-state="interview"]{ border-left-color: var(--state-interview); }
+.jc[data-state="closed"]   { border-left-color: var(--state-closed); opacity: 0.60; }
+
+/* Card head: state badge + meta */
+.jc-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; padding: 10px 16px 0;
+    flex-wrap: wrap;
+}
+.jc-state-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em;
+    padding: 2px 9px; border-radius: 999px;
+}
+.jc-state-badge::before {
+    content: ""; width: 5px; height: 5px; border-radius: 50%;
+    background: currentColor; flex-shrink: 0;
+}
+.jc[data-state="decide"]    .jc-state-badge { color: var(--state-decide);   background: var(--state-decide-bg);  border: 1px solid var(--state-decide-border); }
+.jc[data-state="send"]      .jc-state-badge { color: var(--state-send);     background: var(--state-send-bg);    border: 1px solid var(--state-send-border); }
+.jc[data-state="inflight"]  .jc-state-badge { color: var(--state-inflight); background: var(--state-inflight-bg);border: 1px solid var(--state-inflight-border); }
+.jc[data-state="interview"] .jc-state-badge { color: var(--state-interview);background: var(--state-interview-bg);border: 1px solid var(--state-interview-border); }
+.jc[data-state="closed"]    .jc-state-badge { color: var(--state-closed);   background: var(--state-closed-bg);  border: 1px solid var(--state-closed-border); }
+
+.jc-meta {
+    font-size: 11px; color: var(--subtle);
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.jc-meta-dot { opacity: 0.4; }
+
+/* Card body: two columns */
+.jc-body {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    padding: 10px 16px 0;
+    align-items: start;
+}
+@media (max-width: 640px) { .jc-body { grid-template-columns: 1fr; } }
+
+/* Left column */
+.jc-title {
+    font-size: 15px; font-weight: 700; color: var(--text);
+    letter-spacing: -0.01em; line-height: 1.3;
+    margin-bottom: 1px;
+}
+.jc-company {
+    font-size: 12px; color: var(--muted); margin-bottom: 10px;
+}
+
+/* Score display */
+.jc-score-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 8px; flex-wrap: wrap;
+}
+.score-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 38px; height: 28px; padding: 0 10px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 13px; font-weight: 700;
+}
+.score-badge.strong { background: var(--score-strong-bg); color: var(--score-strong-text); border: 1px solid var(--score-strong-border); }
+.score-badge.good   { background: var(--score-good-bg);   color: var(--score-good-text);   border: 1px solid var(--score-good-border); }
+.score-badge.mid    { background: var(--score-mid-bg);    color: var(--score-mid-text);     border: 1px solid var(--score-mid-border); }
+.score-badge.low    { background: var(--score-low-bg);    color: var(--score-low-text);     border: 1px solid var(--score-low-border); }
+.score-badge.stale  {
+    background: transparent; color: var(--subtle);
+    border: 1px solid var(--line-strong);
+    text-decoration: line-through; text-decoration-color: var(--line-hi);
+    opacity: 0.7;
+}
+.score-arrow { color: var(--subtle); font-size: 13px; }
+.score-delta {
+    font-size: 11px; font-weight: 700;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    padding: 2px 7px; border-radius: 6px;
+}
+.score-delta.positive { background: var(--accent-soft); color: var(--accent); }
+.score-delta.zero     { background: var(--bg-2); color: var(--subtle); }
+.score-delta.negative { background: var(--score-low-bg); color: var(--score-low-text); }
+
+/* Breakdown pills */
+.jc-breakdown {
+    display: flex; align-items: center; gap: 4px;
+    flex-wrap: wrap; margin-bottom: 6px;
+}
+.bd-pill {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
+    padding: 1px 6px; border-radius: 5px;
+}
+.bd-pill.strong { background: var(--score-strong-bg); color: var(--score-strong-text); }
+.bd-pill.good   { background: var(--score-good-bg);   color: var(--score-good-text); }
+.bd-pill.mid    { background: var(--score-mid-bg);    color: var(--score-mid-text); }
+.bd-pill.low    { background: var(--score-low-bg);    color: var(--score-low-text); }
+.bd-pill.na     { background: var(--bg-2); color: var(--subtle); }
+.bd-sep         { color: var(--line-hi); font-size: 10px; }
+
+/* Reason text */
+.jc-reason {
+    font-size: 11px; color: var(--muted); line-height: 1.5;
+    max-width: 560px;
+}
+
+/* Right column */
+.jc-right { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+
+/* Fit pills */
+.jc-fit-row {
+    display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end;
+}
+.fit-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-weight: 600;
+    padding: 2px 8px; border-radius: 999px;
+}
+.fit-pill.pass { background: var(--score-strong-bg); color: var(--score-strong-text); border: 1px solid var(--score-strong-border); }
+.fit-pill.warn { background: var(--score-mid-bg);    color: var(--score-mid-text);    border: 1px solid var(--score-mid-border); }
+.fit-pill.fail { background: var(--score-low-bg);    color: var(--score-low-text);    border: 1px solid var(--score-low-border); }
+.fit-pill.na   { background: var(--bg-2); color: var(--subtle); border: 1px solid var(--line-strong); }
+
+/* Package links */
+.jc-pkg {
+    display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;
+}
+.pkg-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 8px; border-radius: 7px;
+    background: var(--bg-1); border: 1px solid var(--line-strong);
+    color: var(--accent); text-decoration: none;
+    transition: border-color .12s, color .12s;
+}
+.pkg-link:hover { border-color: var(--accent); color: #fff; }
+.pkg-link.missing { color: var(--subtle); font-weight: 400; }
+
+/* Action bar */
+.jc-actions {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px; flex-wrap: wrap;
+}
+.jc-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 8px;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all .12s ease; text-decoration: none;
+    border: 1px solid transparent;
+}
+.jc-btn:hover { transform: translateY(-1px); }
+.jc-btn.primary-decide {
+    background: var(--state-decide-bg); color: var(--state-decide);
+    border-color: var(--state-decide-border);
+}
+.jc-btn.primary-decide:hover { background: rgba(251,191,36,0.12); }
+.jc-btn.primary-send {
+    background: var(--state-send-bg); color: var(--state-send);
+    border-color: var(--state-send-border);
+}
+.jc-btn.primary-send:hover { background: rgba(56,189,248,0.12); }
+.jc-btn.primary-inflight {
+    background: var(--state-inflight-bg); color: var(--state-inflight);
+    border-color: var(--state-inflight-border);
+}
+.jc-btn.primary-green {
+    background: var(--accent-soft); color: var(--accent);
+    border-color: rgba(52,211,153,0.28);
+}
+.jc-btn.primary-green:hover { background: rgba(52,211,153,0.18); }
+.jc-btn.ghost {
+    background: transparent; color: var(--muted);
+    border-color: var(--line-strong);
+}
+.jc-btn.ghost:hover { color: var(--text-1); border-color: var(--line-hi); }
+.jc-btn.danger-ghost {
+    background: transparent; color: var(--subtle);
+    border-color: transparent;
+}
+.jc-btn.danger-ghost:hover { color: var(--danger); }
+.jc-actions-right { margin-left: auto; display: flex; gap: 6px; }
+
+/* Empty state */
+.queue-empty {
+    padding: 48px 24px; text-align: center;
+    color: var(--subtle); font-size: 14px;
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-lg);
+}
+.queue-empty strong { color: var(--muted); display: block; margin-bottom: 6px; font-size: 16px; }
+
+/* Loading skeleton */
+.jc-skeleton {
+    height: 120px; border-radius: var(--radius-lg);
+    background: linear-gradient(90deg, var(--surface) 25%, var(--bg-2) 50%, var(--surface) 75%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+    border: 1px solid var(--line);
+}
+@keyframes shimmer { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-head">
     <div>
@@ -6,119 +288,590 @@
         <h1 class="page-title">Jobs</h1>
     </div>
     <div class="dashboard-actions">
-        <span id="jobs-count" class="status-text"></span>
+        <span id="jobs-meta-count" class="status-text"></span>
     </div>
 </div>
 
-<div class="surface-panel p-6">
-    <div class="flex flex-wrap gap-2 mb-5" id="jobs-filters">
-        <button data-filter="all"       class="px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide bg-white/20 text-purple-100 border border-white/30">All</button>
-        <button data-filter="scraped"   class="px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide bg-white/5 text-purple-200 border border-white/10 hover:bg-white/10">Scraped</button>
-        <button data-filter="scored"    class="px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide bg-white/5 text-purple-200 border border-white/10 hover:bg-white/10">Scored</button>
-        <button data-filter="generated" class="px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide bg-white/5 text-purple-200 border border-white/10 hover:bg-white/10">Tailored</button>
-        <button data-filter="applied"   class="px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide bg-white/5 text-purple-200 border border-white/10 hover:bg-white/10">Applied</button>
-    </div>
-
-    <div class="overflow-x-auto">
-        <table class="w-full text-left">
-            <thead>
-                <tr>
-                    <th class="py-2 px-3">Score</th>
-                    <th class="py-2 px-3">Title</th>
-                    <th class="py-2 px-3">Company</th>
-                    <th class="py-2 px-3">Source</th>
-                    <th class="py-2 px-3">Status</th>
-                    <th class="py-2 px-3">Reason</th>
-                    <th class="py-2 px-3"></th>
-                </tr>
-            </thead>
-            <tbody id="jobs-body">
-                <tr><td colspan="7" class="py-4 text-purple-300 px-3">Loading…</td></tr>
-            </tbody>
-        </table>
-    </div>
+<!-- Intent filters -->
+<div class="filter-bar" id="filter-bar">
+    <button class="filter-chip" data-filter="decide">
+        Needs decision <span class="filter-count" data-count="decide">0</span>
+    </button>
+    <button class="filter-chip" data-filter="send">
+        Ready to send <span class="filter-count" data-count="send">0</span>
+    </button>
+    <button class="filter-chip" data-filter="inflight">
+        In flight <span class="filter-count" data-count="inflight">0</span>
+    </button>
+    <button class="filter-chip" data-filter="strong">
+        Strong fit &ge;80 <span class="filter-count" data-count="strong">0</span>
+    </button>
+    <button class="filter-chip" data-filter="new">
+        New today <span class="filter-count" data-count="new">0</span>
+    </button>
+    <button class="filter-chip" data-filter="all">
+        All <span class="filter-count" data-count="all">0</span>
+    </button>
+    <button class="pref-toggle" id="pref-toggle" title="Toggle: hide salary-fail and on-site only">
+        <span id="pref-toggle-icon">&#9685;</span>
+        <span id="pref-toggle-label">Prefs filter on</span>
+    </button>
 </div>
 
-<style>
-.score-cell {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 38px; height: 26px; padding: 0 8px; border-radius: 7px;
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-size: 12px; font-weight: 700; letter-spacing: -0.01em;
-}
-.score-high { background: rgba(52,211,153,0.12); color: #34d399; border: 1px solid rgba(52,211,153,0.25); }
-.score-mid  { background: rgba(251,191,36,0.10); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
-.score-low  { background: rgba(251,113,133,0.10); color: #fb7185; border: 1px solid rgba(251,113,133,0.25); }
-.score-na   { background: #18181b; color: #71717a; border: 1px solid #27272a; }
-.status-cell {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500;
-    background: #18181b; color: #a1a1aa; border: 1px solid #27272a;
-}
-.status-cell::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.status-scraped         { color: #71717a; }
-.status-filtered        { color: #fb7185; }
-.status-scored          { color: #fbbf24; }
-.status-below_threshold { color: #fb7185; }
-.status-generated       { color: #34d399; }
-.status-apply_submitted { color: #34d399; }
-.status-apply_failed    { color: #fb7185; }
-</style>
+<!-- Sort row -->
+<div class="sort-bar">
+    <span>Sort</span>
+    <select class="sort-select" id="sort-key">
+        <option value="best_score">Best score</option>
+        <option value="base_score">Base score</option>
+        <option value="delta">Score delta</option>
+        <option value="date">Posted date</option>
+        <option value="title">Title</option>
+        <option value="company">Company</option>
+    </select>
+    <button id="sort-dir-btn" class="filter-chip" style="padding:4px 10px;border-radius:8px"
+            data-dir="desc" title="Toggle sort direction">&#9660; desc</button>
+    <span class="jobs-meta" id="jobs-queue-meta"></span>
+</div>
+
+<!-- Job card queue -->
+<div id="jobs-queue">
+    <div class="jc-skeleton"></div>
+    <div class="jc-skeleton" style="height:90px;opacity:.6"></div>
+    <div class="jc-skeleton" style="height:100px;opacity:.4"></div>
+</div>
 
 <script>
-const JOBS_FILTER_BTNS = Array.from(document.querySelectorAll('#jobs-filters [data-filter]'));
-const ACTIVE_CLS = 'bg-white/20 text-purple-100 border-white/30';
-const IDLE_CLS = 'bg-white/5 text-purple-200 border-white/10 hover:bg-white/10';
-
-function scoreTone(s) {
-    if (s === null || s === undefined) return 'score-na';
-    if (s >= 70) return 'score-high';
-    if (s >= 40) return 'score-mid';
-    return 'score-low';
+(function () {
+/* ---- helpers ---- */
+function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function scoreClass(s) {
+    if (s == null) return 'na';
+    if (s >= 80) return 'strong';
+    if (s >= 70) return 'good';
+    if (s >= 50) return 'mid';
+    return 'low';
+}
+function breakdownClass(v) {
+    if (v == null) return 'na';
+    if (v >= 80) return 'strong';
+    if (v >= 65) return 'good';
+    if (v >= 45) return 'mid';
+    return 'low';
+}
+function formatDaysAgo(iso) {
+    if (!iso) return '';
+    const ms = Date.parse(iso);
+    if (isNaN(ms)) return '';
+    const days = Math.floor((Date.now() - ms) / 86400000);
+    if (days === 0) return 'today';
+    if (days === 1) return '1d ago';
+    if (days < 7) return `${days}d ago`;
+    if (days < 30) return `${Math.floor(days/7)}w ago`;
+    return `${Math.floor(days/30)}mo ago`;
 }
 
-function escapeHtml(s) {
-    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* ---- action state derivation ---- */
+const INFLIGHT_ST = new Set(['apply_submitted','employer_received','waiting_response','apply_queued']);
+const INFLIGHT_AS = new Set(['applied','dry_run']);
+const INTERVIEW_ST = new Set(['interview_invited']);
+const CLOSED_ST = new Set(['listing_expired','apply_failed','discarded','filtered']);
+const CLOSED_AS = new Set(['expired','failed']);
+
+function actionState(job) {
+    const st = (job.status || '').toLowerCase();
+    const as = (job.applied_state || '').toLowerCase();
+    if (INTERVIEW_ST.has(st) || as === 'interview_invited') return 'interview';
+    if (CLOSED_ST.has(st) || CLOSED_AS.has(as)) return 'closed';
+    if (INFLIGHT_ST.has(st) || INFLIGHT_AS.has(as)) return 'inflight';
+    if (st === 'generated') return 'send';
+    /* Even if status is scored/tailored, documents exist = ready */
+    if (job.cv_pdf_url || job.cover_letter_pdf_url) return 'send';
+    if (st === 'scored' || st === 'tailored') return 'decide';
+    return 'decide';
+}
+function stateBadgeLabel(state) {
+    return {
+        decide:    'Needs decision',
+        send:      'Ready to send',
+        inflight:  'In flight',
+        interview: 'Interview',
+        closed:    'Closed',
+    }[state] || state;
 }
 
-async function loadJobs(status) {
-    JOBS_FILTER_BTNS.forEach(b => {
-        const active = b.getAttribute('data-filter') === status;
-        b.className = `px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide border ${active ? ACTIVE_CLS : IDLE_CLS}`;
+/* Parses legacy "role=X, skills=Y, location=Z, seniority=W" prefix from reason text */
+const BD_RE = /role\s*[=:]\s*(\d+).*?skills\s*[=:]\s*(\d+).*?location\s*[=:]\s*(\d+).*?seniority\s*[=:]\s*(\d+)/i;
+
+/* ---- effective breakdown (API field or parsed from reason text) ---- */
+function getBreakdown(job) {
+    let bd = job.score_breakdown;
+    if (!bd || typeof bd !== 'object') {
+        const m = BD_RE.exec(job.reason || job.score_reason || '');
+        if (m) bd = { role: +m[1], skills: +m[2], location: +m[3], seniority: +m[4] };
+    }
+    return bd || null;
+}
+
+/* ---- salary / location / seniority fit signals ---- */
+const SALARY_FLOOR = 125000;
+function salaryFit(job) {
+    const raw = (job.salary_text || job.expected_salary || '').toLowerCase();
+    if (!raw) return 'na';
+    const match = raw.match(/(\d[\d.,]*)/g);
+    if (!match) return 'na';
+    const nums = match.map(n => parseFloat(n.replace(/[.,]/g, '').replace(',','.'))).filter(n => n > 10000);
+    if (!nums.length) return 'na';
+    const maxSalary = Math.max(...nums);
+    if (maxSalary >= SALARY_FLOOR) return 'pass';
+    if (maxSalary >= SALARY_FLOOR * 0.85) return 'warn';
+    return 'fail';
+}
+function locationFit(job) {
+    const bd = getBreakdown(job);
+    if (bd && bd.location != null) {
+        if (bd.location >= 70) return 'pass';
+        if (bd.location >= 40) return 'warn';
+        return 'fail';
+    }
+    return 'na';
+}
+function seniorityFit(job) {
+    const bd = getBreakdown(job);
+    if (bd && bd.seniority != null) {
+        if (bd.seniority >= 70) return 'pass';
+        if (bd.seniority >= 40) return 'warn';
+        return 'fail';
+    }
+    return 'na';
+}
+function fitLabel(kind, job) {
+    if (kind === 'location') {
+        const bd = getBreakdown(job);
+        if (bd && bd.location != null) return bd.location >= 70 ? 'Remote / Berlin' : 'On-site';
+        return 'Location?';
+    }
+    if (kind === 'salary') {
+        const raw = (job.salary_text || job.expected_salary || '').replace(/\s+/g, ' ').trim();
+        return raw ? raw.slice(0, 18) : 'Salary?';
+    }
+    if (kind === 'seniority') {
+        const raw = (job.seniority || '').trim();
+        if (!raw || /^not\s/i.test(raw) || /unspecified/i.test(raw)) return 'Seniority?';
+        const s = raw.replace(/^(senior|lead|principal)\s*/i, '').trim();
+        if (!s) return 'Senior';
+        const firstWord = s.split(/[\s/]/)[0];
+        return firstWord.length > 12 ? firstWord.slice(0, 12) : firstWord || 'Seniority?';
+    }
+    return '';
+}
+
+/* ---- preference filter ---- */
+let prefFilterOn = true;
+function passesPrefs(job) {
+    if (!prefFilterOn) return true;
+    if (salaryFit(job) === 'fail') return false;
+    if (locationFit(job) === 'fail') return false;
+    return true;
+}
+
+/* ---- bucket classification ---- */
+const todayStart = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); })();
+
+function buckets(job) {
+    const state = actionState(job);
+    const score = job.score_tailored ?? job.score ?? 0;
+    const set = new Set();
+    set.add('all');
+    if (state === 'decide') set.add('decide');
+    if (state === 'send')   set.add('send');
+    if (state === 'inflight' || state === 'interview') set.add('inflight');
+    if (score >= 80) set.add('strong');
+    if (job.first_seen_at && Date.parse(job.first_seen_at) >= todayStart) set.add('new');
+    return set;
+}
+
+/* ---- sort ---- */
+let sortKey = 'best_score';
+let sortDir = -1; // -1 = desc
+
+function sortJobs(jobs) {
+    return jobs.slice().sort((a, b) => {
+        let va, vb;
+        switch (sortKey) {
+            case 'best_score':
+                va = a.score_tailored ?? a.score ?? -1;
+                vb = b.score_tailored ?? b.score ?? -1;
+                break;
+            case 'base_score':
+                va = a.score ?? -1; vb = b.score ?? -1;
+                break;
+            case 'delta':
+                va = a.score_delta ?? 0; vb = b.score_delta ?? 0;
+                break;
+            case 'date':
+                va = Date.parse(a.first_seen_at) || 0;
+                vb = Date.parse(b.first_seen_at) || 0;
+                break;
+            case 'title':
+                va = (a.title || '').toLowerCase();
+                vb = (b.title || '').toLowerCase();
+                return va < vb ? -sortDir : va > vb ? sortDir : 0;
+            case 'company':
+                va = (a.company || '').toLowerCase();
+                vb = (b.company || '').toLowerCase();
+                return va < vb ? -sortDir : va > vb ? sortDir : 0;
+            default:
+                va = a.score ?? -1; vb = b.score ?? -1;
+        }
+        if (va === vb) return 0;
+        return (va - vb) * sortDir;
     });
-    const endpoint = status === 'all' ? '/api/jobs' : `/api/jobs/by-status/${status}`;
-    const tbody = document.getElementById('jobs-body');
-    tbody.innerHTML = '<tr><td colspan="7" class="py-4 text-purple-300 px-3">Loading…</td></tr>';
-    const res = await fetch(endpoint);
-    const rows = await res.json();
-    const countEl = document.getElementById('jobs-count');
-    if (countEl) countEl.textContent = `${rows.length} job${rows.length === 1 ? '' : 's'}`;
-    if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-purple-300 px-3">No jobs in this bucket yet.</td></tr>';
+}
+
+/* ---- render score block ---- */
+function renderScoreBlock(job) {
+    const base = job.score;
+    const tailored = job.score_tailored;
+    const delta = job.score_delta;
+
+    if (base == null) {
+        return '<span class="score-badge na" title="not yet scored">?</span>';
+    }
+    if (tailored != null) {
+        const deltaSign = delta > 0 ? '+' : '';
+        const deltaCls = delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'zero';
+        return `
+            <span class="score-badge stale" title="base score before tailoring">${base}</span>
+            <span class="score-arrow">&rarr;</span>
+            <span class="score-badge ${scoreClass(tailored)}" title="tailored score">${tailored}</span>
+            <span class="score-delta ${deltaCls}" title="score improvement from tailored CV/CL">${deltaSign}${delta ?? 0}</span>
+        `;
+    }
+    return `<span class="score-badge ${scoreClass(base)}" title="fit score (not yet tailored)">${base}</span>`;
+}
+
+/* ---- render score breakdown ---- */
+function renderBreakdown(job) {
+    let bd = job.score_breakdown;
+    /* Fall back to parsing legacy "role=X, skills=Y, ..." prefix in reason text */
+    if (!bd || typeof bd !== 'object') {
+        const m = BD_RE.exec(job.reason || job.score_reason || '');
+        if (m) bd = { role: +m[1], skills: +m[2], location: +m[3], seniority: +m[4] };
+    }
+    if (!bd) return '';
+    const axes = [
+        ['Role', bd.role], ['Skills', bd.skills],
+        ['Loc', bd.location], ['Senior', bd.seniority],
+    ];
+    return axes.map(([label, val], i) => {
+        if (val == null) return '';
+        const cls = breakdownClass(val);
+        const sep = i > 0 ? '<span class="bd-sep">|</span>' : '';
+        return `${sep}<span class="bd-pill ${cls}">${label} ${val}</span>`;
+    }).filter(Boolean).join('');
+}
+
+/* ---- render fit pills ---- */
+function renderFitPills(job) {
+    const locFit = locationFit(job);
+    const salFit = salaryFit(job);
+    const senFit = seniorityFit(job);
+    const pill = (cls, label, icon) =>
+        `<span class="fit-pill ${cls}" title="${esc(label)}">${icon} ${esc(label)}</span>`;
+    return `
+        <div class="jc-fit-row">
+            ${pill(locFit, fitLabel('location', job), locFit === 'pass' ? '&#9679;' : locFit === 'fail' ? '&#9675;' : '&#9648;')}
+            ${pill(salFit, fitLabel('salary', job), '&euro;')}
+            ${pill(senFit, fitLabel('seniority', job), '&#11044;')}
+        </div>`;
+}
+
+/* ---- render package links ---- */
+function renderPkg(job) {
+    const links = [];
+    if (job.cv_pdf_url) {
+        links.push(`<a class="pkg-link" href="${esc(job.cv_pdf_url)}" target="_blank" title="Open tailored CV">&#128196; cv.pdf</a>`);
+    } else if (job.cv_html_url) {
+        links.push(`<a class="pkg-link" href="${esc(job.cv_html_url)}" target="_blank">cv.html</a>`);
+    }
+    if (job.cover_letter_pdf_url) {
+        links.push(`<a class="pkg-link" href="${esc(job.cover_letter_pdf_url)}" target="_blank" title="Open cover letter">&#128196; cover.pdf</a>`);
+    } else if (job.cover_letter_html_url) {
+        links.push(`<a class="pkg-link" href="${esc(job.cover_letter_html_url)}" target="_blank">cover.html</a>`);
+    }
+    if (!links.length) return '';
+    return `<div class="jc-pkg">${links.join('')}</div>`;
+}
+
+/* ---- render primary action ---- */
+function renderActions(job, state) {
+    const postingHref = esc(job.url || '#');
+    const openLink = job.url
+        ? `<a class="jc-btn ghost" href="${postingHref}" target="_blank" rel="noopener">Open &#8599;</a>`
+        : '';
+    const applyUrl = job.apply_url || job.url || '';
+    const applyEmail = job.apply_email || '';
+
+    if (state === 'interview') {
+        return `
+            <div class="jc-actions">
+                <span class="jc-btn primary-inflight" style="cursor:default">&#127775; Interview scheduled</span>
+                <div class="jc-actions-right">${openLink}</div>
+            </div>`;
+    }
+    if (state === 'inflight') {
+        return `
+            <div class="jc-actions">
+                <span class="jc-btn primary-inflight" style="cursor:default">&#9992; Applied &mdash; awaiting reply</span>
+                <div class="jc-actions-right">${openLink}</div>
+            </div>`;
+    }
+    if (state === 'closed') {
+        return `
+            <div class="jc-actions">
+                <span class="jc-btn ghost" style="cursor:default;opacity:.5">Closed</span>
+                <div class="jc-actions-right">${openLink}</div>
+            </div>`;
+    }
+    if (state === 'send') {
+        const applyHref = applyEmail
+            ? `mailto:${esc(applyEmail)}`
+            : esc(applyUrl || '#');
+        const applyTarget = applyEmail ? '_self' : '_blank';
+        return `
+            <div class="jc-actions">
+                <a class="jc-btn primary-send" href="${applyHref}" target="${applyTarget}" rel="noopener">
+                    &#9993; Apply now
+                </a>
+                <div class="jc-actions-right">
+                    <button class="jc-btn danger-ghost" data-action="skip" data-job-id="${esc(job.id)}">Skip</button>
+                    ${openLink}
+                </div>
+            </div>`;
+    }
+    /* decide / default: no package yet */
+    return `
+        <div class="jc-actions">
+            <button class="jc-btn primary-decide" data-action="generate" data-job-id="${esc(job.id)}">
+                &#9889; Generate package
+            </button>
+            <div class="jc-actions-right">
+                <button class="jc-btn danger-ghost" data-action="skip" data-job-id="${esc(job.id)}">Skip</button>
+                ${openLink}
+            </div>
+        </div>`;
+}
+
+/* ---- render single job card ---- */
+function renderCard(job) {
+    const state = actionState(job);
+    const daysAgo = formatDaysAgo(job.first_seen_at);
+    const source = esc(job.source || '');
+    const reason = esc((job.reason || job.score_reason || '').slice(0, 160));
+
+    return `
+        <article class="jc" data-state="${state}" data-job-id="${esc(job.id)}">
+            <div class="jc-head">
+                <span class="jc-state-badge">${stateBadgeLabel(state)}</span>
+                <span class="jc-meta">
+                    ${source ? `<span>${source}</span><span class="jc-meta-dot">&middot;</span>` : ''}
+                    <span>${daysAgo}</span>
+                </span>
+            </div>
+            <div class="jc-body">
+                <div class="jc-left">
+                    <div class="jc-title">${esc(job.title || 'Untitled position')}</div>
+                    <div class="jc-company">${esc(job.company || '')}</div>
+                    <div class="jc-score-row">${renderScoreBlock(job)}</div>
+                    <div class="jc-breakdown">${renderBreakdown(job)}</div>
+                    ${reason ? `<div class="jc-reason">${reason}</div>` : ''}
+                </div>
+                <div class="jc-right">
+                    ${renderFitPills(job)}
+                    ${renderPkg(job)}
+                </div>
+            </div>
+            ${renderActions(job, state)}
+        </article>`;
+}
+
+/* ---- state ---- */
+let allJobs = [];
+let activeFilter = 'decide';
+
+/* Restore filter from URL param on load */
+const urlParams = new URLSearchParams(window.location.search);
+const initFilter = urlParams.get('filter');
+if (initFilter && ['decide','send','inflight','strong','new','all'].includes(initFilter)) {
+    activeFilter = initFilter;
+}
+
+/* ---- update filter chip counts ---- */
+function updateCounts() {
+    const filtered = allJobs.filter(passesPrefs);
+    const counts = { decide:0, send:0, inflight:0, strong:0, new:0, all:0 };
+    filtered.forEach(j => {
+        const b = buckets(j);
+        for (const k of Object.keys(counts)) if (b.has(k)) counts[k]++;
+    });
+    Object.entries(counts).forEach(([k, v]) => {
+        document.querySelectorAll(`[data-count="${k}"]`).forEach(el => el.textContent = v);
+    });
+    return counts;
+}
+
+/* ---- render queue ---- */
+function renderQueue() {
+    const q = document.getElementById('jobs-queue');
+    const meta = document.getElementById('jobs-queue-meta');
+    const prefFiltered = allJobs.filter(passesPrefs);
+    const visible = prefFiltered.filter(j => buckets(j).has(activeFilter));
+    const sorted = sortJobs(visible);
+
+    if (meta) meta.textContent = `${sorted.length} job${sorted.length !== 1 ? 's' : ''}`;
+
+    if (!sorted.length) {
+        const labels = {
+            decide: 'No jobs needing a decision right now.',
+            send:   'No packages ready to send — generate one from "Needs decision".',
+            inflight: 'No applications in flight yet.',
+            strong: 'No jobs with score &ge;80 in the current set.',
+            new:    'No new jobs scraped today.',
+            all:    'No jobs found. Run the pipeline to scrape fresh postings.',
+        };
+        q.innerHTML = `
+            <div class="queue-empty">
+                <strong>Nothing here</strong>
+                ${labels[activeFilter] || 'No jobs in this bucket.'}
+            </div>`;
         return;
     }
-    tbody.innerHTML = rows.map(job => {
-        const score = job.score;
-        const scoreText = score === null || score === undefined ? ',' : score;
-        const statusCls = `status-${(job.status || '').replace(/-/g, '_')}`;
-        return `
-            <tr>
-                <td class="py-3 px-3"><span class="score-cell ${scoreTone(score)} num">${scoreText}</span></td>
-                <td class="py-3 px-3"><a class="underline" target="_blank" href="${escapeHtml(job.url || '#')}">${escapeHtml(job.title || '')}</a></td>
-                <td class="py-3 px-3 text-purple-200">${escapeHtml(job.company || '')}</td>
-                <td class="py-3 px-3 text-purple-300 text-xs">${escapeHtml(job.location || '')}</td>
-                <td class="py-3 px-3"><span class="status-cell ${statusCls}">${escapeHtml(job.status || ',')}</span></td>
-                <td class="py-3 px-3 text-xs text-purple-200 max-w-xl truncate" title="${escapeHtml(job.score_reason || '')}">${escapeHtml(job.score_reason || ',')}</td>
-                <td class="py-3 px-3"><a class="underline text-purple-200" target="_blank" href="${escapeHtml(job.url || '#')}">open ↗</a></td>
-            </tr>
-        `;
-    }).join('');
+
+    q.innerHTML = sorted.map(renderCard).join('');
+    wireCardActions(q);
 }
 
-JOBS_FILTER_BTNS.forEach(btn => {
-    btn.addEventListener('click', () => loadJobs(btn.getAttribute('data-filter')));
+/* ---- wire card action buttons ---- */
+function wireCardActions(root) {
+    root.querySelectorAll('[data-action="generate"]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const jobId = btn.getAttribute('data-job-id');
+            btn.disabled = true;
+            btn.textContent = 'Generating…';
+            try {
+                const r = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/generate`, { method: 'POST' });
+                if (r.ok) {
+                    btn.textContent = 'Done — reload to see package';
+                    btn.className = 'jc-btn primary-green';
+                } else {
+                    const b = await r.json().catch(() => ({}));
+                    btn.textContent = b.error || 'Error generating';
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                btn.textContent = 'Network error';
+                btn.disabled = false;
+            }
+        });
+    });
+}
+
+/* ---- filter chips ---- */
+document.querySelectorAll('.filter-chip[data-filter]').forEach(chip => {
+    chip.addEventListener('click', () => {
+        activeFilter = chip.getAttribute('data-filter');
+        document.querySelectorAll('.filter-chip[data-filter]').forEach(c =>
+            c.classList.toggle('active', c === chip));
+        renderQueue();
+        const url = new URL(window.location);
+        url.searchParams.set('filter', activeFilter);
+        history.replaceState(null, '', url.toString());
+    });
+    if (chip.getAttribute('data-filter') === activeFilter) chip.classList.add('active');
 });
 
-loadJobs('all');
+/* ---- pref toggle ---- */
+const prefBtn = document.getElementById('pref-toggle');
+const prefIcon = document.getElementById('pref-toggle-icon');
+const prefLabel = document.getElementById('pref-toggle-label');
+if (prefBtn) {
+    prefBtn.addEventListener('click', () => {
+        prefFilterOn = !prefFilterOn;
+        prefBtn.classList.toggle('showing-all', !prefFilterOn);
+        prefIcon.textContent = prefFilterOn ? '⚅' : '⚆';
+        prefLabel.textContent = prefFilterOn ? 'Prefs filter on' : 'Showing all';
+        updateCounts();
+        renderQueue();
+    });
+}
+
+/* ---- sort ---- */
+const sortKeyEl = document.getElementById('sort-key');
+const sortDirBtn = document.getElementById('sort-dir-btn');
+if (sortKeyEl) sortKeyEl.addEventListener('change', () => { sortKey = sortKeyEl.value; renderQueue(); });
+if (sortDirBtn) {
+    sortDirBtn.addEventListener('click', () => {
+        sortDir = -sortDir;
+        sortDirBtn.setAttribute('data-dir', sortDir === -1 ? 'desc' : 'asc');
+        sortDirBtn.innerHTML = sortDir === -1 ? '&#9660; desc' : '&#9650; asc';
+        renderQueue();
+    });
+}
+
+/* ---- sidebar last-run ---- */
+(async function () {
+    try {
+        const r = await fetch('/api/runs');
+        if (!r.ok) return;
+        const rows = await r.json();
+        if (!rows.length) return;
+        const run = rows[0];
+        const setTxt = (id, v, cls) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = v;
+            if (cls) el.className = cls;
+        };
+        setTxt('sidebar-last-run-when', run.timestamp_display || '—');
+        setTxt('sidebar-last-run-flow', `${run.n_fetched ?? 0} → ${run.n_generated ?? 0}`);
+        if (run.n_errors > 0) setTxt('sidebar-last-run-status', `${run.n_errors} err`, 'status-err');
+        else if ((run.n_applied ?? 0) > 0) setTxt('sidebar-last-run-status', 'applied', 'status-ok');
+        else setTxt('sidebar-last-run-status', 'completed', 'status-ok');
+    } catch (e) {}
+})();
+
+/* ---- load jobs ---- */
+async function loadJobs() {
+    try {
+        const r = await fetch('/api/shortlist?min_score=60');
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const payload = await r.json();
+        allJobs = payload.jobs || [];
+        updateCounts();
+        renderQueue();
+        const countEl = document.getElementById('jobs-meta-count');
+        if (countEl) countEl.textContent = `${allJobs.length} in queue`;
+        /* nav badge */
+        const readyCount = allJobs.filter(j => actionState(j) === 'send').length;
+        const navBadge = document.getElementById('nav-badge-ready');
+        if (navBadge && readyCount > 0) {
+            navBadge.textContent = readyCount;
+            navBadge.style.display = '';
+        }
+    } catch (e) {
+        document.getElementById('jobs-queue').innerHTML = `
+            <div class="queue-empty">
+                <strong>Could not load jobs</strong>
+                ${esc(e.message)} — is the server running?
+            </div>`;
+    }
+}
+
+loadJobs();
+})();
 </script>
 {% endblock %}
