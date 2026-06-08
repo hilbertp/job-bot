@@ -42,7 +42,6 @@ the profile's voice/capabilities/user_facts or the base CV. Do not invent
 tools. Format as a Markdown bullet list, one tool per bullet:
 
 ```
-- **Lovable**, polished front-end prototypes
 - **Framer**, design-heavy work
 - **Claude Code**, in-repo refactors
 ```
