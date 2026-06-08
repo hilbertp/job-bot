@@ -232,22 +232,24 @@ def compute_outcome_counts(conn) -> dict[str, int]:
 
 @app.route("/")
 def index():
-    """Dashboard home page."""
+    """Today dashboard — new default landing page."""
+    return render_template("today.html", now=datetime.now())
+
+
+@app.route("/overview")
+def overview_page():
+    """Command Center overview (legacy reporting view)."""
     with connect() as conn:
-        # Get status counts (kept for downstream consumers / per-stage panels)
         status_counts = {}
         for st in JobStatus:
             cur = conn.execute("SELECT COUNT(*) FROM seen_jobs WHERE status = ?", (st.value,))
             status_counts[st.value] = cur.fetchone()[0]
 
-        # Get total jobs
         cur = conn.execute("SELECT COUNT(*) FROM seen_jobs")
         total_jobs = cur.fetchone()[0]
 
-        # Total run count for the panel-header badge.
         total_runs = conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
 
-        # Get recent runs
         cur = conn.execute(
             """
             SELECT id, started_at, n_fetched, n_new, n_generated, n_applied, n_errors
