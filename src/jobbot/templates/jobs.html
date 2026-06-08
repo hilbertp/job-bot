@@ -358,6 +358,7 @@
         <option value="best_score">Best score</option>
         <option value="base_score">Base score</option>
         <option value="delta">Score delta</option>
+        <option value="newest">Newest first</option>
         <option value="date">Posted date</option>
         <option value="title">Title</option>
         <option value="company">Company</option>
@@ -559,6 +560,10 @@ function sortJobs(jobs) {
                 break;
             case 'delta':
                 va = a.score_delta ?? 0; vb = b.score_delta ?? 0;
+                break;
+            case 'newest':
+                va = Date.parse(a.first_seen_at) || 0;
+                vb = Date.parse(b.first_seen_at) || 0;
                 break;
             case 'date':
                 va = Date.parse(a.first_seen_at) || 0;
