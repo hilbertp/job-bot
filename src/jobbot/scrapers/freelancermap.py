@@ -19,12 +19,10 @@ from .base import BaseScraper, SearchQuery, stable_id
 
 log = structlog.get_logger()
 
-# freelancermap's public board search is a JS/auth-walled React app: the
-# server-rendered projektboerse.html ignores the `query` param and returns
-# an unfiltered firehose of every trade (construction, SAP, sales, ...).
-# Since we can't filter server-side without an API key, we gate to product
-# roles by TITLE here so only Product Owner / Product Manager freelance
-# projects enter the funnel. EN + DE variants.
+# /projekte honours ?query= server-side, but result pages still mix in
+# off-target trades, so we additionally gate to product roles by TITLE:
+# only Product Owner / Product Manager freelance projects enter the
+# funnel. EN + DE variants.
 _PRODUCT_TITLE_RE = re.compile(
     r"\b("
     r"product\s*owner|product\s*manager|product\s*lead|"
@@ -56,7 +54,10 @@ class FreelancermapScraper(BaseScraper):
         params: dict = {"query": kw}
         if query.get("remote"):
             params["remoteInPercent"] = "100"
-        url = f"{BASE}/projektboerse.html?{urlencode(params)}"
+        # projektboerse.html 301-redirects to /projekte and DROPS the query
+        # param, so the old URL silently served the unfiltered firehose.
+        # /projekte honours ?query= server-side (confirmed 2026-06-09).
+        url = f"{BASE}/projekte?{urlencode(params)}"
 
         try:
             r = httpx.get(url, headers=_HEADERS, timeout=20, follow_redirects=True)
