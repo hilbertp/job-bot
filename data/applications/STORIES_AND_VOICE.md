@@ -1,48 +1,63 @@
 # Stories & Voice
 
-Last updated: 2026-06-11. Quotes are verbatim from Philipp unless marked otherwise.
+Last updated: 2026-06-11 (phase 2: transcript mining complete). Quotes verbatim from Philipp unless marked.
 
 ## Hard document rules (zero tolerance)
 
-1. **No Lovable URLs ever** (`*.lovable.app`, `*.lovable.dev`) in any document, footer, link. Scan every source for `lovable` before rendering. (The tool name "Lovable" in an AI-skills list is allowed.) Canonical site citation: **www.true-north.berlin** (always with www).
-2. **Contact line everywhere:** `hilbert@true-north.berlin · +357 94101644 · www.true-north.berlin`. Never projuncta.com.
-3. **No em-dashes** in any generated artefact (AI tell). Use colons, commas, parentheses. En-dash in year ranges (2013–2018) is fine.
-4. **Dates:** English docs "11 June 2026" (he hated "1. Mai 2026" in an English letter: "why would you enumerate a month looking like first of may?"). German docs use German format "Berlin, 11. Juni 2026".
-5. German proper nouns with correct umlauts (Bundesagentur für Arbeit, Technische Universität Berlin), "Rohde & Schwarz" with ampersand, "Diplom-Wirtschaftsingenieur" with hyphen.
-6. Verify rendered PDFs: extract text (whitespace-normalized; the domain line-wraps) and check key strings landed.
+1. **No Lovable URLs ever** (`*.lovable.app`, `*.lovable.dev`) in any document, footer, link. Scan every source for `lovable` before rendering. The tool name "Lovable" in an AI-skills list is allowed. Canonical site citation: **www.true-north.berlin** (always with www). Origin: "there must never be lovable links at the bottom or anywhere else" / "all documents must have www.true-north.berlin with www".
+2. **Contact line everywhere:** `hilbert@true-north.berlin · +357 94101644 · www.true-north.berlin`. Never projuncta.com (see APPLICATIONS.md dirty-CV audit).
+3. **No em-dashes** in any generated artefact (AI tell). Origin: "you have to remove all mdashes from all application package and save to memory to nevr use them" (the sweep hit 333 output files). En-dash in year ranges is fine.
+4. **Dates:** English docs "11 June 2026" ("youre 1. Mai 2026 is badly done, why would you enumerate a month looking like first of may?"). German docs: "Berlin, 11. Juni 2026".
+5. German proper nouns with umlauts; "Rohde & Schwarz" with ampersand; "Diplom-Wirtschaftsingenieur" with hyphen. NEVER "Master of Science" (a packmatic CV mistakenly claimed this).
+6. AI tools in documents: say just "GPT", never a version number ("remove gpt 4o everywhere... version errelevant, just GPT").
+7. **Design reference:** `opus CV.pdf` in Dropbox `000 True North/Bewerbungen` is "the design king reference"; "use this for all tailored CVs and CLs". Application documents archive lives in that Dropbox folder.
+8. Verify rendered PDFs by extracting text (whitespace-normalized) and checking key strings.
 
 ## Voice & style preferences
 
-- Human, direct, confident; no formulaic AI phrasing ("I am excited", "passionate", "delve", "X is, at its core, a Y problem" openers). He asked to "rewrite the whole paragraph to make it more in my style and with human language".
-- Honesty over bluffing: he volunteered "i never used it :(" about Chili Piper's product rather than fake familiarity; cover letters may name a gap in one sentence and counter it (Otark PPA gap, Computer Futures retail-banking depth).
-- Vary phrasing across documents; never recycle the same sentence into CV, CL, and email (template tell).
-- Lead with the strongest concrete hook (a shipped product, an exact-title match, a named acquirer), not with adjectives.
-- His own brand-copy taste (Cloud9 brand guide): short, clear, friendly, confident, relaxed, slightly atmospheric; no hard selling, no exaggerated luxury claims, no formal stiffness.
-- Working style he expects from the assistant: score + package + drop to Downloads is ONE operation, unprompted ("why do i have to ask so many times for this"); tailored scores always computed, never blank ("SCOREEEEE!!!!!"); mark expired listings yourself immediately.
+- "rewerite the hole parapgraph to make it more in my style and with human language": plain, human, direct; away from polished AI cadence. No "excited/passionate/delve", no "X is, at its core, a Y problem" openers.
+- **Founder-first framing:** "highlight my foudner an startup experience in the CV and CL clearly" and "why dont you highlight more founder and startup experience in my cover ltter?". Kvitt/Qcrypt/Smart Soil (and now Cloud9) belong front and center, CLINET counts as startup experience too ("clinet was also a startup i worked for").
+- Honesty over hype (his PRD principle verbatim: "Honesty over hype. Fit and gaps are shown plainly. No inflated 'match' language."). He volunteered "i never used it :(" rather than bluffing.
+- Vary phrasing across documents; never recycle sentences verbatim between CV/CL/email.
+- Workflow expectations: score + package + Downloads = ONE operation ("why do i have to ask so many times for this"); tailored scores never blank ("SCOREEEEEE!!!!!!!"); single merged PDF ("one application packages with CL and CL together in one pdf"); availability is always ASAP; mark expired listings proactively ("always mark expired ion the future yourself!").
+- Pushback calibration: don't invent keyword gaps. Hygraph verbatim: "PIM i understand the rest is such bullshit requirements and callign it a gap is LAUGHABLE."
 
-## Story bank (screeners & interviews)
+## Screener answer bank
 
-- **OpenShift blocker (R&S):** personally root-caused and fixed an infrastructure blocker engineering had not cracked in over a year; deployment times days → 20-40 minutes. Use for: bias-to-action, technical depth, "tell me about a hard problem".
-- **17-person restructure (EMIL):** split a bloated 17-person team into effective Scrum units, restored velocity and rebuilt client trust in a prototype-stage environment through structured communication and weekly product workshops. Use for: fragmented ownership, turnaround, stakeholder trust.
-- **Customer-vs-acceptance tradeoff story:** raw material given for Chili Piper ("risk losing customer vs risk of losing hold of acceptance"); verbatim wording pending transcript re-extraction (see APPLICATIONS.md TODO). Use for: hard prioritisation calls.
-- **Rohde & Schwarz customer interaction / error-proneness story:** raw material given for an AI-evaluation answer; verbatim pending re-extraction.
-- **LLM bounds insight (his words):** "when standard workflows arent reliably rigid enough even the frontier models todax struggle with staying in bounds or even progressing at all" — polished version used in Riverty CL; use for conversational-AI/agent roles and any compliance-meets-AI discussion.
-- **Founder empathy for debt/payments:** built a payments company, eight years CFO handling receivables and payment plans; knows what has to balance when account/booking data moves (used in HCL DWH and Riverty CLs).
-- **Anamnesis exact-match (CLINET):** "a platform for digital anamnesis processes is exactly the product I already built" plus CGM interface implemented and custom health offers on anonymized patient data (used in ISO healthcare CL).
-- **Grenzpreis reconstruction (Studienarbeit + HyperMVP):** reconstructed market information the ÜNB don't publish, twice, ten years apart (used in 50Hertz email; full numbers in PROFILE.md).
+### Chili Piper (PM, R&D, remote; applied at score 88; comp stated 125000 USD)
 
-## Interview/recruiter events log
+- **CRM/MAP question (his words, as submitted):** "Hubspot, Setup and Installation are usually only doable with coaching/consulting, company needs to adapt more to the CRM than the CRM adapts to them"
+- **Difficult-tradeoff question, RAW INPUT (INTERNAL ONLY, never reuse verbatim):** "tradeoff: risk losing custeomer vs risk of losing hold of acceptence by my own managment. at emil i had to try and keep a customers happy enough not to sue us even though al we did is talk to him and pretend we where progressing with his problems while we fully served entirely diffrentet customers first. we needed to make that decsion since we were overworked and undercapacitated. the cat and mouse game wasted some time but we achieve keeping him until we finally after 8 months coudl find space for his requests in the engineering team." The submitted answer was a diplomatically polished rewrite (overloaded roadmap, structured communication, customer retained until capacity freed after 8 months).
+- **AI-investment question, his 3 criteria:** "how critical is correctness, how repetitive and heavy on quantity is it and how important is personal relationship building with the customers". Near-final draft framework: (1) correctness criticality defines human-fallback share, (2) repetition/volume is where AI earns its keep (routing, classification, summarisation, first drafts), (3) relationship dependence: AI replacing a valued human touchpoint erodes trust, AI removing unvalued friction is a pure win. R&S example: dataset quality filtering (high volume, high error cost, no relationship dimension) with audit trails baked in from day one. His closing line: "when standard workflows arent reliably rigid enough even the frontier models todax struggle with staying in bounds or even progressing at all. web interface and browser automation are still weak."
+- **R&S auditability story (raw):** "at rohde where we had like custoemr interaction and lots of error proneness, we needed to mitigate this with an entire time to make it auditable with full provenance. actually it was even two teams. this highlight the overhead of keeping AI aligned and surbveyable and transparent end to end" (one, actually two, teams dedicated to AI auditability = the overhead of keeping AI aligned and surveyable).
+- **Used Chili Piper before?** "i never used it :(" (answered honestly).
 
-- **ZABEL (Constantin Clodius, DataOps PO mandate):** recruiter call prep done in German; salary gap flagged (role 85-100k vs 125k floor). Status: briefed, scheduling offered for two slots (2026-06).
-- **Veronika / Computer Futures:** Freelance PM Retail Banking, Frankfurt-adjacent; CL sent 4 June with honest fit caveat. The same mandate appeared publicly on freelancermap (apply direct next time to skip agency margin).
-- **GTO Wizard:** applied (CDP/Brave flow beat their custom drag-the-animal CAPTCHA), scored 78/97, status: rejected.
-- **HCL Tech (Frankfurt DWH PM):** recruiter email answered with details block; salary countered 110k → 125k.
-- **Sarah König / Riverty** named recruiting contact for PM Conversational AI (applied via SuccessFactors).
-- **Katharina Haß / 50Hertz HR** for SCADA PO (Job-ID 10847); supplementary Studienarbeit email sent to work@50hertz.com.
+### ApprovalMax (UK, comp offered 107k GBP after "is 125000 GBP viable?")
 
-## TODO (extend when retry extraction lands)
+- **Q: AI use cases in SaaS + customer trust.** Approved answer anchored on R&S: sceptical defence users structurally like accountants; pick use cases by biggest workflow risk, not most exciting capability; n8n/Manus/Lovable/Claude Code as explicitly non-deterministic 10x discovery tools, engineering then ships deterministic production MVPs; Matomo instrumentation reviewed every morning; trust pattern = every AI action exposes input, reasoning, and one-click override; advisory→default-on only when override rate stabilises low. "The trust narrative is built into the feature surface, not pasted on as marketing copy."
+- **Q: product analytics decision.** Approved answer: EMIL Claims Center, built 0→1 "with no spec and no internal precedent"; discovery with one pilot customer's claim specialists; Matomo events/funnels; "Churn rate at each step of the claim-handling flow was the primary metric"; deprioritised unused flows, "shipped a focused module rather than a wide one". Tools: Matomo, Figma, Jira/Confluence.
+- Raw inputs behind it: "at emil i didnt make an approval decision. i made a claim module 0 to 1 with zero guidance from management..." and "matomo integrated to track user actions on the web UI, churn rate was the most important metric we tracked."
 
-- Verbatim Chili Piper screener answers (full Q&A set).
-- Verbatim tradeoff + Rohde stories.
-- ZABEL briefing content + exact scheduling outcome.
-- Older packages' angles (jetbrains, tibber, charles, nooxit, envisio, flix, revizto, merantix, delivery_hero, ratbacher, hannover, scalable, chili_piper, olly_olly, opus, xpate...) and the dirty-CV audit (projuncta/lovable check per PDF).
+### Other screeners encountered
+
+- OP Labs (Optimism, Sr PM Fintechs & Exchanges): "why are you interested in optimism?" + crypto-involvement/talents/favorite-book question. Applied/done.
+- Symbiotic (PM Ecosystem): "Why are you interested in working at Symbiotic?". Done.
+- GTO Wizard package angle: **semi-professional poker player** (PokerStrategy, PokerTracker, Hold'em Manager) + AI-native delivery; rejected after applying.
+
+## Recruiter & interview log
+
+- **ZABEL / Constantin Clodius** (Consultant, Zabel GmbH, Friedrichstraße 68, 10117 Berlin; c.clodius@zabelglobal.com; +49 1703660753; www.zabelglobal.com). Applied via email with application_zabel.pdf; he replied inviting a 45-min Google Meet; Philipp offered two slots (around 26 May); role = DataOps Product Owner, offered 85-100k vs 125k floor (flagged in German briefing).
+- **Daniel Jahn / Digital Eleven** (dfj@digitaleleven.de, +49 175 484 5504): Project Q. PMM role scored 38, (Sr.) PM scored 78; German email replies dictated; Qcrypt 3-layer correction originated here ("i do have hardware experienced with integrated software hardware solutions at qcrypt, shipping a b2b encryption device that installs in less than 2min setup time" + TRNG/Linux-OTP/server-relay detail).
+- **Veronika Igic / Computer Futures** (v.igic@computerfutures.at): freelance PM Retail Banking, Frankfurt + remote, 3 months; honest payments-not-retail caveat in CL; same mandate later seen on freelancermap (apply direct next time).
+- **Sarah König / Riverty**, **Katharina Haß / 50Hertz** (work@50hertz.com; do NOT use sbv@50hertz.com, that's the disability representative), **Leona Günther + Tomasz Login / ISO Recruiting**, **Kristin Zwicker / CIMPCO**, **Benjamin Knodt / TEKsystems**, **Pia Fuchs / hannover.de** (fuchs@hannover.de), **t.ade@ratbacher.com / Ratbacher**, **Sabrina Rösch / Breuninger**, **Louis (recruiter) + Etienne (CEO) / autarc**.
+- **Rejections:** HERO Software (verbatim reason: "Leider weicht Deine Gehaltsvorstellung von unseren derzeitigen Budgetmöglichkeiten für die Position ab."), GTO Wizard (rejected after full apply incl. CAPTCHA saga + 6666-salary bug, later corrected to 125k standard).
+- **Process lessons:** ETERNO refused email applications for data-compliance reasons → career-portal submission is the safe channel. Consensys/MetaMask expired between scoring and applying → origin of listing_expired status. Accesa expired (user spotted it first). Galvany finished manually after auto-fill gaps.
+
+## Skip log (deliberate non-applications, with reasons)
+
+- ChefsList: "sounds like a skip" (after review).
+- Hygraph: keyword-gap analysis rejected as theater; only PIM conceded as real gap.
+- IXOPAY Munich: salary from 75k, below floor.
+- SAP IDM/Cloud Identity mandate (2026-06-11): no SAP anywhere, scored 35/48, skipped.
+- Batch dismissal: "none of it is a real fit because of salary and on site".
+- Girocard 3-month agency variant: skipped in favour of the 6-month variant (one agency per end-mandate).
