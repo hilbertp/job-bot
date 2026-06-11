@@ -23,7 +23,47 @@ package built, appended in the same turn the package lands in ~/Downloads.
 | (sent via email) | cl_computerfutures_letter.md, cl_computerfutures_cv.md | EN | Freelance PM Retail Banking via Veronika/Computer Futures; honest "payments not retail-breadth" caveat | rate "welcome a conversation" | 2026-06-04 |
 | (not packaged) | cl_visable.md + visable_cv.md | EN | Senior PM B2B Marketplace Connections; connection/integration thesis | 4 weeks notice | 2026-06-04 |
 | (not packaged) | cl_mitek.md | EN | PO ML Identity & Fraud; Qcrypt + Bundesdruckerei identity angle | 4 weeks notice | 2026-06-04 |
-| Pre-2026-06-08 batch (jetbrains, tibber, scalable_capital, chili_piper, olly_olly, charles, nooxit, envisio, flix, revizto, merantix, delivery_hero, ratbacher, hannoverde, congrify-old, packmatic, opus, xpate, ...) | sources lost (/tmp wiped); PDFs in Downloads | mixed | Angles pending PDF re-extraction; AUDIT projuncta/lovable contamination for packages built before the 2026-06-08 clean-CV rebuild | mixed | 2026-05/06 |
+| application_1komma5.pdf | (PDF only) | EN | 1KOMMA5° PM Energy: Smart Soil sustainability founder + energy interest; open to Hamburg | none, 4 wks | 2026-06-08 |
+| application_adsquare.pdf | (PDF only) | EN | PO Data & Integrations: integrations career core (CLINET/EMIL/R&S) | none, 4 wks | 2026-06-08 |
+| application_jetbrains.pdf | (PDF only) | EN | PM Dev Tools: builder-and-user, Kotlin/JVM at FCAS, own agent frameworks | none, 4 wks | 2026-06-08 |
+| application_legartis.pdf | (PDF only) | EN | PM Legal AI: ExplainableAI/SafeAI trust bar; document-heavy regulated delivery | none, 4 wks | 2026-06-08 |
+| application_mamahealth.pdf | (PDF only) | EN | Senior PM patient community: CLINET + BA community + Bundesdruckerei | none, 4 wks | 2026-06-08 |
+| application_solactive.pdf | (PDF only) | EN | PM Financial Market Data: 8y market microstructure + provenance pipelines | none, 4 wks, Frankfurt travel OK | 2026-06-08 |
+| application_tibber.pdf | (PDF only) | EN | PM Energy & Markets: market-microstructure instinct, dynamic pricing | none, 4 wks | 2026-06-08 |
+| application_wemolo.pdf | (PDF only) | EN | PM IoT: Qcrypt shipped-hardware angle ("Most PMs never shipped a physical device"); Munich relocation offered | none, 4 wks | 2026-06-08 |
+| application_zabel.pdf | (PDF only) | EN | PO DataOps (regulated finance): BA ETL + ITSO compliance; sent to c.clodius@zabelglobal.com, led to interview invite | none | 2026-06-02 |
+| application_retail_banking_freelance.pdf | cl_computerfutures_*.md | EN | via Veronika Igic; honest payments-vs-retail caveat | rate deferred | 2026-06-04 |
+| application_chili_piper.pdf | (PDF only) | EN | Senior PM B2B SaaS; score 88; APPLIED with 6 screener answers (see STORIES_AND_VOICE.md); Lovable tool-mention only | 125000 USD | 2026-06-02 |
+| application_hannoverde_internet_gm.pdf | (PDF only) | EN | Platform PO civic CMS, to Pia Fuchs (note: EN letter to German municipal employer); Lovable tool-mention | none | 2026-06-02 |
+| application_olly_olly.pdf | (PDF only) | EN | PM execution-first; AI toolbelt; Lovable tool-mention | none | 2026-06-02 |
+| application_ratbacher_gmbh.pdf | (PDF only) | EN | AI-native PO via Ratbacher (t.ade@ratbacher.com); Lovable tool-mention | none | 2026-06-02 |
+| application_robots_and_pencils.pdf | (PDF only) | EN | Embedded PM AI Pod; "no handoffs" R&S story; Lovable tool-mention | none | 2026-06-02 |
+| application_rulemapping_group.pdf | (PDF only) | EN | PO rule-driven regulated platforms; governance-to-backlog angle | none, 4 wks | 2026-06-02 |
+| application_instaffo_gmbh.pdf | (PDF only) | EN | Growth PM (asellerate via Instaffo); CV says "AOK (via projuncta)" brand mention | none, 4 wks | 2026-06-02 |
+| application_package*.pdf (ETERNO, GTO Wizard x2, procilon x2, xpate) | (PDF only) | EN | 2026-05 era full packages; GTO = semi-pro poker angle; procilon = honest eIDAS-gap framing; package_proc.pdf has localhost print artifacts (UNSENDABLE); Lovable tool-mentions | none | 2026-05 |
+| cv/cover_letter packmatic.pdf | (PDF only) | EN | PO Packmatic; WARNING: CV claims "Master of Science" (wrong, it is a Diplom) and CL is dated "May 12, 2025"; fix both before any reuse | none, 4 wks | 2026-06-08 |
+| **DIRTY 2-3 June batch** (16 PDFs, see audit below) | (PDF only) | EN | buzz_solutions, charles, chefslist, cresta, delivery_hero, envisio, epilot, flix, general, infront, ixopay, merantix, nooxit, revizto, scalable_capital, shyftplan | none, 4 wks | 2026-06-02/03 |
+
+## ⚠️ Dirty-CV audit (completed 2026-06-11, all 55 Downloads PDFs scanned)
+
+**16 packages from 2-3 June 2026 contain the old dirty CV** (cover letter clean, but the attached
+"CURRICULUM VITAE PRODUCT MANAGER" carries `philipp@projuncta.com`, `true-north-cy.lovable.app`,
+and `lovable.dev/projects/...` print URLs):
+buzz_solutions, charles, chefslist, cresta, delivery_hero, envisio, epilot, flix, **general**,
+infront, ixopay, merantix, nooxit, revizto, scalable_capital, shyftplan.
+Several were sent before the 2026-06-08 clean rebuild and cannot be unsent. NEVER reuse these
+PDFs; `application_general.pdf` is the highest reuse risk (generic package). If any of these
+companies re-engage, render a fresh clean package first.
+
+**Minor flags (tool-mention only, acceptable):** chili_piper, hannoverde, olly_olly, otark,
+ratbacher, robots_and_pencils, application_package* files, cv packmatic ("Lovable" listed as a
+prototyping tool; no URLs).
+
+**Quality bugs:** application_package_proc.pdf has 127.0.0.1:5001 print headers and an ALL-CAPS
+paragraph (unsendable); cover_letter packmatic.pdf misdated "May 12, 2025"; cv packmatic.pdf
+claims "Master of Science" instead of Diplom-Wirtschaftsingenieur.
+
+**Clean (26):** everything rendered 8-11 June 2026 with the rebuilt CV.
 
 ## Channel & etiquette notes
 

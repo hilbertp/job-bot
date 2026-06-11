@@ -38,15 +38,33 @@ Works **8-10 hours/day** with Claude Code, Codex, Cursor, GitHub Copilot, Claude
 
 ## Web3 / DeFi
 
-Eight years hands-on practitioner: hot/cold wallets, DEXes + aggregators, perpetuals, cross-chain bridging, liquidity provision; CEX mechanics, AMMs, concentrated liquidity, margin/funding/liquidation models, bridge risk, oracle pricing. Use for trading/settlement credibility; CUT the standalone section for conservative German corporates (banking DWH, TSO) where it reads risk-affine.
+Eight years hands-on practitioner: hot/cold wallets, DEXes + aggregators, perpetuals, cross-chain bridging, liquidity provision; CEX mechanics, AMMs, concentrated liquidity, margin/funding/liquidation models, bridge risk, oracle pricing. Side project: self-built crypto backtest engine (Hyperliquid/Jupiter/1inch) plus a self-hosted agentic dev framework for crypto research. Use for trading/settlement credibility; CUT the standalone section for conservative German corporates (banking DWH, TSO) where it reads risk-affine.
 
-## Constraints & conditions
+## Side facts & misc assets
 
-- **Permanent salary floor: 125k EUR** (countered HCL's 110k float with 125k).
-- **Freelance rate precedent: 80 EUR/h all-in** (set 2026-06-11 for healthcare proxy-PO and girocard PO; my market read was 95-110, he priced to win the screen).
-- Remote strongly preferred; `on_site_ok: false` in profile.yaml BUT willing to relocate/commute for the right role (AllUnity Frankfurt, 50Hertz Berlin onsite share, HCL Frankfurt hybrid all accepted).
+- **Semi-professional poker player** (PokerStrategy, PokerTracker, Hold'em Manager) — the GTO Wizard application angle; reusable for gaming/probability/decision-under-uncertainty roles.
+- Online-marketing hands-on: Google lead campaigns (stated to Digital Eleven), Google Ads + Consent Mode v2 + conversion tracking in production (Cloud9); evaluates marketing through Dan Kennedy's Magnetic Marketing lens.
+- CV tool lists historically include II-Agent, Antigravity, n8n, Manus, Lovable, Framer; a "CV Suri Ventures" variant exists in data/corpus/cvs/.
+- Application document archive: Dropbox `000 True North/Bewerbungen`; `opus CV.pdf` there is the design reference ("design king").
+- Landlord: 76 sqm Berlin penthouse (5th floor, listed on ImmoScout24, available from 1 June 2026).
+- Physically in Limassol (Cyprus) periodically; construct8 diligence done on the ground; his key insight: the venture needs native Cypriot connections ("meson"), his local network is Russian-speaking.
+- Sought human CV review on r/EngineeringResumes (blocked by flair requirements).
+
+## Salary & rate doctrine (his rules, verbatim where quoted)
+
+- **Permanent anchor: 125k EUR/year.** "for any future application take 125k per year okay?" Rule: "if they provide one themselve, use the lower end. if they dont provide apply with 125k."
+- **Hard floor: filter out sub-90k** ("absolutely LAUGHABLE for a strong international PM"). Profile range recorded as 125k-170k.
+- **Currency calibration:** UK = 107k GBP (ApprovalMax precedent after "is 125000 GBP viable?"); German Mittelstand calibrated down case-by-case (procilon at 105k); USD roles 125000 USD (Chili Piper).
+- **Freelance: 80 EUR/h all-in, remote** ("then use freelancermap as PO freelance position only. thats fine at 80 EUR per hour remote!"; reaffirmed "offer me for 80 EUR allin"). freelancermap is for freelance PO gigs only.
+- **Availability: always ASAP** ("enter asap availability always").
+- **Apply threshold: tailored score 80+ triggers package creation** ("if higher than 80, create application package").
+
+## Other constraints
+
+- Remote strongly preferred (remote or Berlin/Munich per his PRD); willing to relocate/commute for the right role (AllUnity Frankfurt, 50Hertz Berlin onsite share, HCL Frankfurt hybrid, Wemolo Munich, autarc Berlin-Mitte hybrid all accepted).
 - Available at short notice (between engagements since R&S ended 2025; gap covered on CVs by "True North · Independent Product & Delivery Consultant, 2025-present").
-- Scalable Capital blocker: TU Berlin Diplom-Urkunde not digitised (their form demands a degree certificate scan).
+- **He owns no degree certificate at all** ("never has anybody EVER asked for it... i dont own one") — any portal demanding a Urkunde scan (Scalable Capital) is blocked, period.
+- Email applications can bounce on data-compliance grounds (ETERNO precedent): prefer career-portal submission.
 
 ## The 13-years framing rule (verified by adversarial review)
 
