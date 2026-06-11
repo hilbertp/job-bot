@@ -1,0 +1,15 @@
+Betreff: Job-ID 10847 | Ergänzung zur Bewerbung Philipp Hilbert: Regelleistungsmarkt-Erfahrung (Studienarbeit mit Siemens Energy + aktuelles aFRR-Projekt)
+
+Sehr geehrte Frau Haß, sehr geehrtes MCCS-Team,
+
+ich habe mich auf die Position Product Owner SCADA Engineering Platform (Job-ID 10847) beworben. Zwei Punkte passen in kein Lebenslauf-Feld, sind aber für MCCS zu relevant, um sie unerwähnt zu lassen: Ich habe den deutschen Regelleistungsmarkt zweimal modelliert. Einmal wissenschaftlich, einmal als aktuelles Software-Projekt.
+
+Meine Studienarbeit an der TU Berlin, angefertigt in Zusammenarbeit mit dem Energy Service der Siemens AG, behandelte die Regelarten PRL, SRL und MRL mit ihren Reaktions- und Erbringungszeiten und modellierte den Sekundärregelmarkt im Detail: das zweistufige wöchentliche Ausschreibungsverfahren über Leistungs- und Arbeitspreis sowie die Abruf-Merit-Order. Auch die Kernanteilsregelung in der 50Hertz-Regelzone kam vor: Die regionale Bevorzugung habe ich in meinen Durchschnittsanalysen explizit herausgerechnet, um unverzerrte Marktpreise zu erhalten. Der Kern der Arbeit war selbst programmiert: Ich habe 131 wöchentliche Merit-Order-Listen von regelleistung.net (Mitte 2011 bis Ende 2013) mit eigenem Code eingelesen, bereinigt und sortiert und daraus für rund 41.900 Viertelstunden-Intervalle den Grenzarbeitspreis rekonstruiert, also den Preis, bis zu dem die Merit-Order je Intervall tatsächlich abgerufen wurde: eine Größe, die die ÜNB nicht direkt veröffentlichen. Darauf aufbauend habe ich eine empirische Abruffunktion programmiert, die jedem Arbeitspreis seine erwartete wöchentliche Abrufhäufigkeit zuordnet. Damit ließ sich der umsatzoptimale Arbeitspreis eines Gasturbinenbetreibers bestimmen (2013: minus 29 EUR/MWh) und erklären, warum die günstigsten Gebote im Markt bei etwa minus 37 EUR/MWh clustern: Unterhalb von rund 45 Prozent Anlagenlast übersteigt die Arbeitspreiszahlung die Gasersparnis.
+
+Das ist keine zwölf Jahre alte Erinnerung, sondern gelebte Praxis: In einem aktuellen privaten Projekt verarbeite ich mit einer selbst gebauten Python-Pipeline (DuckDB, Polars) die Daten des heutigen aFRR-Markts: Gebotslisten von regelleistung.net in 4-Stunden-Scheiben, Abrufdeltas von netztransparenz.de im Viertelstundenraster, idempotente Re-Importe für Datenkorrekturen. Eine Merit-Order-Engine rekonstruiert daraus Grenzpreise je Intervall, und zwar gezielt für die negative aFRR in der 50Hertz-Regelzone. Ziel ist die wirtschaftliche Bewertung netzdienlicher Flexibilität, etwa durch Elektrolyse oder flexible Rechenlast.
+
+Für die ausgeschriebene Rolle heißt das: Ich bringe nicht nur Product Ownership für Daten- und Streaming-Plattformen mit, sondern ein gewachsenes und aktuell gehaltenes Verständnis der Domäne, die MCCS bedient: Regelleistungsmechanik, Merit-Order-Abrufe und der wirtschaftliche Wert von Datenqualität bei Realtime-Netzdaten. Über ein Gespräch dazu freue ich mich sehr.
+
+Mit freundlichen Grüßen
+Philipp Hilbert
+hilbert@true-north.berlin · +357 94101644 · www.true-north.berlin
