@@ -6,7 +6,7 @@ Last updated: 2026-06-11. Extend immediately when new facts surface.
 
 Philipp Hilbert · Berlin, Germany · hilbert@true-north.berlin · +357 94101644 · www.true-north.berlin
 LinkedIn: linkedin.com/in/philipp-hilbert-34032275 · GitHub: github.com/hilbertp
-German native, English C2. Phone is Cypriot; business interests in Cyprus (construct8, Cloud9 Limassol); applications present Berlin as base.
+German native, English C2 — confirmed complete 2026-06-12 ("only en and german"), never list other languages. Phone is Cypriot; business interests in Cyprus (construct8, Cloud9 Limassol); applications present Berlin as base.
 
 ## Ventures (founder track record)
 
@@ -70,8 +70,8 @@ Eight years hands-on practitioner: hot/cold wallets, DEXes + aggregators, perpet
 ## Open conflicts to resolve with Philipp (do not propagate either side until confirmed)
 
 1. ~~R&S CI/CD~~ RESOLVED (2026-06-12, from Philipp): **R&S = ArgoCD** (GitOps, with Argo Workflows); **Jenkins was at the Bundesagentur für Arbeit**. Never claim GitLab or Jenkins at R&S.
-2. EMIL stack: Java (0G CV) vs Python (Suri CV)?
-3. Smart Soil: co-founder since 2016 (KB) vs phase-titles with co-founder only from 2021 (Suri CV)?
+2. ~~EMIL stack~~ RESOLVED (2026-06-12): **Java**. His caveat: "i am not the developer. so what does it matter?" — stack lines on PM CVs are context, not authorship claims; keep them short and never let a stack keyword carry the application.
+3. ~~Smart Soil~~ RESOLVED (2026-06-12): **Co-founder 2016-2021 is correct.** The Suri CV's phase-titles framing (co-founder only from 2021) is deprecated; do not reuse.
 4. Kvitt exit wording: canonical is "acquired and operated by Sparkasse" (singular); Suri's "an Banken verkauft" (plural) must NOT be propagated.
 5. Years framing: legacy CVs say "more than ten years product leadership"; calibrated rule is 13 years total delivery / ~7 years data-platform domain / "nearly ten" employed PM. Use the calibrated framing.
 6. PRIMARY opus CV + 0G PDF contain banned contact data (projuncta, lovable.app URL, versioned GPT names): fact sources ONLY, never copy sources.
@@ -101,5 +101,5 @@ Total career since founding Kvitt (2013) = 13 years: OK as "13 years of end-to-e
 - **No SAP anywhere** (SAP IDM / Cloud Identity Services mandates = skip; scored 35/48 on 2026-06-11).
 - **No operational PPA settlement / Bilanzkreis day-to-day** (capped Otark at 90; prep question for energy-market interviews).
 - **No shipped production chatbot/voicebot** (counter-story: the agentic job-bot infrastructure as product case study).
-- **No PM certifications** (no PMP/PRINCE2/SAFe/CSPO). Mitigation: "Methods" line listing Scrum/Kanban/hybrid delivery in regulated programmes.
+- **No PM certifications** — confirmed by Philipp 2026-06-12 ("NO CERTS"); never claim any. Mitigation: "Methods" line listing Scrum/Kanban/hybrid delivery in regulated programmes.
 - **No literal "IT Project Manager" titles recently** (PM/PO titles 2019-2025); mitigate with dual-form headline ("IT Project & Product Manager") when JD demands PM.
