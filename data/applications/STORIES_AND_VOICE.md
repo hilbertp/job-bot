@@ -62,6 +62,22 @@ Last updated: 2026-06-11 (phase 2: transcript mining complete). Quotes verbatim 
 - Batch dismissal: "none of it is a real fit because of salary and on site".
 - Girocard 3-month agency variant: skipped in favour of the 6-month variant (one agency per end-mandate).
 
+## References (verbatim, quotable — both captured 2026-06-12)
+
+### EMIL Group GmbH — Chris Maslowski, Geschäftsführer
+
+> "Ich kann Philipp wärmsten empfehlen. Philipp hat uns ca. 8 Monate als Product Owner unterstützt. Trotz des relativ komplexen Products hat sich Philipp extrem schnell eingearbeitet und hat sich innerhalb kürzester Zeit das notwendige Fachwissen angeeignet. Die Kommunikation mit internen Stakeholdern und auch Kunden verlief hervorragend. Philipp hat das Product Backlog vollständig gemanaged und konnte selbst bei knappsten Resourcen Zielkonflikte immer zur Zufriedenheit von allen Stakeholdern lösen. Ich kann Philipp uneingeschränkt weiterempfehlen!"
+
+Best pull-quotes: "das Product Backlog vollständig gemanaged", "Zielkonflikte immer zur Zufriedenheit von allen Stakeholdern" (bei knappsten Ressourcen), "uneingeschränkt weiterempfehlen". CEO-level reference; EMIL engagement duration: ~8 months.
+
+### ITSCare GbR — Hartmut Brand, Geschäftsführer (letter dated 31.01.2022; file: Dropbox archive Empfehlungsschreiben ITSCare.pdf, scanned)
+
+- Engagement **März 2019 bis Mai 2020** as **"Proxy Product Owner"** (the literal title, now documented third-party), Geschäftsbereich Anwendungsentwicklung, **Projekt "AMSys#neo 1.0"**, under Projektleiter Andy Saß.
+- Scope: modern webshop for internal procurement of IT services and hardware for **three regionally organised AOK organisations, ~20,000 employees total**.
+- Outcome quote: contributed so "dass heute ein sehr gut funktionierender Webshop betrieben werden kann" (still in production).
+- Soft quotes: "ausgesprochen engagiert und zuverlässig", "stets mit Ernsthaftigkeit und Kompetenz nachgekommen, ohne dabei den Humor zu verlieren", "Teamfähigkeit und freundliche Umgangsformen".
+- ITSCare = GbR of AOK Baden-Württemberg, AOK Hessen, AOK Rheinland-Pfalz/Saarland. Reference contact on letter: Gerd Peter (Gerd.Peter@itscare.de).
+
 ## Reusable quotes & method lines (mined from legacy corpus, 2026-06-12)
 
 - **R&S project-leader quote (German, verbatim, strongest third-party proof he has):** "Auf dieses Feature habe [ich] mehr als ein Jahr bei den Entwicklern gepocht und du hast es alleine innerhalb einer Woche geliefert!" Context: self-taught OpenShift, solo feature development through to release.

@@ -62,7 +62,9 @@ Eight years hands-on practitioner: hot/cold wallets, DEXes + aggregators, perpet
 - **EMIL detail:** 17-person org split into exactly 2 stable teams; senior-dev attrition went from near-total exodus to a single departure.
 - **CLINET detail:** 3-person dev team, overambitious roadmap cut to "the most important 10% of features"; stakeholders = hospital leadership and middle management. The opus CV titles this "Founding Product Owner".
 - **BA detail:** based Nürnberg; formal training on attack vectors/mitigation as deputy ITSO; IT Security Concept audited bi-annually. Stack also included JavaScript, MicroStrategy, Jenkins, Bitbucket.
-- **AOK detail:** Shopware webshop sourced IT/software material for several regions, customizable approval policies per branch. **Enercon detail:** scope included hardware racks, servers, switches, comm lines.
+- **AOK detail (per ITSCare reference letter):** engagement März 2019 bis Mai 2020 as "Proxy Product Owner", Projekt **"AMSys#neo 1.0"** (Anwendungsentwicklung, PL Andy Saß): webshop for internal IT/hardware procurement serving **three AOK organisations, ~20,000 employees**; customizable approval policies per branch; webshop still in production per the letter. **Enercon detail:** scope included hardware racks, servers, switches, comm lines.
+- **DOB: 13.11.1984** (from the ITSCare letter; for application forms that require it).
+- **EMIL duration: ~8 months** as PO (per CEO reference letter).
 - **Smart Soil phases (Suri CV):** 2016-2019 Projektmanager & Business Development (nanotech, investor relations); 2020-2021 CFO & Projektleiter (finance, HR, ERP-Einführung); 2021 Co-Founder, CDO & **Head of HR**.
 - **Additional tools claimed in legacy CVs:** Replit, Clawdbot, Kimi K2.5, Gamma.app, Helm, Terraform, Prometheus, Grafana, Docker, MicroStrategy, Jenkins, Bitbucket.
 - **Past application targets (corpus):** 0G Labs (Sr PM, Web3 AI infra), BCB Group (crypto payments PM), Fedi (Head of Product & UX, bitcoin wallet), Suri Ventures (DE freelance PO/BA, insurance + agentic AI), Upwind (cloud security PM), N26 (lending PM), opus (Founding PM, procurement AI; the PRIMARY design-reference package).
