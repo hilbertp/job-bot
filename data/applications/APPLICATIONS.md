@@ -65,6 +65,26 @@ claims "Master of Science" instead of Diplom-Wirtschaftsingenieur.
 
 **Clean (26):** everything rendered 8-11 June 2026 with the rebuilt CV.
 
+## Market signals
+
+- **2026-06-12 (Philipp):** "all projects rejecting interview. they arent really hiring" — the freelance-portal
+  mandates (freelancermap/freelance.de wave of early June) are coming back as rejections without interviews;
+  his read is that many of these agency postings are profile-harvesting, not live hiring. Implication: keep
+  freelance applications cheap (no deep custom work beyond the template library), prioritise direct-employer
+  permanent roles (50Hertz-class) and recruiter conversations that show a real mandate (named end client,
+  concrete start date, interview within days).
+
+## Open items (need Philipp or external access)
+
+- **Recommendation letters not yet mined** (Dropbox online-only files would not hydrate on 2026-06-12):
+  `~/Library/CloudStorage/Dropbox/00 projuncta/01 Bewerbungen/archive/recommendation letter ITSCare.docx`,
+  `recommendation letter Emil Group GmbH.docx`, `Empfehlungsschreiben ITSCare.pdf`, `Empfehlung Emil Group.png`.
+  Same archive also holds unmined Oct 2025 CV sources (`philipp_hilbert_cv_deutsch_okt2025.md`, english
+  variant) and older profile exports. Retry when Dropbox is syncing, or pull the copies attached to his
+  freelancermap profile via the browser.
+- Interview outcomes untracked: ZABEL/Clodius call result, Project Q/Digital Eleven follow-up, Computer
+  Futures/Veronika status.
+
 ## Channel & etiquette notes
 
 - One agency per end-mandate; if materials for two variants are demanded anyway, write fully distinct texts (girocard precedent).
