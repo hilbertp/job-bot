@@ -69,7 +69,7 @@ Eight years hands-on practitioner: hot/cold wallets, DEXes + aggregators, perpet
 
 ## Open conflicts to resolve with Philipp (do not propagate either side until confirmed)
 
-1. R&S CI/CD: KB says GitLab; opus CV says Jenkins. Which was it (or both)?
+1. ~~R&S CI/CD~~ RESOLVED (2026-06-12, from Philipp): **R&S = ArgoCD** (GitOps, with Argo Workflows); **Jenkins was at the Bundesagentur für Arbeit**. Never claim GitLab or Jenkins at R&S.
 2. EMIL stack: Java (0G CV) vs Python (Suri CV)?
 3. Smart Soil: co-founder since 2016 (KB) vs phase-titles with co-founder only from 2021 (Suri CV)?
 4. Kvitt exit wording: canonical is "acquired and operated by Sparkasse" (singular); Suri's "an Banken verkauft" (plural) must NOT be propagated.

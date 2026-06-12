@@ -26,7 +26,7 @@ Senior PO for the central AI and data platform of the European FCAS defence prog
 - Resolved an OpenShift infrastructure blocker that engineering had been unable to crack in over a year
 - Drove deployment time from several days to 20-40 minutes through delivery standardisation
 
-*Kotlin (Spring Boot), Python, PostgreSQL, MongoDB, Redpanda, Kubernetes, Argo Workflows, ArgoCD, OpenShift, GitLab*
+*Kotlin (Spring Boot), Python, PostgreSQL, MongoDB, Redpanda, Kubernetes, Argo Workflows, ArgoCD, OpenShift*
 
 ### Federal Employment Agency — Product Manager, Public Data Analytics
 *2023 – 2024 · Remote*
