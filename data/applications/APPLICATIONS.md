@@ -76,12 +76,11 @@ claims "Master of Science" instead of Diplom-Wirtschaftsingenieur.
 
 ## Open items (need Philipp or external access)
 
-- **Recommendation letters not yet mined** (Dropbox online-only files would not hydrate on 2026-06-12):
-  `~/Library/CloudStorage/Dropbox/00 projuncta/01 Bewerbungen/archive/recommendation letter ITSCare.docx`,
-  `recommendation letter Emil Group GmbH.docx`, `Empfehlungsschreiben ITSCare.pdf`, `Empfehlung Emil Group.png`.
-  Same archive also holds unmined Oct 2025 CV sources (`philipp_hilbert_cv_deutsch_okt2025.md`, english
-  variant) and older profile exports. Retry when Dropbox is syncing, or pull the copies attached to his
-  freelancermap profile via the browser.
+- ~~Recommendation letters~~ DONE 2026-06-12: both captured verbatim in STORIES_AND_VOICE.md (EMIL: Chris
+  Maslowski, Geschäftsführer; ITSCare: Hartmut Brand, Geschäftsführer, dated 31.01.2022). Originals in
+  `~/Library/CloudStorage/Dropbox/00 projuncta/01 Bewerbungen/archive/` and attached to his freelancermap
+  profile. Still unmined in that archive: Oct 2025 CV sources (`philipp_hilbert_cv_deutsch_okt2025.md` +
+  english variant) and older profile exports.
 - Interview outcomes untracked: ZABEL/Clodius call result, Project Q/Digital Eleven follow-up, Computer
   Futures/Veronika status.
 
