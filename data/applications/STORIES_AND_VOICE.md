@@ -61,3 +61,12 @@ Last updated: 2026-06-11 (phase 2: transcript mining complete). Quotes verbatim 
 - SAP IDM/Cloud Identity mandate (2026-06-11): no SAP anywhere, scored 35/48, skipped.
 - Batch dismissal: "none of it is a real fit because of salary and on site".
 - Girocard 3-month agency variant: skipped in favour of the 6-month variant (one agency per end-mandate).
+
+## Reusable quotes & method lines (mined from legacy corpus, 2026-06-12)
+
+- **R&S project-leader quote (German, verbatim, strongest third-party proof he has):** "Auf dieses Feature habe [ich] mehr als ein Jahr bei den Entwicklern gepocht und du hast es alleine innerhalb einer Woche geliefert!" Context: self-taught OpenShift, solo feature development through to release.
+- **Discovery doctrine (BCB letter):** "A smart product manager has an ever ongoing core discovery team of at least himself, a product designer and the lead engineer."
+- **Metrics doctrine (BCB letter):** "Without metrics, decisions are not falsifiable!"
+- **Small-bets axiom (0G essay):** "It is a good assumption that 75% of the product decisions turn into absolutely zero revenues" (Cagan-style portfolio framing).
+- **Provenance contrast (0G essay):** defence platforms prove "it was your fault"; open AI platforms need "a maximum of transparency to enable a maximum of network effect and learning of the swarm."
+- **opus package structure (the design-king reference):** Why-them / honest framing of the gap / AI-native stack / side project / 3-week onboarding plan (Week 1 listen-map, Week 2 prototype-slice, Week 3+ ship) / CL / CV. Reuse this structure for founding-PM applications.

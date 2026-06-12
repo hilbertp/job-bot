@@ -49,6 +49,32 @@ Eight years hands-on practitioner: hot/cold wallets, DEXes + aggregators, perpet
 - Landlord: 76 sqm Berlin penthouse (5th floor, listed on ImmoScout24, available from 1 June 2026).
 - Physically in Limassol (Cyprus) periodically; construct8 diligence done on the ground; his key insight: the venture needs native Cypriot connections ("meson"), his local network is Russian-speaking.
 - Sought human CV review on r/EngineeringResumes (blocked by flair requirements).
+- **YouTube English sample** (also Qcrypt product proof): https://www.youtube.com/watch?v=nt06f71lgfE
+- Has positioned at **Head of Product** level before (FeDi/DeFi base CVs: "Head of Product and UX | 0 to 1 under ambiguity | Security vs usability").
+- Dual-location header precedent: 0G application listed "Berlin, Germany / Limassol, Cyprus".
+
+## Station details mined from legacy corpus (2026-06-12)
+
+- **Hospital Chain WiFi rollout (early career, in 5 CV variants):** supervised IT rollout equipping 9 hospitals with full WiFi coverage. Pre-dates the AOK/Enercon era; healthcare-infrastructure proof point.
+- **Liberation of Bajor** (github.com/hilbertp/liberation-of-bajor): self-built multi-agent AI orchestration over a local file queue; agents Kira (coordinator), O'Brien (implementor via Claude Code CLI) plus evaluator; 669+ commits across 298 thin slices, ADR-driven refactors, mutex-gated merges, real-time dashboard. Strongest agentic-engineering proof besides job_bot.
+- **in_vis:** founder-level structuring engagement incl. virtual stock option plan design; he personally holds VSOP options.
+- **R&S detail:** self-taught OpenShift, delivered the year-blocked feature SOLO within one week (project-leader quote in STORIES_AND_VOICE.md).
+- **EMIL detail:** 17-person org split into exactly 2 stable teams; senior-dev attrition went from near-total exodus to a single departure.
+- **CLINET detail:** 3-person dev team, overambitious roadmap cut to "the most important 10% of features"; stakeholders = hospital leadership and middle management. The opus CV titles this "Founding Product Owner".
+- **BA detail:** based Nürnberg; formal training on attack vectors/mitigation as deputy ITSO; IT Security Concept audited bi-annually. Stack also included JavaScript, MicroStrategy, Jenkins, Bitbucket.
+- **AOK detail:** Shopware webshop sourced IT/software material for several regions, customizable approval policies per branch. **Enercon detail:** scope included hardware racks, servers, switches, comm lines.
+- **Smart Soil phases (Suri CV):** 2016-2019 Projektmanager & Business Development (nanotech, investor relations); 2020-2021 CFO & Projektleiter (finance, HR, ERP-Einführung); 2021 Co-Founder, CDO & **Head of HR**.
+- **Additional tools claimed in legacy CVs:** Replit, Clawdbot, Kimi K2.5, Gamma.app, Helm, Terraform, Prometheus, Grafana, Docker, MicroStrategy, Jenkins, Bitbucket.
+- **Past application targets (corpus):** 0G Labs (Sr PM, Web3 AI infra), BCB Group (crypto payments PM), Fedi (Head of Product & UX, bitcoin wallet), Suri Ventures (DE freelance PO/BA, insurance + agentic AI), Upwind (cloud security PM), N26 (lending PM), opus (Founding PM, procurement AI; the PRIMARY design-reference package).
+
+## Open conflicts to resolve with Philipp (do not propagate either side until confirmed)
+
+1. R&S CI/CD: KB says GitLab; opus CV says Jenkins. Which was it (or both)?
+2. EMIL stack: Java (0G CV) vs Python (Suri CV)?
+3. Smart Soil: co-founder since 2016 (KB) vs phase-titles with co-founder only from 2021 (Suri CV)?
+4. Kvitt exit wording: canonical is "acquired and operated by Sparkasse" (singular); Suri's "an Banken verkauft" (plural) must NOT be propagated.
+5. Years framing: legacy CVs say "more than ten years product leadership"; calibrated rule is 13 years total delivery / ~7 years data-platform domain / "nearly ten" employed PM. Use the calibrated framing.
+6. PRIMARY opus CV + 0G PDF contain banned contact data (projuncta, lovable.app URL, versioned GPT names): fact sources ONLY, never copy sources.
 
 ## Salary & rate doctrine (his rules, verbatim where quoted)
 
