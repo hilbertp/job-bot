@@ -57,6 +57,60 @@ def test_clear_site_tree_preserves_git_and_cname(tmp_path: Path):
     assert not (repo_dir / "docs").exists()
 
 
+def test_remote_url_change_reclones(tmp_path: Path):
+    remote_a = tmp_path / "a.git"
+    remote_b = tmp_path / "b.git"
+    for r in (remote_a, remote_b):
+        subprocess.run(["git", "init", "--bare", "--initial-branch=main", str(r)],
+                       check=True, capture_output=True)
+    repo_dir = tmp_path / "pages"
+
+    ensure_pages_repo(repo_dir, str(remote_a), "main")
+    (repo_dir / "index.html").write_text("site A")
+    commit_and_push(repo_dir, "main")
+
+    # Pointing publish at a different remote must not push into remote A.
+    ensure_pages_repo(repo_dir, str(remote_b), "main")
+    origin = subprocess.run(["git", "remote", "get-url", "origin"], cwd=repo_dir,
+                            capture_output=True, text=True).stdout.strip()
+    assert origin == str(remote_b)
+    assert not (repo_dir / "index.html").exists()  # fresh clone of empty B
+
+
+def test_gh_pages_branch_on_code_repo_is_orphan_site_only(tmp_path: Path):
+    # A "code repo": main branch with source files already pushed.
+    remote = _bare_remote(tmp_path)
+    seed = tmp_path / "seed"
+    subprocess.run(["git", "init", "--initial-branch=main", str(seed)],
+                   check=True, capture_output=True)
+    subprocess.run(["git", "remote", "add", "origin", str(remote)], cwd=seed,
+                   check=True, capture_output=True)
+    (seed / "src").mkdir()
+    (seed / "src" / "app.py").write_text("print('code')\n")
+    subprocess.run(["git", "add", "-A"], cwd=seed, check=True, capture_output=True)
+    subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t",
+                    "commit", "-m", "code"], cwd=seed, check=True, capture_output=True)
+    subprocess.run(["git", "push", "origin", "main"], cwd=seed,
+                   check=True, capture_output=True)
+
+    repo_dir = tmp_path / "pages"
+    ensure_pages_repo(repo_dir, str(remote), "gh-pages")
+    clear_site_tree(repo_dir)
+    (repo_dir / "index.html").write_text("<h1>site</h1>")
+    assert commit_and_push(repo_dir, "gh-pages") == "pushed"
+
+    files = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", "gh-pages"], cwd=remote,
+        capture_output=True, text=True, check=True,
+    ).stdout.split()
+    assert files == ["index.html"]  # no code files on the site branch
+    history = subprocess.run(
+        ["git", "log", "--oneline", "gh-pages"], cwd=remote,
+        capture_output=True, text=True, check=True,
+    ).stdout.strip().splitlines()
+    assert len(history) == 1  # orphan lineage, detached from code history
+
+
 def test_no_push_commits_locally_only(tmp_path: Path):
     remote = _bare_remote(tmp_path)
     repo_dir = tmp_path / "pages"

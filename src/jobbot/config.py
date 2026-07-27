@@ -109,6 +109,11 @@ class PublishConfig(BaseModel):
     min_score: int = 60
     # Only rows first seen within this many days appear on the site.
     max_age_days: int = 45
+    # When true, the site shows ONLY postings from the current (UTC) day:
+    # a row survives when its posted_at date (falling back to the day it
+    # was first scraped) equals the publish date. The daily 14:00 pass
+    # then presents a same-day-only dashboard.
+    posted_today_only: bool = False
     # Hard cap on rows in data.json / index.html, highest score first.
     max_jobs: int = 300
     # Git remote of the GitHub Pages repo (e.g. the user-site repo

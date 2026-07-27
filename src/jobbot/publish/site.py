@@ -77,9 +77,14 @@ def collect_site_jobs(
         (config.publish.min_score, cutoff, config.publish.max_jobs),
     ).fetchall()
 
+    today = now.date().isoformat()
     jobs: list[dict] = []
     for row in rows:
         payload = _raw_payload(row)
+        if config.publish.posted_today_only:
+            stamp = str(payload.get("posted_at") or row["first_seen_at"] or "")[:10]
+            if stamp != today:
+                continue
         apply_url = payload.get("apply_url") or row["url"]
         route, target = usable_apply_route(row["apply_email"], apply_url)
         jobs.append({
@@ -225,6 +230,11 @@ th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--li
 th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.7px;
   color: var(--muted); cursor: pointer; user-select: none; white-space: nowrap;
   background: var(--panel2); position: sticky; top: 0; }
+th .grip { position: absolute; top: 0; right: 0; width: 8px; height: 100%;
+  cursor: col-resize; }
+th .grip:hover, th .grip.active { background: var(--accent); opacity: 0.45; }
+table.resized { table-layout: fixed; }
+table.resized td { overflow: hidden; text-overflow: ellipsis; }
 tr:last-child td { border-bottom: none; }
 .badge { display: inline-block; min-width: 38px; text-align: center; padding: 2px 8px;
   border-radius: 999px; font-weight: 650; font-size: 13px; }
@@ -282,6 +292,39 @@ _PAGE_JS = """
         return av < bv ? -dir : av > bv ? dir : 0;
       });
       rows.forEach(function (r) { tbody.appendChild(r); });
+    });
+  });
+  // Resizable columns: drag the right edge of any header cell.
+  document.querySelectorAll('th').forEach(function (th) {
+    const grip = document.createElement('div');
+    grip.className = 'grip';
+    th.appendChild(grip);
+    grip.addEventListener('click', function (e) { e.stopPropagation(); });
+    grip.addEventListener('mousedown', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const table = th.closest('table');
+      const startX = e.pageX;
+      const startW = th.offsetWidth;
+      // Freeze current widths once, so dragging one column does not
+      // reflow the others.
+      if (!table.classList.contains('resized')) {
+        table.querySelectorAll('thead th').forEach(function (h) {
+          h.style.width = h.offsetWidth + 'px';
+        });
+        table.classList.add('resized');
+      }
+      grip.classList.add('active');
+      function move(ev) {
+        th.style.width = Math.max(48, startW + ev.pageX - startX) + 'px';
+      }
+      function up() {
+        grip.classList.remove('active');
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', up);
+      }
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', up);
     });
   });
   apply();

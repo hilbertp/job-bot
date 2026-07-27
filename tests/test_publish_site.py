@@ -63,6 +63,24 @@ def test_collect_filters_by_score_and_age(db):
     assert got[0]["location"] == "Remote, EU"
 
 
+def test_posted_today_only_filters_older_postings(db):
+    from datetime import datetime as dt
+    now = dt(2026, 7, 27, 14, 0, tzinfo=timezone.utc)
+    posted_today = _mk_job(1, posted_at=dt(2026, 7, 27, 6, 0, tzinfo=timezone.utc))
+    posted_earlier = _mk_job(2, posted_at=dt(2026, 7, 24, 6, 0, tzinfo=timezone.utc))
+    no_posted_at = _mk_job(3)  # falls back to first_seen_at (= today)
+    _seed(db, [(posted_today, 80), (posted_earlier, 90), (no_posted_at, 70)])
+    db.execute("UPDATE seen_jobs SET first_seen_at = ?",
+               (now.isoformat(),))
+
+    got = collect_site_jobs(db, _config(posted_today_only=True), now=now)
+    assert {j["id"] for j in got} == {posted_today.id, no_posted_at.id}
+
+    # Off by default: all three rows survive.
+    got_all = collect_site_jobs(db, _config(), now=now)
+    assert len(got_all) == 3
+
+
 def test_collect_orders_by_best_score(db):
     a, b = _mk_job(1), _mk_job(2)
     _seed(db, [(a, 70), (b, 75)])

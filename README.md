@@ -344,9 +344,14 @@ which is what the 14:00 LaunchAgent runs, so you can open your Pages URL every
 afternoon and see the freshly discovered matches with apply links and
 downloadable documents.
 
-Setup: create the (public) user-site repo `<user>.github.io` on GitHub, set
-`publish.pages_repo_url` to its clone URL, and run `jobbot publish` once. The
-working copy for publish commits lives in `~/.jobbot/pages-repo` by default.
+Setup: point `publish.pages_repo_url` at a public repo and run `jobbot publish`
+once. Two layouts work: a user site (`<user>.github.io` repo, `pages_branch:
+main`, served at `https://<user>.github.io/`) or a project site (the code repo
+itself with `pages_branch: gh-pages`, served at
+`https://<user>.github.io/<repo>/`; the site branch is created as an orphan so
+generated content never mixes with code history). The working copy for publish
+commits lives in `~/.jobbot/pages-repo` by default. `posted_today_only: true`
+restricts the site to postings from the publish day itself.
 Note the site is public: set `publish.include_documents: false` if the tailored
 CV / cover letter PDFs should stay off the web (the Downloads export still runs).
 

@@ -37,6 +37,17 @@ def _git(repo_dir: Path, *args: str) -> subprocess.CompletedProcess:
 
 def ensure_pages_repo(repo_dir: Path, remote_url: str, branch: str) -> None:
     """Clone the pages repo (or sync an existing working copy to origin)."""
+    if (repo_dir / ".git").is_dir():
+        # Working copy left over from a different remote (e.g. the pages
+        # target moved from the user-site repo to a gh-pages project
+        # branch): throw it away and clone fresh.
+        current = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            cwd=repo_dir, capture_output=True, text=True,
+        ).stdout.strip()
+        if current != remote_url:
+            shutil.rmtree(repo_dir)
+
     if not (repo_dir / ".git").is_dir():
         repo_dir.parent.mkdir(parents=True, exist_ok=True)
         proc = subprocess.run(
@@ -44,7 +55,8 @@ def ensure_pages_repo(repo_dir: Path, remote_url: str, branch: str) -> None:
             capture_output=True, text=True,
         )
         if proc.returncode != 0:
-            # Fresh/empty remote has no branch to clone; start one locally.
+            # The publish branch doesn't exist on the remote yet (fresh
+            # empty repo, or a code repo getting its first gh-pages).
             proc2 = subprocess.run(
                 ["git", "clone", remote_url, str(repo_dir)],
                 capture_output=True, text=True,
@@ -54,7 +66,16 @@ def ensure_pages_repo(repo_dir: Path, remote_url: str, branch: str) -> None:
                     f"git clone {remote_url} failed: {proc.stderr.strip()} / "
                     f"{proc2.stderr.strip()}"
                 )
-            _git(repo_dir, "checkout", "-B", branch)
+            has_head = subprocess.run(
+                ["git", "rev-parse", "--verify", "HEAD"],
+                cwd=repo_dir, capture_output=True, text=True,
+            ).returncode == 0
+            if has_head:
+                # Detach the site branch from the code history: an orphan
+                # branch keeps gh-pages a pure generated-content lineage.
+                _git(repo_dir, "checkout", "--orphan", branch)
+            else:
+                _git(repo_dir, "checkout", "-B", branch)
         return
 
     _git(repo_dir, "fetch", "origin")
