@@ -289,10 +289,12 @@ _PAGE_JS = """
     document.getElementById('shown-count').textContent = shown;
     const empty = document.getElementById('filter-empty');
     if (empty) empty.style.display = shown ? 'none' : '';
+    return shown;
   }
   q.addEventListener('input', apply);
   minScore.addEventListener('input', apply);
-  timeWin.addEventListener('change', apply);
+  const note = document.getElementById('timewin-note');
+  timeWin.addEventListener('change', function () { note.textContent = ''; apply(); });
   let sortState = {};
   document.querySelectorAll('th[data-sort]').forEach(function (th) {
     th.addEventListener('click', function () {
@@ -310,6 +312,21 @@ _PAGE_JS = """
       rows.forEach(function (r) { tbody.appendChild(r); });
     });
   });
+  // Start at "today", but never present an empty page when older matches
+  // exist: widen the window until something shows.
+  (function () {
+    const order = ['today', '3', '7', '30', '0'];
+    const labels = {'3': 'last 3 days', '7': 'last 7 days',
+                    '30': 'last 30 days', '0': 'any time'};
+    let i = order.indexOf(timeWin.value);
+    while (apply() === 0 && rows.length > 0 && i < order.length - 1) {
+      i += 1;
+      timeWin.value = order[i];
+    }
+    if (i > 0 && timeWin.value === order[i]) {
+      note.textContent = 'nothing posted today, widened to ' + labels[order[i]];
+    }
+  })();
   // Resizable columns: drag the right edge of any header cell.
   document.querySelectorAll('th').forEach(function (th) {
     const grip = document.createElement('div');
@@ -493,6 +510,7 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
         <option value="30">last 30 days</option>
         <option value="0">any time</option>
       </select>
+      <span id="timewin-note" class="meta"></span>
     </label>
     <label>Min score <input id="minscore" type="range" min="0" max="100"
       value="{config.publish.min_score}" step="5">
