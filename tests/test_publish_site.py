@@ -119,6 +119,9 @@ def test_build_site_writes_page_data_and_docs(db, tmp_path: Path):
     html = (site_dir / "index.html").read_text()
     assert "Acme 1" in html
     assert f"docs/{j.id}/cv.pdf" in html
+    assert 'id="timewin"' in html      # posted-time filter control
+    assert 'data-posted="' in html     # per-row stamp the filter reads
+    assert 'id="filter-empty"' in html
     assert "https://example.com/jobs/1/apply" in html
     data = json.loads((site_dir / "data.json").read_text())
     assert data["jobs"][0]["company"] == "Acme 1"

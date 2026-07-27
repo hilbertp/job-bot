@@ -222,6 +222,8 @@ a:hover { text-decoration: underline; }
   border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
   color: var(--text); font-size: 14px; }
 .controls label { color: var(--muted); font-size: 13px; }
+.controls select { padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--text); font-size: 13px; }
 .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px;
   background: var(--panel); }
 table { border-collapse: collapse; width: 100%; min-width: 980px; }
@@ -260,7 +262,18 @@ _PAGE_JS = """
   const q = document.getElementById('q');
   const minScore = document.getElementById('minscore');
   const minLabel = document.getElementById('minscore-label');
-  const rows = Array.from(document.querySelectorAll('tbody#jobs tr'));
+  const timeWin = document.getElementById('timewin');
+  const rows = Array.from(document.querySelectorAll('tbody#jobs tr[data-hay]'));
+  function inWindow(tr) {
+    const stamp = tr.getAttribute('data-posted');
+    if (!stamp) return timeWin.value === '0';
+    if (timeWin.value === 'today') {
+      return new Date(stamp + 'T00:00:00').toDateString() === new Date().toDateString();
+    }
+    const days = parseInt(timeWin.value, 10);
+    if (!days) return true;
+    return (Date.now() - Date.parse(stamp)) <= days * 864e5;
+  }
   function apply() {
     const needle = (q.value || '').toLowerCase();
     const floor = parseInt(minScore.value, 10) || 0;
@@ -269,14 +282,17 @@ _PAGE_JS = """
     rows.forEach(function (tr) {
       const hay = tr.getAttribute('data-hay');
       const best = parseInt(tr.getAttribute('data-best'), 10) || 0;
-      const ok = (!needle || hay.indexOf(needle) !== -1) && best >= floor;
+      const ok = (!needle || hay.indexOf(needle) !== -1) && best >= floor && inWindow(tr);
       tr.style.display = ok ? '' : 'none';
       if (ok) shown += 1;
     });
     document.getElementById('shown-count').textContent = shown;
+    const empty = document.getElementById('filter-empty');
+    if (empty) empty.style.display = shown ? 'none' : '';
   }
   q.addEventListener('input', apply);
   minScore.addEventListener('input', apply);
+  timeWin.addEventListener('change', apply);
   let sortState = {};
   document.querySelectorAll('th[data-sort]').forEach(function (th) {
     th.addEventListener('click', function () {
@@ -384,8 +400,10 @@ def _job_row_html(job: dict, now: datetime) -> str:
     hay = e(" ".join(str(v or "") for v in
                      (job["title"], job["company"], job["location"],
                       job["source"], job["salary"])).lower())
+    posted_stamp = str(job["posted_at"] or first_seen or "")[:10]
     return (
         f'<tr data-hay="{hay}" data-best="{best}" data-score="{job["score"] or 0}"'
+        f' data-posted="{e(posted_stamp)}"'
         f' data-tailored="{job["score_tailored"] or 0}"'
         f' data-company="{e((job["company"] or "").lower())}"'
         f' data-seen="{e(first_seen)}">'
@@ -430,6 +448,11 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
                           " scoring may be failing (check API credits and logs).")
         job_rows = (f'<tr><td colspan="9" class="meta" style="text-align:center;'
                     f'padding:28px">{e(empty_msg)}</td></tr>')
+    else:
+        job_rows += ('\n<tr id="filter-empty" style="display:none"><td colspan="9"'
+                     ' class="meta" style="text-align:center;padding:28px">'
+                     'Nothing matches the current filters. Widen the posted-time'
+                     ' window or lower the score floor.</td></tr>')
     run_rows = "\n".join(
         f"<tr><td>{r['id']}</td><td>{e(_fmt_ts(r['started_at']))}</td>"
         f"<td>{e(_fmt_ts(r['finished_at']))}</td><td>{r['n_fetched']}</td>"
@@ -462,6 +485,15 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
   <p class="meta">{latest_line}</p>
   <div class="controls">
     <input id="q" type="search" placeholder="Filter by company, title, location, source">
+    <label>Posted
+      <select id="timewin">
+        <option value="today">today</option>
+        <option value="3">last 3 days</option>
+        <option value="7">last 7 days</option>
+        <option value="30">last 30 days</option>
+        <option value="0">any time</option>
+      </select>
+    </label>
     <label>Min score <input id="minscore" type="range" min="0" max="100"
       value="{config.publish.min_score}" step="5">
       <b id="minscore-label">{config.publish.min_score}</b></label>
