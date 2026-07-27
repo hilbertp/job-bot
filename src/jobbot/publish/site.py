@@ -209,13 +209,15 @@ a:hover { text-decoration: underline; }
 .header { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline;
   justify-content: space-between; margin-bottom: 18px; }
 .meta { color: var(--muted); font-size: 13px; }
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px; margin-bottom: 20px; }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
-  padding: 14px 16px; }
-.card .num { font-size: 26px; font-weight: 650; }
-.card .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase;
-  letter-spacing: 0.8px; }
+.statbar { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 0;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px 16px; margin-bottom: 10px; }
+.stat { display: inline-flex; align-items: baseline; gap: 7px; }
+.stat .num { font-size: 17px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.stat .lbl { color: var(--muted); font-size: 13px; }
+.statbar .sep { color: var(--line); margin: 0 14px; }
+.runline { color: var(--muted); font-size: 13px; margin: 0 0 18px; }
+.runline .err { color: var(--mid); font-weight: 550; }
 .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;
   align-items: center; }
 .controls input[type=search] { flex: 1 1 240px; max-width: 380px; padding: 8px 12px;
@@ -229,9 +231,21 @@ a:hover { text-decoration: underline; }
 table { border-collapse: collapse; width: 100%; min-width: 980px; }
 th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line);
   vertical-align: top; }
-th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.7px;
-  color: var(--muted); cursor: pointer; user-select: none; white-space: nowrap;
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--muted); user-select: none; white-space: nowrap;
   background: var(--panel2); position: sticky; top: 0; }
+th[data-sort] { cursor: pointer; }
+th[data-sort]:hover { color: var(--text); }
+th .sort-ind { display: inline-block; width: 1em; color: var(--accent); }
+tbody tr { transition: background-color 150ms cubic-bezier(0.25, 1, 0.5, 1); }
+tbody tr:hover { background: var(--panel2); }
+a:focus-visible, input:focus-visible, select:focus-visible,
+th[data-sort]:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+input[type=range], select { accent-color: var(--accent); }
+@media (prefers-reduced-motion: reduce) {
+  tbody tr { transition: none; }
+}
 th .grip { position: absolute; top: 0; right: 0; width: 8px; height: 100%;
   cursor: col-resize; }
 th .grip:hover, th .grip.active { background: var(--accent); opacity: 0.45; }
@@ -296,12 +310,24 @@ _PAGE_JS = """
   const note = document.getElementById('timewin-note');
   timeWin.addEventListener('change', function () { note.textContent = ''; apply(); });
   let sortState = {};
-  document.querySelectorAll('th[data-sort]').forEach(function (th) {
-    th.addEventListener('click', function () {
+  const sortHeaders = Array.from(document.querySelectorAll('th[data-sort]'));
+  sortHeaders.forEach(function (th) {
+    th.setAttribute('tabindex', '0');
+    th.setAttribute('role', 'button');
+    const ind = document.createElement('span');
+    ind.className = 'sort-ind';
+    th.appendChild(ind);
+    function doSort() {
       const key = th.getAttribute('data-sort');
       const numeric = th.getAttribute('data-num') === '1';
       sortState[key] = !sortState[key];
       const dir = sortState[key] ? 1 : -1;
+      sortHeaders.forEach(function (h) {
+        h.querySelector('.sort-ind').textContent = '';
+        h.removeAttribute('aria-sort');
+      });
+      ind.textContent = dir === 1 ? '\\u25b4' : '\\u25be';
+      th.setAttribute('aria-sort', dir === 1 ? 'ascending' : 'descending');
       const tbody = document.getElementById('jobs');
       rows.sort(function (a, b) {
         let av = a.getAttribute('data-' + key) || '';
@@ -310,6 +336,10 @@ _PAGE_JS = """
         return av < bv ? -dir : av > bv ? dir : 0;
       });
       rows.forEach(function (r) { tbody.appendChild(r); });
+    }
+    th.addEventListener('click', doSort);
+    th.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort(); }
     });
   });
   // Start at "today", but never present an empty page when older matches
@@ -455,7 +485,7 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
             f" {latest['n_generated']} packages generated"
         )
         if latest["n_errors"]:
-            latest_line += f", {latest['n_errors']} errors"
+            latest_line += f', <span class="err">{latest["n_errors"]} errors</span>'
 
     job_rows = "\n".join(_job_row_html(j, now) for j in jobs)
     if not jobs:
@@ -493,13 +523,16 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
     <h1>{e(config.publish.site_title)}</h1>
     <span class="meta">Generated {e(_fmt_ts(now.isoformat()))} UTC</span>
   </div>
-  <div class="cards">
-    <div class="card"><div class="num">{len(jobs)}</div><div class="lbl">Matches shown</div></div>
-    <div class="card"><div class="num">{new_today}</div><div class="lbl">New today</div></div>
-    <div class="card"><div class="num">{with_docs}</div><div class="lbl">Ready-to-send packages</div></div>
-    <div class="card"><div class="num" id="shown-count">{len(jobs)}</div><div class="lbl">After filters</div></div>
+  <div class="statbar">
+    <span class="stat"><span class="num">{len(jobs)}</span><span class="lbl">matches</span></span>
+    <span class="sep">|</span>
+    <span class="stat"><span class="num">{new_today}</span><span class="lbl">new today</span></span>
+    <span class="sep">|</span>
+    <span class="stat"><span class="num">{with_docs}</span><span class="lbl">ready-to-send packages</span></span>
+    <span class="sep">|</span>
+    <span class="stat"><span class="num" id="shown-count">{len(jobs)}</span><span class="lbl">after filters</span></span>
   </div>
-  <p class="meta">{latest_line}</p>
+  <p class="runline">{latest_line}</p>
   <div class="controls">
     <input id="q" type="search" placeholder="Filter by company, title, location, source">
     <label>Posted
