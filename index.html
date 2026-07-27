@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Daily Job Matches</title>
+<style>
+:root {
+  --bg: #0f1115; --panel: #171a21; --panel2: #1d212b; --text: #e8eaf0;
+  --muted: #9aa3b5; --line: #2a2f3c; --accent: #7aa2ff; --good: #3fb96f;
+  --mid: #d7a63f; --link: #8ab4ff;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --panel2: #eef1f6; --text: #1a202c;
+    --muted: #5b6472; --line: #dde2ea; --accent: #2f5fd0; --good: #1e8a4c;
+    --mid: #9a7413; --link: #2456b8;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1280px; margin: 0 auto; padding: 24px 20px 60px; }
+h1 { font-size: 22px; margin: 0; letter-spacing: 0.2px; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.header { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline;
+  justify-content: space-between; margin-bottom: 18px; }
+.meta { color: var(--muted); font-size: 13px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px; margin-bottom: 20px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 16px; }
+.card .num { font-size: 26px; font-weight: 650; }
+.card .lbl { color: var(--muted); font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.8px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;
+  align-items: center; }
+.controls input[type=search] { flex: 1 1 240px; max-width: 380px; padding: 8px 12px;
+  border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
+  color: var(--text); font-size: 14px; }
+.controls label { color: var(--muted); font-size: 13px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 980px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line);
+  vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.7px;
+  color: var(--muted); cursor: pointer; user-select: none; white-space: nowrap;
+  background: var(--panel2); position: sticky; top: 0; }
+th .grip { position: absolute; top: 0; right: 0; width: 8px; height: 100%;
+  cursor: col-resize; }
+th .grip:hover, th .grip.active { background: var(--accent); opacity: 0.45; }
+table.resized { table-layout: fixed; }
+table.resized td { overflow: hidden; text-overflow: ellipsis; }
+tr:last-child td { border-bottom: none; }
+.badge { display: inline-block; min-width: 38px; text-align: center; padding: 2px 8px;
+  border-radius: 999px; font-weight: 650; font-size: 13px; }
+.badge.hi { background: rgba(63,185,111,.15); color: var(--good); }
+.badge.mid { background: rgba(215,166,63,.15); color: var(--mid); }
+.badge.na { color: var(--muted); font-weight: 400; }
+.newpill { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 11px;
+  border-radius: 999px; background: rgba(122,162,255,.18); color: var(--accent);
+  font-weight: 650; vertical-align: middle; }
+.src { color: var(--muted); font-size: 12px; }
+.docs a { display: inline-block; margin-right: 8px; white-space: nowrap; }
+.apply { white-space: nowrap; font-weight: 550; }
+.noroute { color: var(--muted); font-size: 13px; }
+.runs { margin-top: 26px; }
+.runs h2 { font-size: 15px; color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.8px; }
+.runs table { min-width: 640px; }
+footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="header">
+    <h1>Daily Job Matches</h1>
+    <span class="meta">Generated 2026-07-27 17:58 UTC</span>
+  </div>
+  <div class="cards">
+    <div class="card"><div class="num">0</div><div class="lbl">Matches shown</div></div>
+    <div class="card"><div class="num">0</div><div class="lbl">New today</div></div>
+    <div class="card"><div class="num">0</div><div class="lbl">Ready-to-send packages</div></div>
+    <div class="card"><div class="num" id="shown-count">0</div><div class="lbl">After filters</div></div>
+  </div>
+  <p class="meta">Latest run 2026-07-27 17:00 UTC: 522 fetched, 12 new, 0 packages generated, 188 errors</p>
+  <div class="controls">
+    <input id="q" type="search" placeholder="Filter by company, title, location, source">
+    <label>Min score <input id="minscore" type="range" min="0" max="100"
+      value="60" step="5">
+      <b id="minscore-label">60</b></label>
+  </div>
+  <div class="tablewrap">
+  <table>
+    <thead><tr>
+      <th data-sort="company">Company</th>
+      <th>Title</th>
+      <th>Location</th>
+      <th>Salary</th>
+      <th data-sort="score" data-num="1">Base score</th>
+      <th data-sort="tailored" data-num="1">Tailored score</th>
+      <th>Apply</th>
+      <th>Documents</th>
+      <th data-sort="seen">First seen</th>
+    </tr></thead>
+    <tbody id="jobs">
+
+    </tbody>
+  </table>
+  </div>
+  <div class="runs">
+    <h2>Recent runs</h2>
+    <div class="tablewrap">
+    <table>
+      <thead><tr><th>Run</th><th>Started</th><th>Finished</th><th>Fetched</th>
+        <th>New</th><th>Generated</th><th>Errors</th></tr></thead>
+      <tbody>
+<tr><td>280</td><td>2026-07-27 17:00</td><td>2026-07-27 17:06</td><td>522</td><td>12</td><td>0</td><td>188</td></tr>
+<tr><td>279</td><td>2026-07-27 13:00</td><td>2026-07-27 13:12</td><td>492</td><td>25</td><td>0</td><td>187</td></tr>
+<tr><td>278</td><td>2026-07-27 05:00</td><td>2026-07-27 11:13</td><td>0</td><td>0</td><td>0</td><td>201</td></tr>
+<tr><td>277</td><td>2026-07-26 17:00</td><td>2026-07-26 17:06</td><td>493</td><td>0</td><td>0</td><td>199</td></tr>
+<tr><td>276</td><td>2026-07-26 13:00</td><td>2026-07-26 13:08</td><td>495</td><td>5</td><td>0</td><td>171</td></tr>
+<tr><td>275</td><td>2026-07-26 05:14</td><td>2026-07-26 09:28</td><td>491</td><td>78</td><td>0</td><td>81</td></tr>
+<tr><td>274</td><td>2026-07-23 05:08</td><td></td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>273</td><td>2026-07-22 17:00</td><td>2026-07-22 17:06</td><td>434</td><td>22</td><td>0</td><td>184</td></tr>
+<tr><td>272</td><td>2026-07-22 13:00</td><td>2026-07-22 13:05</td><td>419</td><td>140</td><td>0</td><td>141</td></tr>
+<tr><td>271</td><td>2026-07-22 05:15</td><td>2026-07-22 11:48</td><td>284</td><td>20</td><td>0</td><td>193</td></tr>
+<tr><td>270</td><td>2026-07-21 17:03</td><td>2026-07-21 19:47</td><td>294</td><td>23</td><td>0</td><td>190</td></tr>
+<tr><td>269</td><td>2026-07-21 13:00</td><td>2026-07-21 13:06</td><td>285</td><td>6</td><td>0</td><td>178</td></tr>
+<tr><td>268</td><td>2026-07-21 05:11</td><td>2026-07-21 11:50</td><td>238</td><td>16</td><td>0</td><td>200</td></tr>
+<tr><td>267</td><td>2026-07-20 17:00</td><td>2026-07-20 17:06</td><td>284</td><td>32</td><td>0</td><td>191</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+  <footer>Built by jobbot. Data also available as <a href="data.json">data.json</a>.</footer>
+</main>
+<script>
+(function () {
+  const q = document.getElementById('q');
+  const minScore = document.getElementById('minscore');
+  const minLabel = document.getElementById('minscore-label');
+  const rows = Array.from(document.querySelectorAll('tbody#jobs tr'));
+  function apply() {
+    const needle = (q.value || '').toLowerCase();
+    const floor = parseInt(minScore.value, 10) || 0;
+    minLabel.textContent = floor;
+    let shown = 0;
+    rows.forEach(function (tr) {
+      const hay = tr.getAttribute('data-hay');
+      const best = parseInt(tr.getAttribute('data-best'), 10) || 0;
+      const ok = (!needle || hay.indexOf(needle) !== -1) && best >= floor;
+      tr.style.display = ok ? '' : 'none';
+      if (ok) shown += 1;
+    });
+    document.getElementById('shown-count').textContent = shown;
+  }
+  q.addEventListener('input', apply);
+  minScore.addEventListener('input', apply);
+  let sortState = {};
+  document.querySelectorAll('th[data-sort]').forEach(function (th) {
+    th.addEventListener('click', function () {
+      const key = th.getAttribute('data-sort');
+      const numeric = th.getAttribute('data-num') === '1';
+      sortState[key] = !sortState[key];
+      const dir = sortState[key] ? 1 : -1;
+      const tbody = document.getElementById('jobs');
+      rows.sort(function (a, b) {
+        let av = a.getAttribute('data-' + key) || '';
+        let bv = b.getAttribute('data-' + key) || '';
+        if (numeric) { av = parseFloat(av) || 0; bv = parseFloat(bv) || 0; }
+        return av < bv ? -dir : av > bv ? dir : 0;
+      });
+      rows.forEach(function (r) { tbody.appendChild(r); });
+    });
+  });
+  // Resizable columns: drag the right edge of any header cell.
+  document.querySelectorAll('th').forEach(function (th) {
+    const grip = document.createElement('div');
+    grip.className = 'grip';
+    th.appendChild(grip);
+    grip.addEventListener('click', function (e) { e.stopPropagation(); });
+    grip.addEventListener('mousedown', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const table = th.closest('table');
+      const startX = e.pageX;
+      const startW = th.offsetWidth;
+      // Freeze current widths once, so dragging one column does not
+      // reflow the others.
+      if (!table.classList.contains('resized')) {
+        table.querySelectorAll('thead th').forEach(function (h) {
+          h.style.width = h.offsetWidth + 'px';
+        });
+        table.classList.add('resized');
+      }
+      grip.classList.add('active');
+      function move(ev) {
+        th.style.width = Math.max(48, startW + ev.pageX - startX) + 'px';
+      }
+      function up() {
+        grip.classList.remove('active');
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', up);
+      }
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', up);
+    });
+  });
+  apply();
+})();
+</script>
+</body>
+</html>
