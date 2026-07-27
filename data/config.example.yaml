@@ -20,6 +20,21 @@ digest:
   generate_docs_above_score: 70
   max_per_email: 100
 
+# Static GitHub Pages dashboard + local Downloads export (`jobbot publish`).
+# The daily scheduled pass (`jobbot daily`) runs the pipeline and then this.
+publish:
+  enabled: true
+  site_title: "Job Bot: Daily Matches"
+  min_score: 60               # only rows scoring >= this appear on the site
+  max_age_days: 45            # only rows first seen within this window
+  max_jobs: 300               # hard cap, best score first
+  pages_repo_url: ""          # e.g. https://github.com/<user>/<user>.github.io.git; empty = build only
+  pages_repo_dir: ""          # working copy for the publish commit; empty = ~/.jobbot/pages-repo
+  pages_branch: main
+  include_documents: true     # WARNING: the Pages site is public; false keeps PDFs off the web
+  downloads_dir: ""           # empty = ~/Downloads/jobbot
+  downloads_enabled: true
+
 # Per-source settings. Each can be enabled/disabled, given specific search queries,
 # and (separately) opted into auto-submit.
 sources:

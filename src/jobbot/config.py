@@ -94,6 +94,39 @@ class EnrichmentConfig(BaseModel):
     per_run_cap: int = 100
 
 
+class PublishConfig(BaseModel):
+    """Static-site publishing (GitHub Pages) + local Downloads export.
+
+    `jobbot publish` reads the SQLite state, renders a self-contained
+    static dashboard (index.html + data.json + generated PDFs), commits it
+    to the working copy at `pages_repo_dir`, and pushes to
+    `pages_repo_url`. It also copies each generated CV / cover letter /
+    application package into `downloads_dir` exactly once.
+    """
+    enabled: bool = True
+    site_title: str = "Job Bot: Daily Matches"
+    # Only rows with a base score >= min_score appear on the site.
+    min_score: int = 60
+    # Only rows first seen within this many days appear on the site.
+    max_age_days: int = 45
+    # Hard cap on rows in data.json / index.html, highest score first.
+    max_jobs: int = 300
+    # Git remote of the GitHub Pages repo (e.g. the user-site repo
+    # https://github.com/<user>/<user>.github.io.git). Empty = build the
+    # site locally but skip the git publish step.
+    pages_repo_url: str = ""
+    # Local working copy used for the publish commit. Empty = ~/.jobbot/pages-repo.
+    pages_repo_dir: str = ""
+    pages_branch: str = "main"
+    # Copy generated PDFs into the site's docs/ tree so the dashboard can
+    # link them. The user-site Pages repo is PUBLIC; set false to keep
+    # documents off the web and rely on the Downloads export instead.
+    include_documents: bool = True
+    # Where generated documents are exported locally. Empty = ~/Downloads/jobbot.
+    downloads_dir: str = ""
+    downloads_enabled: bool = True
+
+
 class SourceConfig(BaseModel):
     enabled: bool = True
     auto_submit: bool = False
@@ -144,6 +177,7 @@ class Config(BaseModel):
     otp: OtpConfig = Field(default_factory=OtpConfig)
     captcha: CaptchaConfig = Field(default_factory=CaptchaConfig)
     enrichment: EnrichmentConfig = Field(default_factory=EnrichmentConfig)
+    publish: PublishConfig = Field(default_factory=PublishConfig)
 
 
 def load_secrets(env_file: Path | None = None) -> Secrets:
