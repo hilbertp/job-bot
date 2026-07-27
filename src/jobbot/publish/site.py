@@ -423,6 +423,13 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
             latest_line += f", {latest['n_errors']} errors"
 
     job_rows = "\n".join(_job_row_html(j, now) for j in jobs)
+    if not jobs:
+        empty_msg = "No postings to show for this window."
+        if latest and latest["n_errors"]:
+            empty_msg += (f" The latest run reported {latest['n_errors']} errors;"
+                          " scoring may be failing (check API credits and logs).")
+        job_rows = (f'<tr><td colspan="9" class="meta" style="text-align:center;'
+                    f'padding:28px">{e(empty_msg)}</td></tr>')
     run_rows = "\n".join(
         f"<tr><td>{r['id']}</td><td>{e(_fmt_ts(r['started_at']))}</td>"
         f"<td>{e(_fmt_ts(r['finished_at']))}</td><td>{r['n_fetched']}</td>"
