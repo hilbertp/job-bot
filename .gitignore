@@ -33,6 +33,10 @@ data/general*.pdf
 data/corpus/cvs/
 data/corpus/website/
 
+# Personal business/finance documents (never commit)
+construct8_revenue_blueprint.xlsx
+*.xlsx
+
 # --- State, runtime, and generated artifacts (never commit) ---
 data/jobbot.db
 data/jobbot.db-*
