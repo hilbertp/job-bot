@@ -80,7 +80,7 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
 <main>
   <div class="header">
     <h1>Daily Job Matches</h1>
-    <span class="meta">Generated 2026-07-27 18:02 UTC</span>
+    <span class="meta">Generated 2026-07-27 18:06 UTC</span>
   </div>
   <div class="cards">
     <div class="card"><div class="num">273</div><div class="lbl">Matches shown</div></div>
@@ -99,6 +99,7 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
         <option value="30">last 30 days</option>
         <option value="0">any time</option>
       </select>
+      <span id="timewin-note" class="meta"></span>
     </label>
     <label>Min score <input id="minscore" type="range" min="0" max="100"
       value="60" step="5">
@@ -454,10 +455,12 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
     document.getElementById('shown-count').textContent = shown;
     const empty = document.getElementById('filter-empty');
     if (empty) empty.style.display = shown ? 'none' : '';
+    return shown;
   }
   q.addEventListener('input', apply);
   minScore.addEventListener('input', apply);
-  timeWin.addEventListener('change', apply);
+  const note = document.getElementById('timewin-note');
+  timeWin.addEventListener('change', function () { note.textContent = ''; apply(); });
   let sortState = {};
   document.querySelectorAll('th[data-sort]').forEach(function (th) {
     th.addEventListener('click', function () {
@@ -475,6 +478,21 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
       rows.forEach(function (r) { tbody.appendChild(r); });
     });
   });
+  // Start at "today", but never present an empty page when older matches
+  // exist: widen the window until something shows.
+  (function () {
+    const order = ['today', '3', '7', '30', '0'];
+    const labels = {'3': 'last 3 days', '7': 'last 7 days',
+                    '30': 'last 30 days', '0': 'any time'};
+    let i = order.indexOf(timeWin.value);
+    while (apply() === 0 && rows.length > 0 && i < order.length - 1) {
+      i += 1;
+      timeWin.value = order[i];
+    }
+    if (i > 0 && timeWin.value === order[i]) {
+      note.textContent = 'nothing posted today, widened to ' + labels[order[i]];
+    }
+  })();
   // Resizable columns: drag the right edge of any header cell.
   document.querySelectorAll('th').forEach(function (th) {
     const grip = document.createElement('div');
