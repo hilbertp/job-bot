@@ -78,6 +78,16 @@ Best pull-quotes: "das Product Backlog vollständig gemanaged", "Zielkonflikte i
 - Soft quotes: "ausgesprochen engagiert und zuverlässig", "stets mit Ernsthaftigkeit und Kompetenz nachgekommen, ohne dabei den Humor zu verlieren", "Teamfähigkeit und freundliche Umgangsformen".
 - ITSCare = GbR of AOK Baden-Württemberg, AOK Hessen, AOK Rheinland-Pfalz/Saarland. Reference contact on letter: Gerd Peter (Gerd.Peter@itscare.de).
 
+## Diplomatie-Story: Umgang mit ärztlichen Fachbereichen (CLINET, 2026-07-28)
+
+**Kontext:** Bei CLINET hat Philipp die Anforderungen direkt mit Ober- und Chefärzten geklärt und dort viel Erfahrung mit "Gebaren", Arroganz und Überheblichkeit gesammelt (seine Worte). Das ist sein **wichtigster Soft-Skill-Beleg für Healthcare-Mandate**.
+
+**Sein Vorgehen (verbatim-nah):** Emotionen bleiben zu Hause, tief durchatmen, zu 100% sachlich bleiben und das Gespräch immer auf das zu lösende Problem zurücklenken. "Nicht in Lösungen verlieben, sondern in die Probleme" und dort ohne Ego pragmatisch zu schlanken Lösungen kommen, die Schritt für Schritt implementiert werden. Genau daraus entsteht Vertrauen, und auf dieser Vertrauensbasis lassen sich Herausforderungen gemeinsam angehen.
+
+**Warum das zählt (ISO Proxy-PO-Mandat 3028163):** Bei diesem Endkunden sind bereits **mehrere Rollen zwischenmenschlich gescheitert** und nach kurzer Zeit ausgetauscht worden, sowohl ein interner als auch ein externer Mitarbeiter. Die Rolle wird also nicht nur fachlich, sondern vor allem zwischenmenschlich entschieden.
+
+**Wie einsetzen:** Bewusstsein signalisieren, ohne über die gescheiterten Vorgänger zu sprechen (Gerüchte-Anmutung vermeiden, Recruiter nicht kompromittieren). Bewährte Formulierung aus `cl_iso_healthcare_po_v2.md`: "Die Position zwischen medizinischem Fachbereich und Entwicklung ist zwischenmenschlich mindestens so anspruchsvoll wie fachlich, und das ist mir sehr bewusst." Ärzte respektvoll beschreiben ("ausgeprägte fachliche Autorität, wenig Zeit, klare Hierarchien"), nie abwertend. Im Interview ist das die Antwort auf jede Stakeholder-Konflikt-Frage.
+
 ## Reusable quotes & method lines (mined from legacy corpus, 2026-06-12)
 
 - **R&S project-leader quote (German, verbatim, strongest third-party proof he has):** "Auf dieses Feature habe [ich] mehr als ein Jahr bei den Entwicklern gepocht und du hast es alleine innerhalb einer Woche geliefert!" Context: self-taught OpenShift, solo feature development through to release.

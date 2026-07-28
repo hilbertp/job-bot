@@ -30,7 +30,7 @@ Product Owner mit zehn Jahren Erfahrung in der Übersetzung komplexer fachlicher
 Krankenhaus-Pilotplattform für iOS und Android mit tiefer KIS-Integration; Greenfield-Produktaufbau im HealthTech-Startup.
 
 - **Digitale Anamnese** konzipiert und ausgeliefert, dazu Therapie- und Essenspläne, Chat und Patienten-Dokumentenablage
-- **CGM-Schnittstelle** implementiert und in die KIS-Workflows der Kliniken integriert; Anforderungen der Klinik-Fachbereiche in umsetzbare User Stories übersetzt
+- **CGM-Schnittstelle** implementiert und in die KIS-Workflows der Kliniken integriert; Anforderungen direkt mit Ober- und Chefärzten geklärt und in umsetzbare User Stories übersetzt
 - **DSGVO:** datenschutzsensible Patientendaten-Workflows strukturiert; Gesundheitsprodukt-Angebote auf Basis anonymisierter Patientendaten datenschutzkonform konzipiert
 
 *AngularJS, Ionic, Python, Kubernetes, CGM-API-Integration*
