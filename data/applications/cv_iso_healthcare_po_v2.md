@@ -18,6 +18,7 @@ Product Owner mit zehn Jahren Erfahrung in der Übersetzung komplexer fachlicher
 - **Gesundheitswesen und Datenschutz:** digitale Anamnese, KIS-Integration, RKI-Datenplattformen; DSGVO und Compliance aus der Verantwortungsrolle (2x stellv. IT-Sicherheitsbeauftragter)
 - **Multi-Team-Koordination:** Synchronisation domänenübergreifender Abhängigkeiten zwischen Fachbereich, Architektur, Entwicklung und QA; skalierte agile Zusammenarbeit in internationalen Programmen
 - **Technisches Fundament:** REST-APIs, eventgetriebene Systeme (Kafka/Redpanda), Kubernetes, CI/CD; enge Zusammenarbeit mit Softwarearchitekten auf Augenhöhe
+- **AI-native Delivery:** eigenes autonomes Software-Delivery-Framework (Denorios) mit voller DevOps-Kette von CI-Gates bis Rollback; Integration von AI-Agenten und Vibe Codern in professionelle, testgetriebene Entwicklungsprozesse unter menschlicher Governance
 - **Domänenstrukturierung:** fachliche Abgrenzung und Strukturierung von Plattform-Domänen entlang der Geschäftslogik, auch im Greenfield; von Versicherungs-Underwriting bis Verteidigungsdaten
 
 ---
@@ -71,8 +72,12 @@ Zentrale Datenplattform des europäischen Verteidigungsprogramms FCAS: fachlich 
 
 ---
 
-## Gründungen
+## Gründungen & eigene Projekte
 
+- **Denorios · Creator & Operator (2026–heute):** Autonomes Software-Delivery-Framework: AI-Agenten planen, implementieren, reviewen und testen Code in einer menschlich governten Pipeline; das Framework hat 350+ Arbeitspakete seines eigenen Codebestands durch die eigene Pipeline ausgeliefert und wird aktuell als installierbares npm-Framework paketiert
+  - Volle DevOps-Kette eigenhändig gebaut und betrieben: Node.js-Orchestrator (~7.000 LOC ohne Runtime-Dependencies), AI-Coding-Agenten in isolierten Git-Worktrees, unabhängiger AI-Review-Agent, fail-closed GitHub-Actions-Gate (komplette Regression- plus Playwright-Browser-Suite, Fast-Forward auf main nur bei Grün, Rollback als Revert-Forward), Operations-Dashboard mit One-Click Promote/Rollback und Token-Kosten pro Deliverable
+  - Guardrails gegen AI-spezifische Fehlermodi: Test-Update-Gate trennt gewollte Teständerungen von maskierten Regressionen; Akzeptanzkriterien-Hoheit liegt ausschließlich beim Menschen (ein Agent, der Anforderungen aufweicht, stoppt die Pipeline); Write-Locks auf Quellpfade; Liveness-Monitoring, das agentengeschriebenen Timestamps grundsätzlich misstraut
+  - Brücke zwischen Vibe Coding und professioneller Engineering-Praxis: derselbe gated Prozess integriert AI-Agenten und menschliche Entwickler, mit maschinenlesbaren Akzeptanzkriterien in Merge-Trailern und einem QA-Agenten, der fehlende Guard-Tests zur menschlichen Freigabe vorschlägt
 - **construct8 · Gründer und Product Owner (2026–heute):** Zweiseitiger B2B2C-Marktplatz, der Bauunternehmen auf Zypern mit geprüften, dokumentierten Bauarbeitern verbindet; als Solo-Gründer mit AI-gestützter Entwicklung von der Idee bis zur Zahlungsreife in Monaten statt Jahren geführt
   - Mehrsprachige Produktionsplattform (Englisch, Griechisch, Russisch, Arabisch inkl. Rechts-nach-links-Layout); Stripe-Payments mit automatisierter Rechnungsstellung; WhatsApp-Messaging-Relay mit Übersetzung über die Sprachgrenze hinweg
   - Conversion-Funnel stufenweise entschärft: anonymes Katalog-Browsing ohne Account, Fünf-Felder-Signup beim Erstkontakt, Rechnungsdaten erst im Zahlungsmoment; Identitätsschutz beider Seiten als serverseitig erzwungene Geschäftsregel (Anonymität bis zur Buchung, 399 EUR Einmalgebühr)
