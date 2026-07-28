@@ -82,6 +82,8 @@ Best pull-quotes: "das Product Backlog vollständig gemanaged", "Zielkonflikte i
 
 **Kontext:** Bei CLINET hat Philipp die Anforderungen direkt mit Ober- und Chefärzten geklärt und dort viel Erfahrung mit "Gebaren", Arroganz und Überheblichkeit gesammelt (seine Worte). Das ist sein **wichtigster Soft-Skill-Beleg für Healthcare-Mandate**.
 
+**Die Kernbotschaft (seine Priorisierung, 2026-07-28): ego-freies Agieren und Manövrieren ohne die Erwartung, dass sich die Umgebung an einen selbst anpasst, sondern man sich selbst an die Umgebung.** Das ist der Satz, der in jedes Healthcare-/Konzern-Anschreiben und in jede Interview-Antwort zu Stakeholder-Konflikten gehört. Er erklärt implizit auch, woran Vorgänger in solchen Rollen scheitern: sie bringen ihr Vorgehen mit und erwarten, dass die gewachsene Organisation sich danach richtet.
+
 **Sein Vorgehen (verbatim-nah):** Emotionen bleiben zu Hause, tief durchatmen, zu 100% sachlich bleiben und das Gespräch immer auf das zu lösende Problem zurücklenken. "Nicht in Lösungen verlieben, sondern in die Probleme" und dort ohne Ego pragmatisch zu schlanken Lösungen kommen, die Schritt für Schritt implementiert werden. Genau daraus entsteht Vertrauen, und auf dieser Vertrauensbasis lassen sich Herausforderungen gemeinsam angehen.
 
 **Warum das zählt (ISO Proxy-PO-Mandat 3028163):** Bei diesem Endkunden sind bereits **mehrere Rollen zwischenmenschlich gescheitert** und nach kurzer Zeit ausgetauscht worden, sowohl ein interner als auch ein externer Mitarbeiter. Die Rolle wird also nicht nur fachlich, sondern vor allem zwischenmenschlich entschieden.
