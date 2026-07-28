@@ -8,6 +8,7 @@ package built, appended in the same turn the package lands in ~/Downloads.
 
 | Package (Downloads) | Sources (this dir) | Lang | Angle / notes | Rate / comp stated | Built |
 |---|---|---|---|---|---|
+| application_iso_healthcare_proxy_po_v2.pdf | cl/cv_iso_healthcare_po_v2.md | DE | RE-LISTING of Projekt 3009610 as 3028163 (internal hire fell through); recruiter Tomasz Login re-approached proactively 2026-07-28 after phone attempt; v2 adds nice-to-have coverage (DDD/Greenfield/Architekt), asap availability + construct8 B2B2C marketplace entry (per Philipp 2026-07-28); scored 82/94 (DB id freelancermap_9f7ddc2c0e2d8063) | 80 EUR/h all-in; avail asap | 2026-07-28 |
 | application_50hertz_scada.pdf | cl/cv_50hertz_scada.md + email_50hertz_studienarbeit.md | DE | MCCS Master Data System = R&S profile 1:1; Studienarbeit + HyperMVP Grenzpreis story; addressed to Katharina Haß, Job-ID 10847. SUBMITTED | 125k EUR p.a. | 2026-06-11 |
 | application_otark_energy_pm.pdf | cl/cv_otark_energy.md | DE | PPA/energy-trading PM (real employer Otark GmbH via Grizzly Peak posting); double market-modelling + 8-10h AI toolbelt + Max-plan line; honest PPA-ops gap sentence | none | 2026-06-11 |
 | application_iso_healthcare_proxy_po.pdf | cl/cv_iso_healthcare_po.md | DE | Digital-anamnesis exact match (CLINET, CGM implemented, anonymized-data offers); literal Proxy-PO title; ISO Recruiting, Projekt 3009610, Leona Günther | 80 EUR/h all-in; avail 01.08.26 | 2026-06-11 |
