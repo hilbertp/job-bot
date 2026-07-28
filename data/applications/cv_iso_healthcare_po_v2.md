@@ -17,7 +17,7 @@ Product Owner mit zehn Jahren Erfahrung in der Übersetzung komplexer fachlicher
 - **Anforderungsübersetzung und Backlog:** medizinische und fachliche Anforderungen in Epics, Features, User Stories und prüfbare Akzeptanzkriterien; Backlog-Aufbau und kontinuierliche Priorisierung, aktive Refinement-Begleitung
 - **Gesundheitswesen und Datenschutz:** digitale Anamnese, KIS/CGM-Integration, RKI-Datenplattformen; DSGVO und Compliance als zweimaliger stellv. IT-Sicherheitsbeauftragter
 - **Multi-Team-Koordination und Domänenstrukturierung:** Synchronisation von Fachbereich, Architektur, Entwicklung und QA in skalierten agilen Programmen (u. a. unternehmensweites SAFe bei Scheidt & Bachmann); Domänenschnitt entlang der Geschäftslogik, auch im Greenfield
-- **Technisches Fundament und DevOps:** REST-APIs, eventgetriebene Systeme (Kafka/Redpanda), Kubernetes, CI/CD; bei Rohde & Schwarz Deployment-Zeiten von Tagen auf 20-40 Minuten reduziert
+- **Technisches Fundament und DevOps:** REST-APIs, eventgetriebene Systeme (Kafka/Redpanda), Kubernetes, CI/CD; bei Rohde & Schwarz Deployment-Zeiten im Team von Tagen auf 20-40 Minuten reduziert
 - **AI-native Delivery:** AI-Coding- und Review-Agenten produktiv im eigenen Delivery-Betrieb (Denorios, construct8, Project Phoenix); volle DevOps-Kette von CI-Gates bis Rollback unter menschlicher Governance
 
 ---
@@ -29,20 +29,20 @@ Product Owner mit zehn Jahren Erfahrung in der Übersetzung komplexer fachlicher
 
 Krankenhaus-Pilotplattform für iOS und Android mit tiefer KIS-Integration; Greenfield-Produktaufbau im HealthTech-Startup.
 
-- **Digitale Anamnese** konzipiert und ausgeliefert, dazu Therapie- und Essenspläne, Chat und Patienten-Dokumentenablage
-- **CGM-Schnittstelle** implementiert und in die KIS-Workflows der Kliniken integriert; Anforderungen direkt mit Ober- und Chefärzten geklärt und in umsetzbare User Stories übersetzt
-- **DSGVO:** datenschutzsensible Patientendaten-Workflows strukturiert; Gesundheitsprodukt-Angebote auf Basis anonymisierter Patientendaten datenschutzkonform konzipiert
+- **Digitale Anamnese** mit dem Team konzipiert und ausgeliefert, dazu Therapie- und Essenspläne, Chat und Patienten-Dokumentenablage
+- **CGM-Schnittstelle:** Entwicklerteam fachlich angeleitet und die Integration in die KIS-Workflows der Kliniken gesteuert
+- **Anforderungsklärung** direkt mit Ober- und Chefärzten; medizinische Anforderungen in umsetzbare User Stories übersetzt
 
 *AngularJS, Ionic, Python, Kubernetes, CGM-API-Integration*
 
 ### Rohde & Schwarz · Product Owner, KI- und Datenplattform (FCAS)
 *2024 – 2025 · München / Remote*
 
-Zentrale Datenplattform des europäischen Verteidigungsprogramms FCAS: fachlich hochkomplexes, domänengetriebenes Plattformprodukt, im Greenfield im Multi-Team-Setup aufgebaut.
+Zentrale Datenplattform des europäischen Verteidigungsprogramms FCAS: fachlich hochkomplexes, domänengetriebenes Plattformprodukt, im Greenfield im Multi-Team-Setup aufgebaut. Meine Rolle: fachliche Struktur, Backlog und Abhängigkeitssteuerung.
 
 - **Epics, Features, User Stories:** Anforderungen multinationaler Fachstakeholder übersetzt; Akzeptanzkriterien definiert, Umsetzungsergebnisse fachlich bewertet, Audit-Trails und Datenprovenienz sichergestellt
 - **Multi-Team-Synchronisation:** domänenübergreifende Abhängigkeiten mit Softwarearchitekt, Data Science, Entwicklung und QA gesteuert; tägliche Zusammenarbeit mit der Architektur
-- **CI/CD:** Deployment-Zeiten von mehreren Tagen auf 20-40 Minuten reduziert
+- **CI/CD:** Deployment-Zeiten im Team von mehreren Tagen auf 20-40 Minuten reduziert
 
 *Kotlin, Python, PostgreSQL, MongoDB, Redpanda (Kafka), Kubernetes, ArgoCD, OpenShift*
 

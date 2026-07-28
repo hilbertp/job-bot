@@ -6,12 +6,13 @@ Last updated: 2026-06-11 (phase 2: transcript mining complete). Quotes verbatim 
 
 1. **No Lovable URLs ever** (`*.lovable.app`, `*.lovable.dev`) in any document, footer, link. Scan every source for `lovable` before rendering. The tool name "Lovable" in an AI-skills list is allowed. Canonical site citation: **www.true-north.berlin** (always with www). Origin: "there must never be lovable links at the bottom or anywhere else" / "all documents must have www.true-north.berlin with www".
 2. **Contact line everywhere:** `hilbert@true-north.berlin · +357 94101644 · www.true-north.berlin`. Never projuncta.com (see APPLICATIONS.md dirty-CV audit).
-3. **No em-dashes** in any generated artefact (AI tell). Origin: "you have to remove all mdashes from all application package and save to memory to nevr use them" (the sweep hit 333 output files). En-dash in year ranges is fine.
-4. **Dates:** English docs "11 June 2026" ("youre 1. Mai 2026 is badly done, why would you enumerate a month looking like first of may?"). German docs: "Berlin, 11. Juni 2026".
-5. German proper nouns with umlauts; "Rohde & Schwarz" with ampersand; "Diplom-Wirtschaftsingenieur" with hyphen. NEVER "Master of Science" (a packmatic CV mistakenly claimed this).
-6. AI tools in documents: say just "GPT", never a version number ("remove gpt 4o everywhere... version errelevant, just GPT").
-7. **Design reference:** `opus CV.pdf` in Dropbox `000 True North/Bewerbungen` is "the design king reference"; "use this for all tailored CVs and CLs". Application documents archive lives in that Dropbox folder.
-8. Verify rendered PDFs by extracting text (whitespace-normalized) and checking key strings.
+3. **"Wir", nicht "ich", bei allem, was ein Team geliefert hat** (Regel von Philipp, 2026-07-28: "sprich immer von wir, nicht von ich. das ist teamarbeit nicht meine leistung"). "Ich" bleibt reserviert für seine Rolle, seine Verantwortung, seine Haltung und Rahmenbedingungen (Verfügbarkeit, Satz). Umsetzungsergebnisse, Releases, Metriken und technische Lieferungen gehören dem Team. Auslöser: die Behauptung, er habe die CGM-Schnittstelle eigenhändig implementiert, war falsch; er hat die Entwickler angeleitet. Solo-Projekte (Denorios, construct8, Project Phoenix) bleiben "ich", dort stimmt es.
+4. **No em-dashes** in any generated artefact (AI tell). Origin: "you have to remove all mdashes from all application package and save to memory to nevr use them" (the sweep hit 333 output files). En-dash in year ranges is fine.
+5. **Dates:** English docs "11 June 2026" ("youre 1. Mai 2026 is badly done, why would you enumerate a month looking like first of may?"). German docs: "Berlin, 11. Juni 2026".
+6. German proper nouns with umlauts; "Rohde & Schwarz" with ampersand; "Diplom-Wirtschaftsingenieur" with hyphen. NEVER "Master of Science" (a packmatic CV mistakenly claimed this).
+7. AI tools in documents: say just "GPT", never a version number ("remove gpt 4o everywhere... version errelevant, just GPT").
+8. **Design reference:** `opus CV.pdf` in Dropbox `000 True North/Bewerbungen` is "the design king reference"; "use this for all tailored CVs and CLs". Application documents archive lives in that Dropbox folder.
+9. Verify rendered PDFs by extracting text (whitespace-normalized) and checking key strings.
 
 ## Voice & style preferences
 
