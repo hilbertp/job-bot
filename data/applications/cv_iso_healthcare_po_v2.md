@@ -10,6 +10,8 @@ Berlin · hilbert@true-north.berlin · +357 94101644 · www.true-north.berlin
 
 Product Owner mit zehn Jahren Erfahrung in der Übersetzung komplexer fachlicher Anforderungen in Epics, Features und User Stories, davon dreimal im Gesundheitswesen: digitale Anamnese bei CLINET, RKI-Datenplattformen bei der Bundesdruckerei, Krankenkassen-Umfeld bei der AOK. Zweimal stellvertretender IT-Sicherheitsbeauftragter: Datenschutz und DSGVO verantworte ich, statt sie nur zu kennen. Technisches Fundament für die Zusammenarbeit mit Softwarearchitekten auf Augenhöhe, AI-native Arbeitsweise bis zur eigenen autonomen Delivery-Pipeline (Denorios). Deutsch Muttersprache, Englisch C2.
 
+---
+
 ## Schwerpunkte
 
 - **Anforderungsübersetzung und Backlog:** medizinische und fachliche Anforderungen in Epics, Features, User Stories und prüfbare Akzeptanzkriterien; Backlog-Aufbau und kontinuierliche Priorisierung, aktive Refinement-Begleitung
@@ -22,7 +24,8 @@ Product Owner mit zehn Jahren Erfahrung in der Übersetzung komplexer fachlicher
 
 ## Berufserfahrung
 
-### CLINET Platforms · Product Owner, Mobile Healthcare-Plattform (2021–2022, Berlin)
+### CLINET Platforms · Product Owner, Mobile Healthcare-Plattform
+*2021 – 2022 · Berlin*
 
 Krankenhaus-Pilotplattform für iOS und Android mit tiefer KIS-Integration; Greenfield-Produktaufbau im HealthTech-Startup.
 
@@ -32,7 +35,8 @@ Krankenhaus-Pilotplattform für iOS und Android mit tiefer KIS-Integration; Gree
 
 *AngularJS, Ionic, Python, Kubernetes, CGM-API-Integration*
 
-### Rohde & Schwarz · Product Owner, KI- und Datenplattform FCAS (2024–2025, München/Remote)
+### Rohde & Schwarz · Product Owner, KI- und Datenplattform (FCAS)
+*2024 – 2025 · München / Remote*
 
 Zentrale Datenplattform des europäischen Verteidigungsprogramms FCAS: fachlich hochkomplexes, domänengetriebenes Plattformprodukt, im Greenfield im Multi-Team-Setup aufgebaut.
 
@@ -42,12 +46,14 @@ Zentrale Datenplattform des europäischen Verteidigungsprogramms FCAS: fachlich 
 
 *Kotlin, Python, PostgreSQL, MongoDB, Redpanda (Kafka), Kubernetes, ArgoCD, OpenShift*
 
-### Bundesagentur für Arbeit · Product Manager, Daten- und Analyseplattform (2023–2024, Remote)
+### Bundesagentur für Arbeit · Product Manager, Daten- und Analyseplattform
+*2023 – 2024 · Remote*
 
 - **Datenschutz und Governance:** Analyseplattform für Arbeitsmarktdaten im öffentlichen Sektor; stellvertretender IT-Sicherheitsbeauftragter (Compliance, Data Lineage)
 - **DevOps:** automatisierte ETL mit Dagster eingeführt, CI/CD standardisiert
 
-### EMIL Group · Product Manager, InsurTech-SaaS-Plattform (2022, Berlin)
+### EMIL Group · Product Manager, InsurTech-SaaS-Plattform
+*2022 · Berlin*
 
 - **Domänenstrukturierung:** hochregulierte Versicherungsdomäne (Produktkonfiguration, Pricing, Underwriting) fachlich strukturiert und in Software übersetzt
 - **Skalierte Zusammenarbeit:** 17-köpfige Delivery-Organisation in funktionierende Scrum-Einheiten restrukturiert; mehrere PO-Rollen koordiniert
@@ -59,6 +65,8 @@ Zentrale Datenplattform des europäischen Verteidigungsprogramms FCAS: fachlich 
 - **Product Owner, COVID-19-Datenplattform, Bundesdruckerei (2021):** sichere Datenstrukturen und Identity Management für die RKI-Projekte DIM und DESH; nationale Gesundheitsinfrastruktur unter höchsten Datenschutzanforderungen
 - **Technischer Product Owner (interim), Scheidt & Bachmann (2020/2021, 3 Monate):** Design einer Fuel-Self-Service-Terminal-Software und einer bestehenden Zapfsäulensteuerung für den DACH-Markt; vollständig nach SAFe organisierte Matrixorganisation (PI-Planning, Release Train)
 - **Proxy Product Owner, AOK ITSCare (2019–2020):** Proxy-PO zwischen Fachbereich der Krankenkasse und Entwicklungsteam; Webshop-Migration mit komplexer Katalog- und API-Integration
+
+---
 
 ## Gründungen & eigene Projekte
 
