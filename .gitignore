@@ -46,6 +46,7 @@ data/.fuse_hidden*
 output/
 logs/
 *.log
+site/
 
 # --- Editor / OS noise ---
 .vscode/

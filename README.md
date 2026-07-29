@@ -309,12 +309,12 @@ If something else breaks: `logs/run.out.log` and `logs/run.err.log` carry struct
 
 ## Scheduling (macOS launchd, optional)
 
-Four LaunchAgents ship in [scheduling/](./scheduling/). Replace `REPO_PATH` with the absolute path to your checkout, then install:
+Five LaunchAgents ship in [scheduling/](./scheduling/). Replace `REPO_PATH` with the absolute path to your checkout, then install:
 
 ```bash
 REPO=$(pwd)
 mkdir -p logs
-for plist in scrape digest apply inbox; do
+for plist in scrape digest apply inbox daily; do
   sed "s|REPO_PATH|$REPO|g" "scheduling/com.philipp.jobbot.$plist.plist" \
     > ~/Library/LaunchAgents/com.philipp.jobbot.$plist.plist
   launchctl unload ~/Library/LaunchAgents/com.philipp.jobbot.$plist.plist 2>/dev/null
@@ -329,8 +329,31 @@ launchctl list | grep jobbot
 | `digest` | 08:30 daily | `jobbot digest` |
 | `apply` | 09:00 daily | `jobbot apply` (batched send, respects `dry_run`) |
 | `inbox` | 09:30 daily | `jobbot inbox-scan` (replies / bounces / interviews) |
+| `daily` | 14:00 daily | `jobbot daily` (full pipeline pass, then `jobbot publish`) |
 
 To remove all: `launchctl unload ~/Library/LaunchAgents/com.philipp.jobbot.*.plist`.
+
+### Publishing a static dashboard (GitHub Pages)
+
+`jobbot publish` renders the current DB state into a self-contained static site
+(index.html + data.json + the generated PDFs), copies each newly generated
+application package into `~/Downloads/jobbot/` exactly once, and pushes the
+site to the GitHub Pages repo configured under `publish:` in
+`data/config.yaml`. `jobbot daily` chains a full pipeline pass and a publish,
+which is what the 14:00 LaunchAgent runs, so you can open your Pages URL every
+afternoon and see the freshly discovered matches with apply links and
+downloadable documents.
+
+Setup: point `publish.pages_repo_url` at a public repo and run `jobbot publish`
+once. Two layouts work: a user site (`<user>.github.io` repo, `pages_branch:
+main`, served at `https://<user>.github.io/`) or a project site (the code repo
+itself with `pages_branch: gh-pages`, served at
+`https://<user>.github.io/<repo>/`; the site branch is created as an orphan so
+generated content never mixes with code history). The working copy for publish
+commits lives in `~/.jobbot/pages-repo` by default. `posted_today_only: true`
+restricts the site to postings from the publish day itself.
+Note the site is public: set `publish.include_documents: false` if the tailored
+CV / cover letter PDFs should stay off the web (the Downloads export still runs).
 
 > **Python path gotcha:** the plists must point at a real Python interpreter, not the macOS `/usr/bin/python3` shim (which silently fails under launchd). The setup script's `.venv/bin/python` is a stable choice.
 

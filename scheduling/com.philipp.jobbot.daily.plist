@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.philipp.jobbot.daily</string>
+
+  <!-- Replace /Users/phillyvanilly/job_bot with the absolute path to this repo -->
+  <key>WorkingDirectory</key>
+  <string>/Users/phillyvanilly/job_bot</string>
+
+  <!-- Full daily pass: scrape -> score -> generate, then publish the
+       static dashboard to GitHub Pages + export docs to Downloads. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/phillyvanilly/job_bot/.venv-1/bin/python</string>
+    <string>-m</string>
+    <string>jobbot</string>
+    <string>daily</string>
+  </array>
+
+  <key>StandardOutPath</key>
+  <string>/Users/phillyvanilly/job_bot/logs/daily.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/phillyvanilly/job_bot/logs/daily.err.log</string>
+
+  <!-- 14:00 in the machine's local timezone (Europe/Nicosia on this laptop).
+       launchd runs a missed slot at next wake if the lid was closed. -->
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Hour</key><integer>14</integer><key>Minute</key><integer>0</integer></dict>
+  </array>
+
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>

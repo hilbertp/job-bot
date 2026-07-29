@@ -22,6 +22,34 @@ from .state import connect, db_lock_status
 console = Console()
 
 
+def cmd_publish(args) -> int:
+    """Build the static dashboard, export new docs to Downloads, push to Pages."""
+    from .publish import publish_all
+
+    config = load_config()
+    summary = publish_all(
+        config,
+        push=not getattr(args, "no_push", False),
+        downloads=not getattr(args, "no_downloads", False),
+    )
+    console.print(Panel(
+        f"[cyan]Site[/cyan] {summary['site_dir']}\n"
+        f"[cyan]Jobs shown[/cyan] {summary['n_jobs']}\n"
+        f"[cyan]Documents on site[/cyan] {summary['n_docs']}\n"
+        f"[cyan]New Downloads exports[/cyan] {summary['downloads_created']}\n"
+        f"[cyan]Git[/cyan] {summary['git_result']}",
+        title="[bold]jobbot · publish[/bold]", border_style="blue",
+    ))
+    return 0
+
+
+def cmd_daily(args) -> int:
+    """The 14:00 scheduled pass: full pipeline run, then publish."""
+    rc = cmd_run(args)
+    publish_rc = cmd_publish(args)
+    return rc or publish_rc
+
+
 def cmd_run(_args) -> int:
     result = run_with_failure_alerts(load_config(), load_secrets())
 
@@ -766,6 +794,27 @@ def main(argv: list[str] | None = None) -> int:
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init",    help="Interactive newcomer setup: writes .env + profile.yaml + config.yaml + base_cv.md.").set_defaults(fn=cmd_init)
     sub.add_parser("run",     help="Run one full pipeline pass.").set_defaults(fn=cmd_run)
+
+    publish = sub.add_parser(
+        "publish",
+        help="Build the static GitHub Pages dashboard from the DB, export "
+             "new application documents to Downloads, and push the site.",
+    )
+    publish.add_argument("--no-push", action="store_true",
+                         help="Build + commit the site but skip git push.")
+    publish.add_argument("--no-downloads", action="store_true",
+                         help="Skip the Downloads folder export.")
+    publish.set_defaults(fn=cmd_publish)
+
+    daily = sub.add_parser(
+        "daily",
+        help="Scheduled daily pass: run the full pipeline, then publish.",
+    )
+    daily.add_argument("--no-push", action="store_true",
+                       help="Build + commit the site but skip git push.")
+    daily.add_argument("--no-downloads", action="store_true",
+                       help="Skip the Downloads folder export.")
+    daily.set_defaults(fn=cmd_daily)
     sub.add_parser("digest",  help="Send a digest of the last 24h.").set_defaults(fn=cmd_digest)
     sub.add_parser("status",  help="Show pipeline counts.").set_defaults(fn=cmd_status)
     sub.add_parser("sources", help="List registered scrapers.").set_defaults(fn=cmd_sources)
