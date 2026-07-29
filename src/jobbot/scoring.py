@@ -24,9 +24,9 @@ import re
 from pathlib import Path
 
 import yaml
-from anthropic import Anthropic
 
 from .config import REPO_ROOT, Config, Secrets
+from .llm import complete as llm_complete
 from .models import JobPosting, ScoreResult
 from .profile import Profile, load_primary_cv
 
@@ -220,17 +220,14 @@ def _invoke_scorer(
     job_id: str | None = None,
 ) -> ScoreResult:
     """Shared LLM call + response parsing for both base and tailored scoring."""
-    client = Anthropic(api_key=secrets.anthropic_api_key)
     prompt = PROMPT_PATH.read_text()
     model = "claude-sonnet-4-6"
-    msg = client.messages.create(
-        model=model,
-        max_tokens=800,
-        system=prompt,
-        messages=[{"role": "user", "content": user_message}],
+    msg = llm_complete(
+        secrets, system=prompt, user=user_message,
+        max_tokens=800, model=model, timeout_s=300,
     )
     _record_usage_if_present(msg, run_id=run_id, phase=phase, job_id=job_id, model=model)
-    text = "".join(b.text for b in msg.content if b.type == "text")
+    text = msg.text
     data = _parse_score_json(text)
     score = int(data["score"])
     reason = str(data.get("reason", ""))
@@ -487,7 +484,6 @@ def extract_profile_updates_from_feedback(
     Failure modes (network, parse error, etc.) raise, the caller should
     treat extraction as best-effort and not block the rescore.
     """
-    client = Anthropic(api_key=secrets.anthropic_api_key)
     user_msg = (
         "Candidate's feedback comment:\n"
         f'"""\n{feedback.strip()}\n"""\n\n'
@@ -498,17 +494,15 @@ def extract_profile_updates_from_feedback(
         f"- last 5 user_facts: {profile.user_facts[-5:] if profile.user_facts else []}\n\n"
         "Return the JSON object now."
     )
-    msg = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=400,
-        system=_FEEDBACK_EXTRACT_SYSTEM,
-        messages=[{"role": "user", "content": user_msg}],
+    msg = llm_complete(
+        secrets, system=_FEEDBACK_EXTRACT_SYSTEM, user=user_msg,
+        max_tokens=400, model="claude-sonnet-4-6", timeout_s=180,
     )
     _record_usage_if_present(
         msg, run_id=run_id, phase="extract_profile_updates",
         job_id=job_id, model="claude-sonnet-4-6",
     )
-    text = "".join(b.text for b in msg.content if b.type == "text").strip()
+    text = msg.text.strip()
     # Strip a possible ```json fence if the model added one despite the
     # instructions.
     if text.startswith("```"):

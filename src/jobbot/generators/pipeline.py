@@ -13,7 +13,7 @@ import shutil
 from datetime import date
 from pathlib import Path
 
-from anthropic import Anthropic
+from ..llm import complete as llm_complete
 from markdown_it import MarkdownIt
 
 from ..config import REPO_ROOT, Config, Secrets
@@ -456,7 +456,7 @@ def _record_usage_if_present(
 
 
 def _call_sonnet(
-    client: Anthropic,
+    secrets: Secrets,
     system_prompt: str,
     user_payload: str,
     *,
@@ -473,14 +473,12 @@ def _call_sonnet(
     # opus reference PDF runs ~3500 words of output; 4096 tokens leaves
     # comfortable headroom without inflating cost meaningfully (Sonnet
     # output tokens dominate cost, but the per-job add is ~$0.03).
-    msg = client.messages.create(
-        model=model,
-        max_tokens=4096,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_payload}],
+    msg = llm_complete(
+        secrets, system=system_prompt, user=user_payload,
+        max_tokens=4096, model=model, timeout_s=900,
     )
     _record_usage_if_present(msg, run_id=run_id, phase=phase, job_id=job_id, model=model)
-    return "".join(b.text for b in msg.content if b.type == "text").strip()
+    return msg.text.strip()
 
 
 def _resolve_static_cv(config: Config) -> Path | None:
@@ -688,8 +686,6 @@ def generate_application_package(
     - II  Curriculum vitae (bearing, core strengths, experience, founders, langs)
     - Bottom banner + trust-anchor band (LinkedIn / GitHub / true-north / YouTube)
     """
-    client = Anthropic(api_key=secrets.anthropic_api_key)
-
     package_prompt = (PROMPTS / "application_package.md").read_text()
     payload = (
         f"# Job\n\n## {job.title}, {job.company}\n\n{job.description}\n\n"
@@ -698,7 +694,7 @@ def generate_application_package(
     )
 
     package_md = _call_sonnet(
-        client, package_prompt, payload,
+        secrets, package_prompt, payload,
         run_id=run_id, phase="generate_application_package", job_id=job.id,
     )
     # Pin trust anchors top + bottom so the band is guaranteed regardless of
@@ -809,8 +805,6 @@ def generate_documents(
     *,
     run_id: int | None = None,
 ) -> GeneratedDocs:
-    client = Anthropic(api_key=secrets.anthropic_api_key)
-
     cv_prompt = (PROMPTS / "cv_tailor.md").read_text()
     cl_prompt = (PROMPTS / "cover_letter.md").read_text()
     payload = (
@@ -820,7 +814,7 @@ def generate_documents(
     )
 
     cv_md = _call_sonnet(
-        client, cv_prompt, payload,
+        secrets, cv_prompt, payload,
         run_id=run_id, phase="generate_cv", job_id=job.id,
     )
     # Pin LinkedIn / GitHub / personal-site links visibly at top + bottom of
@@ -828,7 +822,7 @@ def generate_documents(
     # of what the model chose to keep from the base CV's header.
     cv_md = _inject_trust_anchors(cv_md, profile)
     cl_md = _call_sonnet(
-        client, cl_prompt, payload,
+        secrets, cl_prompt, payload,
         run_id=run_id, phase="generate_cover_letter", job_id=job.id,
     )
 
