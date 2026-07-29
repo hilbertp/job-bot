@@ -5,6 +5,8 @@ max_jobs_per_run: 200         # safety cap on LLM spend
 salary_floor_eur_year: 0      # drop postings whose STATED top pay < this (EUR/yr); 0 disables
 freelance_sources: []         # sources with hourly comp, exempt from the annual floor
 freelance_hourly_floor_eur: 0 # min freelance rate EUR/hr for those sources; 0 disables
+llm_backend: api              # api = Anthropic API credits | claude_cli = local Claude Code CLI (subscription limits)
+claude_cli_path: ""           # absolute path to the claude binary for claude_cli (launchd has a minimal PATH)
 apply_research_enabled: false # web-search canonical apply URL for paywalled rows (adds LLM+search cost)
 apply_research_max_per_run: 50 # cap researched rows/run when enabled
 regenerate_existing_docs: false # false = reuse CV/CL already on disk (cheaper); true = always rebuild

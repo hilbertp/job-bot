@@ -290,24 +290,16 @@ def test_initial_llm_score_uses_sonnet_primary_cv_and_full_scraped_description(
     - sends the full enriched job description under the cap."""
     captured: dict = {}
 
-    class FakeMessages:
-        def create(self, **kwargs):
-            captured.update(kwargs)
-            return SimpleNamespace(
-                content=[
-                    SimpleNamespace(
-                        type="text",
-                        text='{"score": 88, "reason": "strong primary-profile fit"}',
-                    )
-                ]
-            )
+    def fake_complete(secrets, *, system, user, max_tokens, model, **kwargs):
+        captured.update(
+            api_key=secrets.anthropic_api_key, system=system, user=user,
+            max_tokens=max_tokens, model=model,
+        )
+        from jobbot.llm import LlmResponse
+        return LlmResponse(
+            text='{"score": 88, "reason": "strong primary-profile fit"}')
 
-    class FakeAnthropic:
-        def __init__(self, api_key: str) -> None:
-            captured["api_key"] = api_key
-            self.messages = FakeMessages()
-
-    monkeypatch.setattr("jobbot.scoring.Anthropic", FakeAnthropic)
+    monkeypatch.setattr("jobbot.scoring.llm_complete", fake_complete)
     monkeypatch.setattr(
         "jobbot.scoring.load_primary_cv",
         lambda: "# PRIMARY PROFILE SENTINEL\n\nProduct leadership proof.",
@@ -331,7 +323,7 @@ def test_initial_llm_score_uses_sonnet_primary_cv_and_full_scraped_description(
     assert captured["model"] == "claude-sonnet-4-6"
     assert captured["max_tokens"] == 800
 
-    user_message = captured["messages"][0]["content"]
+    user_message = captured["user"]
     assert "# Primary CV (source of truth)" in user_message
     assert "PRIMARY PROFILE SENTINEL" in user_message
     assert "# Job description" in user_message

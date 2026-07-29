@@ -142,6 +142,17 @@ class Config(BaseModel):
     score_threshold: int = 70
     max_jobs_per_run: int = 50
     output_dir: str = "output"
+    # Which backend serves scoring / tailoring LLM calls:
+    #   "api"        - Anthropic Messages API, billed against console
+    #                  credits via ANTHROPIC_API_KEY in .env (default).
+    #   "claude_cli" - the locally installed Claude Code CLI in headless
+    #                  print mode; uses the CLI's own login, so calls draw
+    #                  on the user's Claude subscription (Pro/Max) limits.
+    llm_backend: str = "api"
+    # Absolute path to the claude binary for the claude_cli backend.
+    # launchd jobs run with a minimal PATH, so `which claude` resolution
+    # cannot be relied on there; empty = look up on PATH.
+    claude_cli_path: str = ""
     # Hard salary floor in EUR/year. When a posting STATES a salary range
     # whose top end (after currency + period normalisation to EUR/year)
     # falls below this number, the row is filtered out before LLM scoring,

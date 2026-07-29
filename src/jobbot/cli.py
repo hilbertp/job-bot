@@ -12,6 +12,7 @@ from rich.table import Table
 from rich.text import Text
 
 from .config import REPO_ROOT, load_config, load_secrets
+from .logsetup import configure_logging, trim_oversized_logs
 from .models import JobStatus
 from .pipeline import daily_digest, run_with_failure_alerts
 from .profile_distiller import rebuild_compiled_profile
@@ -51,6 +52,9 @@ def cmd_daily(args) -> int:
 
 
 def cmd_run(_args) -> int:
+    # Scheduled runs append to logs/*.log forever; drop any that ballooned
+    # (a failing run once produced a 12 GB file of rich tracebacks).
+    trim_oversized_logs()
     result = run_with_failure_alerts(load_config(), load_secrets())
 
     fetched = result.get("n_fetched", 0)
@@ -790,6 +794,9 @@ def cmd_profile_remove(args) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # TTY-aware structlog setup: plain compact output when stdout is a
+    # launchd log file / pipe, pretty colors only on a real terminal.
+    configure_logging()
     p = argparse.ArgumentParser(prog="jobbot")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("init",    help="Interactive newcomer setup: writes .env + profile.yaml + config.yaml + base_cv.md.").set_defaults(fn=cmd_init)
