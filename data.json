@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-29T13:00:26.424372+00:00",
+  "generated_at": "2026-07-29T17:34:56.714180+00:00",
   "jobs": [
     {
       "id": "xing_cff33b58916ff1b2",
@@ -786,6 +786,22 @@
       ]
     },
     {
+      "id": "dailyremote_8ebd29dea600f1dc",
+      "source": "dailyremote",
+      "title": "Product Manager",
+      "company": "Arionkoder",
+      "location": null,
+      "salary": null,
+      "score": 90,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-07-29T12:58:12.878022+00:00",
+      "posted_at": "2026-07-29T12:00:16+00:00",
+      "apply_route": "missing",
+      "apply_target": null,
+      "documents": []
+    },
+    {
       "id": "weworkremotely_54e2b4bfe51a2565",
       "source": "weworkremotely",
       "title": "Staff Product Manager, Payments",
@@ -1530,6 +1546,86 @@
       ]
     },
     {
+      "id": "freelancermap_41002206c691664e",
+      "source": "freelancermap",
+      "title": "Digital Product Manager (w/m/d) \u2013 Erfahrung in Tech- und Plattformunternehmen // 6 Mon.++ // remote",
+      "company": "freelancermap (Auftraggeber anonym)",
+      "location": null,
+      "salary": null,
+      "score": 87,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-07-29T16:18:07.223586+00:00",
+      "posted_at": null,
+      "apply_route": "url",
+      "apply_target": "https://www.freelancermap.de/projekt/digital-product-manager-w-m-d-erfahrung-in-tech-und-plattformunternehmen-6-mon-remote",
+      "documents": []
+    },
+    {
+      "id": "dailyremote_605f1f24d25d18a9",
+      "source": "dailyremote",
+      "title": "Product Owner",
+      "company": "Unit4",
+      "location": null,
+      "salary": null,
+      "score": 87,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-07-29T16:18:03.565839+00:00",
+      "posted_at": "2026-07-29T13:00:08+00:00",
+      "apply_route": "missing",
+      "apply_target": null,
+      "documents": []
+    },
+    {
+      "id": "dailyremote_557c5ff6912270a3",
+      "source": "dailyremote",
+      "title": "Product Owner",
+      "company": "Agility PR Solutions",
+      "location": null,
+      "salary": null,
+      "score": 87,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-07-29T16:18:03.565022+00:00",
+      "posted_at": "2026-07-29T16:00:10+00:00",
+      "apply_route": "email",
+      "apply_target": "careers@agilitypr.com",
+      "documents": []
+    },
+    {
+      "id": "linkedin_f82050bbe4ba45eb",
+      "source": "linkedin",
+      "title": "Product Manager - AI Platform (m/f/x)",
+      "company": "Scalable Capital",
+      "location": "Berlin, Berlin, Germany",
+      "salary": "\u20ac50",
+      "score": 87,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-07-29T12:58:48.677474+00:00",
+      "posted_at": "2026-07-29T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://de.linkedin.com/jobs/view/product-manager-ai-platform-m-f-x-at-scalable-capital-4446082055",
+      "documents": []
+    },
+    {
+      "id": "stepstone_b681fee310dac9fe",
+      "source": "stepstone",
+      "title": "Product Owner (gn)",
+      "company": "BLS Beteiligungs GmbH",
+      "location": "M\u00fcnchen",
+      "salary": null,
+      "score": 87,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-07-29T12:58:27.821464+00:00",
+      "posted_at": "2026-07-29T09:54:17.037000+00:00",
+      "apply_route": "url",
+      "apply_target": "https://www.stepstone.de/stellenangebote--Product-Owner-gn-Muenchen-BLS-Beteiligungs-GmbH--14337623-inline.html",
+      "documents": []
+    },
+    {
       "id": "linkedin_ae31718498a9f015",
       "source": "linkedin",
       "title": "Product Owner (m|w|d)",
@@ -1667,6 +1763,38 @@
       "posted_at": null,
       "apply_route": "url",
       "apply_target": "https://www.freelancermap.de/projekt/fractional-cpo-complex-tech-transformations",
+      "documents": []
+    },
+    {
+      "id": "linkedin_d256a20f0d5832e8",
+      "source": "linkedin",
+      "title": "Product Manager - AI Platform (m/f/x)",
+      "company": "Scalable Capital",
+      "location": "Munich, Bavaria, Germany",
+      "salary": "\u20ac50",
+      "score": 82,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-07-29T12:58:48.678086+00:00",
+      "posted_at": "2026-07-29T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://de.linkedin.com/jobs/view/product-manager-ai-platform-m-f-x-at-scalable-capital-4446064681",
+      "documents": []
+    },
+    {
+      "id": "dailyremote_5a55fe26a71f8c7e",
+      "source": "dailyremote",
+      "title": "Product Manager",
+      "company": "Edisyl",
+      "location": null,
+      "salary": null,
+      "score": 82,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-07-29T05:00:11.718432+00:00",
+      "posted_at": "2026-07-28T18:01:00+00:00",
+      "apply_route": "missing",
+      "apply_target": null,
       "documents": []
     },
     {
@@ -2502,6 +2630,38 @@
       "documents": []
     },
     {
+      "id": "linkedin_17e97dd1e9a595a5",
+      "source": "linkedin",
+      "title": "Product Owner",
+      "company": "ADVICE Consulting",
+      "location": "Frankfurt, Hesse, Germany",
+      "salary": null,
+      "score": 79,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-07-29T16:18:55.476465+00:00",
+      "posted_at": "2026-07-29T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://de.linkedin.com/jobs/view/product-owner-at-advice-consulting-4446810220",
+      "documents": []
+    },
+    {
+      "id": "linkedin_46cb2c5a53c7f45a",
+      "source": "linkedin",
+      "title": "Senior Product Manager",
+      "company": "Hack The Box",
+      "location": "Berlin, Berlin, Germany",
+      "salary": null,
+      "score": 78,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-07-29T05:00:47.382638+00:00",
+      "posted_at": "2026-07-27T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://de.linkedin.com/jobs/view/senior-product-manager-at-hack-the-box-4445153384",
+      "documents": []
+    },
+    {
       "id": "weworkremotely_eebea437c2424365",
       "source": "weworkremotely",
       "title": "Staff Product Manager - Conversations",
@@ -2807,6 +2967,22 @@
       "posted_at": "2026-07-14T17:18:41",
       "apply_route": "url",
       "apply_target": "https://himalayas.app/companies/redcare-pharmacy/jobs/senior-principal-product-manager-search-experience-m-f-d-6693643293",
+      "documents": []
+    },
+    {
+      "id": "xing_b2787e7ca459deca",
+      "source": "xing",
+      "title": "Product Owner (m/f/d)",
+      "company": "SoftProject GmbH",
+      "location": "Ettlingen+ 0 weitere",
+      "salary": null,
+      "score": 74,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-07-29T09:00:33.741617+00:00",
+      "posted_at": "2026-07-21T23:42:56+00:00",
+      "apply_route": "email",
+      "apply_target": "jobs@softproject.de",
       "documents": []
     },
     {
@@ -3730,22 +3906,6 @@
       "documents": []
     },
     {
-      "id": "linkedin_5cc44e6ccb3f79e7",
-      "source": "linkedin",
-      "title": "Product Manager (m/w/d)",
-      "company": "Parto",
-      "location": "Hamburg, Hamburg, Germany",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "listing_expired",
-      "first_seen_at": "2026-06-14T17:00:44.058717+00:00",
-      "posted_at": "2026-06-14T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://de.linkedin.com/jobs/view/product-manager-m-w-d-at-parto-4425734914",
-      "documents": []
-    },
-    {
       "id": "freelancermap_f827295de489fd3b",
       "source": "freelancermap",
       "title": "Remote/DUS, FRA, MUC - Senior Product Owner (m/w/d) Kapitalma\u00dfnahmen",
@@ -3855,6 +4015,22 @@
       "posted_at": "2026-06-22T14:09:06.227000+00:00",
       "apply_route": "url",
       "apply_target": "https://www.stepstone.de/stellenangebote--Product-Owner-fuer-M-TEXT-m-w-d-Muenster-LVM-Versicherung--14183682-inline.html",
+      "documents": []
+    },
+    {
+      "id": "dailyremote_e9fac8a15a6a891d",
+      "source": "dailyremote",
+      "title": "Product Manager",
+      "company": "Berry Virtual",
+      "location": null,
+      "salary": null,
+      "score": 65,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-07-29T05:00:11.717822+00:00",
+      "posted_at": "2026-07-29T00:03:57+00:00",
+      "apply_route": "missing",
+      "apply_target": null,
       "documents": []
     },
     {
@@ -4660,14 +4836,34 @@
   ],
   "runs": [
     {
-      "id": 288,
-      "started_at": "2026-07-29T13:00:03.674521+00:00",
+      "id": 290,
+      "started_at": "2026-07-29T17:05:25.367039+00:00",
       "finished_at": null,
       "n_fetched": 0,
       "n_new": 0,
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 0
+    },
+    {
+      "id": 289,
+      "started_at": "2026-07-29T16:17:57.287220+00:00",
+      "finished_at": "2026-07-29T17:34:56.682921+00:00",
+      "n_fetched": 324,
+      "n_new": 5,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 169
+    },
+    {
+      "id": 288,
+      "started_at": "2026-07-29T13:00:03.674521+00:00",
+      "finished_at": "2026-07-29T13:02:07.949802+00:00",
+      "n_fetched": 332,
+      "n_new": 0,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 207
     },
     {
       "id": 287,
@@ -4778,26 +4974,6 @@
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 199
-    },
-    {
-      "id": 276,
-      "started_at": "2026-07-26T13:00:04.266679+00:00",
-      "finished_at": "2026-07-26T13:08:09.095499+00:00",
-      "n_fetched": 495,
-      "n_new": 5,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 171
-    },
-    {
-      "id": 275,
-      "started_at": "2026-07-26T05:14:29.475372+00:00",
-      "finished_at": "2026-07-26T09:28:51.783986+00:00",
-      "n_fetched": 491,
-      "n_new": 78,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 81
     }
   ]
 }
