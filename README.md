@@ -329,7 +329,7 @@ launchctl list | grep jobbot
 | `digest` | 08:30 daily | `jobbot digest` |
 | `apply` | 09:00 daily | `jobbot apply` (batched send, respects `dry_run`) |
 | `inbox` | 09:30 daily | `jobbot inbox-scan` (replies / bounces / interviews) |
-| `daily` | 14:00 daily | `jobbot daily` (full pipeline pass, then `jobbot publish`) |
+| `daily` | 15:00 daily | `jobbot daily` (full pipeline pass, then `jobbot publish`) |
 
 To remove all: `launchctl unload ~/Library/LaunchAgents/com.philipp.jobbot.*.plist`.
 

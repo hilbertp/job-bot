@@ -25,11 +25,13 @@
   <key>StandardErrorPath</key>
   <string>/Users/phillyvanilly/job_bot/logs/daily.err.log</string>
 
-  <!-- 14:00 in the machine's local timezone (Europe/Nicosia on this laptop).
-       launchd runs a missed slot at next wake if the lid was closed. -->
+  <!-- 15:00 in the machine's local timezone (Europe/Nicosia on this laptop).
+       launchd only fires while the Mac is awake; 15:00 is a slot where the
+       laptop is reliably in use. A slot missed during sleep runs once at
+       the next wake as long as the agent stays loaded. -->
   <key>StartCalendarInterval</key>
   <array>
-    <dict><key>Hour</key><integer>14</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Hour</key><integer>15</integer><key>Minute</key><integer>0</integer></dict>
   </array>
 
   <key>RunAtLoad</key>
