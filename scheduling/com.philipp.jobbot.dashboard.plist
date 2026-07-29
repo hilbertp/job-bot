@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.philipp.jobbot.dashboard</string>
+
+  <!-- Replace /Users/phillyvanilly/job_bot with the absolute path to this repo -->
+  <key>WorkingDirectory</key>
+  <string>/Users/phillyvanilly/job_bot</string>
+
+  <!-- Always-on local dashboard (http://localhost:5001). Also serves the
+       /api/runs/trigger endpoint behind the static site's Run-now button. -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/phillyvanilly/job_bot/.venv-1/bin/python</string>
+    <string>-m</string>
+    <string>jobbot</string>
+    <string>dashboard</string>
+  </array>
+
+  <key>StandardOutPath</key>
+  <string>/Users/phillyvanilly/job_bot/logs/dashboard.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/phillyvanilly/job_bot/logs/dashboard.err.log</string>
+
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+</dict>
+</plist>

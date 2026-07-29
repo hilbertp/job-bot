@@ -404,9 +404,40 @@ def api_runs():
     return jsonify(runs)
 
 
-@app.route("/api/runs/trigger", methods=["POST"])
+def _pages_origin() -> str:
+    """Web origin of the static GitHub Pages dashboard, derived from the
+    configured pages repo (github.com/<owner>/... -> https://<owner>.github.io).
+    Empty when publishing is not configured."""
+    from .config import load_config
+
+    url = load_config().publish.pages_repo_url or ""
+    m = re.search(r"github\.com[:/]([^/]+)/", url)
+    return f"https://{m.group(1).lower()}.github.io" if m else ""
+
+
+@app.after_request
+def _cors_for_pages_trigger(resp):
+    """Let the static Pages dashboard's "Run now" button POST to this
+    local endpoint. Scoped to the one trigger route and to the exact
+    Pages origin; includes the Private Network Access preflight header
+    Chromium requires for public-site -> localhost requests."""
+    if request.path == "/api/runs/trigger":
+        allowed = _pages_origin()
+        if allowed and request.headers.get("Origin") == allowed:
+            resp.headers["Access-Control-Allow-Origin"] = allowed
+            resp.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+            resp.headers["Access-Control-Allow-Private-Network"] = "true"
+            resp.headers["Vary"] = "Origin"
+    return resp
+
+
+@app.route("/api/runs/trigger", methods=["POST", "OPTIONS"])
 def api_trigger_run():
     """Start one pipeline run from the dashboard without blocking the request."""
+    if request.method == "OPTIONS":
+        # CORS preflight for the static-site button; headers are added by
+        # the after_request hook.
+        return "", 204
     if not _RUN_TRIGGER_LOCK.acquire(blocking=False):
         return jsonify({
             "ok": False,
@@ -422,6 +453,14 @@ def api_trigger_run():
             from .pipeline import run_with_failure_alerts
 
             result = run_with_failure_alerts(load_config(), load_secrets())
+            # Push the refreshed state to the static Pages dashboard so a
+            # button-triggered run ends with visible results, not a stale
+            # site. Publish failures don't fail the run.
+            try:
+                from .publish import publish_all
+                publish_all(load_config())
+            except Exception:
+                traceback.print_exc()
             _RUN_TRIGGER_STATE.update({
                 "status": "finished",
                 "run_id": result.get("run_id"),
