@@ -309,12 +309,12 @@ If something else breaks: `logs/run.out.log` and `logs/run.err.log` carry struct
 
 ## Scheduling (macOS launchd, optional)
 
-Five LaunchAgents ship in [scheduling/](./scheduling/). Replace `REPO_PATH` with the absolute path to your checkout, then install:
+Six LaunchAgents ship in [scheduling/](./scheduling/). Replace `REPO_PATH` with the absolute path to your checkout, then install:
 
 ```bash
 REPO=$(pwd)
 mkdir -p logs
-for plist in scrape digest apply inbox daily; do
+for plist in scrape digest apply inbox daily dashboard; do
   sed "s|REPO_PATH|$REPO|g" "scheduling/com.philipp.jobbot.$plist.plist" \
     > ~/Library/LaunchAgents/com.philipp.jobbot.$plist.plist
   launchctl unload ~/Library/LaunchAgents/com.philipp.jobbot.$plist.plist 2>/dev/null
@@ -330,6 +330,7 @@ launchctl list | grep jobbot
 | `apply` | 09:00 daily | `jobbot apply` (batched send, respects `dry_run`) |
 | `inbox` | 09:30 daily | `jobbot inbox-scan` (replies / bounces / interviews) |
 | `daily` | 15:00 daily | `jobbot daily` (full pipeline pass, then `jobbot publish`) |
+| `dashboard` | always on | `jobbot dashboard` (localhost:5001; also serves the static site's Run-now trigger) |
 
 To remove all: `launchctl unload ~/Library/LaunchAgents/com.philipp.jobbot.*.plist`.
 

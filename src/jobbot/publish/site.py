@@ -208,7 +208,13 @@ a { color: var(--link); text-decoration: none; }
 a:hover { text-decoration: underline; }
 .header { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline;
   justify-content: space-between; margin-bottom: 18px; }
+.header .actions { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .meta { color: var(--muted); font-size: 13px; }
+.btn { background: var(--accent); color: var(--bg); border: none; border-radius: 8px;
+  padding: 8px 14px; font-weight: 650; font-size: 13px; cursor: pointer;
+  font-family: inherit; }
+.btn:hover { filter: brightness(1.12); }
+.btn:disabled { opacity: 0.55; cursor: default; filter: none; }
 .statbar { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 0;
   background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
   padding: 12px 16px; margin-bottom: 10px; }
@@ -357,6 +363,33 @@ _PAGE_JS = """
       note.textContent = 'nothing posted today, widened to ' + labels[order[i]];
     }
   })();
+  // "Run now": POST to the jobbot dashboard on the machine that runs the
+  // pipeline. Only reachable when this page is opened on that machine
+  // (or its network) with `jobbot dashboard` up; the run republishes
+  // this site when it finishes.
+  const runBtn = document.getElementById('run-now');
+  const runStatus = document.getElementById('run-now-status');
+  runBtn.addEventListener('click', function () {
+    runBtn.disabled = true;
+    runStatus.textContent = 'contacting local dashboard…';
+    fetch('http://127.0.0.1:5001/api/runs/trigger', {method: 'POST'})
+      .then(function (r) { return r.json().then(function (d) { return {ok: r.ok, d: d}; }); })
+      .then(function (x) {
+        if (x.ok) {
+          runStatus.textContent = 'run started; this page republishes when it finishes (typically under an hour)';
+        } else if (x.d && x.d.status === 'already_running') {
+          runStatus.textContent = 'a run is already in progress';
+          runBtn.disabled = false;
+        } else {
+          runStatus.textContent = 'trigger failed, check the local dashboard';
+          runBtn.disabled = false;
+        }
+      })
+      .catch(function () {
+        runStatus.textContent = 'local dashboard not reachable: open this page on the Mac running jobbot and make sure `jobbot dashboard` is running';
+        runBtn.disabled = false;
+      });
+  });
   // Resizable columns: drag the right edge of any header cell.
   document.querySelectorAll('th').forEach(function (th) {
     const grip = document.createElement('div');
@@ -521,7 +554,12 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
 <main>
   <div class="header">
     <h1>{e(config.publish.site_title)}</h1>
-    <span class="meta">Generated {e(_fmt_ts(now.isoformat()))} UTC</span>
+    <span class="actions">
+      <span id="run-now-status" class="meta"></span>
+      <button id="run-now" class="btn" type="button"
+        title="Starts a pipeline run on the Mac running jobbot (needs jobbot dashboard up)">Run now</button>
+      <span class="meta">Generated {e(_fmt_ts(now.isoformat()))} UTC</span>
+    </span>
   </div>
   <div class="statbar">
     <span class="stat"><span class="num">{len(jobs)}</span><span class="lbl">matches</span></span>
