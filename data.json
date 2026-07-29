@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-27T18:11:23.441691+00:00",
+  "generated_at": "2026-07-29T12:27:46.530743+00:00",
   "jobs": [
     {
       "id": "xing_cff33b58916ff1b2",
@@ -80,6 +80,22 @@
         "cover_letter.pdf",
         "application_package.pdf"
       ]
+    },
+    {
+      "id": "freelancermap_9f7ddc2c0e2d8063",
+      "source": "freelancermap",
+      "title": "Proxy Product Owner (m/w/d) Plattformprojekt im Gesundheitsumfeld, Remote",
+      "company": "BG prevent GmbH (via ISO Recruiting)",
+      "location": null,
+      "salary": null,
+      "score": 82,
+      "score_tailored": 96,
+      "status": "generated",
+      "first_seen_at": "2026-07-27T13:00:40.055420+00:00",
+      "posted_at": null,
+      "apply_route": "url",
+      "apply_target": "https://www.freelancermap.de/projekt/proxy-product-owner-m-w-d-plattformprojekt-im-gesundheitsumfeld-remote-3028163",
+      "documents": []
     },
     {
       "id": "linkedin_e924fe325768993c",
@@ -2470,22 +2486,6 @@
       "documents": []
     },
     {
-      "id": "xing_e55751602db04af5",
-      "source": "xing",
-      "title": "Product Owner (d/m/w) mit Schwerpunkt Kooperationsprodukte",
-      "company": "genua GmbH",
-      "location": "Berlin+ 0 weitere",
-      "salary": null,
-      "score": 82,
-      "score_tailored": null,
-      "status": "listing_expired",
-      "first_seen_at": "2026-06-13T05:24:37.356443+00:00",
-      "posted_at": "2026-06-12T22:58:08+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.xing.com/jobs/berlin-product-owner-schwerpunkt-kooperationsprodukte-155279646",
-      "documents": []
-    },
-    {
       "id": "freelancermap_e11dfc8c3a0b868c",
       "source": "freelancermap",
       "title": "AN\u00dc |  Product Owner / Fertigungsmanager (m/w/d) \u2013  eGovernment Berlin | Hybrid",
@@ -2759,38 +2759,6 @@
       "posted_at": null,
       "apply_route": "url",
       "apply_target": "https://www.freelancermap.de/projekt/technical-product-owner-m-w-d-3011212",
-      "documents": []
-    },
-    {
-      "id": "linkedin_6a68632a8adc0b81",
-      "source": "linkedin",
-      "title": "Technical Product Owner - AI & Digital Innovation",
-      "company": "enercity",
-      "location": "Hannover, Lower Saxony, Germany",
-      "salary": null,
-      "score": 78,
-      "score_tailored": null,
-      "status": "listing_expired",
-      "first_seen_at": "2026-06-13T05:57:24.476908+00:00",
-      "posted_at": "2026-06-12T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://de.linkedin.com/jobs/view/technical-product-owner-ai-digital-innovation-at-enercity-4427226984",
-      "documents": []
-    },
-    {
-      "id": "linkedin_023bd711f2d397a2",
-      "source": "linkedin",
-      "title": "AI Product Manager (m/f/x)",
-      "company": "Cortea",
-      "location": "Berlin, Berlin, Germany",
-      "salary": null,
-      "score": 78,
-      "score_tailored": null,
-      "status": "listing_expired",
-      "first_seen_at": "2026-06-13T05:24:50.835117+00:00",
-      "posted_at": "2026-06-13T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://de.linkedin.com/jobs/view/ai-product-manager-m-f-x-at-cortea-4428195550",
       "documents": []
     },
     {
@@ -3778,22 +3746,6 @@
       "documents": []
     },
     {
-      "id": "linkedin_cd422911f2fcd373",
-      "source": "linkedin",
-      "title": "AI Product Owner - Finance Automation (all genders)",
-      "company": "Serrala",
-      "location": "Germany",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "listing_expired",
-      "first_seen_at": "2026-06-13T09:01:01.243788+00:00",
-      "posted_at": "2026-06-13T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://de.linkedin.com/jobs/view/ai-product-owner-finance-automation-all-genders-at-serrala-4400504051",
-      "documents": []
-    },
-    {
       "id": "freelancermap_f827295de489fd3b",
       "source": "freelancermap",
       "title": "Remote/DUS, FRA, MUC - Senior Product Owner (m/w/d) Kapitalma\u00dfnahmen",
@@ -4704,25 +4656,69 @@
       "apply_route": "missing",
       "apply_target": null,
       "documents": []
-    },
-    {
-      "id": "linkedin_0cbf40e3655ce9a0",
-      "source": "linkedin",
-      "title": "Product Manager",
-      "company": "eBay",
-      "location": "Berlin Metropolitan Area",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-06-14T06:45:05.793992+00:00",
-      "posted_at": "2026-06-13T00:00:00Z",
-      "apply_route": "email",
-      "apply_target": "talent@ebay.com",
-      "documents": []
     }
   ],
   "runs": [
+    {
+      "id": 286,
+      "started_at": "2026-07-29T09:00:01.781315+00:00",
+      "finished_at": "2026-07-29T10:18:22.974956+00:00",
+      "n_fetched": 402,
+      "n_new": 14,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 192
+    },
+    {
+      "id": 285,
+      "started_at": "2026-07-29T05:00:03.416471+00:00",
+      "finished_at": "2026-07-29T05:05:25.983775+00:00",
+      "n_fetched": 483,
+      "n_new": 23,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 200
+    },
+    {
+      "id": 284,
+      "started_at": "2026-07-28T17:11:06.479451+00:00",
+      "finished_at": "2026-07-28T18:46:32.878451+00:00",
+      "n_fetched": 502,
+      "n_new": 26,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 191
+    },
+    {
+      "id": 283,
+      "started_at": "2026-07-28T13:00:02.418188+00:00",
+      "finished_at": "2026-07-28T13:08:21.186298+00:00",
+      "n_fetched": 510,
+      "n_new": 13,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 197
+    },
+    {
+      "id": 282,
+      "started_at": "2026-07-28T09:01:52.276899+00:00",
+      "finished_at": "2026-07-28T10:59:57.953804+00:00",
+      "n_fetched": 507,
+      "n_new": 12,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 196
+    },
+    {
+      "id": 281,
+      "started_at": "2026-07-28T05:00:02.238713+00:00",
+      "finished_at": "2026-07-28T07:22:38.393289+00:00",
+      "n_fetched": 480,
+      "n_new": 19,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 202
+    },
     {
       "id": 280,
       "started_at": "2026-07-27T17:00:01.878306+00:00",
@@ -4802,66 +4798,6 @@
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 184
-    },
-    {
-      "id": 272,
-      "started_at": "2026-07-22T13:00:05.694794+00:00",
-      "finished_at": "2026-07-22T13:05:37.728107+00:00",
-      "n_fetched": 419,
-      "n_new": 140,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 141
-    },
-    {
-      "id": 271,
-      "started_at": "2026-07-22T05:15:12.125938+00:00",
-      "finished_at": "2026-07-22T11:48:09.636798+00:00",
-      "n_fetched": 284,
-      "n_new": 20,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 193
-    },
-    {
-      "id": 270,
-      "started_at": "2026-07-21T17:03:30.486216+00:00",
-      "finished_at": "2026-07-21T19:47:30.183365+00:00",
-      "n_fetched": 294,
-      "n_new": 23,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 190
-    },
-    {
-      "id": 269,
-      "started_at": "2026-07-21T13:00:02.591738+00:00",
-      "finished_at": "2026-07-21T13:06:13.722006+00:00",
-      "n_fetched": 285,
-      "n_new": 6,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 178
-    },
-    {
-      "id": 268,
-      "started_at": "2026-07-21T05:11:28.222439+00:00",
-      "finished_at": "2026-07-21T11:50:52.701169+00:00",
-      "n_fetched": 238,
-      "n_new": 16,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 200
-    },
-    {
-      "id": 267,
-      "started_at": "2026-07-20T17:00:01.584415+00:00",
-      "finished_at": "2026-07-20T17:06:58.797008+00:00",
-      "n_fetched": 284,
-      "n_new": 32,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 191
     }
   ]
 }
