@@ -6,12 +6,13 @@ Last updated: 2026-06-11 (phase 2: transcript mining complete). Quotes verbatim 
 
 1. **No Lovable URLs ever** (`*.lovable.app`, `*.lovable.dev`) in any document, footer, link. Scan every source for `lovable` before rendering. The tool name "Lovable" in an AI-skills list is allowed. Canonical site citation: **www.true-north.berlin** (always with www). Origin: "there must never be lovable links at the bottom or anywhere else" / "all documents must have www.true-north.berlin with www".
 2. **Contact line everywhere:** `hilbert@true-north.berlin · +357 94101644 · www.true-north.berlin`. Never projuncta.com (see APPLICATIONS.md dirty-CV audit).
-3. **No em-dashes** in any generated artefact (AI tell). Origin: "you have to remove all mdashes from all application package and save to memory to nevr use them" (the sweep hit 333 output files). En-dash in year ranges is fine.
-4. **Dates:** English docs "11 June 2026" ("youre 1. Mai 2026 is badly done, why would you enumerate a month looking like first of may?"). German docs: "Berlin, 11. Juni 2026".
-5. German proper nouns with umlauts; "Rohde & Schwarz" with ampersand; "Diplom-Wirtschaftsingenieur" with hyphen. NEVER "Master of Science" (a packmatic CV mistakenly claimed this).
-6. AI tools in documents: say just "GPT", never a version number ("remove gpt 4o everywhere... version errelevant, just GPT").
-7. **Design reference:** `opus CV.pdf` in Dropbox `000 True North/Bewerbungen` is "the design king reference"; "use this for all tailored CVs and CLs". Application documents archive lives in that Dropbox folder.
-8. Verify rendered PDFs by extracting text (whitespace-normalized) and checking key strings.
+3. **"Wir", nicht "ich", bei allem, was ein Team geliefert hat** (Regel von Philipp, 2026-07-28: "sprich immer von wir, nicht von ich. das ist teamarbeit nicht meine leistung"). "Ich" bleibt reserviert für seine Rolle, seine Verantwortung, seine Haltung und Rahmenbedingungen (Verfügbarkeit, Satz). Umsetzungsergebnisse, Releases, Metriken und technische Lieferungen gehören dem Team. Auslöser: die Behauptung, er habe die CGM-Schnittstelle eigenhändig implementiert, war falsch; er hat die Entwickler angeleitet. Solo-Projekte (Denorios, construct8, Project Phoenix) bleiben "ich", dort stimmt es.
+4. **No em-dashes** in any generated artefact (AI tell). Origin: "you have to remove all mdashes from all application package and save to memory to nevr use them" (the sweep hit 333 output files). En-dash in year ranges is fine.
+5. **Dates:** English docs "11 June 2026" ("youre 1. Mai 2026 is badly done, why would you enumerate a month looking like first of may?"). German docs: "Berlin, 11. Juni 2026".
+6. German proper nouns with umlauts; "Rohde & Schwarz" with ampersand; "Diplom-Wirtschaftsingenieur" with hyphen. NEVER "Master of Science" (a packmatic CV mistakenly claimed this).
+7. AI tools in documents: say just "GPT", never a version number ("remove gpt 4o everywhere... version errelevant, just GPT").
+8. **Design reference:** `opus CV.pdf` in Dropbox `000 True North/Bewerbungen` is "the design king reference"; "use this for all tailored CVs and CLs". Application documents archive lives in that Dropbox folder.
+9. Verify rendered PDFs by extracting text (whitespace-normalized) and checking key strings.
 
 ## Voice & style preferences
 
@@ -77,6 +78,18 @@ Best pull-quotes: "das Product Backlog vollständig gemanaged", "Zielkonflikte i
 - Outcome quote: contributed so "dass heute ein sehr gut funktionierender Webshop betrieben werden kann" (still in production).
 - Soft quotes: "ausgesprochen engagiert und zuverlässig", "stets mit Ernsthaftigkeit und Kompetenz nachgekommen, ohne dabei den Humor zu verlieren", "Teamfähigkeit und freundliche Umgangsformen".
 - ITSCare = GbR of AOK Baden-Württemberg, AOK Hessen, AOK Rheinland-Pfalz/Saarland. Reference contact on letter: Gerd Peter (Gerd.Peter@itscare.de).
+
+## Diplomatie-Story: Umgang mit ärztlichen Fachbereichen (CLINET, 2026-07-28)
+
+**Kontext:** Bei CLINET hat Philipp die Anforderungen direkt mit Ober- und Chefärzten geklärt und dort viel Erfahrung mit "Gebaren", Arroganz und Überheblichkeit gesammelt (seine Worte). Das ist sein **wichtigster Soft-Skill-Beleg für Healthcare-Mandate**.
+
+**Die Kernbotschaft (seine Priorisierung, 2026-07-28): ego-freies Agieren und Manövrieren ohne die Erwartung, dass sich die Umgebung an einen selbst anpasst, sondern man sich selbst an die Umgebung.** Das ist der Satz, der in jedes Healthcare-/Konzern-Anschreiben und in jede Interview-Antwort zu Stakeholder-Konflikten gehört. Er erklärt implizit auch, woran Vorgänger in solchen Rollen scheitern: sie bringen ihr Vorgehen mit und erwarten, dass die gewachsene Organisation sich danach richtet.
+
+**Sein Vorgehen (verbatim-nah):** Emotionen bleiben zu Hause, tief durchatmen, zu 100% sachlich bleiben und das Gespräch immer auf das zu lösende Problem zurücklenken. "Nicht in Lösungen verlieben, sondern in die Probleme" und dort ohne Ego pragmatisch zu schlanken Lösungen kommen, die Schritt für Schritt implementiert werden. Genau daraus entsteht Vertrauen, und auf dieser Vertrauensbasis lassen sich Herausforderungen gemeinsam angehen.
+
+**Warum das zählt (ISO Proxy-PO-Mandat 3028163):** Bei diesem Endkunden sind bereits **mehrere Rollen zwischenmenschlich gescheitert** und nach kurzer Zeit ausgetauscht worden, sowohl ein interner als auch ein externer Mitarbeiter. Die Rolle wird also nicht nur fachlich, sondern vor allem zwischenmenschlich entschieden.
+
+**Wie einsetzen:** Bewusstsein signalisieren, ohne über die gescheiterten Vorgänger zu sprechen (Gerüchte-Anmutung vermeiden, Recruiter nicht kompromittieren). Bewährte Formulierung aus `cl_iso_healthcare_po_v2.md`: "Die Position zwischen medizinischem Fachbereich und Entwicklung ist zwischenmenschlich mindestens so anspruchsvoll wie fachlich, und das ist mir sehr bewusst." Ärzte respektvoll beschreiben ("ausgeprägte fachliche Autorität, wenig Zeit, klare Hierarchien"), nie abwertend. Im Interview ist das die Antwort auf jede Stakeholder-Konflikt-Frage.
 
 ## Reusable quotes & method lines (mined from legacy corpus, 2026-06-12)
 
