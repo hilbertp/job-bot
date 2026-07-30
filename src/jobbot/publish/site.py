@@ -287,8 +287,13 @@ _PAGE_JS = """
   function inWindow(tr) {
     const stamp = tr.getAttribute('data-posted');
     if (!stamp) return timeWin.value === '0';
-    if (timeWin.value === 'today') {
-      return new Date(stamp + 'T00:00:00').toDateString() === new Date().toDateString();
+    if (timeWin.value === 'yesterday') {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 1);
+      const pad = function (n) { return String(n).padStart(2, '0'); };
+      const ymd = cutoff.getFullYear() + '-' + pad(cutoff.getMonth() + 1) +
+        '-' + pad(cutoff.getDate());
+      return stamp >= ymd;  // ISO date strings compare lexicographically
     }
     const days = parseInt(timeWin.value, 10);
     if (!days) return true;
@@ -348,10 +353,10 @@ _PAGE_JS = """
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSort(); }
     });
   });
-  // Start at "today", but never present an empty page when older matches
-  // exist: widen the window until something shows.
+  // Start at "since yesterday", but never present an empty page when older
+  // matches exist: widen the window until something shows.
   (function () {
-    const order = ['today', '3', '7', '30', '0'];
+    const order = ['yesterday', '3', '7', '30', '0'];
     const labels = {'3': 'last 3 days', '7': 'last 7 days',
                     '30': 'last 30 days', '0': 'any time'};
     let i = order.indexOf(timeWin.value);
@@ -360,7 +365,7 @@ _PAGE_JS = """
       timeWin.value = order[i];
     }
     if (i > 0 && timeWin.value === order[i]) {
-      note.textContent = 'nothing posted today, widened to ' + labels[order[i]];
+      note.textContent = 'nothing posted since yesterday, widened to ' + labels[order[i]];
     }
   })();
   // "Run now": POST to the jobbot dashboard on the machine that runs the
@@ -575,7 +580,7 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
     <input id="q" type="search" placeholder="Filter by company, title, location, source">
     <label>Posted
       <select id="timewin">
-        <option value="today">today</option>
+        <option value="yesterday">since yesterday</option>
         <option value="3">last 3 days</option>
         <option value="7">last 7 days</option>
         <option value="30">last 30 days</option>
