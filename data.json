@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-29T17:34:56.714180+00:00",
+  "generated_at": "2026-07-30T11:16:14.546463+00:00",
   "jobs": [
     {
       "id": "xing_cff33b58916ff1b2",
@@ -797,8 +797,8 @@
       "status": "scored",
       "first_seen_at": "2026-07-29T12:58:12.878022+00:00",
       "posted_at": "2026-07-29T12:00:16+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
+      "apply_route": "url",
+      "apply_target": "https://job-boards.greenhouse.io/arionkoder/jobs/4122100008",
       "documents": []
     },
     {
@@ -1573,8 +1573,8 @@
       "status": "scored",
       "first_seen_at": "2026-07-29T16:18:03.565839+00:00",
       "posted_at": "2026-07-29T13:00:08+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
+      "apply_route": "url",
+      "apply_target": "https://jobs.smartrecruiters.com/unit44/744000140436520-product-owner",
       "documents": []
     },
     {
@@ -2579,38 +2579,6 @@
       "posted_at": null,
       "apply_route": "url",
       "apply_target": "https://www.freelancermap.de/projekt/technical-product-owner-m-w-d-mma14496-constaff-gmbh",
-      "documents": []
-    },
-    {
-      "id": "linkedin_b97128518750880b",
-      "source": "linkedin",
-      "title": "PRODUCT OWNER (M/W/D)",
-      "company": "FROMMER LEGAL",
-      "location": "Munich, Bavaria, Germany",
-      "salary": null,
-      "score": 82,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-06-15T09:01:05.534767+00:00",
-      "posted_at": "2026-06-15T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://de.linkedin.com/jobs/view/product-owner-m-w-d-at-frommer-legal-4425768690",
-      "documents": []
-    },
-    {
-      "id": "freelancermap_e070968784e55453",
-      "source": "freelancermap",
-      "title": "Product Owner (m/w/d) (ID: 1825)",
-      "company": "freelancermap (Auftraggeber anonym)",
-      "location": null,
-      "salary": null,
-      "score": 82,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-06-15T09:00:15.353877+00:00",
-      "posted_at": null,
-      "apply_route": "url",
-      "apply_target": "https://www.freelancermap.de/projekt/product-owner-m-w-d-id-1825",
       "documents": []
     },
     {
@@ -3874,38 +3842,6 @@
       "documents": []
     },
     {
-      "id": "linkedin_fbbe2e3123420a4c",
-      "source": "linkedin",
-      "title": "Product Owner (w/d/m)",
-      "company": "VR Smart Guide",
-      "location": "Frankfurt am Main, Hesse, Germany",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "listing_expired",
-      "first_seen_at": "2026-06-15T09:01:05.533306+00:00",
-      "posted_at": "2026-06-15T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://de.linkedin.com/jobs/view/product-owner-w-d-m-at-vr-smart-guide-4136757924",
-      "documents": []
-    },
-    {
-      "id": "freelancermap_caaf580006d18247",
-      "source": "freelancermap",
-      "title": "Lead Analyst (PO/Scrum)- Fully Remote - Germany",
-      "company": "freelancermap (Auftraggeber anonym)",
-      "location": null,
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-06-15T09:00:19.021432+00:00",
-      "posted_at": null,
-      "apply_route": "url",
-      "apply_target": "https://www.freelancermap.de/projekt/lead-analyst-po-scrum-fully-remote-germany",
-      "documents": []
-    },
-    {
       "id": "freelancermap_f827295de489fd3b",
       "source": "freelancermap",
       "title": "Remote/DUS, FRA, MUC - Senior Product Owner (m/w/d) Kapitalma\u00dfnahmen",
@@ -4800,50 +4736,28 @@
       "apply_route": "email",
       "apply_target": "accommodations.ta@cengage.com",
       "documents": []
-    },
-    {
-      "id": "linkedin_61c50c3f2638ab19",
-      "source": "linkedin",
-      "title": "Senior Product Owner - Financial Services (all genders)",
-      "company": "Hubject",
-      "location": "Berlin, Berlin, Germany",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "listing_expired",
-      "first_seen_at": "2026-06-15T09:01:05.534257+00:00",
-      "posted_at": "2026-06-15T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://de.linkedin.com/jobs/view/senior-product-owner-financial-services-all-genders-at-hubject-4427474496",
-      "documents": []
-    },
-    {
-      "id": "dailyremote_31531f87cc2f4ec9",
-      "source": "dailyremote",
-      "title": "Product Manager",
-      "company": "Ping Identity",
-      "location": null,
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-06-15T05:00:11.126809+00:00",
-      "posted_at": "2026-06-14T23:00:06+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
-      "documents": []
     }
   ],
   "runs": [
     {
-      "id": 290,
-      "started_at": "2026-07-29T17:05:25.367039+00:00",
+      "id": 291,
+      "started_at": "2026-07-30T05:14:25.533383+00:00",
       "finished_at": null,
       "n_fetched": 0,
       "n_new": 0,
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 0
+    },
+    {
+      "id": 290,
+      "started_at": "2026-07-29T17:05:25.367039+00:00",
+      "finished_at": "2026-07-29T17:40:49.370434+00:00",
+      "n_fetched": 324,
+      "n_new": 1,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 207
     },
     {
       "id": 289,
@@ -4964,16 +4878,6 @@
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 201
-    },
-    {
-      "id": 277,
-      "started_at": "2026-07-26T17:00:02.526572+00:00",
-      "finished_at": "2026-07-26T17:06:52.277053+00:00",
-      "n_fetched": 493,
-      "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 199
     }
   ]
 }
