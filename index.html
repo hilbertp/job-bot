@@ -92,6 +92,20 @@ tr:last-child td { border-bottom: none; }
 #active-run { background: var(--panel); border: 1px solid var(--line);
   border-radius: 10px; padding: 14px 16px; margin-bottom: 18px; }
 #active-run h2 { margin: 0; font-size: 14px; }
+#ar-dot { display: inline-block; width: 9px; height: 9px; border-radius: 999px;
+  margin-right: 7px; vertical-align: 1px; }
+#ar-dot.running { background: var(--good);
+  animation: ar-pulse 1.4s cubic-bezier(0.25, 1, 0.5, 1) infinite; }
+#ar-dot.stalled { background: var(--mid); animation: none; }
+#active-run .stalled-note { color: var(--mid); font-weight: 550; }
+@keyframes ar-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(63, 185, 111, 0.45); }
+  70% { box-shadow: 0 0 0 7px rgba(63, 185, 111, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(63, 185, 111, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #ar-dot.running { animation: none; }
+}
 #active-run .arhead { display: flex; flex-wrap: wrap; gap: 6px 14px;
   align-items: baseline; }
 .stagerow { display: flex; align-items: center; gap: 10px; margin-top: 8px;
@@ -122,7 +136,7 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
       <span id="run-now-status" class="meta"></span>
       <button id="run-now" class="btn" type="button"
         title="Starts a pipeline run on the Mac running jobbot (needs jobbot dashboard up)">Run now</button>
-      <span class="meta">Generated 2026-07-31 12:30 UTC</span>
+      <span class="meta">Generated 2026-07-31 12:34 UTC</span>
     </span>
   </div>
   <div class="statbar">
@@ -137,7 +151,7 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
   <p class="runline">Latest run 2026-07-31 12:19 UTC: 0 fetched, 0 new, 0 packages generated</p>
   <div id="active-run" hidden>
     <div class="arhead">
-      <h2>Active run <span id="ar-id"></span></h2>
+      <h2><span id="ar-dot" class="running"></span>Active run <span id="ar-id"></span></h2>
       <span class="meta" id="ar-meta"></span>
     </div>
     <div id="ar-stages"></div>
@@ -609,14 +623,28 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
     const d = new Date(iso);
     return isNaN(d) ? '' : d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
   }
+  // The pulse is a LIVENESS signal, not decoration: it animates only
+  // while progress rows keep moving. Progress updates land per item and
+  // a single generation call can honestly take a few minutes, so only
+  // 5+ minutes of silence counts as stuck (pulse stops, note appears).
+  const AR_STALL_S = 300;
   function renderActiveRun(run) {
     document.getElementById('ar-id').textContent = '#' + run.id;
     const started = new Date(run.started_at);
     const mins = isNaN(started) ? null : Math.max(0, Math.round((Date.now() - started) / 60000));
-    document.getElementById('ar-meta').textContent =
+    const lastAct = new Date(run.last_activity);
+    const ageS = isNaN(lastAct) ? null : Math.max(0, (Date.now() - lastAct) / 1000);
+    const stalled = ageS !== null && ageS > AR_STALL_S;
+    const dot = document.getElementById('ar-dot');
+    dot.className = stalled ? 'stalled' : 'running';
+    const meta = document.getElementById('ar-meta');
+    meta.className = stalled ? 'meta stalled-note' : 'meta';
+    meta.textContent =
       'started ' + fmtClock(run.started_at) +
       (mins === null ? '' : ', running for ' + mins + ' min') +
-      ', last activity ' + fmtClock(run.last_activity);
+      (stalled
+        ? ', no progress for ' + Math.round(ageS / 60) + ' min, run may be stuck'
+        : ', last activity ' + fmtClock(run.last_activity));
     const holder = document.getElementById('ar-stages');
     holder.textContent = '';
     let currentLabel = '';
