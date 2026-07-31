@@ -90,6 +90,7 @@ def collect_site_jobs(
         jobs.append({
             "id": row["id"],
             "source": row["source"],
+            "url": row["url"],
             "title": row["title"] or "",
             "company": row["company"] or "",
             "location": row["location"] if "location" in row.keys() else payload.get("location"),
@@ -267,6 +268,10 @@ tr:last-child td { border-bottom: none; }
   border-radius: 999px; background: rgba(122,162,255,.18); color: var(--accent);
   font-weight: 650; vertical-align: middle; }
 .src { color: var(--muted); font-size: 12px; }
+.titlelink { color: inherit; text-decoration: underline;
+  text-decoration-style: dotted; text-decoration-color: var(--muted);
+  text-underline-offset: 3px; }
+.titlelink:hover { color: var(--link); text-decoration-style: solid; }
 .docs a { display: inline-block; margin-right: 8px; white-space: nowrap; }
 .apply { white-space: nowrap; font-weight: 550; }
 .noroute { color: var(--muted); font-size: 13px; }
@@ -438,30 +443,86 @@ _PAGE_JS = """
         : ', last activity ' + fmtClock(run.last_activity));
     const holder = document.getElementById('ar-stages');
     holder.textContent = '';
+    // Fixed pipeline order. Later stages only start once earlier ones
+    // feed them, so a stage with no items yet reads "waiting", never 0/0.
+    const ORDER = ['scrape', 'enrichment', 'scoring', 'generation',
+                   'tailored_rescore', 'apply'];
+    const byName = {};
+    (run.stages || []).forEach(function (s) { byName[s.stage] = s; });
+    const doneOf = function (s) {
+      return (Number(s.completed) || 0) + (Number(s.failed) || 0) + (Number(s.skipped) || 0);
+    };
+    const hasActivity = function (s) {
+      return s && ((Number(s.started) || 0) > 0 || doneOf(s) > 0);
+    };
+    let lastActiveIdx = -1;
+    ORDER.forEach(function (n, i) { if (hasActivity(byName[n])) lastActiveIdx = i; });
     let currentLabel = '';
-    (run.stages || []).forEach(function (s) {
+    ORDER.forEach(function (stageName, i) {
+      const s = byName[stageName];
+      const isCore = i < 4;  // scrape/enrichment/scoring/generation always shown
+      if (!hasActivity(s)) {
+        if (!isCore) return;  // rescore/apply appear only when they run
+        const row = document.createElement('div');
+        row.className = 'stagerow';
+        const name = document.createElement('span');
+        name.className = 'sname';
+        name.textContent = stageName;
+        const state = document.createElement('span');
+        state.className = 'meta';
+        state.textContent = i <= lastActiveIdx ? 'no items' : 'waiting';
+        row.appendChild(name); row.appendChild(state);
+        holder.appendChild(row);
+        return;
+      }
       const total = Number(s.total) || 0;
-      const done = (Number(s.completed) || 0) + (Number(s.failed) || 0) + (Number(s.skipped) || 0);
+      const done = doneOf(s);
+      const isActive = i === lastActiveIdx && done < total;
       const row = document.createElement('div');
       row.className = 'stagerow';
       const name = document.createElement('span');
       name.className = 'sname';
-      name.textContent = s.stage;
+      name.textContent = stageName;
       const bar = document.createElement('span');
       bar.className = 'bar';
       const fill = document.createElement('i');
-      fill.style.width = (total ? Math.min(100, Math.round(done / total * 100)) : 0) + '%';
+      fill.style.width = (total ? Math.min(100, Math.round(done / total * 100)) : 100) + '%';
       bar.appendChild(fill);
       const num = document.createElement('span');
       num.className = 'snum' + (Number(s.failed) ? ' sfail' : '');
-      num.textContent = done + '/' + total + (Number(s.failed) ? ' (' + s.failed + ' failed)' : '');
+      let numTxt = done + '/' + total;
+      if (Number(s.failed)) numTxt += ', ' + s.failed + ' failed';
+      if (Number(s.skipped)) numTxt += ', ' + s.skipped + ' skipped';
+      if (!isActive && done < total) numTxt += ', ' + (total - done) + ' not run';
+      if (isActive) {
+        const eta = etaMinutes(stageName, done, total);
+        if (eta !== null) numTxt += ', ~' + eta + ' min left';
+      }
+      num.textContent = numTxt;
       row.appendChild(name); row.appendChild(bar); row.appendChild(num);
       holder.appendChild(row);
-      if (s.current_label && done < total) currentLabel = s.stage + ': ' + s.current_label;
+      if (isActive && s.current_label) currentLabel = stageName + ': ' + s.current_label;
     });
     const cur = document.getElementById('ar-current');
     cur.textContent = currentLabel ? 'working on ' + currentLabel : '';
     arPanel.hidden = false;
+  }
+  // Rolling throughput per stage, measured between polls, for an honest
+  // "~N min left" (scoring runs ~30-60s per posting on the Max plan; a
+  // slow bar is not a stuck bar).
+  const arRates = {};
+  function etaMinutes(stage, done, total) {
+    const now = Date.now();
+    const prev = arRates[stage];
+    if (!prev) { arRates[stage] = {t: now, done: done, rate: 0}; return null; }
+    const dt = (now - prev.t) / 1000;
+    if (dt >= 15) {
+      const r = (done - prev.done) / dt;  // items per second
+      prev.rate = prev.rate ? (0.6 * prev.rate + 0.4 * r) : r;
+      prev.t = now; prev.done = done;
+    }
+    if (!prev.rate || prev.rate <= 0) return null;
+    return Math.max(1, Math.round((total - done) / prev.rate / 60));
   }
   function pollActiveRun() {
     fetch(AR_URL)
@@ -599,7 +660,8 @@ def _job_row_html(job: dict, now: datetime) -> str:
         f' data-company="{e((job["company"] or "").lower())}"'
         f' data-seen="{e(first_seen)}">'
         f'<td>{e(job["company"])}<div class="src">{e(job["source"])}</div></td>'
-        f'<td>{e(job["title"])}{newpill}</td>'
+        f'<td><a class="titlelink" href="{e(job["url"])}" target="_blank"'
+        f' rel="noopener">{e(job["title"])}</a>{newpill}</td>'
         f'<td>{e(job["location"] or "")}</td>'
         f'<td>{e(job["salary"] or "")}</td>'
         f'<td>{_score_badge(job["score"])}</td>'
@@ -614,7 +676,9 @@ def _job_row_html(job: dict, now: datetime) -> str:
 def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
                       now: datetime) -> str:
     e = html.escape
-    latest = runs[0] if runs else None
+    # The newest FINISHED run; an in-flight or abandoned row has only
+    # zeros and would misreport the last real pass as "0 fetched".
+    latest = next((r for r in runs if r["finished_at"]), runs[0] if runs else None)
     new_today = sum(
         1 for j in jobs
         if (j["first_seen_at"] or "")[:10] == now.date().isoformat()
