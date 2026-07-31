@@ -82,6 +82,9 @@ def test_cli_backend_strips_api_key_and_parses_json(monkeypatch, tmp_path):
     assert "ANTHROPIC_API_KEY" not in captured["env"]
     # nvm bin dir prepended so the CLI's node is resolvable under launchd.
     assert captured["env"]["PATH"].startswith(str(tmp_path))
+    # Parity with the API backend: no extended thinking on scoring calls
+    # (measured ~3x slower and ~4x the output tokens with it on).
+    assert captured["env"]["MAX_THINKING_TOKENS"] == "0"
     assert captured["cmd"][:2] == [str(cli), "-p"]
     assert "rubric" in captured["cmd"]  # --system-prompt value
     assert captured["input"] == "the job"
