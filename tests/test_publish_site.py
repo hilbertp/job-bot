@@ -131,6 +131,10 @@ def test_build_site_writes_page_data_and_docs(db, tmp_path: Path):
     assert "run may be stuck" in html  # stalled-state copy
     assert "'waiting'" in html         # pending stages say waiting, not 0/0
     assert "min left" in html          # active stage carries a rate-based ETA
+    assert 'id="ar-ticker"' in html    # live results feed
+    assert 'id="ar-strong"' in html    # running strong-match counter
+    assert 'id="ar-fails"' in html     # inline failure reasons
+    assert "backlog" in html           # scoring queue split new vs backlog
     # Every row links to the posting itself, apply route or not.
     assert f'class="titlelink" href="https://example.com/jobs/1"' in html
     assert "https://example.com/jobs/1/apply" in html
