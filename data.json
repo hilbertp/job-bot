@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-31T14:01:10.808792+00:00",
+  "generated_at": "2026-07-31T14:13:55.472372+00:00",
   "jobs": [
     {
       "id": "xing_cff33b58916ff1b2",
@@ -4163,6 +4163,23 @@
       "documents": []
     },
     {
+      "id": "weworkremotely_3663546b7cba347d",
+      "source": "weworkremotely",
+      "url": "https://weworkremotely.com/remote-jobs/twilio-principal-product-manager",
+      "title": "Principal Product Manager",
+      "company": "Twilio",
+      "location": null,
+      "salary": null,
+      "score": 73,
+      "score_tailored": null,
+      "status": "listing_expired",
+      "first_seen_at": "2026-07-23T13:40:04.668913+00:00",
+      "posted_at": "2026-07-23T07:01:42Z",
+      "apply_route": "url",
+      "apply_target": "https://weworkremotely.com/remote-jobs/twilio-principal-product-manager",
+      "documents": []
+    },
+    {
       "id": "dailyremote_a7f84479dbfdc76a",
       "source": "dailyremote",
       "url": "https://dailyremote.com/remote-job/product-owner-5390109",
@@ -5327,6 +5344,23 @@
       "documents": []
     },
     {
+      "id": "weworkremotely_6fdb836adc3c25ad",
+      "source": "weworkremotely",
+      "url": "https://weworkremotely.com/remote-jobs/twilio-principal-product-manager-1",
+      "title": "Principal Product Manager",
+      "company": "Twilio",
+      "location": null,
+      "salary": null,
+      "score": 66,
+      "score_tailored": null,
+      "status": "listing_expired",
+      "first_seen_at": "2026-07-23T13:40:04.668450+00:00",
+      "posted_at": "2026-07-23T07:01:49Z",
+      "apply_route": "url",
+      "apply_target": "https://weworkremotely.com/remote-jobs/twilio-principal-product-manager-1",
+      "documents": []
+    },
+    {
       "id": "dailyremote_56b9b591af475014",
       "source": "dailyremote",
       "url": "https://dailyremote.com/remote-job/product-manager-5388184",
@@ -5410,52 +5444,18 @@
       "apply_route": "url",
       "apply_target": "https://www.xing.com/jobs/frankfurt-main-product-manager-customer-onboarding-business-banking-156831061",
       "documents": []
-    },
-    {
-      "id": "dailyremote_73de52095bfee3b9",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-manager-5372790",
-      "title": "Product Manager",
-      "company": "Sardina Systems",
-      "location": null,
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-28T17:11:11.229137+00:00",
-      "posted_at": "2026-07-28T15:00:13+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
-      "documents": []
-    },
-    {
-      "id": "stepstone_f2300277866006aa",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-im-Bereich-Informationssicherheit-m-w-d-Bonn-Koeln-Meckenheim-BWI-GmbH--14316344-inline.html",
-      "title": "Product Owner im Bereich Informationssicherheit (m/w/d)",
-      "company": "BWI GmbH",
-      "location": "Bonn, K\u00f6ln, Meckenheim",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:14:58.741349+00:00",
-      "posted_at": "2026-07-23T12:39:40.530000+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.stepstone.de/stellenangebote--Product-Owner-im-Bereich-Informationssicherheit-m-w-d-Bonn-Koeln-Meckenheim-BWI-GmbH--14316344-inline.html",
-      "documents": []
     }
   ],
   "runs": [
     {
       "id": 295,
       "started_at": "2026-07-31T13:26:02.092217+00:00",
-      "finished_at": null,
-      "n_fetched": 0,
+      "finished_at": "2026-07-31T14:13:55.445396+00:00",
+      "n_fetched": 254,
       "n_new": 0,
       "n_generated": 0,
       "n_applied": 0,
-      "n_errors": 0
+      "n_errors": 143
     },
     {
       "id": 294,
