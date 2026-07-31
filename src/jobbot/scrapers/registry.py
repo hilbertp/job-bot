@@ -4,10 +4,16 @@ from __future__ import annotations
 from .base import BaseScraper
 from .dailyremote import DailyRemoteScraper
 from .freelance_de import FreelanceDeScraper
+from .braintrust import BraintrustScraper
+from .brainville import BrainvilleScraper
+from .free_work import FreeWorkScraper
 from .freelancermap import FreelancermapScraper
+from .himalayas import HimalayasScraper
 from .indeed import IndeedScraper
 from .linkedin import LinkedInScraper
 from .nodesk import NoDeskScraper
+from .remoteok import RemoteOkScraper
+from .remotive import RemotiveScraper
 from .stepstone import StepstoneScraper
 from .weworkremotely import WeWorkRemotelyScraper
 from .working_nomads import WorkingNomadsScraper
@@ -24,6 +30,12 @@ REGISTRY: dict[str, BaseScraper] = {
     "stepstone":      StepstoneScraper(),
     "xing":           XingScraper(),
     "linkedin":       LinkedInScraper(),
+    "remotive":       RemotiveScraper(),
+    "remoteok":       RemoteOkScraper(),
+    "himalayas":      HimalayasScraper(),
+    "free_work":      FreeWorkScraper(),
+    "braintrust":     BraintrustScraper(),
+    "brainville":     BrainvilleScraper(),
 }
 
 
