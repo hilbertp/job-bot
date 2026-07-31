@@ -421,7 +421,7 @@ def _cors_for_pages_trigger(resp):
     local endpoint. Scoped to the one trigger route and to the exact
     Pages origin; includes the Private Network Access preflight header
     Chromium requires for public-site -> localhost requests."""
-    if request.path == "/api/runs/trigger":
+    if request.path in ("/api/runs/trigger", "/api/runs/active"):
         allowed = _pages_origin()
         if allowed and request.headers.get("Origin") == allowed:
             resp.headers["Access-Control-Allow-Origin"] = allowed
@@ -429,6 +429,57 @@ def _cors_for_pages_trigger(resp):
             resp.headers["Access-Control-Allow-Private-Network"] = "true"
             resp.headers["Vary"] = "Origin"
     return resp
+
+
+_ACTIVE_RUN_STALE_S = 15 * 60
+
+
+@app.route("/api/runs/active")
+def api_active_run():
+    """The newest in-progress run with live per-stage progress.
+
+    Feeds the static Pages dashboard's active-run panel (CORS via the
+    after_request hook). A run counts as active only while its progress
+    rows are fresh; unfinished rows abandoned by a killed process (e.g.
+    run 274) must not be reported as running forever.
+    """
+    from .state import run_stage_progress
+
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT id, started_at FROM runs WHERE finished_at IS NULL"
+            " ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+        if row is None:
+            return jsonify({"active": False})
+        stages = run_stage_progress(conn, row[0])
+
+    def _dt(value):
+        try:
+            return datetime.fromisoformat(str(value))
+        except (TypeError, ValueError):
+            return None
+
+    stamps = [d for d in
+              ([_dt(row[1])] + [_dt(s["updated_at"]) for s in stages])
+              if d is not None]
+    now = datetime.now(timezone.utc)
+    last_activity = max(
+        (d if d.tzinfo else d.replace(tzinfo=timezone.utc) for d in stamps),
+        default=None,
+    )
+    if last_activity is None or (now - last_activity).total_seconds() > _ACTIVE_RUN_STALE_S:
+        return jsonify({"active": False, "stale_run_id": row[0]})
+
+    return jsonify({
+        "active": True,
+        "run": {
+            "id": row[0],
+            "started_at": row[1],
+            "last_activity": last_activity.isoformat(),
+            "stages": stages,
+        },
+    })
 
 
 @app.route("/api/runs/trigger", methods=["POST", "OPTIONS"])

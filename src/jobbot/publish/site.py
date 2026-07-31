@@ -270,6 +270,24 @@ tr:last-child td { border-bottom: none; }
 .docs a { display: inline-block; margin-right: 8px; white-space: nowrap; }
 .apply { white-space: nowrap; font-weight: 550; }
 .noroute { color: var(--muted); font-size: 13px; }
+#active-run { background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 18px; }
+#active-run h2 { margin: 0; font-size: 14px; }
+#active-run .arhead { display: flex; flex-wrap: wrap; gap: 6px 14px;
+  align-items: baseline; }
+.stagerow { display: flex; align-items: center; gap: 10px; margin-top: 8px;
+  font-size: 13px; }
+.stagerow .sname { flex: 0 0 110px; color: var(--muted); }
+.bar { flex: 1; height: 6px; background: var(--panel2); border-radius: 999px;
+  overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent);
+  border-radius: 999px; transition: width 400ms cubic-bezier(0.25, 1, 0.5, 1); }
+.stagerow .snum { flex: 0 0 110px; text-align: right;
+  font-variant-numeric: tabular-nums; }
+.stagerow .sfail { color: var(--mid); }
+@media (prefers-reduced-motion: reduce) {
+  .bar i { transition: none; }
+}
 .runs { margin-top: 26px; }
 .runs h2 { font-size: 15px; color: var(--muted); text-transform: uppercase;
   letter-spacing: 0.8px; }
@@ -368,6 +386,65 @@ _PAGE_JS = """
       note.textContent = 'nothing posted since yesterday, widened to ' + labels[order[i]];
     }
   })();
+  // Active-run progress: poll the local jobbot dashboard while a run is
+  // going. Same reachability rules as the Run now button: the panel only
+  // appears when this page is open on the machine running jobbot.
+  const arPanel = document.getElementById('active-run');
+  const AR_URL = 'http://127.0.0.1:5001/api/runs/active';
+  let arTimer = null;
+  function arSchedule(ms) {
+    clearTimeout(arTimer);
+    arTimer = setTimeout(pollActiveRun, ms);
+  }
+  function fmtClock(iso) {
+    const d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+  }
+  function renderActiveRun(run) {
+    document.getElementById('ar-id').textContent = '#' + run.id;
+    const started = new Date(run.started_at);
+    const mins = isNaN(started) ? null : Math.max(0, Math.round((Date.now() - started) / 60000));
+    document.getElementById('ar-meta').textContent =
+      'started ' + fmtClock(run.started_at) +
+      (mins === null ? '' : ', running for ' + mins + ' min') +
+      ', last activity ' + fmtClock(run.last_activity);
+    const holder = document.getElementById('ar-stages');
+    holder.textContent = '';
+    let currentLabel = '';
+    (run.stages || []).forEach(function (s) {
+      const total = Number(s.total) || 0;
+      const done = (Number(s.completed) || 0) + (Number(s.failed) || 0) + (Number(s.skipped) || 0);
+      const row = document.createElement('div');
+      row.className = 'stagerow';
+      const name = document.createElement('span');
+      name.className = 'sname';
+      name.textContent = s.stage;
+      const bar = document.createElement('span');
+      bar.className = 'bar';
+      const fill = document.createElement('i');
+      fill.style.width = (total ? Math.min(100, Math.round(done / total * 100)) : 0) + '%';
+      bar.appendChild(fill);
+      const num = document.createElement('span');
+      num.className = 'snum' + (Number(s.failed) ? ' sfail' : '');
+      num.textContent = done + '/' + total + (Number(s.failed) ? ' (' + s.failed + ' failed)' : '');
+      row.appendChild(name); row.appendChild(bar); row.appendChild(num);
+      holder.appendChild(row);
+      if (s.current_label && done < total) currentLabel = s.stage + ': ' + s.current_label;
+    });
+    const cur = document.getElementById('ar-current');
+    cur.textContent = currentLabel ? 'working on ' + currentLabel : '';
+    arPanel.hidden = false;
+  }
+  function pollActiveRun() {
+    fetch(AR_URL)
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.active) { renderActiveRun(d.run); arSchedule(5000); }
+        else { arPanel.hidden = true; arSchedule(60000); }
+      })
+      .catch(function () { arPanel.hidden = true; arSchedule(120000); });
+  }
+  pollActiveRun();
   // "Run now": POST to the jobbot dashboard on the machine that runs the
   // pipeline. Only reachable when this page is opened on that machine
   // (or its network) with `jobbot dashboard` up; the run republishes
@@ -382,6 +459,7 @@ _PAGE_JS = """
       .then(function (x) {
         if (x.ok) {
           runStatus.textContent = 'run started; this page republishes when it finishes (typically under an hour)';
+          arSchedule(3000);
         } else if (x.d && x.d.status === 'already_running') {
           runStatus.textContent = 'a run is already in progress';
           runBtn.disabled = false;
@@ -576,6 +654,14 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
     <span class="stat"><span class="num" id="shown-count">{len(jobs)}</span><span class="lbl">after filters</span></span>
   </div>
   <p class="runline">{latest_line}</p>
+  <div id="active-run" hidden>
+    <div class="arhead">
+      <h2>Active run <span id="ar-id"></span></h2>
+      <span class="meta" id="ar-meta"></span>
+    </div>
+    <div id="ar-stages"></div>
+    <div class="meta" id="ar-current" style="margin-top:8px"></div>
+  </div>
   <div class="controls">
     <input id="q" type="search" placeholder="Filter by company, title, location, source">
     <label>Posted

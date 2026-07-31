@@ -124,6 +124,8 @@ def test_build_site_writes_page_data_and_docs(db, tmp_path: Path):
     assert 'id="filter-empty"' in html
     assert 'id="run-now"' in html      # manual trigger button
     assert "http://127.0.0.1:5001/api/runs/trigger" in html
+    assert 'id="active-run"' in html   # live progress panel
+    assert "http://127.0.0.1:5001/api/runs/active" in html
     assert "https://example.com/jobs/1/apply" in html
     data = json.loads((site_dir / "data.json").read_text())
     assert data["jobs"][0]["company"] == "Acme 1"
