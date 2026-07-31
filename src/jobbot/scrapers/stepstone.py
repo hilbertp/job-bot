@@ -17,7 +17,7 @@ import structlog
 from selectolax.parser import HTMLParser
 
 from ..models import JobPosting
-from .base import BaseScraper, SearchQuery, parse_posted_at, stable_id
+from .base import BaseScraper, ListingGone, SearchQuery, parse_posted_at, stable_id
 
 log = structlog.get_logger()
 
@@ -109,6 +109,12 @@ class StepstoneScraper(BaseScraper):
         if r.status_code in (429, 999):
             log.warning("stepstone_detail_rate_limited", status=r.status_code, url=detail_url)
             return None
+        # StepStone is explicit about withdrawn postings: HTTP 410 Gone.
+        # Treat that as final rather than as a failed fetch, otherwise the
+        # row is re-requested on every run for as long as it stays in the
+        # corpus. 404 is the same verdict from a rebuilt URL.
+        if r.status_code in (404, 410):
+            raise ListingGone(f"stepstone returned HTTP {r.status_code}")
         if r.status_code != 200:
             log.warning("stepstone_detail_http_error", status=r.status_code, url=detail_url)
             return None

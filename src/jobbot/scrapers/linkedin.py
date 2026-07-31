@@ -28,7 +28,7 @@ import structlog
 from selectolax.parser import HTMLParser
 
 from ..models import JobPosting
-from .base import BaseScraper, SearchQuery, parse_posted_at, stable_id
+from .base import BaseScraper, ListingGone, SearchQuery, parse_posted_at, stable_id
 
 log = structlog.get_logger()
 
@@ -163,6 +163,15 @@ class LinkedInScraper(BaseScraper):
         if r.status_code in (429, 999):
             log.warning("linkedin_detail_rate_limited", status=r.status_code, job_id=job_id)
             return None
+        # A pulled posting does not 404 here: LinkedIn answers 200 and
+        # redirects to a generic job search page carrying
+        # `trk=expired_jd_redirect`. Without this check the row fails
+        # enrichment on a ~15-word body and gets retried on every later run.
+        final_url = str(r.url)
+        if "expired_jd_redirect" in final_url or "/jobs/search" in final_url:
+            raise ListingGone(f"linkedin redirected to {final_url[:120]}")
+        if r.status_code == 410:
+            raise ListingGone("linkedin returned HTTP 410 Gone")
         if r.status_code != 200:
             log.warning("linkedin_detail_http_error", status=r.status_code, job_id=job_id)
             return None

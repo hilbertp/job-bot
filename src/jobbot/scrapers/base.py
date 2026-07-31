@@ -13,6 +13,27 @@ from ..models import JobPosting
 SearchQuery = dict[str, Any]
 
 
+class ListingGone(Exception):
+    """The detail page proves the posting has been pulled from the board.
+
+    `fetch_detail` returning None means "no usable body this time", which is
+    a transient verdict: the enrichment runner retries such rows on later
+    runs. A listing that answers HTTP 410, or redirects to a generic search
+    page, will never produce a body, and retrying it every run is pure
+    waste. Measured 2026-07-31: 37 of 100 detail fetches failed, dominated
+    by exactly these two shapes.
+
+    Raise this instead of returning None when the source has told us the
+    posting is dead. The runner marks the row `listing_expired`, which is a
+    terminal status, so it leaves both the enrichment and the scoring queue
+    for good.
+    """
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+
+
 def stable_id(source: str, url: str) -> str:
     h = hashlib.sha1(f"{source}::{url}".encode()).hexdigest()
     return f"{source}_{h[:16]}"

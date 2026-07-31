@@ -27,9 +27,10 @@ from datetime import datetime, timezone
 import re
 import structlog
 
-from ..models import JobPosting
+from ..models import JobPosting, JobStatus
 from ..scrapers import REGISTRY
-from ..state import update_enrichment, update_run_stage_progress
+from ..scrapers.base import ListingGone
+from ..state import update_enrichment, update_run_stage_progress, update_status
 from .email_extractor import extract_apply_email
 
 log = structlog.get_logger()
@@ -44,6 +45,10 @@ class EnrichmentReport:
     n_attempted: int = 0
     n_succeeded: int = 0
     n_failed: int = 0
+    # Rows whose source told us the posting is gone. Counted apart from
+    # n_failed because they are a clean outcome, not a fetch problem, and
+    # they will never be retried.
+    n_expired: int = 0
     per_source_success: Counter = field(default_factory=Counter)
     per_source_failure: Counter = field(default_factory=Counter)
     enriched_jobs: list[JobPosting] = field(default_factory=list)
@@ -122,6 +127,25 @@ def enrich_new_postings(
 
         try:
             enriched = fetch_detail(job)
+        except ListingGone as gone:
+            # Final verdict from the source: the posting is off the board.
+            # Marking it listing_expired (a terminal status) takes it out of
+            # both the enrichment and the scoring queue for good, instead of
+            # re-requesting the same dead URL on every run.
+            log.info("enrichment_listing_gone", job_id=job.id, source=job.source,
+                     reason=gone.reason)
+            update_status(conn, job.id, JobStatus.LISTING_EXPIRED,
+                          reason=gone.reason,
+                          discard_reason=f"listing gone: {gone.reason}")
+            report.n_expired += 1
+            if run_id is not None:
+                update_run_stage_progress(
+                    conn, run_id, "enrichment",
+                    completed=report.n_succeeded,
+                    failed=report.n_failed,
+                    skipped=report.n_expired,
+                )
+            continue
         except Exception as e:
             log.exception("enrichment_fetch_detail_failed", job_id=job.id, source=job.source)
             enriched = None

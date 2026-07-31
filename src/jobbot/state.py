@@ -1020,30 +1020,44 @@ def set_posted_at(conn: sqlite3.Connection, job_id: str, posted_at_iso: str) -> 
 def jobs_needing_enrichment(conn: sqlite3.Connection) -> list[JobPosting]:
     """Re-hydrate JobPosting objects for rows that still owe us a body fetch.
 
-    Two groups qualify:
+    A row qualifies when it has no vouched-for body yet (`description_scraped`
+    NULL or 0) and has not reached a terminal status.
 
-    1. `description_scraped IS NULL` - postings scraped before the enrichment
-       phase was wired into the pipeline. Without this they would never get a
-       body fetch on subsequent runs because dedup excludes them from
-       `all_new`.
-    2. `description_scraped = 0` on a `cannot_score:no_body` row - enrichment
-       ran once and failed. These used to be abandoned permanently: a single
-       429, a transient timeout, or a page selector that has since been fixed
-       left the flag at 0, and every later run skipped the row because it was
-       no longer NULL. Measured on 2026-07-31 that had stranded 393 postings,
-       including WeWorkRemotely rows whose detail page fetches perfectly well
-       today.
+    The NULL case covers postings scraped before the enrichment phase existed;
+    without it they would never get a body because dedup excludes them from
+    `all_new`. The 0 case is the one that used to be abandoned permanently: a
+    single 429, a transient timeout, or a page selector that has since been
+    fixed left the flag at 0, and every later run skipped the row. Measured on
+    2026-07-31 that had stranded 393 postings, including WeWorkRemotely rows
+    whose detail page fetches perfectly well today.
 
-    Retrying group 2 is bounded by the caller's market-age gate, which drops
-    anything older than `max_market_age_days` before a single detail page is
-    requested, so the retry cannot grow without limit.
+    The status whitelist is what keeps the retry honest in the other
+    direction. Only `scraped` and the `cannot_score:*` states are pending
+    work. Everything else has already been decided: a withdrawn listing is
+    `listing_expired` (terminal, set by the runner) and must never come
+    back, and `filtered` / `below_threshold` rows lost on the heuristic, the
+    salary floor or the age gate, so re-fetching their detail pages would
+    spend HTTP requests to re-reach the same verdict. Measured 2026-08-01,
+    a NOT-IN-terminal formulation would have pulled 630 rows in, 466 of them
+    already filtered.
+
+    The remaining retries are bounded by the caller's market-age gate, which
+    drops anything older than `max_market_age_days` before a single detail
+    page is requested, so this cannot grow without limit.
     """
+    pending = (
+        JobStatus.SCRAPED.value,
+        JobStatus.CANNOT_SCORE_NO_BODY.value,
+        JobStatus.CANNOT_SCORE_NO_PRIMARY_CV.value,
+        JobStatus.CANNOT_SCORE_NO_BASE_CV.value,
+    )
+    placeholders = ",".join("?" for _ in pending)
     rows = conn.execute(
         "SELECT raw_json FROM seen_jobs "
         "WHERE raw_json IS NOT NULL "
-        "  AND (description_scraped IS NULL "
-        "       OR (description_scraped = 0 AND status = ?))",
-        (JobStatus.CANNOT_SCORE_NO_BODY.value,),
+        "  AND (description_scraped IS NULL OR description_scraped = 0) "
+        f"  AND status IN ({placeholders})",
+        pending,
     ).fetchall()
     out: list[JobPosting] = []
     for row in rows:
