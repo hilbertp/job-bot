@@ -28,6 +28,8 @@ def test_imports():
         "weworkremotely", "working_nomads", "nodesk", "dailyremote",
         "freelancermap", "freelance_de",
         "indeed", "stepstone", "xing", "linkedin",
+        "remotive", "remoteok", "himalayas",
+        "free_work", "braintrust", "brainville",
     }
 
 
