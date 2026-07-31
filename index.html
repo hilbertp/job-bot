@@ -93,8 +93,16 @@ tr:last-child td { border-bottom: none; }
 .docs a { display: inline-block; margin-right: 8px; white-space: nowrap; }
 .apply { white-space: nowrap; font-weight: 550; }
 .noroute { color: var(--muted); font-size: 13px; }
-#active-run { background: var(--panel); border: 1px solid var(--line);
-  border-radius: 10px; padding: 14px 16px; margin-bottom: 18px; }
+/* An in-flight run is the single most time-sensitive thing on the page:
+   it means the numbers below are mid-change. It therefore sits ABOVE the
+   stat bar and carries an accent border, so it reads as an interruption
+   rather than as one more panel. */
+#active-run { background: var(--panel); border: 1px solid var(--good);
+  border-left: 3px solid var(--good);
+  border-radius: 10px; padding: 14px 16px; margin: 4px 0 18px; }
+#active-run h2 { letter-spacing: 0.01em; }
+/* The 80+ count is the number worth acting on; the rest is context. */
+.stat.hot .num { color: var(--good); }
 #active-run h2 { margin: 0; font-size: 14px; }
 #ar-dot { display: inline-block; width: 9px; height: 9px; border-radius: 999px;
   margin-right: 7px; vertical-align: 1px; }
@@ -151,19 +159,9 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
       <span id="run-now-status" class="meta"></span>
       <button id="run-now" class="btn" type="button"
         title="Starts a pipeline run on the Mac running jobbot (needs jobbot dashboard up)">Run now</button>
-      <span class="meta">Generated 2026-07-31 20:08 UTC</span>
+      <span class="meta">Generated 2026-07-31 23:13 UTC</span>
     </span>
   </div>
-  <div class="statbar">
-    <span class="stat"><span class="num">118</span><span class="lbl">matches</span></span>
-    <span class="sep">|</span>
-    <span class="stat"><span class="num">45</span><span class="lbl">new today</span></span>
-    <span class="sep">|</span>
-    <span class="stat"><span class="num">4</span><span class="lbl">ready-to-send packages</span></span>
-    <span class="sep">|</span>
-    <span class="stat"><span class="num" id="shown-count">118</span><span class="lbl">after filters</span></span>
-  </div>
-  <p class="runline">Latest run 2026-07-31 19:59 UTC: 301 fetched, 0 new, 3 packages generated, <span class="err">1 errors</span></p>
   <div id="active-run" hidden>
     <div class="arhead">
       <h2><span id="ar-dot" class="running"></span>Active run <span id="ar-id"></span></h2>
@@ -175,6 +173,16 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
     <div id="ar-ticker" hidden></div>
     <div id="ar-fails" hidden></div>
   </div>
+  <div class="statbar">
+    <span class="stat"><span class="num">45</span><span class="lbl">new today</span></span>
+    <span class="sep">|</span>
+    <span class="stat hot"><span class="num">18</span><span class="lbl">of those 80+</span></span>
+    <span class="sep">|</span>
+    <span class="stat"><span class="num">89</span><span class="lbl">packages waiting to be sent</span></span>
+    <span class="sep">|</span>
+    <span class="stat"><span class="num" id="shown-count">118</span><span class="lbl">rows shown</span></span>
+  </div>
+  <p class="runline">Latest run 2026-07-31 19:59 UTC: 301 fetched, 0 new, 3 packages generated, <span class="err">1 errors</span></p>
   <div class="controls">
     <input id="q" type="search" placeholder="Filter by company, title, location, source">
     <label>Posted
@@ -490,12 +498,23 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
     // Display names mirror the product flow: scrape PO/PM postings ->
     // score vs the general CV -> tailor CV for 80%+ -> rescore tailored.
     const STAGE_LABELS = {
-      scrape: 'scrape postings',
+      scrape: 'search job boards',
       enrichment: 'fetch details',
       scoring: 'score vs base CV',
       generation: 'tailor CV + letter',
       tailored_rescore: 'rescore tailored',
       apply: 'apply'
+    };
+    // A bare "29/29" or "100/100" reads as a percentage. Name the unit so
+    // the number is unambiguous: 29 searches (across 14 boards), 100
+    // postings fetched, 63 postings scored, 37 packages tailored.
+    const STAGE_UNITS = {
+      scrape: 'searches',
+      enrichment: 'postings',
+      scoring: 'postings',
+      generation: 'packages',
+      tailored_rescore: 'packages',
+      apply: 'applications'
     };
     const byName = {};
     (run.stages || []).forEach(function (s) { byName[s.stage] = s; });
@@ -522,7 +541,18 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
         name.textContent = STAGE_LABELS[stageName] || stageName;
         const state = document.createElement('span');
         state.className = 'meta';
-        state.textContent = i <= lastActiveIdx ? 'no items' : 'waiting';
+        // A bare "waiting" tells the user nothing about why. Name the stage
+        // it is queued behind, so the panel reads as a chain rather than as
+        // four independent things that might be stuck.
+        if (i <= lastActiveIdx) {
+          state.textContent = 'nothing to do';
+        } else {
+          const blocker = ORDER.slice(0, i).reverse()
+            .find(function (n) { return hasActivity(byName[n]); });
+          state.textContent = blocker
+            ? 'waiting for ' + (STAGE_LABELS[blocker] || blocker)
+            : 'waiting to start';
+        }
         row.appendChild(name); row.appendChild(state);
         holder.appendChild(row);
         return;
@@ -544,6 +574,11 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
       const num = document.createElement('span');
       num.className = 'snum' + (Number(s.failed) ? ' sfail' : '');
       let numTxt = done + '/' + total;
+      const unit = STAGE_UNITS[stageName];
+      if (unit) numTxt += ' ' + unit;
+      if (stageName === 'scrape' && meta2.boards) {
+        numTxt += ' across ' + meta2.boards + ' job boards';
+      }
       if (stageName === 'scoring' && meta2.backlog > 0) {
         numTxt += ' (' + (meta2.from_this_run || 0) + ' new + '
                 + meta2.backlog + ' backlog)';
