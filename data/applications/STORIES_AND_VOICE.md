@@ -22,6 +22,7 @@ Last updated: 2026-06-11 (phase 2: transcript mining complete). Quotes verbatim 
 - Vary phrasing across documents; never recycle sentences verbatim between CV/CL/email.
 - Workflow expectations: score + package + Downloads = ONE operation ("why do i have to ask so many times for this"); tailored scores never blank ("SCOREEEEEE!!!!!!!"); single merged PDF ("one application packages with CL and CL together in one pdf"); availability is always ASAP; mark expired listings proactively ("always mark expired ion the future yourself!").
 - Pushback calibration: don't invent keyword gaps. Hygraph verbatim: "PIM i understand the rest is such bullshit requirements and callign it a gap is LAUGHABLE."
+- **Zweiter Praezedenzfall fuer die Regel (29.07.2026, RS GROUP Digital PM):** Die JD verlangte 'nachweisbare Erfahrung in digital-nativen, produktgetriebenen Technologieunternehmen' und sagte 'Erfahrung aus klassischen Konzern-Transformationsprojekten ist ausdruecklich nicht ausreichend'. Ich habe das als hartes Ausschlusskriterium gelesen, den base-Score gedeckelt und R&S/BA/Bundesdruckerei/AOK in einen Kleingedruckt-Block verschoben. Philipp verbatim: 'das ist totaler quatsch. das passt super auf mich und ist ein reines qualifikations blabla der erwartungen an denkweisen und arbeitsstil erzeugt.' LEHRE: Formulierungen ueber Denkweise/Arbeitsstil/Kultur sind KEIN Filter auf Arbeitgebertypen und kein Grund, echte Stationen zu verstecken oder Punkte abzuziehen. Erst pruefen, ob die Anforderung eine nachweisbare Faehigkeit meint oder nur eine Haltung beschreibt.
 
 ## Screener answer bank
 
@@ -79,6 +80,13 @@ Best pull-quotes: "das Product Backlog vollständig gemanaged", "Zielkonflikte i
 - Soft quotes: "ausgesprochen engagiert und zuverlässig", "stets mit Ernsthaftigkeit und Kompetenz nachgekommen, ohne dabei den Humor zu verlieren", "Teamfähigkeit und freundliche Umgangsformen".
 - ITSCare = GbR of AOK Baden-Württemberg, AOK Hessen, AOK Rheinland-Pfalz/Saarland. Reference contact on letter: Gerd Peter (Gerd.Peter@itscare.de).
 
+
+### R&S "exactly zero clicks" story (NEW, from Philipp 2026-07-28) — the best measurement story he has
+
+He pushed to be included in the customer workshops at Rohde & Schwarz until he was finally invited (defence-industry secrecy made this hard). It was immediately clear that the CUSTOMERS' DEVELOPERS (the platform's actual users) worked completely differently from what the team had assumed. So they built a small alternative, code-heavy workflow alongside the intended one and measured which of the two got used. **The originally intended workflow received exactly zero clicks.**
+
+Why it is strong: it proves three things at once, that he fights for direct customer contact, that assumptions die on contact with real users, and that instrumentation settles arguments opinions cannot. Use it as the proof for "nobody can say afterwards whether it worked" and for any question about data-driven decisions or discovery. It now REPLACES the EMIL Claims Center story in problem 5 of the problem-first CV (EMIL churn-per-step stays as an experience bullet).
+
 ## Reusable quotes & method lines (mined from legacy corpus, 2026-06-12)
 
 - **R&S project-leader quote (German, verbatim, strongest third-party proof he has):** "Auf dieses Feature habe [ich] mehr als ein Jahr bei den Entwicklern gepocht und du hast es alleine innerhalb einer Woche geliefert!" Context: self-taught OpenShift, solo feature development through to release.
@@ -87,3 +95,53 @@ Best pull-quotes: "das Product Backlog vollständig gemanaged", "Zielkonflikte i
 - **Small-bets axiom (0G essay):** "It is a good assumption that 75% of the product decisions turn into absolutely zero revenues" (Cagan-style portfolio framing).
 - **Provenance contrast (0G essay):** defence platforms prove "it was your fault"; open AI platforms need "a maximum of transparency to enable a maximum of network effect and learning of the swarm."
 - **opus package structure (the design-king reference):** Why-them / honest framing of the gap / AI-native stack / side project / 3-week onboarding plan (Week 1 listen-map, Week 2 prototype-slice, Week 3+ ship) / CL / CV. Reuse this structure for founding-PM applications.
+
+## Senior positioning: problem-first, NOT achievement-first (set 2026-07-28)
+
+**THE ROOT THESIS underneath the five problems (his words, 2026-07-28):** "wir kennen die loesung (noch) nicht, die der markt braucht. weder wir, noch der markt selbst noch der allerhoechsterlauchte. deswegen machen wir betting und anhaltende discovery und cheap&fast prototyping. damit kommen wir intern tippelschrittchenhaft dem ziel naeher, koennen dann extern mit pilotkunden und stakeholdern prototypes und mvps verifizieren und schaffen so produkte die menschen wirklich lieben!" Rendered in EN as: nobody knows the needed solution, not us, not the customer, not the highest-paid opinion in the room; therefore bets + continuous discovery + cheap fast prototyping, internal progress in small increments, then external verification with pilot customers and stakeholders, which is how you get products people love "rather than products that merely exist (with zero revenues)" (his final wording, ties back to his 75%-of-decisions-produce-no-revenue axiom). ALWAYS open the problem section with this thesis; the five problems are consequences of skipping it.
+
+His own rule, verbatim: "junior sell themselves with their softskills, mids with their achievements and results, good senior tell businesses the problems they probably have and how they would solve them." So senior-level CVs and letters LEAD with a diagnosis, not with a track record.
+
+**IMPORTANT (he corrected me on this):** the problems are **general software product-management pathology**, NOT industry/domain problems. Do not dress up sector operations as "the problems". His canonical five:
+1. **Discovery treated as a phase, and a short one** -> the wrong thing gets built efficiently. Answer: continuous discovery + small cheap bets, resolve the largest uncertainty first (ties to his 75%-of-decisions-produce-no-revenue axiom).
+2. **Discovery without engineers and designers present** -> best technical solution never surfaces; people asked to commit to a solution they had no part in finding. Answer: his verbatim doctrine, a standing core discovery trio of PM + product designer + lead engineer, "not a ceremony, a habit".
+3. **Work arrives as a decree, not a problem to solve** -> feature lists from executives/loudest stakeholder. Answer: bring the team the problem + evidence, negotiate outcomes not output, unemotional stakeholder conversations, metrics so decisions are falsifiable.
+4. **Result: mercenaries instead of missionaries** -> no conviction, no pushback, best engineers leave first. Answer/proof: EMIL 17-person org restructured, near-total exodus stopped at a single departure, velocity + client trust restored.
+5. **Nobody can say afterwards whether it worked.** Answer/proof: EMIL Claims Center from zero, no spec/no precedent, discovery with a pilot customer's claim specialists, churn per process step as the leading metric.
+
+**His three stated strengths (use as a "How I work" block above the problems):** ego-free unemotional stakeholder conversations (leave your own sensitivities at home); fall in love with the problem and with customer satisfaction, never with a solution you thought was clever; approach greenfield with quick, inexpensive bets.
+
+Canonical implementation: `cv_gulf_fuel_energy.md`. Reusable for any senior/principal/head-of-product application regardless of sector; swap only the domain-evidence section.
+
+## BG prevent: the Chefarzt problem, told twice (2026-07-31)
+
+**The intel.** The ISO Recruiting headhunter told Philipp on the phone that BG prevent has already
+replaced **two** people on this mandate in a row: first an internal product owner, then the external
+who was brought in to replace them. Stated reason: the **Ober- and Chefaerzte in German healthcare
+are extraordinarily arrogant and condescending**, and dealing with them is, in his words, "kein
+Zuckerschlecken".
+
+**Why this matters more than any keyword.** Two failed placements means the client's real selection
+criterion is no longer the skill profile, it is temperament. Skills were presumably fine both times.
+What failed was the ability to sit across from a Chefarzt, absorb the status display, and still walk
+out with a decision. That is precisely strength number one: ego at home, want the decision not the
+last word, stay unemotional when the room is not.
+
+**His own firsthand evidence: CLINET.** He lived exactly this dynamic in the CLINET hospital project,
+working the clinical system landscape and the CGM interface inside hospital workflows, with the same
+consultant hierarchy on the other side of the table. So he does not need to promise he can handle it;
+he can describe it.
+
+**How to use it (and how NOT to).** Never pitch this as "I get along with everybody", which is what
+the two replaced people presumably also said. Name the dynamic explicitly, show he has sat in it
+before at CLINET, and describe the *mechanism* rather than the disposition: how he separates the
+person's status need from the decision at hand, and why he does not need the last word to get the
+outcome. Concreteness is the whole differentiator here.
+
+**Commercial note.** He already quoted 80 EUR/h all-in for this mandate on 2026-06-11. The double
+replacement is real leverage, but raising a quoted rate without a scope change reads as opportunism.
+Use the leverage in the positioning and in scope negotiation, not as a re-quote.
+
+**General lesson for the KB:** healthcare platform mandates in Germany fail on the consultant
+hierarchy, not on the backlog. When a posting sits in a clinic or occupational-health context, the
+stakeholder-temperament story belongs in the first third of the letter, not in the soft-skills tail.
