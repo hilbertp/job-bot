@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-31T12:34:43.140883+00:00",
+  "generated_at": "2026-07-31T12:43:39.989508+00:00",
   "jobs": [
     {
       "id": "xing_cff33b58916ff1b2",
@@ -2158,6 +2158,22 @@
       "documents": []
     },
     {
+      "id": "linkedin_71b777e841ff8f76",
+      "source": "linkedin",
+      "title": "Product Owner",
+      "company": "iSpeedToLead",
+      "location": "Austin, TX",
+      "salary": null,
+      "score": 84,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-07-23T13:40:04.686980+00:00",
+      "posted_at": "2026-07-17T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://www.linkedin.com/jobs/view/product-owner-at-ispeedtolead-4442101145",
+      "documents": []
+    },
+    {
       "id": "dailyremote_fc052d3b59e3ad25",
       "source": "dailyremote",
       "title": "Product Owner",
@@ -2246,7 +2262,7 @@
       "salary": null,
       "score": 82,
       "score_tailored": null,
-      "status": "scored",
+      "status": "listing_expired",
       "first_seen_at": "2026-07-27T13:00:28.116579+00:00",
       "posted_at": "2026-07-27T13:00:23+00:00",
       "apply_route": "missing",
@@ -3062,7 +3078,7 @@
       "salary": null,
       "score": 78,
       "score_tailored": null,
-      "status": "scored",
+      "status": "listing_expired",
       "first_seen_at": "2026-07-26T05:14:37.973377+00:00",
       "posted_at": "2026-07-23T18:00:09+00:00",
       "apply_route": "missing",
@@ -3706,7 +3722,7 @@
       "salary": null,
       "score": 72,
       "score_tailored": null,
-      "status": "scored",
+      "status": "listing_expired",
       "first_seen_at": "2026-07-01T05:40:47.580193+00:00",
       "posted_at": "2026-06-30T18:54:06.653000+00:00",
       "apply_route": "url",
@@ -4546,7 +4562,7 @@
       "salary": null,
       "score": 70,
       "score_tailored": null,
-      "status": "scored",
+      "status": "listing_expired",
       "first_seen_at": "2026-07-26T05:14:34.145967+00:00",
       "posted_at": "2026-07-24T05:21:03Z",
       "apply_route": "url",
@@ -5128,22 +5144,6 @@
       "apply_route": "url",
       "apply_target": "https://jobs.ashbyhq.com/teamdynamix/c829dfb1-d293-4710-9d13-33ace86c2df7",
       "documents": []
-    },
-    {
-      "id": "linkedin_406a1e62170495b5",
-      "source": "linkedin",
-      "title": "Product Owner \u2013 Advisor Journeys & API Platform",
-      "company": "FFB | Fidelity International",
-      "location": "Kronberg, Hesse, Germany",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-06-22T18:15:34.964819+00:00",
-      "posted_at": "2026-06-22T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://careers.fidelityinternational.com/search-apply/",
-      "documents": []
     }
   ],
   "runs": [
@@ -5160,12 +5160,12 @@
     {
       "id": 293,
       "started_at": "2026-07-31T12:01:58.321720+00:00",
-      "finished_at": null,
+      "finished_at": "2026-07-31T12:43:39.952967+00:00",
       "n_fetched": 0,
       "n_new": 0,
       "n_generated": 0,
       "n_applied": 0,
-      "n_errors": 0
+      "n_errors": 149
     },
     {
       "id": 292,
