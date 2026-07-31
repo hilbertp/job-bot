@@ -3,16 +3,19 @@
 Written for someone picking this up cold. Two tracks ran in parallel this
 session: **job-application work** (documents, scoring decisions) and
 **pipeline engineering** (why the runs were broken and what was changed).
-The engineering track is the one with unmerged code.
+All code from both tracks is merged; what remains is listed in section 4.
 
 ---
 
 ## 1. Where the code is
 
-**Branch `fix-market-age-gate-and-enrich-fallback`, four commits, not pushed,
-no PR yet.**
+**All merged.** PR #99 (`fix-market-age-gate-and-enrich-fallback`) and PR
+#100 (`fix-expired-listing-detection`) are both in `main`; local `main` is
+synced. Nothing is left dangling on a branch.
 
 ```
+839f7d7 fix(enrichment): retire withdrawn listings instead of re-fetching them forever
+db3b67f docs: session handoff for 2026-07-31
 93533ea docs(applications): canonical positioning, EWERK package, run knowledge
 e932459 fix(dashboard): make the header answer questions the user actually has
 3206890 fix(pipeline): stop runs burning their whole budget on a self-refilling backlog
@@ -21,9 +24,8 @@ e932459 fix(dashboard): make the header answer questions the user actually has
 
 **Important: this code is already running in production.** `.venv-1` is an
 editable install pointing at `src/`, and the launchd agents run from the
-working tree. Run 298 (2026-07-31 19:42 UTC) executed with all of it. So the
-PR is bookkeeping, not activation. Do not assume `main` reflects what the
-machine is doing.
+working tree. Run 298 (2026-07-31 19:42 UTC) executed with all of it. The launchd agents therefore pick up changes as soon as they are saved,
+merged or not, so a green PR is bookkeeping rather than activation.
 
 `data/config.yaml` is **gitignored**. Local values that differ from the
 committed defaults:
@@ -119,12 +121,14 @@ the panel rendered **86/63**.
 
 **Engineering**
 
-- Push the branch, open the PR, merge. `WORKFLOW.md` is mandatory policy here:
-  no direct commits on `main`, integration via GitHub PR.
-- **37 of 100 detail fetches fail.** Largely expired listings: StepStone
-  returns HTTP 410, LinkedIn redirects to `?trk=expired_jd_redirect`.
-  Detecting those and marking `listing_expired` immediately would stop them
-  being retried every run. This is the next real win.
+- ~~37 of 100 detail fetches fail~~ **Done in PR #100.** Scrapers raise
+  `ListingGone` when the source proves the posting is withdrawn (StepStone
+  HTTP 410, LinkedIn redirect to `trk=expired_jd_redirect`); the runner marks
+  the row `listing_expired`, which is terminal, so it stops being re-fetched.
+  Watch the enrichment `skipped` count on the next few runs to see how much
+  of the 37% it actually absorbs, and extend the same signal to freelancermap
+  and XING if their failures persist. XING currently answers HTTP 202 with a
+  2 KB bot-challenge page, which is a different problem and is still open.
 - `caffeinate` is **not** in `com.philipp.jobbot.scrape.plist`. It only
   prevents idle sleep, never clamshell sleep. The user was told
   `sudo pmset -c disablesleep 1` is his call; it is persistent until set
@@ -136,11 +140,13 @@ the panel rendered **86/63**.
 
 **Tests**
 
-`25 failed, 423 passed` is the **pre-existing baseline**, verified twice by
-stashing the changes. All 25 are stale dashboard-template assertions. One
-genuine regression was introduced and fixed during the session (the literal
-`'waiting'` assertion in `test_publish_site.py`), and it was flagged to the
-user before the test was touched, per his standing rule.
+`25 failed, 426 passed` is the current state. The **pre-existing baseline is
+`25 failed, 423 passed`**, verified twice by stashing the changes; the three
+extra passes are the new enrichment tests. All 25 failures are stale
+dashboard-template assertions and predate this session. One genuine
+regression was introduced and fixed along the way (the literal `'waiting'`
+assertion in `test_publish_site.py`), and it was flagged to the user before
+the test was touched, per his standing rule.
 
 Beware: the suite is **order-dependent**. A polluted run reported 44
 failures; a clean run of the same code reported 26. Always compare full-suite
