@@ -145,6 +145,12 @@ def _complete_cli(*, system: str, user: str, model: str,
     # launchd PATH is minimal; the nvm-installed CLI needs its own bin
     # dir (for node) on PATH.
     env["PATH"] = f"{Path(cli).parent}:{env.get('PATH', '')}"
+    # Claude Code enables extended thinking by default; the API backend
+    # never did. Measured on real scoring calls: ~2,000 output tokens and
+    # ~38s per posting with thinking vs ~500 tokens / ~12s without, at
+    # equal scores. Thinking off keeps scores calibrated to the API-era
+    # scorer, roughly triples throughput, and stretches Max-plan limits.
+    env["MAX_THINKING_TOKENS"] = "0"
 
     cmd = [
         cli, "-p",
