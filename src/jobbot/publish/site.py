@@ -447,6 +447,16 @@ _PAGE_JS = """
     // feed them, so a stage with no items yet reads "waiting", never 0/0.
     const ORDER = ['scrape', 'enrichment', 'scoring', 'generation',
                    'tailored_rescore', 'apply'];
+    // Display names mirror the product flow: scrape PO/PM postings ->
+    // score vs the general CV -> tailor CV for 80%+ -> rescore tailored.
+    const STAGE_LABELS = {
+      scrape: 'scrape postings',
+      enrichment: 'fetch details',
+      scoring: 'score vs base CV',
+      generation: 'tailor CV + letter',
+      tailored_rescore: 'rescore tailored',
+      apply: 'apply'
+    };
     const byName = {};
     (run.stages || []).forEach(function (s) { byName[s.stage] = s; });
     const doneOf = function (s) {
@@ -467,7 +477,7 @@ _PAGE_JS = """
         row.className = 'stagerow';
         const name = document.createElement('span');
         name.className = 'sname';
-        name.textContent = stageName;
+        name.textContent = STAGE_LABELS[stageName] || stageName;
         const state = document.createElement('span');
         state.className = 'meta';
         state.textContent = i <= lastActiveIdx ? 'no items' : 'waiting';
@@ -482,7 +492,7 @@ _PAGE_JS = """
       row.className = 'stagerow';
       const name = document.createElement('span');
       name.className = 'sname';
-      name.textContent = stageName;
+      name.textContent = STAGE_LABELS[stageName] || stageName;
       const bar = document.createElement('span');
       bar.className = 'bar';
       const fill = document.createElement('i');
@@ -501,7 +511,7 @@ _PAGE_JS = """
       num.textContent = numTxt;
       row.appendChild(name); row.appendChild(bar); row.appendChild(num);
       holder.appendChild(row);
-      if (isActive && s.current_label) currentLabel = stageName + ': ' + s.current_label;
+      if (isActive && s.current_label) currentLabel = (STAGE_LABELS[stageName] || stageName) + ': ' + s.current_label;
     });
     const cur = document.getElementById('ar-current');
     cur.textContent = currentLabel ? 'working on ' + currentLabel : '';
