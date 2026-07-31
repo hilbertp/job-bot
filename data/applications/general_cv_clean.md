@@ -1,6 +1,6 @@
-# Philipp Hilbert. *Founding Product Manager.*
+# Philipp Hilbert. *Product Manager & Product Owner · Platforms, Payments & AI.*
 
-Berlin, Germany · hilbert@true-north.berlin · +357 94101644 · www.true-north.berlin
+Limassol, Cyprus / Berlin, Germany · hilbert@true-north.berlin · +357 94101644 · www.true-north.berlin
 
 [LinkedIn](https://www.linkedin.com/in/philipp-hilbert-34032275/) · [GitHub](https://github.com/hilbertp)
 
@@ -8,87 +8,101 @@ Berlin, Germany · hilbert@true-north.berlin · +357 94101644 · www.true-north.
 
 ## Profile
 
-Founding Product Manager and AI-native product operator with nearly ten years of experience translating complex operational workflows into scalable software. I have built three companies from scratch, delivered an AI data platform inside a European defence programme, and shipped product across regulated, technically demanding environments. Comfortable in ambiguity and high-pressure delivery. Fluent in AI-native workflows: LLM-assisted development, rapid prototyping, autonomous feature delivery. German native, English C2.
+Product manager and product owner with nearly ten years of end-to-end product responsibility across regulated platforms, payments, and AI, built on a founder track record: I started a payments company that was acquired and is operated by Sparkasse, and I ship my own products across the full delivery chain to this day. I take products from ambiguous problem to production, run backlogs and discovery with discipline, and work AI-native, eight to ten hours a day with agentic tooling. German native, English C2. Remote-proven; based in Cyprus (EU), rooted in the German market.
 
 ---
 
-## Founder Track Record
+## Core Strengths
 
-- **Kvitt Payment Solutions — Founder and CFO (2013–2018):** Group-based P2P payments platform built from zero. PSP integration, full UX/UI, mobile prototype. Acquired and operated by Sparkasse.
-- **Qcrypt AG — Co-Founder and Product Owner (2016–2018):** Quantum-secure encryption system with a three-layer hardware/software architecture (TRNG hardware, Linux OTP endpoints, server relay). Shipped to B2B enterprise clients with a sub-two-minute setup constraint. Deputy IT Security Officer.
-- **Smart Soil Technologies — Co-Founder, CDO and CFO (2016–2021):** Nanotechnology fertiliser and substrate for vertical indoor farming. Held three C-level functions; took the product from lab to investor rounds.
+- **End-to-end product ownership:** discovery, requirements, backlog, specs, delivery, and operations in multi-stakeholder programmes (defence, public sector, insurance, healthcare)
+- **Founder mindset with delivery discipline:** three companies co-founded; a payments platform built from zero and acquired by Sparkasse; comfort with ambiguity and hard prioritisation
+- **AI-native practice:** daily hands-on work with agentic AI tools (Claude Code, Cursor, and similar), human-in-the-loop; own multi-agent systems in production; sober use-case evaluation by value, feasibility, and risk
+- **Technical depth:** I build full-stack myself (requirements to frontend, backend, QA with end-to-end tests, and DevOps); Kubernetes, GitOps, cloud-native architectures; specification writing engineers respect
+- **Data-driven decisions:** funnel and churn metrics as primary prioritisation input; warehouse-grade analytics platforms delivered
 
 ---
 
 ## Professional Experience
 
-### Rohde and Schwarz — Product Manager, AI Data Transformation
-*2024 – 2025 · Munich / Remote*
+### True North · Independent Product & Delivery Consultant
+*2025 to present · Remote*
 
-Government contract within the FCAS (Future Combat Air System) European defence programme. Central AI and data management platform for multimodal datasets.
+Product discovery, delivery, and AI-automation consulting for technology companies (www.true-north.berlin).
 
-- Owned the full product lifecycle: discovery, requirements, backlog, delivery, GitOps rollout via ArgoCD
-- Built reproducible data transformation pipelines with full provenance and audit trails (SafeAI, ExplainableAI)
-- Reduced deployment times from several days to 20–40 minutes
-- Personally resolved an OpenShift infrastructure blocker engineering had not cracked in over a year
-- Led a cross-functional team of architect, data scientists, backend/frontend engineers, and QA with multinational stakeholders
+### Rohde & Schwarz · Product Owner, AI & Data Platform (FCAS)
+*2024 to 2025 · Munich / Remote*
 
-*Kotlin (Spring Boot), Python, PostgreSQL, MongoDB, Redpanda, Kubernetes, Argo Workflows, ArgoCD, OpenShift*
+Central AI and data platform for the European FCAS defence programme.
 
-### Federal Employment Agency (Bundesagentur fur Arbeit) — Product Manager, Public Data Analytics
-*2023 – 2024 · Remote*
+- Owned the platform end to end: discovery, requirements, backlog, GitOps rollout (ArgoCD); led a multinational cross-functional team
+- Built reproducible ML data pipelines with full provenance and audit trails (SafeAI/ExplainableAI)
+- Cut deployment times from days to 20 to 40 minutes; personally resolved an infrastructure blocker engineering had been stuck on for over a year
 
-Advanced the Arbeitsmarktmonitor, an analytics platform for regional labour market and demographic data.
+*Kotlin (Spring Boot), Python, PostgreSQL, Kubernetes, ArgoCD, OpenShift*
 
-- Delivered labour shortage analytics, flexible regional comparison, and modernised admin tooling
-- Introduced Dagster for automated ETL and indicator generation; standardised CI/CD
+### Bundesagentur für Arbeit (Federal Employment Agency) · Product Manager, Data & Analytics Platform
+*2023 to 2024 · Remote*
+
+Nationwide analytics platform for labour-market data, serving policymakers and researchers.
+
+- Introduced Dagster for automated ETL and indicator generation, with dbt models; standardised CI/CD
 - Served as Deputy IT Security Officer: compliance, governance, data lineage
 
 *Python, Django, PostgreSQL, dbt, Dagster, DuckDB, Kubernetes*
 
-### EMIL Group — Product Manager, InsurTech SaaS Platform
+### EMIL Group · Product Manager, B2B InsurTech SaaS
 *2022 · Berlin*
 
-B2B InsurTech platform reducing insurance product time-to-market from over a year to under a week. Served insurers, reinsurers, MGAs, brokers, and underwriters.
+- Shipped a Claims Center from concept to production; modules across pricing, underwriting, and policy issuance
+- Restructured a 17-person delivery organisation into effective Scrum teams; restored velocity and client trust
+- Ran product analytics down to churn per funnel step (Matomo) and prioritised along measured usage
 
-- Delivered modules across product configuration, pricing, underwriting, policy issuance, and document workflow automation
-- Shipped a Claims Center module from concept to production
-- Split a bloated 17-person team into effective Scrum units, restored velocity, and rebuilt client trust
+*Java, Kubernetes, REST APIs*
 
-*Low-code platform, Java, Kubernetes, REST APIs*
+### CLINET Platforms · Product Owner, Mobile Healthcare App
+*2021 to 2022 · Berlin*
 
-### CLINET Platforms — Product Owner, Mobile Healthcare App
-*2021 – 2022 · Berlin*
+- Shipped a hospital app for iOS and Android (digital anamnesis, therapy plans, patient chat); implemented the CGM interface into hospital information systems myself
 
-Mobile-first pilot app for hospitals across iOS and Android.
+*AngularJS, Ionic, Python, Kubernetes*
 
-- Delivered digital anamnesis, meal and therapy plans, transport, chat, and patient document storage
-- Integrated a CGM interface into hospital information system (KIS) workflows
+### Earlier
 
-*AngularJS, Ionic, Python, Kubernetes, CGM API integration*
-
----
-
-## Earlier Experience (Selected)
-
-- **Product Owner, COVID-19 Data Platform, Bundesdruckerei (2021):** Secure data structures and identity management for RKI projects DIM and DESH.
-- **Proxy Product Owner, AOK Health Insurance ITSCare (2019–2020):** Migration of internal webshop to Shopware with complex catalogue/API integration.
-- **Project Lead, Enercon (2019):** Full IT modernisation of a manufacturing site.
+- **Bundesdruckerei (2021):** Product Owner, COVID-19 data platforms for the RKI (DIM, DESH); national health infrastructure, highest privacy requirements
+- **AOK ITSCare (2019 to 2020):** Proxy Product Owner; procurement webshop migration to Shopware for ~20,000 employees, complex legacy integration
+- **Enercon (2019):** Project lead, full IT modernisation of a manufacturing site
 
 ---
 
-## Web3 & DeFi
+## Founder Track Record
 
-Eight years hands-on as a crypto practitioner: hot and cold wallets, DEXes and aggregators, perpetuals, cross-chain bridging, liquidity provision. Practical knowledge of CEX mechanics, AMMs and concentrated liquidity, perp margin/funding/liquidation models, bridge risk, and oracle pricing safety.
+- **Kvitt Payment Solutions · Founder & CFO (2013 to 2018):** mobile P2P payments platform built from zero (PSP integration, settlement, full UX); acquired and operated by Sparkasse
+- **Qcrypt AG · Co-Founder & Product Owner (2016 to 2018):** quantum-secure encrypted communications shipped to enterprise clients; Deputy IT Security Officer
+- **Smart Soil Technologies · Co-Founder, CDO & CFO (2016 to 2021):** nanotechnology product from lab to investor rounds; owned finance and an ERP rollout
+
+---
+
+## Self-Built Products (live, solo, end to end)
+
+- **cloud-nine.store** · multi-tenant services marketplace with live Stripe payments and analytics
+- **construct8.com** · two-sided platform matching construction firms and workers
+- **phoenix882.com** · trading-strategy backtesting platform
+- **Liberation of Bajor / job_bot** · multi-agent coding framework and an autonomous application agent, both in production
 
 ---
 
 ## Education
 
-**Diplom Wirtschaftsingenieur** (Industrial Engineering), Technische Universitat Berlin — specialisation Logistics
+**Diplom-Wirtschaftsingenieur** (Industrial Engineering), Technische Universität Berlin, specialisation Logistics
 
 ---
 
 ## Languages
 
 German (native) · English (C2)
+
+---
+
+## Methods & Tools
+
+Scrum, Kanban, scaled agile | Jira, Confluence | Discovery, MVP definition, backlog prioritisation | Product metrics (Matomo) | Python, SQL | Kubernetes, GitOps (ArgoCD), CI/CD | Claude Code, Cursor, GPT-class tooling
