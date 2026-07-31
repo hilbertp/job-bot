@@ -169,7 +169,16 @@ def build_site(
 
     data = {"generated_at": report.generated_at, "jobs": jobs, "runs": runs}
     (site_dir / "data.json").write_text(json.dumps(data, indent=2, default=str))
-    (site_dir / "index.html").write_text(render_index_html(config, jobs, runs, now))
+    # Built-but-unsent packages across the whole corpus, independent of the
+    # table's age window, so shortening that window never silently hides an
+    # outstanding to-do.
+    unsent_all_time = conn.execute(
+        "SELECT COUNT(*) FROM seen_jobs WHERE output_dir IS NOT NULL"
+        " AND output_dir != '' AND status = 'generated'"
+    ).fetchone()[0]
+    (site_dir / "index.html").write_text(
+        render_index_html(config, jobs, runs, now, unsent_all_time=unsent_all_time)
+    )
     # Tell GitHub Pages to serve the tree verbatim, no Jekyll pass.
     (site_dir / ".nojekyll").write_text("")
     log.info("site_built", dir=str(site_dir), jobs=len(jobs), docs=report.n_docs_copied)
@@ -275,8 +284,16 @@ tr:last-child td { border-bottom: none; }
 .docs a { display: inline-block; margin-right: 8px; white-space: nowrap; }
 .apply { white-space: nowrap; font-weight: 550; }
 .noroute { color: var(--muted); font-size: 13px; }
-#active-run { background: var(--panel); border: 1px solid var(--line);
-  border-radius: 10px; padding: 14px 16px; margin-bottom: 18px; }
+/* An in-flight run is the single most time-sensitive thing on the page:
+   it means the numbers below are mid-change. It therefore sits ABOVE the
+   stat bar and carries an accent border, so it reads as an interruption
+   rather than as one more panel. */
+#active-run { background: var(--panel); border: 1px solid var(--good);
+  border-left: 3px solid var(--good);
+  border-radius: 10px; padding: 14px 16px; margin: 4px 0 18px; }
+#active-run h2 { letter-spacing: 0.01em; }
+/* The 80+ count is the number worth acting on; the rest is context. */
+.stat.hot .num { color: var(--good); }
 #active-run h2 { margin: 0; font-size: 14px; }
 #ar-dot { display: inline-block; width: 9px; height: 9px; border-radius: 999px;
   margin-right: 7px; vertical-align: 1px; }
@@ -461,12 +478,23 @@ _PAGE_JS = """
     // Display names mirror the product flow: scrape PO/PM postings ->
     // score vs the general CV -> tailor CV for 80%+ -> rescore tailored.
     const STAGE_LABELS = {
-      scrape: 'scrape postings',
+      scrape: 'search job boards',
       enrichment: 'fetch details',
       scoring: 'score vs base CV',
       generation: 'tailor CV + letter',
       tailored_rescore: 'rescore tailored',
       apply: 'apply'
+    };
+    // A bare "29/29" or "100/100" reads as a percentage. Name the unit so
+    // the number is unambiguous: 29 searches (across 14 boards), 100
+    // postings fetched, 63 postings scored, 37 packages tailored.
+    const STAGE_UNITS = {
+      scrape: 'searches',
+      enrichment: 'postings',
+      scoring: 'postings',
+      generation: 'packages',
+      tailored_rescore: 'packages',
+      apply: 'applications'
     };
     const byName = {};
     (run.stages || []).forEach(function (s) { byName[s.stage] = s; });
@@ -493,7 +521,18 @@ _PAGE_JS = """
         name.textContent = STAGE_LABELS[stageName] || stageName;
         const state = document.createElement('span');
         state.className = 'meta';
-        state.textContent = i <= lastActiveIdx ? 'no items' : 'waiting';
+        // A bare "waiting" tells the user nothing about why. Name the stage
+        // it is queued behind, so the panel reads as a chain rather than as
+        // four independent things that might be stuck.
+        if (i <= lastActiveIdx) {
+          state.textContent = 'nothing to do';
+        } else {
+          const blocker = ORDER.slice(0, i).reverse()
+            .find(function (n) { return hasActivity(byName[n]); });
+          state.textContent = blocker
+            ? 'waiting for ' + (STAGE_LABELS[blocker] || blocker)
+            : 'waiting to start';
+        }
         row.appendChild(name); row.appendChild(state);
         holder.appendChild(row);
         return;
@@ -515,6 +554,11 @@ _PAGE_JS = """
       const num = document.createElement('span');
       num.className = 'snum' + (Number(s.failed) ? ' sfail' : '');
       let numTxt = done + '/' + total;
+      const unit = STAGE_UNITS[stageName];
+      if (unit) numTxt += ' ' + unit;
+      if (stageName === 'scrape' && meta2.boards) {
+        numTxt += ' across ' + meta2.boards + ' job boards';
+      }
       if (stageName === 'scoring' && meta2.backlog > 0) {
         numTxt += ' (' + (meta2.from_this_run || 0) + ' new + '
                 + meta2.backlog + ' backlog)';
@@ -751,14 +795,33 @@ def _job_row_html(job: dict, now: datetime) -> str:
 
 
 def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
-                      now: datetime) -> str:
+                      now: datetime, unsent_all_time: int | None = None) -> str:
     e = html.escape
     # The newest FINISHED run; an in-flight or abandoned row has only
     # zeros and would misreport the last real pass as "0 fetched".
     latest = next((r for r in runs if r["finished_at"]), runs[0] if runs else None)
-    new_today = sum(
+    # The old bar led with len(jobs), which is just `publish.max_jobs` once
+    # the corpus outgrows it: it read "300 matches" every single day and
+    # answered a question nobody has. What the user acts on is: what showed
+    # up today, how much of that cleared the tailoring bar, and what is
+    # sitting finished and unsent.
+    today_iso = now.date().isoformat()
+    is_new_today = lambda j: (j["first_seen_at"] or "")[:10] == today_iso  # noqa: E731
+    best = lambda j: j["score_tailored"] if j["score_tailored"] is not None else (j["score"] or 0)  # noqa: E731
+    bar = config.digest.generate_docs_above_score
+
+    new_today = sum(1 for j in jobs if is_new_today(j))
+    hot_today = sum(1 for j in jobs if is_new_today(j) and best(j) >= bar)
+    # Finished packages that have not gone out yet: the actual to-do list.
+    # Counted over ALL time, not just the table's window, because a package
+    # built six weeks ago and never sent is still owed an action. Falls back
+    # to the window when the caller has no DB handle (tests).
+    unsent = unsent_all_time if unsent_all_time is not None else sum(
         1 for j in jobs
-        if (j["first_seen_at"] or "")[:10] == now.date().isoformat()
+        if j["documents"] and j["status"] not in (
+            "apply_submitted", "apply_queued", "employer_received",
+            "rejected", "interview_invited", "listing_expired",
+        )
     )
     with_docs = sum(1 for j in jobs if j["documents"])
 
@@ -813,16 +876,6 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
       <span class="meta">Generated {e(_fmt_ts(now.isoformat()))} UTC</span>
     </span>
   </div>
-  <div class="statbar">
-    <span class="stat"><span class="num">{len(jobs)}</span><span class="lbl">matches</span></span>
-    <span class="sep">|</span>
-    <span class="stat"><span class="num">{new_today}</span><span class="lbl">new today</span></span>
-    <span class="sep">|</span>
-    <span class="stat"><span class="num">{with_docs}</span><span class="lbl">ready-to-send packages</span></span>
-    <span class="sep">|</span>
-    <span class="stat"><span class="num" id="shown-count">{len(jobs)}</span><span class="lbl">after filters</span></span>
-  </div>
-  <p class="runline">{latest_line}</p>
   <div id="active-run" hidden>
     <div class="arhead">
       <h2><span id="ar-dot" class="running"></span>Active run <span id="ar-id"></span></h2>
@@ -834,6 +887,16 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
     <div id="ar-ticker" hidden></div>
     <div id="ar-fails" hidden></div>
   </div>
+  <div class="statbar">
+    <span class="stat"><span class="num">{new_today}</span><span class="lbl">new today</span></span>
+    <span class="sep">|</span>
+    <span class="stat hot"><span class="num">{hot_today}</span><span class="lbl">of those {bar}+</span></span>
+    <span class="sep">|</span>
+    <span class="stat"><span class="num">{unsent}</span><span class="lbl">packages waiting to be sent</span></span>
+    <span class="sep">|</span>
+    <span class="stat"><span class="num" id="shown-count">{len(jobs)}</span><span class="lbl">rows shown</span></span>
+  </div>
+  <p class="runline">{latest_line}</p>
   <div class="controls">
     <input id="q" type="search" placeholder="Filter by company, title, location, source">
     <label>Posted

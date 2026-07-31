@@ -56,7 +56,11 @@ def _render_html(md: str) -> str:
     --sans:       'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   }}
 
-  @page {{ size: A4; margin: 20mm 22mm; }}
+  /* Full bleed: WeasyPrint does not propagate the root background into the
+     @page margin area, so the paper tone is set on @page itself. The html
+     rule keeps the standalone .html files bleeding in a browser too. */
+  @page {{ size: A4; margin: 20mm 22mm; background: var(--paper); }}
+  html {{ background: var(--paper); }}
 
   body {{
     font-family: var(--serif);
@@ -246,7 +250,9 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
     --sans:       'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   }}
 
-  @page {{ size: A4; margin: 22mm 22mm 22mm 22mm; }}
+  /* Full bleed: see _render_html. */
+  @page {{ size: A4; margin: 22mm 22mm 22mm 22mm; background: var(--paper); }}
+  html {{ background: var(--paper); }}
 
   body {{
     font-family: var(--serif);

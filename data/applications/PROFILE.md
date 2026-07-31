@@ -98,13 +98,78 @@ Eight years hands-on practitioner: hot/cold wallets, DEXes + aggregators, perpet
 - **Availability: always ASAP** ("enter asap availability always").
 - **Apply threshold: tailored score 80+ triggers package creation** ("if higher than 80, create application package").
 
+## CANONICAL POSITIONING: technical PM, NOT a developer (set by Philipp 2026-07-31)
+
+He pushed back hard on an EWERK letter that said "Python ist meine tägliche Arbeitssprache" and
+"ich lese und schreibe den Code, mit dem meine Teams arbeiten": *"ich bin doch kein entwickler."*
+
+**What he IS:** a technical Product Manager / Product Owner with an **AI-first** approach that lets
+him deliver, part-time, the output a four-person team needed full-time a year ago.
+
+**Where his technical contribution actually sits** (use these words, they are his):
+after discovery and requirements, organising a structured, well-tuned **dev and test-automation
+setup** with a sensible **branching and merging strategy** that allows **same-day hotfixes**, plus
+frictionless **GitOps** for efficient **rollout and rollback**, today almost always in
+**containerised environments**. That is the technical achievement of a competent product manager.
+
+**What he does NOT do:** touch Python or the code itself. He considers that the correct division of
+labour, and expects the developer circle to stop doing it too, now or very soon.
+
+**Never treat the three character strengths as table stakes or as filler to be trimmed for space.**
+Philipp, 2026-07-31: *"es gibt projekte die nur deshalb einen PO/PM austauschen, weil er
+charakterlich, wegen seines egos, nicht gepasst hat. trotz 20 jahren berufserfahrung."* Roles fail
+on ego, not on delivery-chain gaps, which get covered by an architect or a lead. **Named precedent:
+BG prevent GmbH replaced two people in a row on the same mandate** (first the internal PO, then the
+external hired to replace them) because of the arrogance of the Ober- and Chefaerzte; confirmed by
+the ISO Recruiting headhunter by phone, 2026-07-31. Full story in STORIES_AND_VOICE.md. Ego at home /
+fall in love with the problem / buy information before building stay FIRST in every CV; the value
+chain strength is a second axis (how far responsibility reaches), never a superior one.
+
+**FOURTH STRENGTH, added 2026-07-31 and now part of the canonical set** (the first three are ego at
+home / fall in love with the problem / buy information before building): *"I keep the whole value
+chain in view, not just the backlog"* (DE: *"Ich denke die ganze Wertschöpfungskette mit, nicht nur
+das Backlog"*). Core line: **the time from spotting a defect to shipping the fix is a product
+metric, not an engineering detail.**
+
+Two wordings he explicitly rejected, both on 2026-07-31:
+- *"fully devops native"* (his own first draft) reads like an application for a DevOps engineering
+  role. Frame it as product responsibility, never as a toolbelt.
+- *"Ich verantworte die ganze Wertschöpfungskette"* / *"I own the whole value chain"* overclaims:
+  *"verantworten können sowas nur teilweise architekten oder devopser. das wäre etwas zu weit
+  gegriffen zu behaupten."* His calibration, use it verbatim: **he understands the chain and can
+  steer it into the right lanes** ("ich verstehe und kann sie in die richtige bahnen leiten"), and
+  the strength text should SAY that building and owning it is architects' and DevOps' work. Naming
+  that limit is what makes the claim credible.
+
+**The grounded origin story he wants told** (his framing, 2026-07-31, "bleib auf dem teppich"):
+he taught himself to code in **2014, in VBA, during the Siemens Studienarbeit**, because the
+analysis was not doable otherwise. Since then, **more than a decade at PO and PM level**
+experiencing the technical interrelations of software development and the technical dependencies
+firsthand, from micro-organisations up to corporations, and structuring team work along exactly
+those dependencies. His AI-native proximity to development then taught him firsthand how much
+those structures carry: a clean branching and merging strategy, reliable regression tests and a
+frictionless GitOps process decide the time from spotting a defect to the rolled-out fix, and with
+it the everyday time-to-market. Use this instead of scoring himself against a job ad's checklist.
+
+**His thesis:** deep skill and specialisation have lost significant weight because frontier models
+already cover and largely replace them. What counts now is **breadth and transfer knowledge along
+the entire software value chain**.
+
+NEVER write, in any artefact: that he codes, that a language is his "daily working language", that
+he reads/writes his teams' production code, or anything else that frames him as a hands-on
+developer. Naming a stack he **owned** (Django at the BA, Kubernetes/ArgoCD at R&S) is correct and
+encouraged; claiming he **writes** in it is not. The one legitimate hands-on exception is the
+historical CLINET interface (2021-2022), which he did implement himself; frame it as past evidence
+of technical depth, never as present practice.
+
 ## Other constraints
 
 - Remote strongly preferred (remote or Berlin/Munich per his PRD); willing to relocate/commute for the right role (AllUnity Frankfurt, 50Hertz Berlin onsite share, HCL Frankfurt hybrid, Wemolo Munich, autarc Berlin-Mitte hybrid all accepted).
 - **Willing to relocate to the US for at least $150k base salary** (2026-07-04, verbatim: "i am willing to move to the US for at least 150k salary"; supersedes the same-day "if the salary is high" phrasing). Also willing to relocate internationally for strong roles (Crypto.com US, Revolut hubs London/Barcelona/Madrid/Dubai/Kraków). US caveat: work authorization / visa sponsorship is the real gate; prioritise US roles where his domain is exceptional (payments/crypto/trading) and the employer sponsors, over cold generic FAANG PM applies. See [[feedback-score-everything-scraped]].
 - Available at short notice (between engagements since R&S ended 2025; gap covered on CVs by "True North · Independent Product & Delivery Consultant, 2025-present").
-- **He owns no degree certificate at all** ("never has anybody EVER asked for it... i dont own one") — any portal demanding a Urkunde scan (Scalable Capital) is blocked, period.
+- **He owns no degree certificate at all** ("never has anybody EVER asked for it... i dont own one") — any portal demanding a Urkunde scan is blocked, period. **Scalable Capital confirmed twice** (2026-06 and again 2026-07-30, when he abandoned a 96-tailored application at the upload step). Do not build for Scalable again unless they drop the requirement. Check the upload step BEFORE investing a tailored package anywhere with a formal German application portal.
 - Email applications can bounce on data-compliance grounds (ETERNO precedent): prefer career-portal submission.
+- **Never write a "I have not worked with X" disclaimer without grepping the station stack lines above first.** Precedent 2026-07-30: the EWERK letter claimed Django was never owned in production, while the BA station in this file lists Django in its stack. An honest-sounding negative that is false is worse than no sentence at all, because it hands the reader a reason to reject on something that is actually a strength.
 
 ## The 13-years framing rule (verified by adversarial review)
 
@@ -117,3 +182,16 @@ Eight years hands-on practitioner: hot/cold wallets, DEXes + aggregators, perpet
 - **No shipped production chatbot/voicebot** (counter-story: the agentic job-bot infrastructure as product case study).
 - **No PM certifications** — confirmed by Philipp 2026-06-12 ("NO CERTS"); never claim any. Mitigation: "Methods" line listing Scrum/Kanban/hybrid delivery in regulated programmes.
 - **No literal "IT Project Manager" titles recently** (PM/PO titles 2019-2025); mitigate with dual-form headline ("IT Project & Product Manager") when JD demands PM.
+
+## Gulf / Middle East track (opened 2026-07-28)
+
+Target: software-solution roles for the fuel/petrol/oil industry in **Dubai, Abu Dhabi, Doha**; Philipp is willing to relocate there. Canonical CV: `cv_gulf_fuel_energy.md`.
+- **Domain anchor is Scheidt & Bachmann Fuel & Convenience Retail (2020-2021)**: POS, payment and forecourt systems. Their integration field is literally branded LINK ("integrate and connect forecourt, shop, payment and management procedures"), so "Product Owner, Integration Team" maps exactly onto the industry's core problem. S&B is the No.1 installed base of petrol-station management systems in Germany but **has no verified fuel-retail presence in the Gulf** (their Dubai/Qatar entities are Parking) -> always add a peer explainer: "in the same category as Gilbarco Veeder-Root and Dover Fuelling Solutions".
+- **HARD BLOCKER for national oil companies:** ADNOC and QatarEnergy require attested education certificates and transcripts via their own portals. Philipp owns no degree certificate -> the NOC direct route is closed. Target instead: fuel-retail systems vendors (Gilbarco Veeder-Root incl. new Saudi office, Dover Fuelling, PDI, Comarch), systems integrators and consultancies serving the sector.
+- **Gulf CV conventions:** personal-details header (nationality, location, availability, visa status) is expected; DOB, marital status and photo are also customary but were deliberately omitted (marital status unknown; DOB 13.11.1984 available on request). Emiratisation quotas mean an expat is hired only when the role is genuinely hard to fill, so the CV must argue **scarcity**, not general competence, which is why the problem-first format fits this market.
+- **Comp anchor:** AI/product management in UAE roughly AED 25k-75k/month; negotiate the total package (housing 20-30% of basic, schooling, flights, relocation), not basic salary. Tax-free only once German tax residency actually ends.
+
+## Self-descriptor and seniority framing (set 2026-07-28)
+
+- **Title he chose for himself: "Diplomatic Product Leadership"** (earlier iteration was "Diplomatic Product Manager") (in the CV headline, alongside a substance line such as "Discovery, Delivery and AI-Native Product Work"). It deliberately foregrounds his first strength, the ego-free unemotional stakeholder conversation, and the "declining a stakeholder's pet feature is a discipline, not a personality trait" line.
+- **Seniority line he chose: "10+ years of XP"** (his wording; XP as in experience points, he is a lifelong gamer. NOTE the ambiguity flagged to him: in an agile/product context XP is commonly read as Extreme Programming. Earlier iteration was "Senior (10+ years experience in product)"). This UPDATES the older "fast zehn Jahre / nearly ten years" calibration; he counts founder product ownership (Kvitt from 2013, Qcrypt PO 2016-2018) alongside the employed PM/PO run from 2019, which makes "10+ in product" defensible. Do not "correct" it back to "nearly ten". The retired framing remains the 13-years-total-delivery claim, which he rejected.

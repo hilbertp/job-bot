@@ -160,6 +160,26 @@ class Config(BaseModel):
     # under the candidate's level. Postings that state no salary are left
     # alone (we don't penalise unknown comp). 0 disables the filter.
     salary_floor_eur_year: int = 0
+    # Maximum age, in days, a posting may have been on the market before we
+    # stop spending work on it. Checked against the scraper-extracted
+    # posted_at (falling back to the day we first saw it) BEFORE enrichment
+    # and before the LLM call, so a stale row costs neither a detail fetch
+    # nor a scoring call. Rows with no usable date are never blocked.
+    # 0 disables the gate.
+    max_market_age_days: int = 3
+    # How many scoring LLM calls may be in flight at once. The calls are
+    # independent and the stage is pure wait: 7.0s per posting measured on
+    # run 297, 1408s of a 2023s run. Each claude_cli call spawns its own
+    # subprocess, so this is bounded deliberately rather than set to the
+    # candidate count. 1 restores the old strictly-serial behaviour.
+    score_concurrency: int = 4
+    # Stop the scoring stage after this many CONSECUTIVE failures of the
+    # same kind. Without it a process-level fault (expired CLI login, rate
+    # limit, unreachable backend) is rediscovered once per candidate and
+    # burns the whole `max_jobs_per_run` budget: runs 286-296 recorded
+    # 143-207 errors each against a 200-job cap, and left every remaining
+    # posting unscored. 0 disables the breaker.
+    score_failure_breaker: int = 5
     # Sources whose comp is hourly (freelance projects), not an annual
     # salary. These are EXEMPT from salary_floor_eur_year (a "800 EUR/Tag"
     # day-rate would otherwise be misread as 800 EUR/year and wrongly

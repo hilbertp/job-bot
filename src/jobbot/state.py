@@ -1018,15 +1018,32 @@ def set_posted_at(conn: sqlite3.Connection, job_id: str, posted_at_iso: str) -> 
 
 
 def jobs_needing_enrichment(conn: sqlite3.Connection) -> list[JobPosting]:
-    """Re-hydrate JobPosting objects for rows where description_scraped IS NULL.
+    """Re-hydrate JobPosting objects for rows that still owe us a body fetch.
 
-    These are postings scraped before the enrichment phase was wired into the
-    pipeline; without this they would never get a body fetch on subsequent runs
-    because dedup excludes them from `all_new`.
+    Two groups qualify:
+
+    1. `description_scraped IS NULL` - postings scraped before the enrichment
+       phase was wired into the pipeline. Without this they would never get a
+       body fetch on subsequent runs because dedup excludes them from
+       `all_new`.
+    2. `description_scraped = 0` on a `cannot_score:no_body` row - enrichment
+       ran once and failed. These used to be abandoned permanently: a single
+       429, a transient timeout, or a page selector that has since been fixed
+       left the flag at 0, and every later run skipped the row because it was
+       no longer NULL. Measured on 2026-07-31 that had stranded 393 postings,
+       including WeWorkRemotely rows whose detail page fetches perfectly well
+       today.
+
+    Retrying group 2 is bounded by the caller's market-age gate, which drops
+    anything older than `max_market_age_days` before a single detail page is
+    requested, so the retry cannot grow without limit.
     """
     rows = conn.execute(
-        "SELECT raw_json FROM seen_jobs WHERE description_scraped IS NULL "
-        "AND raw_json IS NOT NULL"
+        "SELECT raw_json FROM seen_jobs "
+        "WHERE raw_json IS NOT NULL "
+        "  AND (description_scraped IS NULL "
+        "       OR (description_scraped = 0 AND status = ?))",
+        (JobStatus.CANNOT_SCORE_NO_BODY.value,),
     ).fetchall()
     out: list[JobPosting] = []
     for row in rows:
