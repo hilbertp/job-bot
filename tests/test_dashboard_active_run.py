@@ -32,11 +32,19 @@ def test_no_runs_reports_inactive(client):
 
 def test_fresh_unfinished_run_reports_stages(client):
     c, db = client
+    telemetry = {
+        "stage_started_at": "2026-07-31T13:00:00+00:00",
+        "from_this_run": 14, "backlog": 186,
+        "ticker": [{"c": "Acme", "s": 87}, {"c": "Beta", "s": 55}],
+        "failures": [{"c": "Gamma", "e": "no body"}],
+        "n_strong": 1, "strong_threshold": 80,
+    }
     with connect(db) as conn:
         run_id = start_run(conn)
         update_run_stage_progress(conn, run_id, "scoring", total=200,
                                   completed=42, failed=3,
-                                  current_label="Acme, Senior PM")
+                                  current_label="Acme, Senior PM",
+                                  metadata=telemetry)
     data = c.get("/api/runs/active").get_json()
     assert data["active"] is True
     assert data["run"]["id"] == run_id
@@ -45,6 +53,8 @@ def test_fresh_unfinished_run_reports_stages(client):
     assert stage["completed"] == 42
     assert stage["failed"] == 3
     assert stage["current_label"] == "Acme, Senior PM"
+    # Telemetry the static panel renders: queue split, ticker, failures.
+    assert stage["metadata"] == telemetry
     assert data["run"]["last_activity"]
 
 

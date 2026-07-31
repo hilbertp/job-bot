@@ -301,9 +301,20 @@ tr:last-child td { border-bottom: none; }
   overflow: hidden; }
 .bar i { display: block; height: 100%; background: var(--accent);
   border-radius: 999px; transition: width 400ms cubic-bezier(0.25, 1, 0.5, 1); }
-.stagerow .snum { flex: 0 0 110px; text-align: right;
+.stagerow .snum { flex: 0 0 auto; min-width: 90px; text-align: right;
   font-variant-numeric: tabular-nums; }
 .stagerow .sfail { color: var(--mid); }
+#ar-strong { margin-top: 10px; font-size: 13px; font-weight: 600;
+  color: var(--good); }
+#ar-ticker { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+#ar-ticker .tick { display: inline-flex; align-items: baseline; gap: 5px;
+  padding: 2px 9px; border-radius: 999px; font-size: 12px;
+  background: var(--panel2); color: var(--muted);
+  font-variant-numeric: tabular-nums; }
+#ar-ticker .tick b { font-weight: 650; color: var(--text); }
+#ar-ticker .tick.hit { background: rgba(63, 185, 111, 0.14); color: var(--good); }
+#ar-ticker .tick.hit b { color: var(--good); }
+#ar-fails { margin-top: 8px; font-size: 12.5px; color: var(--mid); }
 @media (prefers-reduced-motion: reduce) {
   .bar i { transition: none; }
 }
@@ -468,6 +479,8 @@ _PAGE_JS = """
     let lastActiveIdx = -1;
     ORDER.forEach(function (n, i) { if (hasActivity(byName[n])) lastActiveIdx = i; });
     let currentLabel = '';
+    let headerEta = '';
+    let scoringMeta = null;
     ORDER.forEach(function (stageName, i) {
       const s = byName[stageName];
       const isCore = i < 4;  // scrape/enrichment/scoring/generation always shown
@@ -498,24 +511,78 @@ _PAGE_JS = """
       const fill = document.createElement('i');
       fill.style.width = (total ? Math.min(100, Math.round(done / total * 100)) : 100) + '%';
       bar.appendChild(fill);
+      const meta2 = s.metadata || {};
       const num = document.createElement('span');
       num.className = 'snum' + (Number(s.failed) ? ' sfail' : '');
       let numTxt = done + '/' + total;
+      if (stageName === 'scoring' && meta2.backlog > 0) {
+        numTxt += ' (' + (meta2.from_this_run || 0) + ' new + '
+                + meta2.backlog + ' backlog)';
+      }
       if (Number(s.failed)) numTxt += ', ' + s.failed + ' failed';
       if (Number(s.skipped)) numTxt += ', ' + s.skipped + ' skipped';
       if (!isActive && done < total) numTxt += ', ' + (total - done) + ' not run';
+      const el = stageElapsed(meta2, s, isActive);
+      if (el) numTxt += ', ' + el;
       if (isActive) {
         const eta = etaMinutes(stageName, done, total);
-        if (eta !== null) numTxt += ', ~' + eta + ' min left';
+        if (eta !== null) {
+          numTxt += ', ~' + eta + ' min left';
+          headerEta = '~' + eta + ' min left in ' + (STAGE_LABELS[stageName] || stageName);
+        }
       }
       num.textContent = numTxt;
       row.appendChild(name); row.appendChild(bar); row.appendChild(num);
       holder.appendChild(row);
       if (isActive && s.current_label) currentLabel = (STAGE_LABELS[stageName] || stageName) + ': ' + s.current_label;
+      if (stageName === 'scoring') scoringMeta = meta2;
     });
     const cur = document.getElementById('ar-current');
     cur.textContent = currentLabel ? 'working on ' + currentLabel : '';
+    if (headerEta) {
+      document.getElementById('ar-meta').textContent += ', ' + headerEta;
+    }
+    renderTicker(scoringMeta);
     arPanel.hidden = false;
+  }
+  function stageElapsed(meta2, s, isActive) {
+    const t0 = Date.parse(meta2.stage_started_at || '');
+    if (isNaN(t0)) return '';
+    const t1 = isActive ? Date.now() : Date.parse(s.updated_at || '');
+    if (isNaN(t1) || t1 <= t0) return '';
+    const m = Math.round((t1 - t0) / 60000);
+    return m < 1 ? '<1 min' : m + ' min';
+  }
+  function renderTicker(meta2) {
+    const strong = document.getElementById('ar-strong');
+    const ticker = document.getElementById('ar-ticker');
+    const fails = document.getElementById('ar-fails');
+    if (!meta2) { strong.hidden = ticker.hidden = fails.hidden = true; return; }
+    const thr = meta2.strong_threshold || 80;
+    if (meta2.n_strong > 0) {
+      strong.textContent = meta2.n_strong + ' match' +
+        (meta2.n_strong === 1 ? '' : 'es') + ' at ' + thr + '+ this run';
+      strong.hidden = false;
+    } else { strong.hidden = true; }
+    const ticks = (meta2.ticker || []).slice().reverse();
+    ticker.textContent = '';
+    ticks.forEach(function (t) {
+      const chip = document.createElement('span');
+      chip.className = 'tick' + (Number(t.s) >= thr ? ' hit' : '');
+      const score = document.createElement('b');
+      score.textContent = t.s;
+      chip.appendChild(document.createTextNode((t.c || '?') + ' '));
+      chip.appendChild(score);
+      ticker.appendChild(chip);
+    });
+    ticker.hidden = ticks.length === 0;
+    const fl = meta2.failures || [];
+    if (fl.length) {
+      fails.textContent = 'could not score: ' + fl.slice().reverse()
+        .map(function (f) { return (f.c || '?') + ' (' + (f.e || 'error') + ')'; })
+        .join(', ');
+      fails.hidden = false;
+    } else { fails.hidden = true; }
   }
   // Rolling throughput per stage, measured between polls, for an honest
   // "~N min left" (scoring runs ~30-60s per posting on the Max plan; a
@@ -763,6 +830,9 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
     </div>
     <div id="ar-stages"></div>
     <div class="meta" id="ar-current" style="margin-top:8px"></div>
+    <div id="ar-strong" hidden></div>
+    <div id="ar-ticker" hidden></div>
+    <div id="ar-fails" hidden></div>
   </div>
   <div class="controls">
     <input id="q" type="search" placeholder="Filter by company, title, location, source">

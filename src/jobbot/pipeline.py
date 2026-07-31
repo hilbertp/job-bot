@@ -123,10 +123,16 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
             if src_cfg.enabled
             for query in src_cfg.queries
         ]
+        scrape_meta: dict[str, Any] = {
+            "stage_started_at": datetime.now(timezone.utc).isoformat(),
+            "hits_so_far": 0,
+            "new_so_far": 0,
+        }
         update_run_stage_progress(
             conn, run_id, "scrape",
             total=len(scrape_queries), started=0, completed=0, failed=0, skipped=0,
             current_index=0, current_item_id=None, current_label=None,
+            metadata=scrape_meta,
         )
         scrape_index = 0
         scrape_failed = 0
@@ -141,10 +147,11 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 # progress bar can complete; a config that names a portal
                 # this build doesn't ship must not read as a stuck run.
                 scrape_skipped += len(src_cfg.queries)
+                scrape_meta["skipped_reason"] = f"no scraper registered: {name}"
                 update_run_stage_progress(
                     conn, run_id, "scrape",
                     skipped=scrape_skipped,
-                    metadata={"skipped_reason": f"no scraper registered: {name}"},
+                    metadata=scrape_meta,
                 )
                 continue
             for query in src_cfg.queries:
@@ -157,10 +164,8 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                     current_index=scrape_index,
                     current_item_id=name,
                     current_label=f"{name} · {query}",
-                    metadata={
-                        "hits_so_far": n_fetched,
-                        "new_so_far": n_new,
-                    },
+                    metadata={**scrape_meta,
+                              "hits_so_far": n_fetched, "new_so_far": n_new},
                 )
                 try:
                     fetched_raw = scraper.fetch(query)
@@ -277,10 +282,37 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
 
         to_generate: list[tuple[JobPosting, int, str]] = []
         score_candidates = list(to_score.values())[: config.max_jobs_per_run]
+        # Live telemetry for the dashboards: queue composition (fresh finds
+        # vs backlog), a rolling feed of landed scores, and failure reasons.
+        # The dict is mutated in place and snapshotted into metadata_json on
+        # every progress write.
+        fresh_ids = {j.id for j in enrichment.enriched_jobs if j is not None}
+        n_from_this_run = sum(1 for j, _ in score_candidates if j.id in fresh_ids)
+        scoring_meta: dict[str, Any] = {
+            "stage_started_at": datetime.now(timezone.utc).isoformat(),
+            "from_this_run": n_from_this_run,
+            "backlog": len(score_candidates) - n_from_this_run,
+            "ticker": [],     # newest last, capped at 24
+            "failures": [],   # newest last, capped at 8
+            "n_strong": 0,
+            "strong_threshold": config.digest.generate_docs_above_score,
+        }
+
+        def _tick(job: JobPosting, score: int) -> None:
+            scoring_meta["ticker"].append({"c": job.company, "s": score})
+            del scoring_meta["ticker"][:-24]
+            if score >= scoring_meta["strong_threshold"]:
+                scoring_meta["n_strong"] += 1
+
+        def _tick_failure(job: JobPosting, why: str) -> None:
+            scoring_meta["failures"].append({"c": job.company, "e": why[:80]})
+            del scoring_meta["failures"][:-8]
+
         update_run_stage_progress(
             conn, run_id, "scoring",
             total=len(score_candidates), started=0, completed=0, failed=0,
             current_index=0, current_label=None,
+            metadata=scoring_meta,
         )
         for idx, (job, desc_scraped) in enumerate(score_candidates, start=1):
             if stopped := _continue_or_stop():
@@ -290,6 +322,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 total=len(score_candidates), started=idx, current_index=idx,
                 current_item_id=job.id,
                 current_label=f"{job.title} @ {job.company}",
+                metadata=scoring_meta,
             )
             ok, reason = passes_heuristic(job, profile)
             if not ok:
@@ -307,6 +340,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                     conn, run_id, "scoring",
                     completed=n_scored + n_below_threshold + n_filtered + n_cannot_score,
                     skipped=n_filtered,
+                    metadata=scoring_meta,
                 )
                 blocker_counts[reason or "filtered by heuristic"] += 1
                 continue
@@ -332,6 +366,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                     conn, run_id, "scoring",
                     completed=n_scored + n_below_threshold + n_filtered + n_cannot_score,
                     skipped=n_filtered,
+                    metadata=scoring_meta,
                 )
                 blocker_counts["salary below floor"] += 1
                 continue
@@ -357,6 +392,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 update_status(conn, job.id, new_status, score=None, reason=reason)
                 n_cannot_score += 1
                 blocker_counts[f"cannot_score: {reason}"] += 1
+                _tick_failure(job, reason)
                 cannot_score_entries.append({
                     "job": job.model_dump(mode="json"),
                     "status": new_status.value,
@@ -366,6 +402,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                     conn, run_id, "scoring",
                     completed=n_scored + n_below_threshold + n_filtered + n_cannot_score,
                     failed=n_cannot_score + n_score_failed,
+                    metadata=scoring_meta,
                 )
                 continue
             except Exception as e:
@@ -374,6 +411,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                 n_score_failed += 1
                 err_label = f"scoring error: {type(e).__name__}"
                 blocker_counts[err_label] += 1
+                _tick_failure(job, err_label)
                 # No score recorded: the LLM call failed, so per PRD §7.5
                 # there is no trustworthy number. Status drops back to
                 # SCRAPED so the next run retries.
@@ -382,6 +420,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                     conn, run_id, "scoring",
                     completed=n_scored + n_below_threshold + n_filtered + n_cannot_score,
                     failed=n_cannot_score + n_score_failed,
+                    metadata=scoring_meta,
                 )
                 continue
             if result.score < config.score_threshold:
@@ -391,10 +430,12 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
                               discard_reason=result.discard_reason)
                 n_below_threshold += 1
                 score_values.append(result.score)
+                _tick(job, result.score)
                 update_run_stage_progress(
                     conn, run_id, "scoring",
                     completed=n_scored + n_below_threshold + n_filtered + n_cannot_score,
                     failed=n_cannot_score + n_score_failed,
+                    metadata=scoring_meta,
                 )
                 continue
             update_status(conn, job.id, JobStatus.SCORED,
@@ -404,10 +445,12 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
             n_scored += 1
             score_values.append(result.score)
             to_generate.append((job, result.score, result.reason))
+            _tick(job, result.score)
             update_run_stage_progress(
                 conn, run_id, "scoring",
                 completed=n_scored + n_below_threshold + n_filtered + n_cannot_score,
                 failed=n_cannot_score + n_score_failed,
+                metadata=scoring_meta,
             )
 
         # 3.5) Housekeep: probe every live shortlist row's apply URL and
@@ -445,6 +488,7 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
             conn, run_id, "generation",
             total=len(to_generate), started=0, completed=0, failed=0,
             current_index=0, current_label=None,
+            metadata={"stage_started_at": datetime.now(timezone.utc).isoformat()},
         )
         generation_skipped = 0
         generation_failed = 0

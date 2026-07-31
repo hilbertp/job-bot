@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 import re
 import structlog
 
@@ -83,6 +84,7 @@ def enrich_new_postings(
             conn, run_id, "enrichment",
             total=len(jobs), started=0, completed=0, failed=0, skipped=0,
             current_index=0, current_item_id=None, current_label=None,
+            metadata={"stage_started_at": datetime.now(timezone.utc).isoformat()},
         )
 
     for idx, job in enumerate(jobs, start=1):
