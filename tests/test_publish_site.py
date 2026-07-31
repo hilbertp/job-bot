@@ -129,6 +129,10 @@ def test_build_site_writes_page_data_and_docs(db, tmp_path: Path):
     assert 'id="ar-dot"' in html       # liveness pulse indicator
     assert "ar-pulse" in html          # its animation, gated on freshness
     assert "run may be stuck" in html  # stalled-state copy
+    assert "'waiting'" in html         # pending stages say waiting, not 0/0
+    assert "min left" in html          # active stage carries a rate-based ETA
+    # Every row links to the posting itself, apply route or not.
+    assert f'class="titlelink" href="https://example.com/jobs/1"' in html
     assert "https://example.com/jobs/1/apply" in html
     data = json.loads((site_dir / "data.json").read_text())
     assert data["jobs"][0]["company"] == "Acme 1"

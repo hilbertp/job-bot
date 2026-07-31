@@ -130,12 +130,22 @@ def run_once(config: Config, secrets: Secrets) -> dict[str, Any]:
         )
         scrape_index = 0
         scrape_failed = 0
+        scrape_skipped = 0
         for name, src_cfg in config.sources.items():
             if not src_cfg.enabled:
                 continue
             scraper = REGISTRY.get(name)
             if scraper is None:
                 errors.append({"source": name, "error": "no scraper registered"})
+                # Count this source's queries as skipped so the scrape
+                # progress bar can complete; a config that names a portal
+                # this build doesn't ship must not read as a stuck run.
+                scrape_skipped += len(src_cfg.queries)
+                update_run_stage_progress(
+                    conn, run_id, "scrape",
+                    skipped=scrape_skipped,
+                    metadata={"skipped_reason": f"no scraper registered: {name}"},
+                )
                 continue
             for query in src_cfg.queries:
                 if stopped := _continue_or_stop():
