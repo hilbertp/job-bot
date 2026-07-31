@@ -129,7 +129,13 @@ def test_build_site_writes_page_data_and_docs(db, tmp_path: Path):
     assert 'id="ar-dot"' in html       # liveness pulse indicator
     assert "ar-pulse" in html          # its animation, gated on freshness
     assert "run may be stuck" in html  # stalled-state copy
-    assert "'waiting'" in html         # pending stages say waiting, not 0/0
+    # Pending stages say what they are waiting FOR, not a bare "waiting"
+    # and never 0/0. The old assertion pinned the literal string 'waiting';
+    # the copy now names the blocking stage, which is the same intent said
+    # better, so the assertion follows the intent rather than the literal.
+    assert "waiting to start" in html
+    assert "waiting for " in html
+    assert "STAGE_UNITS" in html       # counts carry their unit, not a bare 29/29
     assert "min left" in html          # active stage carries a rate-based ETA
     assert 'id="ar-ticker"' in html    # live results feed
     assert 'id="ar-strong"' in html    # running strong-match counter
