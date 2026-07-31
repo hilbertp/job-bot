@@ -130,7 +130,11 @@ class LinkedInScraper(BaseScraper):
                     posted_at=posted_at,
                 ))
 
-            time.sleep(random.uniform(3.0, 5.0))
+            # Space out same-host page requests, but not after the last one:
+            # nothing follows it on this host, so that sleep throttles
+            # nothing and only lengthens the run. Measured ~4s per query.
+            if page < _PAGES_PER_QUERY - 1:
+                time.sleep(random.uniform(3.0, 5.0))
 
         return out
 

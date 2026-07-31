@@ -38,6 +38,55 @@ PROFILE_YAML_PATH = REPO_ROOT / "data" / "profile.yaml"
 # previews, Stepstone teaser cards) and the scorer would hallucinate.
 MIN_BODY_WORDS = 100
 
+# Market-age gate. A posting that has been advertised for more than a few
+# days has usually already collected its shortlist, so scoring it spends an
+# LLM call on a race we have lost. The gate runs before enrichment and
+# before the heuristic, which is where the savings are: no detail fetch and
+# no LLM call for a stale row. Configurable via `max_market_age_days`.
+MAX_MARKET_AGE_DAYS = 3
+
+
+def market_age_days(
+    posted_at: "datetime | None", first_seen_at: "datetime | str | None" = None
+) -> int | None:
+    """Days this posting has been on the market, or None when unknown.
+
+    Prefers the posting's own `posted_at`, which most scrapers extract, and
+    falls back to the day we first saw it. The fallback understates the age
+    of anything we discovered late, so it is deliberately lenient: an
+    unknown age never blocks scoring, it only fails to save a call.
+    """
+    from datetime import datetime as _dt, timezone as _tz
+
+    candidate = posted_at
+    if candidate is None and first_seen_at is not None:
+        if isinstance(first_seen_at, str):
+            try:
+                candidate = _dt.fromisoformat(first_seen_at.replace("Z", "+00:00"))
+            except ValueError:
+                candidate = None
+        else:
+            candidate = first_seen_at
+    if candidate is None:
+        return None
+    if candidate.tzinfo is None:
+        candidate = candidate.replace(tzinfo=_tz.utc)
+    return max(0, (_dt.now(tz=_tz.utc) - candidate).days)
+
+
+def too_old_for_market(
+    job: JobPosting,
+    max_age_days: int = MAX_MARKET_AGE_DAYS,
+    first_seen_at: "datetime | str | None" = None,
+) -> tuple[bool, str]:
+    """(is_too_old, reason). `max_age_days <= 0` disables the gate."""
+    if max_age_days <= 0:
+        return False, ""
+    age = market_age_days(job.posted_at, first_seen_at)
+    if age is None or age <= max_age_days:
+        return False, ""
+    return True, f"too old: {age} days on the market, cutoff is {max_age_days}"
+
 # Cap the primary CV at 18k chars (~3-4k tokens). Sonnet handles much more,
 # but the marginal context past this point is mostly formatting noise.
 _PRIMARY_CV_CAP = 18000
