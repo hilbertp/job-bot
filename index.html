@@ -93,16 +93,8 @@ tr:last-child td { border-bottom: none; }
 .docs a { display: inline-block; margin-right: 8px; white-space: nowrap; }
 .apply { white-space: nowrap; font-weight: 550; }
 .noroute { color: var(--muted); font-size: 13px; }
-/* An in-flight run is the single most time-sensitive thing on the page:
-   it means the numbers below are mid-change. It therefore sits ABOVE the
-   stat bar and carries an accent border, so it reads as an interruption
-   rather than as one more panel. */
-#active-run { background: var(--panel); border: 1px solid var(--good);
-  border-left: 3px solid var(--good);
-  border-radius: 10px; padding: 14px 16px; margin: 4px 0 18px; }
-#active-run h2 { letter-spacing: 0.01em; }
-/* The 80+ count is the number worth acting on; the rest is context. */
-.stat.hot .num { color: var(--good); }
+#active-run { background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 18px; }
 #active-run h2 { margin: 0; font-size: 14px; }
 #ar-dot { display: inline-block; width: 9px; height: 9px; border-radius: 999px;
   margin-right: 7px; vertical-align: 1px; }
@@ -159,9 +151,19 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
       <span id="run-now-status" class="meta"></span>
       <button id="run-now" class="btn" type="button"
         title="Starts a pipeline run on the Mac running jobbot (needs jobbot dashboard up)">Run now</button>
-      <span class="meta">Generated 2026-07-31 23:13 UTC</span>
+      <span class="meta">Generated 2026-07-31 23:20 UTC</span>
     </span>
   </div>
+  <div class="statbar">
+    <span class="stat"><span class="num">122</span><span class="lbl">matches</span></span>
+    <span class="sep">|</span>
+    <span class="stat"><span class="num">49</span><span class="lbl">new today</span></span>
+    <span class="sep">|</span>
+    <span class="stat"><span class="num">5</span><span class="lbl">ready-to-send packages</span></span>
+    <span class="sep">|</span>
+    <span class="stat"><span class="num" id="shown-count">122</span><span class="lbl">after filters</span></span>
+  </div>
+  <p class="runline">Latest run 2026-07-31 23:13 UTC: 300 fetched, 5 new, 2 packages generated, <span class="err">1 errors</span></p>
   <div id="active-run" hidden>
     <div class="arhead">
       <h2><span id="ar-dot" class="running"></span>Active run <span id="ar-id"></span></h2>
@@ -173,16 +175,6 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
     <div id="ar-ticker" hidden></div>
     <div id="ar-fails" hidden></div>
   </div>
-  <div class="statbar">
-    <span class="stat"><span class="num">45</span><span class="lbl">new today</span></span>
-    <span class="sep">|</span>
-    <span class="stat hot"><span class="num">18</span><span class="lbl">of those 80+</span></span>
-    <span class="sep">|</span>
-    <span class="stat"><span class="num">89</span><span class="lbl">packages waiting to be sent</span></span>
-    <span class="sep">|</span>
-    <span class="stat"><span class="num" id="shown-count">118</span><span class="lbl">rows shown</span></span>
-  </div>
-  <p class="runline">Latest run 2026-07-31 19:59 UTC: 301 fetched, 0 new, 3 packages generated, <span class="err">1 errors</span></p>
   <div class="controls">
     <input id="q" type="search" placeholder="Filter by company, title, location, source">
     <label>Posted
@@ -228,6 +220,7 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
 <tr data-hay="senior product manager (f/m/x) mindfuel munich, bavaria, germany linkedin " data-best="90" data-score="90" data-posted="2026-07-28" data-tailored="0" data-company="mindfuel" data-seen="2026-07-28T13:02:00.026320+00:00"><td>Mindfuel<div class="src">linkedin</div></td><td><a class="titlelink" href="https://de.linkedin.com/jobs/view/senior-product-manager-f-m-x-at-mindfuel-4443273993" target="_blank" rel="noopener">Senior Product Manager (f/m/x)</a></td><td>Munich, Bavaria, Germany</td><td></td><td><span class="badge hi">90</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://de.linkedin.com/jobs/view/senior-product-manager-f-m-x-at-mindfuel-4443273993" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-28 13:02</td></tr>
 <tr data-hay="senior product owner (m/w/d) freelancermap (auftraggeber anonym)  freelancermap " data-best="90" data-score="90" data-posted="2026-07-27" data-tailored="0" data-company="freelancermap (auftraggeber anonym)" data-seen="2026-07-27T17:00:33.641581+00:00"><td>freelancermap (Auftraggeber anonym)<div class="src">freelancermap</div></td><td><a class="titlelink" href="https://www.freelancermap.de/projekt/senior-product-owner-m-w-d-3028468" target="_blank" rel="noopener">Senior Product Owner (m/w/d)</a></td><td></td><td></td><td><span class="badge hi">90</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://www.freelancermap.de/projekt/senior-product-owner-m-w-d-3028468" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-27 17:00</td></tr>
 <tr data-hay="afra-10776-product owner (m/w/d) freelancermap (auftraggeber anonym)  freelancermap " data-best="90" data-score="90" data-posted="2026-07-26" data-tailored="0" data-company="freelancermap (auftraggeber anonym)" data-seen="2026-07-26T05:14:45.621452+00:00"><td>freelancermap (Auftraggeber anonym)<div class="src">freelancermap</div></td><td><a class="titlelink" href="https://www.freelancermap.de/projekt/afra-10776-product-owner-m-w-d" target="_blank" rel="noopener">AFRA-10776-Product Owner (m/w/d)</a></td><td></td><td></td><td><span class="badge hi">90</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://www.freelancermap.de/projekt/afra-10776-product-owner-m-w-d" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-26 05:14</td></tr>
+<tr data-hay="product manager integration (m/w/d) riverty baden-baden, baden-württemberg, germany linkedin " data-best="88" data-score="82" data-posted="2026-07-30" data-tailored="88" data-company="riverty" data-seen="2026-07-31T23:14:28.076774+00:00"><td>Riverty<div class="src">linkedin</div></td><td><a class="titlelink" href="https://de.linkedin.com/jobs/view/product-manager-integration-m-w-d-at-riverty-4446480634" target="_blank" rel="noopener">Product Manager Integration (m/w/d)</a><span class="newpill">NEW</span></td><td>Baden-Baden, Baden-Württemberg, Germany</td><td></td><td><span class="badge hi">82</span></td><td><span class="badge hi">88</span></td><td><a class="apply" href="https://de.linkedin.com/jobs/view/product-manager-integration-m-w-d-at-riverty-4446480634" target="_blank" rel="noopener">Apply</a></td><td><span class="docs"><a href="docs/linkedin_67284fbd061a7842/cv.pdf" download>CV</a> <a href="docs/linkedin_67284fbd061a7842/cover_letter.pdf" download>Cover letter</a> <a href="docs/linkedin_67284fbd061a7842/application_package.pdf" download>Full package</a></span></td><td class="meta">2026-07-31 23:14</td></tr>
 <tr data-hay="product owner - registration route &amp; ab testing (f/m/d) smava berlin, germany linkedin " data-best="88" data-score="82" data-posted="2026-07-31" data-tailored="88" data-company="smava" data-seen="2026-07-31T14:38:18.066393+00:00"><td>smava<div class="src">linkedin</div></td><td><a class="titlelink" href="https://de.linkedin.com/jobs/view/product-owner-registration-route-ab-testing-f-m-d-at-smava-4447511669" target="_blank" rel="noopener">Product Owner - Registration Route &amp; AB Testing (f/m/d)</a><span class="newpill">NEW</span></td><td>Berlin, Germany</td><td></td><td><span class="badge hi">82</span></td><td><span class="badge hi">88</span></td><td><a class="apply" href="https://de.linkedin.com/jobs/view/product-owner-registration-route-ab-testing-f-m-d-at-smava-4447511669" target="_blank" rel="noopener">Apply</a></td><td><span class="docs"><a href="docs/linkedin_9398a55c79d04291/cv.pdf" download>CV</a> <a href="docs/linkedin_9398a55c79d04291/cover_letter.pdf" download>Cover letter</a> <a href="docs/linkedin_9398a55c79d04291/application_package.pdf" download>Full package</a></span></td><td class="meta">2026-07-31 14:38</td></tr>
 <tr data-hay="founding product lead reli berlin, germany linkedin " data-best="88" data-score="88" data-posted="2026-07-28" data-tailored="0" data-company="reli" data-seen="2026-07-31T12:20:04.633597+00:00"><td>Reli<div class="src">linkedin</div></td><td><a class="titlelink" href="https://de.linkedin.com/jobs/view/founding-product-lead-at-reli-4443256559" target="_blank" rel="noopener">Founding Product Lead</a><span class="newpill">NEW</span></td><td>Berlin, Germany</td><td></td><td><span class="badge hi">88</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://de.linkedin.com/jobs/view/founding-product-lead-at-reli-4443256559" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-31 12:20</td></tr>
 <tr data-hay="product owner freelancermap (auftraggeber anonym)  freelancermap " data-best="88" data-score="88" data-posted="2026-07-31" data-tailored="0" data-company="freelancermap (auftraggeber anonym)" data-seen="2026-07-31T12:19:19.286673+00:00"><td>freelancermap (Auftraggeber anonym)<div class="src">freelancermap</div></td><td><a class="titlelink" href="https://www.freelancermap.de/projekt/product-owner-3030310" target="_blank" rel="noopener">Product Owner</a><span class="newpill">NEW</span></td><td></td><td></td><td><span class="badge hi">88</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://www.freelancermap.de/projekt/product-owner-3030310" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-31 12:19</td></tr>
@@ -273,6 +266,8 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
 <tr data-hay="product owner / projektmanager*in (w/m/d) teilzeit open digitalgruppe gmbh köln stepstone " data-best="80" data-score="80" data-posted="2026-07-30" data-tailored="0" data-company="open digitalgruppe gmbh" data-seen="2026-07-30T12:01:00.979358+00:00"><td>OPEN Digitalgruppe GmbH<div class="src">stepstone</div></td><td><a class="titlelink" href="https://www.stepstone.de/stellenangebote--Product-Owner-Projektmanagerin-w-m-d-Teilzeit-Koeln-OPEN-Digitalgruppe-GmbH--14338647-inline.html" target="_blank" rel="noopener">Product Owner / Projektmanager*in (w/m/d) Teilzeit</a></td><td>Köln</td><td></td><td><span class="badge hi">80</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://www.stepstone.de/stellenangebote--Product-Owner-Projektmanagerin-w-m-d-Teilzeit-Koeln-OPEN-Digitalgruppe-GmbH--14338647-inline.html" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-30 12:01</td></tr>
 <tr data-hay="product manager kpler  dailyremote " data-best="80" data-score="80" data-posted="2026-07-23" data-tailored="0" data-company="kpler" data-seen="2026-07-26T05:14:37.386529+00:00"><td>Kpler<div class="src">dailyremote</div></td><td><a class="titlelink" href="https://dailyremote.com/remote-job/product-manager-5352577" target="_blank" rel="noopener">Product Manager</a></td><td></td><td></td><td><span class="badge hi">80</span></td><td><span class="badge na">n/a</span></td><td><span class="noroute">no direct route yet</span></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-26 05:14</td></tr>
 <tr data-hay="product owner advice consulting frankfurt, hesse, germany linkedin " data-best="79" data-score="79" data-posted="2026-07-29" data-tailored="0" data-company="advice consulting" data-seen="2026-07-29T16:18:55.476465+00:00"><td>ADVICE Consulting<div class="src">linkedin</div></td><td><a class="titlelink" href="https://de.linkedin.com/jobs/view/product-owner-at-advice-consulting-4446810220" target="_blank" rel="noopener">Product Owner</a></td><td>Frankfurt, Hesse, Germany</td><td></td><td><span class="badge mid">79</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://de.linkedin.com/jobs/view/product-owner-at-advice-consulting-4446810220" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-29 16:18</td></tr>
+<tr data-hay="product owner (m/w/d) riverty dortmund, north rhine-westphalia, germany linkedin " data-best="78" data-score="78" data-posted="2026-07-31" data-tailored="0" data-company="riverty" data-seen="2026-07-31T23:14:37.859584+00:00"><td>Riverty<div class="src">linkedin</div></td><td><a class="titlelink" href="https://de.linkedin.com/jobs/view/product-owner-m-w-d-at-riverty-4447700327" target="_blank" rel="noopener">Product Owner (m/w/d)</a><span class="newpill">NEW</span></td><td>Dortmund, North Rhine-Westphalia, Germany</td><td></td><td><span class="badge mid">78</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://de.linkedin.com/jobs/view/product-owner-m-w-d-at-riverty-4447700327" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-31 23:14</td></tr>
+<tr data-hay="product manager integration (m/w/d) riverty berlin, germany linkedin " data-best="78" data-score="78" data-posted="2026-07-31" data-tailored="0" data-company="riverty" data-seen="2026-07-31T23:14:28.073710+00:00"><td>Riverty<div class="src">linkedin</div></td><td><a class="titlelink" href="https://de.linkedin.com/jobs/view/product-manager-integration-m-w-d-at-riverty-4447589468" target="_blank" rel="noopener">Product Manager Integration (m/w/d)</a><span class="newpill">NEW</span></td><td>Berlin, Germany</td><td></td><td><span class="badge mid">78</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://de.linkedin.com/jobs/view/product-manager-integration-m-w-d-at-riverty-4447589468" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-31 23:14</td></tr>
 <tr data-hay="product owner - data &amp; analytics / marketing technology (m/w/d) vgl publishing ag berlin, bundesweit, homeoffice stepstone " data-best="78" data-score="78" data-posted="2026-07-31" data-tailored="0" data-company="vgl publishing ag" data-seen="2026-07-31T17:57:56.187233+00:00"><td>VGL Publishing AG<div class="src">stepstone</div></td><td><a class="titlelink" href="https://www.stepstone.de/stellenangebote--Product-Owner-Data-Analytics-Marketing-Technology-m-w-d-Berlin-Bundesweit-Homeoffice-VGL-Publishing-AG--14346950-inline.html" target="_blank" rel="noopener">Product Owner - Data &amp; Analytics / Marketing Technology (m/w/d)</a><span class="newpill">NEW</span></td><td>Berlin, Bundesweit, Homeoffice</td><td></td><td><span class="badge mid">78</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://www.stepstone.de/stellenangebote--Product-Owner-Data-Analytics-Marketing-Technology-m-w-d-Berlin-Bundesweit-Homeoffice-VGL-Publishing-AG--14346950-inline.html" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-31 17:57</td></tr>
 <tr data-hay="product owner - registration route &amp; ab testing (f/m/d) smava hamburg, hamburg, germany linkedin " data-best="78" data-score="78" data-posted="2026-07-31" data-tailored="0" data-company="smava" data-seen="2026-07-31T14:38:18.066864+00:00"><td>smava<div class="src">linkedin</div></td><td><a class="titlelink" href="https://de.linkedin.com/jobs/view/product-owner-registration-route-ab-testing-f-m-d-at-smava-4447531458" target="_blank" rel="noopener">Product Owner - Registration Route &amp; AB Testing (f/m/d)</a><span class="newpill">NEW</span></td><td>Hamburg, Hamburg, Germany</td><td></td><td><span class="badge mid">78</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://de.linkedin.com/jobs/view/product-owner-registration-route-ab-testing-f-m-d-at-smava-4447531458" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-31 14:38</td></tr>
 <tr data-hay="senior product manager - agent experience liveperson berlin, berlin, germany linkedin " data-best="78" data-score="78" data-posted="2026-07-30" data-tailored="0" data-company="liveperson" data-seen="2026-07-31T12:19:50.588300+00:00"><td>LivePerson<div class="src">linkedin</div></td><td><a class="titlelink" href="https://de.linkedin.com/jobs/view/senior-product-manager-agent-experience-at-liveperson-4444189442" target="_blank" rel="noopener">Senior Product Manager - Agent Experience</a><span class="newpill">NEW</span></td><td>Berlin, Berlin, Germany</td><td></td><td><span class="badge mid">78</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="mailto:an@liveperson.comemail">an@liveperson.comemail</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-31 12:19</td></tr>
@@ -298,6 +293,7 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
 <tr data-hay="(senior) product manager (m/f/d) - saas nooxit berlin, berlin, germany linkedin " data-best="73" data-score="73" data-posted="2026-07-27" data-tailored="0" data-company="nooxit" data-seen="2026-07-27T17:01:00.450108+00:00"><td>Nooxit<div class="src">linkedin</div></td><td><a class="titlelink" href="https://de.linkedin.com/jobs/view/senior-product-manager-m-f-d-saas-at-nooxit-4442832823" target="_blank" rel="noopener">(Senior) Product Manager (m/f/d) - SaaS</a></td><td>Berlin, Berlin, Germany</td><td></td><td><span class="badge mid">73</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://de.linkedin.com/jobs/view/senior-product-manager-m-f-d-saas-at-nooxit-4442832823" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-27 17:01</td></tr>
 <tr data-hay="senior product owner (m/w/d) instaffo berlin, berlin, germany linkedin " data-best="73" data-score="73" data-posted="2026-07-27" data-tailored="0" data-company="instaffo" data-seen="2026-07-27T13:01:49.257689+00:00"><td>Instaffo<div class="src">linkedin</div></td><td><a class="titlelink" href="https://de.linkedin.com/jobs/view/senior-product-owner-m-w-d-at-instaffo-4445921424" target="_blank" rel="noopener">Senior Product Owner (m/w/d)</a></td><td>Berlin, Berlin, Germany</td><td></td><td><span class="badge mid">73</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://de.linkedin.com/jobs/view/senior-product-owner-m-w-d-at-instaffo-4445921424" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-27 13:01</td></tr>
 <tr data-hay="product owner - e-commerce / conversion / kpi (m/w/d) ionos se karlsruhe stepstone " data-best="73" data-score="73" data-posted="2026-07-27" data-tailored="0" data-company="ionos se" data-seen="2026-07-27T13:00:49.588853+00:00"><td>IONOS SE<div class="src">stepstone</div></td><td><a class="titlelink" href="https://www.stepstone.de/stellenangebote--Product-Owner-E-Commerce-Conversion-KPI-m-w-d-Karlsruhe-IONOS-SE--13441058-inline.html" target="_blank" rel="noopener">Product Owner - E-Commerce / Conversion / KPI (m/w/d)</a></td><td>Karlsruhe</td><td></td><td><span class="badge mid">73</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://www.stepstone.de/stellenangebote--Product-Owner-E-Commerce-Conversion-KPI-m-w-d-Karlsruhe-IONOS-SE--13441058-inline.html" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-27 13:00</td></tr>
+<tr data-hay="product manager govpilot  dailyremote " data-best="72" data-score="72" data-posted="2026-07-31" data-tailored="0" data-company="govpilot" data-seen="2026-07-31T23:13:58.484049+00:00"><td>GovPilot<div class="src">dailyremote</div></td><td><a class="titlelink" href="https://dailyremote.com/remote-job/product-manager-5393986" target="_blank" rel="noopener">Product Manager</a><span class="newpill">NEW</span></td><td></td><td></td><td><span class="badge mid">72</span></td><td><span class="badge na">n/a</span></td><td><span class="noroute">no direct route yet</span></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-31 23:13</td></tr>
 <tr data-hay="product manager axiscare home care software united states himalayas 401k" data-best="72" data-score="72" data-posted="2026-07-31" data-tailored="0" data-company="axiscare home care software" data-seen="2026-07-31T17:58:36.507493+00:00"><td>AxisCare Home Care Software<div class="src">himalayas</div></td><td><a class="titlelink" href="https://himalayas.app/companies/axiscare-home-care-software/jobs/product-manager" target="_blank" rel="noopener">Product Manager</a><span class="newpill">NEW</span></td><td>United States</td><td>401K</td><td><span class="badge mid">72</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://himalayas.app/companies/axiscare-home-care-software/jobs/product-manager" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-31 17:58</td></tr>
 <tr data-hay="product manager turbalance heidelberg, baden-württemberg, germany linkedin " data-best="72" data-score="72" data-posted="2026-07-31" data-tailored="0" data-company="turbalance" data-seen="2026-07-31T17:58:17.642750+00:00"><td>turbalance<div class="src">linkedin</div></td><td><a class="titlelink" href="https://de.linkedin.com/jobs/view/product-manager-at-turbalance-4445508996" target="_blank" rel="noopener">Product Manager</a><span class="newpill">NEW</span></td><td>Heidelberg, Baden-Württemberg, Germany</td><td></td><td><span class="badge mid">72</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="https://de.linkedin.com/jobs/view/product-manager-at-turbalance-4445508996" target="_blank" rel="noopener">Apply</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-31 17:58</td></tr>
 <tr data-hay="product manager (f/m/d) - fintech for social care parto group gmbh hamburg stepstone " data-best="72" data-score="72" data-posted="2026-07-31" data-tailored="0" data-company="parto group gmbh" data-seen="2026-07-31T17:57:51.709079+00:00"><td>Parto Group GmbH<div class="src">stepstone</div></td><td><a class="titlelink" href="https://www.stepstone.de/stellenangebote--Product-Manager-f-m-d-FinTech-for-Social-Care-Hamburg-Parto-Group-GmbH--14346727-inline.html" target="_blank" rel="noopener">Product Manager (f/m/d) - FinTech for Social Care</a><span class="newpill">NEW</span></td><td>Hamburg</td><td></td><td><span class="badge mid">72</span></td><td><span class="badge na">n/a</span></td><td><a class="apply" href="mailto:christoph.roling@goparto.com">christoph.roling@goparto.com</a></td><td><span class="noroute">not generated</span></td><td class="meta">2026-07-31 17:57</td></tr>
@@ -342,6 +338,7 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
       <thead><tr><th>Run</th><th>Started</th><th>Finished</th><th>Fetched</th>
         <th>New</th><th>Generated</th><th>Errors</th></tr></thead>
       <tbody>
+<tr><td>300</td><td>2026-07-31 23:13</td><td>2026-07-31 23:20</td><td>300</td><td>5</td><td>2</td><td>1</td></tr>
 <tr><td>299</td><td>2026-07-31 19:59</td><td>2026-07-31 20:08</td><td>301</td><td>0</td><td>3</td><td>1</td></tr>
 <tr><td>298</td><td>2026-07-31 19:42</td><td>2026-07-31 19:47</td><td>302</td><td>4</td><td>1</td><td>1</td></tr>
 <tr><td>297</td><td>2026-07-31 17:57</td><td>2026-07-31 18:31</td><td>333</td><td>13</td><td>6</td><td>2</td></tr>
@@ -355,7 +352,6 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
 <tr><td>289</td><td>2026-07-29 16:17</td><td>2026-07-29 17:34</td><td>324</td><td>5</td><td>0</td><td>169</td></tr>
 <tr><td>288</td><td>2026-07-29 13:00</td><td>2026-07-29 13:02</td><td>332</td><td>0</td><td>0</td><td>207</td></tr>
 <tr><td>287</td><td>2026-07-29 12:58</td><td>2026-07-29 13:00</td><td>333</td><td>8</td><td>0</td><td>206</td></tr>
-<tr><td>286</td><td>2026-07-29 09:00</td><td>2026-07-29 10:18</td><td>402</td><td>14</td><td>0</td><td>192</td></tr>
       </tbody>
     </table>
     </div>
@@ -498,23 +494,12 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
     // Display names mirror the product flow: scrape PO/PM postings ->
     // score vs the general CV -> tailor CV for 80%+ -> rescore tailored.
     const STAGE_LABELS = {
-      scrape: 'search job boards',
+      scrape: 'scrape postings',
       enrichment: 'fetch details',
       scoring: 'score vs base CV',
       generation: 'tailor CV + letter',
       tailored_rescore: 'rescore tailored',
       apply: 'apply'
-    };
-    // A bare "29/29" or "100/100" reads as a percentage. Name the unit so
-    // the number is unambiguous: 29 searches (across 14 boards), 100
-    // postings fetched, 63 postings scored, 37 packages tailored.
-    const STAGE_UNITS = {
-      scrape: 'searches',
-      enrichment: 'postings',
-      scoring: 'postings',
-      generation: 'packages',
-      tailored_rescore: 'packages',
-      apply: 'applications'
     };
     const byName = {};
     (run.stages || []).forEach(function (s) { byName[s.stage] = s; });
@@ -541,18 +526,7 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
         name.textContent = STAGE_LABELS[stageName] || stageName;
         const state = document.createElement('span');
         state.className = 'meta';
-        // A bare "waiting" tells the user nothing about why. Name the stage
-        // it is queued behind, so the panel reads as a chain rather than as
-        // four independent things that might be stuck.
-        if (i <= lastActiveIdx) {
-          state.textContent = 'nothing to do';
-        } else {
-          const blocker = ORDER.slice(0, i).reverse()
-            .find(function (n) { return hasActivity(byName[n]); });
-          state.textContent = blocker
-            ? 'waiting for ' + (STAGE_LABELS[blocker] || blocker)
-            : 'waiting to start';
-        }
+        state.textContent = i <= lastActiveIdx ? 'no items' : 'waiting';
         row.appendChild(name); row.appendChild(state);
         holder.appendChild(row);
         return;
@@ -574,11 +548,6 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
       const num = document.createElement('span');
       num.className = 'snum' + (Number(s.failed) ? ' sfail' : '');
       let numTxt = done + '/' + total;
-      const unit = STAGE_UNITS[stageName];
-      if (unit) numTxt += ' ' + unit;
-      if (stageName === 'scrape' && meta2.boards) {
-        numTxt += ' across ' + meta2.boards + ' job boards';
-      }
       if (stageName === 'scoring' && meta2.backlog > 0) {
         numTxt += ' (' + (meta2.from_this_run || 0) + ' new + '
                 + meta2.backlog + ' backlog)';
