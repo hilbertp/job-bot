@@ -30,7 +30,10 @@ import structlog
 from ..models import JobPosting, JobStatus
 from ..scrapers import REGISTRY
 from ..scrapers.base import ListingGone
-from ..state import update_enrichment, update_run_stage_progress, update_status
+from ..state import (
+    increment_fetch_attempts, update_enrichment, update_run_stage_progress,
+    update_status,
+)
 from .email_extractor import extract_apply_email
 
 log = structlog.get_logger()
@@ -38,6 +41,10 @@ log = structlog.get_logger()
 _SENIORITY_RE = re.compile(r"\b(intern|junior|mid|senior|lead|principal|staff|head)\b", re.IGNORECASE)
 _SALARY_RE = re.compile(r"(?:€\s?\d+[\d.,kK-]*|\b\d+\s?[kK]\b|\b\d{2,3}\s?[-–]\s?\d{2,3}\s?[kK]\b)")
 _MIN_WORDS = 100
+# Give up on a row after this many failed detail fetches across runs.
+# One failure is a rate limit or a hiccup; three, on three separate runs,
+# is a page that is not coming back.
+_MAX_FETCH_ATTEMPTS = 3
 
 
 @dataclass
@@ -45,6 +52,10 @@ class EnrichmentReport:
     n_attempted: int = 0
     n_succeeded: int = 0
     n_failed: int = 0
+    # Permanently closed rows: walled/disabled sources and rows that hit
+    # the failed-fetch cap. Not failures (nothing is retried), not successes.
+    n_walled: int = 0
+    n_gave_up: int = 0
     # Rows whose source told us the posting is gone. Counted apart from
     # n_failed because they are a clean outcome, not a fetch problem, and
     # they will never be retried.
@@ -52,6 +63,26 @@ class EnrichmentReport:
     per_source_success: Counter = field(default_factory=Counter)
     per_source_failure: Counter = field(default_factory=Counter)
     enriched_jobs: list[JobPosting] = field(default_factory=list)
+
+
+def _give_up_if_capped(conn, job: JobPosting, report: EnrichmentReport,
+                       stage_meta: dict) -> None:
+    """Count a failed fetch; retire the row for good once the cap is hit.
+
+    Called from every transient-failure branch. Keeps genuinely flaky rows
+    retryable (attempt 1..cap-1) while dead pages on otherwise healthy
+    boards stop poisoning the retry queue after `_MAX_FETCH_ATTEMPTS` runs.
+    """
+    attempts = increment_fetch_attempts(conn, job.id)
+    if attempts < _MAX_FETCH_ATTEMPTS:
+        return
+    why = f"gave up after {attempts} failed detail fetches"
+    log.info("enrichment_gave_up", job_id=job.id, source=job.source,
+             attempts=attempts)
+    update_status(conn, job.id, JobStatus.UNFETCHABLE,
+                  reason=why, discard_reason=f"unfetchable: {why}")
+    report.n_gave_up += 1
+    stage_meta["gave_up"] = report.n_gave_up
 
 
 def enrich_new_postings(
@@ -114,7 +145,43 @@ def enrich_new_postings(
             )
         scraper = scraper_registry.get(job.source)
         fetch_detail = getattr(scraper, "fetch_detail", None) if scraper is not None else None
+
+        # Permanent no-gos, resolved WITHOUT an HTTP request: the board
+        # walls its detail pages (login/paywall), or the source is disabled
+        # in config (e.g. robots.txt compliance). Marking the row
+        # unfetchable (terminal) takes it out of the retry queue for good.
+        # NOTE: a missing fetch_detail is NOT in this set — such rows are
+        # scored from their card body below, and the attempt cap retires
+        # the ones that never make it.
+        walled = getattr(scraper, "detail_walled", None) if scraper is not None else None
+        src_cfg = getattr(config, "sources", None) or {}
+        source_disabled = (
+            job.source in src_cfg and not getattr(src_cfg[job.source], "enabled", True)
+        )
+        if walled or source_disabled:
+            why = walled or "source disabled in config"
+            log.info("enrichment_unfetchable", job_id=job.id, source=job.source,
+                     reason=why)
+            update_status(conn, job.id, JobStatus.UNFETCHABLE,
+                          reason=why, discard_reason=f"unfetchable: {why}")
+            report.n_walled += 1
+            walled_by_source = stage_meta.setdefault("walled_by_source", {})
+            walled_by_source[job.source] = walled_by_source.get(job.source, 0) + 1
+            stage_meta.setdefault("walled_reasons", {})[job.source] = why
+            if run_id is not None:
+                update_run_stage_progress(
+                    conn, run_id, "enrichment",
+                    completed=report.n_succeeded,
+                    failed=report.n_failed,
+                    skipped=report.n_expired + report.n_walled,
+                    metadata=stage_meta,
+                )
+            continue
+
         if not callable(fetch_detail):
+            # No fetcher for this source: persist the card body so scoring
+            # can still work from it (description_scraped stays False), and
+            # let the attempt cap retire rows that never reach a score.
             log.warning("enrichment_no_fetch_detail", job_id=job.id, source=job.source)
             report.n_failed += 1
             report.per_source_failure[job.source] += 1
@@ -129,6 +196,7 @@ def enrich_new_postings(
                 salary_text=None,
                 apply_email=None,
             )
+            _give_up_if_capped(conn, job, report, stage_meta)
             if run_id is not None:
                 update_run_stage_progress(
                     conn, run_id, "enrichment",
@@ -156,7 +224,7 @@ def enrich_new_postings(
                     conn, run_id, "enrichment",
                     completed=report.n_succeeded,
                     failed=report.n_failed,
-                    skipped=report.n_expired,
+                    skipped=report.n_expired + report.n_walled,
                 )
             continue
         except Exception as e:
@@ -178,6 +246,7 @@ def enrich_new_postings(
                 salary_text=None,
                 apply_email=None,
             )
+            _give_up_if_capped(conn, job, report, stage_meta)
             if run_id is not None:
                 update_run_stage_progress(
                     conn, run_id, "enrichment",
@@ -255,6 +324,7 @@ def enrich_new_postings(
             report.n_failed += 1
             report.per_source_failure[job.source] += 1
             stage_meta["fail_by_source"] = dict(report.per_source_failure)
+            _give_up_if_capped(conn, job, report, stage_meta)
         if run_id is not None:
             update_run_stage_progress(
                 conn, run_id, "enrichment",
@@ -263,6 +333,8 @@ def enrich_new_postings(
                 metadata=stage_meta if not description_scraped else None,
             )
     
-    log.info("enrichment_complete", n_attempted=report.n_attempted, n_succeeded=report.n_succeeded, n_failed=report.n_failed)
+    log.info("enrichment_complete", n_attempted=report.n_attempted,
+             n_succeeded=report.n_succeeded, n_failed=report.n_failed,
+             n_walled=report.n_walled, n_gave_up=report.n_gave_up)
 
     return report

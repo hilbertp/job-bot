@@ -141,6 +141,11 @@ SEEN_JOBS_ADD_COLUMNS: list[tuple[str, str]] = [
     ("feedback_at", "TEXT"),
     ("score_after_feedback", "INTEGER"),
     ("score_after_feedback_reason", "TEXT"),
+    # How many detail-page fetches have failed for this row, across runs.
+    # The enrichment runner gives up (status=unfetchable) once this hits
+    # its cap: 3 failures across different runs is a dead page, not a
+    # transient.
+    ("fetch_attempts", "INTEGER"),
 ]
 
 APPLICATIONS_ADD_COLUMNS: list[tuple[str, str]] = [
@@ -1015,6 +1020,23 @@ def set_posted_at(conn: sqlite3.Connection, job_id: str, posted_at_iso: str) -> 
         "UPDATE seen_jobs SET raw_json = ? WHERE id = ?",
         (json.dumps(payload), job_id),
     )
+
+
+def increment_fetch_attempts(conn: sqlite3.Connection, job_id: str) -> int:
+    """Bump the cross-run failed-fetch counter for a row; returns the new count.
+
+    The enrichment runner calls this on every failed detail fetch and gives
+    up permanently (status=unfetchable) once the count reaches its cap.
+    """
+    conn.execute(
+        "UPDATE seen_jobs SET fetch_attempts = COALESCE(fetch_attempts, 0) + 1 "
+        "WHERE id = ?",
+        (job_id,),
+    )
+    row = conn.execute(
+        "SELECT fetch_attempts FROM seen_jobs WHERE id = ?", (job_id,)
+    ).fetchone()
+    return int(row["fetch_attempts"]) if row and row["fetch_attempts"] else 0
 
 
 def jobs_needing_enrichment(

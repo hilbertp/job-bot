@@ -27,6 +27,11 @@ class JobStatus(str, Enum):  # str-mixin for sqlite/JSON compatibility, works on
     # Surfaced in the dashboard with an ⏱ "expired" pill so the user
     # knows to move on instead of trying to apply.
     LISTING_EXPIRED = "listing_expired"
+    # The detail page can never be fetched: the board walls it (login /
+    # paywall / robots.txt), the source is disabled in config, or the row
+    # failed its fetch enough times to count as a dead page. Terminal, so
+    # the enrichment retry queue and the scorer never touch it again.
+    UNFETCHABLE = "unfetchable"
     EMPLOYER_RECEIVED = "employer_received"
     WAITING_RESPONSE = "waiting_response"
     REJECTED = "rejected"
@@ -45,6 +50,7 @@ TERMINAL_STATUSES = frozenset({
     JobStatus.APPLY_NEEDS_REVIEW.value,
     JobStatus.APPLY_FAILED.value,
     JobStatus.LISTING_EXPIRED.value,
+    JobStatus.UNFETCHABLE.value,
     JobStatus.EMPLOYER_RECEIVED.value,
     JobStatus.WAITING_RESPONSE.value,
     JobStatus.REJECTED.value,

@@ -692,6 +692,21 @@ _PAGE_JS = """
         .map(function (k) { return k + ' ×' + fb[k]; }).join(', ');
       if (srcs) parts.push('could not fetch details: ' + srcs);
     }
+    if (emeta && emeta.gave_up) {
+      parts.push('gave up on ' + emeta.gave_up + ' dead page' +
+        (emeta.gave_up === 1 ? '' : 's') + ' (3 failed tries)');
+    }
+    // Permanently closed rows: walled boards and disabled sources are
+    // resolved without a fetch and never retried again.
+    const wb = (emeta && emeta.walled_by_source) || null;
+    if (wb) {
+      const wr = (emeta && emeta.walled_reasons) || {};
+      const srcs = Object.keys(wb).sort(function (a, b) { return wb[b] - wb[a]; })
+        .map(function (k) {
+          return k + ' ×' + wb[k] + (wr[k] ? ' (' + wr[k] + ')' : '');
+        }).join(', ');
+      if (srcs) parts.push("won't retry: " + srcs);
+    }
     const fl = meta2.failures || [];
     if (fl.length) {
       parts.push('could not score: ' + fl.slice().reverse()
