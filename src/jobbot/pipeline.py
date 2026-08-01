@@ -288,8 +288,11 @@ def _run_once_locked(config: Config, secrets: Secrets) -> dict[str, Any]:
         # waste. `all_new` is the upsert's genuinely-new set;
         # jobs_needing_enrichment covers rows still missing a body.
         to_enrich_by_id: dict[str, JobPosting] = {j.id: j for j in all_new}
-        for stale in jobs_needing_enrichment(conn):
-            to_enrich_by_id.setdefault(stale.id, stale)
+        retry_first_seen: dict[str, str | None] = {}
+        for stale, first_seen in jobs_needing_enrichment(conn):
+            if stale.id not in to_enrich_by_id:
+                to_enrich_by_id[stale.id] = stale
+                retry_first_seen[stale.id] = first_seen
 
         # Market-age gate, applied BEFORE the detail fetch. A posting that
         # has been advertised for longer than `max_market_age_days` has
@@ -298,10 +301,15 @@ def _run_once_locked(config: Config, secrets: Secrets) -> dict[str, Any]:
         # the row here (rather than at scoring time) is what makes this an
         # efficiency win instead of a cosmetic one, and it also stops the row
         # from re-entering the enrichment queue on every subsequent run.
+        # Retry rows fall back to first_seen_at, same as the scoring gate:
+        # most retry rows have no posted_at at all (bot-walled boards), and
+        # without the fallback they re-fail their fetch on every run forever
+        # — run 305 spent 84 of its 85 fetches on that zombie queue.
         n_too_old = 0
         for jid, candidate in list(to_enrich_by_id.items()):
             is_stale, age_reason = too_old_for_market(
-                candidate, config.max_market_age_days
+                candidate, config.max_market_age_days,
+                first_seen_at=retry_first_seen.get(jid),
             )
             if is_stale:
                 del to_enrich_by_id[jid]
@@ -314,9 +322,21 @@ def _run_once_locked(config: Config, secrets: Secrets) -> dict[str, Any]:
 
         cap = config.enrichment.per_run_cap
         to_enrich = list(to_enrich_by_id.values())[:cap]
+        n_retries_queued = sum(1 for j in to_enrich if j.id in retry_first_seen)
+        # Funnel telemetry between "search job boards" and "fetch details":
+        # the panel needs to say why 333 found postings became 13 fetches
+        # (dedup, age gate, retry backlog) or the narrowing reads as loss.
+        enrich_meta: dict[str, Any] = {
+            "found": n_fetched,
+            "already_seen": max(0, n_fetched - n_new),
+            "too_old": n_too_old,
+            "new": len(to_enrich) - n_retries_queued,
+            "retries": n_retries_queued,
+            "deferred_over_cap": max(0, len(to_enrich_by_id) - cap),
+        }
         enrichment = enrich_new_postings(
             to_enrich, conn, registry=REGISTRY, run_id=run_id,
-            config=config, secrets=secrets,
+            config=config, secrets=secrets, stage_metadata=enrich_meta,
         )
         n_enriched = enrichment.n_succeeded
         n_enrichment_failed = enrichment.n_failed

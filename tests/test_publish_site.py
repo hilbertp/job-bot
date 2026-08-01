@@ -141,6 +141,11 @@ def test_build_site_writes_page_data_and_docs(db, tmp_path: Path):
     assert 'id="ar-strong"' in html    # running strong-match counter
     assert 'id="ar-fails"' in html     # inline failure reasons
     assert "backlog" in html           # scoring queue split new vs backlog
+    assert "already known" in html     # scrape→fetch funnel: dedup count
+    assert "to fetch" in html          # funnel: what actually gets fetched
+    assert "funnelrow" in html         # the in-between row itself
+    assert "could not fetch details" in html  # fetch failures named by board
+    assert "retries)" in html          # fetch queue split new vs retries
     # Every row links to the posting itself, apply route or not.
     assert f'class="titlelink" href="https://example.com/jobs/1"' in html
     assert "https://example.com/jobs/1/apply" in html
