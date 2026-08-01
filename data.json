@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-01T14:07:11.912455+00:00",
+  "generated_at": "2026-08-01T14:11:03.154293+00:00",
   "jobs": [
     {
       "id": "linkedin_d256a20f0d5832e8",
@@ -2208,6 +2208,16 @@
   ],
   "runs": [
     {
+      "id": 308,
+      "started_at": "2026-08-01T14:09:48.807687+00:00",
+      "finished_at": "2026-08-01T14:11:03.121639+00:00",
+      "n_fetched": 291,
+      "n_new": 1,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
       "id": 307,
       "started_at": "2026-08-01T13:00:01.239214+00:00",
       "finished_at": "2026-08-01T13:01:23.416896+00:00",
@@ -2336,16 +2346,6 @@
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 143
-    },
-    {
-      "id": 294,
-      "started_at": "2026-07-31T12:19:06.182235+00:00",
-      "finished_at": null,
-      "n_fetched": 0,
-      "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 0
     }
   ]
 }
