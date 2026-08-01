@@ -445,13 +445,33 @@ def api_active_run():
     """
     from .state import run_stage_progress
 
+    def _last_finished(conn):
+        """Newest completed run, same shape as `run`, for the idle panel.
+
+        The panel keeps showing the previous run's final state instead of
+        vanishing the moment the work is done, which was exactly when it
+        had the most to say.
+        """
+        done = conn.execute(
+            "SELECT id, started_at, finished_at FROM runs"
+            " WHERE finished_at IS NOT NULL ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+        if done is None:
+            return None
+        return {
+            "id": done[0],
+            "started_at": done[1],
+            "finished_at": done[2],
+            "stages": run_stage_progress(conn, done[0]),
+        }
+
     with connect() as conn:
         row = conn.execute(
             "SELECT id, started_at FROM runs WHERE finished_at IS NULL"
             " ORDER BY id DESC LIMIT 1"
         ).fetchone()
         if row is None:
-            return jsonify({"active": False})
+            return jsonify({"active": False, "last_run": _last_finished(conn)})
         stages = run_stage_progress(conn, row[0])
 
     def _dt(value):
@@ -469,7 +489,10 @@ def api_active_run():
         default=None,
     )
     if last_activity is None or (now - last_activity).total_seconds() > _ACTIVE_RUN_STALE_S:
-        return jsonify({"active": False, "stale_run_id": row[0]})
+        with connect() as conn:
+            last_run = _last_finished(conn)
+        return jsonify({"active": False, "stale_run_id": row[0],
+                        "last_run": last_run})
 
     return jsonify({
         "active": True,
