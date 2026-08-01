@@ -146,6 +146,10 @@ def test_build_site_writes_page_data_and_docs(db, tmp_path: Path):
     assert "funnelrow" in html         # the in-between row itself
     assert "could not fetch details" in html  # fetch failures named by board
     assert "retries)" in html          # fetch queue split new vs retries
+    assert 'id="ar-title"' in html     # header flips Active run / Last run
+    assert "'Last run'" in html        # idle panel keeps the finished run
+    assert "last_run" in html          # reads the endpoint's idle payload
+    assert "did not run" in html       # finished runs don't say "waiting"
     # Every row links to the posting itself, apply route or not.
     assert f'class="titlelink" href="https://example.com/jobs/1"' in html
     assert "https://example.com/jobs/1/apply" in html

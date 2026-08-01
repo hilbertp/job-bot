@@ -27,7 +27,30 @@ def client(tmp_path: Path, monkeypatch):
 def test_no_runs_reports_inactive(client):
     c, _ = client
     data = c.get("/api/runs/active").get_json()
-    assert data == {"active": False}
+    assert data == {"active": False, "last_run": None}
+
+
+def test_idle_reports_last_finished_run(client):
+    """Idle panel keeps the previous run on screen: the endpoint must hand
+    over the newest FINISHED run, stages and telemetry included."""
+    c, db = client
+    telemetry = {"found": 333, "already_seen": 320, "new": 13}
+    with connect(db) as conn:
+        run_id = start_run(conn)
+        update_run_stage_progress(conn, run_id, "enrichment", total=85,
+                                  completed=1, failed=84, metadata=telemetry)
+        conn.execute(
+            "UPDATE runs SET finished_at = ? WHERE id = ?",
+            (datetime.now(timezone.utc).isoformat(), run_id),
+        )
+    data = c.get("/api/runs/active").get_json()
+    assert data["active"] is False
+    last = data["last_run"]
+    assert last["id"] == run_id
+    assert last["finished_at"]
+    stage = next(s for s in last["stages"] if s["stage"] == "enrichment")
+    assert stage["failed"] == 84
+    assert stage["metadata"] == telemetry
 
 
 def test_fresh_unfinished_run_reports_stages(client):

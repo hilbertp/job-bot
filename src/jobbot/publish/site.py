@@ -300,6 +300,7 @@ tr:last-child td { border-bottom: none; }
 #ar-dot.running { background: var(--good);
   animation: ar-pulse 1.4s cubic-bezier(0.25, 1, 0.5, 1) infinite; }
 #ar-dot.stalled { background: var(--mid); animation: none; }
+#ar-dot.done { background: var(--good); animation: none; }
 #active-run .stalled-note { color: var(--mid); font-weight: 550; }
 @keyframes ar-pulse {
   0% { box-shadow: 0 0 0 0 rgba(63, 185, 111, 0.45); }
@@ -453,23 +454,47 @@ _PAGE_JS = """
   // a single generation call can honestly take a few minutes, so only
   // 5+ minutes of silence counts as stuck (pulse stops, note appears).
   const AR_STALL_S = 300;
-  function renderActiveRun(run) {
+  function fmtWhen(iso) {
+    // Clock time alone misleads once the run is a day old: "18:31" reads
+    // as today. Prefix the date whenever it isn't.
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    const clock = d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    return d.toDateString() === new Date().toDateString()
+      ? clock
+      : d.toLocaleDateString([], {month: 'short', day: 'numeric'}) + ' ' + clock;
+  }
+  function renderActiveRun(run, finished) {
+    document.getElementById('ar-title').textContent =
+      finished ? 'Last run' : 'Active run';
     document.getElementById('ar-id').textContent = '#' + run.id;
     const started = new Date(run.started_at);
-    const mins = isNaN(started) ? null : Math.max(0, Math.round((Date.now() - started) / 60000));
-    const lastAct = new Date(run.last_activity);
-    const ageS = isNaN(lastAct) ? null : Math.max(0, (Date.now() - lastAct) / 1000);
-    const stalled = ageS !== null && ageS > AR_STALL_S;
     const dot = document.getElementById('ar-dot');
-    dot.className = stalled ? 'stalled' : 'running';
     const meta = document.getElementById('ar-meta');
-    meta.className = stalled ? 'meta stalled-note' : 'meta';
-    meta.textContent =
-      'started ' + fmtClock(run.started_at) +
-      (mins === null ? '' : ', running for ' + mins + ' min') +
-      (stalled
-        ? ', no progress for ' + Math.round(ageS / 60) + ' min, run may be stuck'
-        : ', last activity ' + fmtClock(run.last_activity));
+    if (finished) {
+      const ended = new Date(run.finished_at);
+      const took = (isNaN(started) || isNaN(ended)) ? null
+        : Math.max(0, Math.round((ended - started) / 60000));
+      dot.className = 'done';
+      meta.className = 'meta';
+      meta.textContent =
+        'started ' + fmtWhen(run.started_at) +
+        ', finished ' + fmtWhen(run.finished_at) +
+        (took === null ? '' : ', took ' + (took < 1 ? '<1' : took) + ' min');
+    } else {
+      const mins = isNaN(started) ? null : Math.max(0, Math.round((Date.now() - started) / 60000));
+      const lastAct = new Date(run.last_activity);
+      const ageS = isNaN(lastAct) ? null : Math.max(0, (Date.now() - lastAct) / 1000);
+      const stalled = ageS !== null && ageS > AR_STALL_S;
+      dot.className = stalled ? 'stalled' : 'running';
+      meta.className = stalled ? 'meta stalled-note' : 'meta';
+      meta.textContent =
+        'started ' + fmtWhen(run.started_at) +
+        (mins === null ? '' : ', running for ' + mins + ' min') +
+        (stalled
+          ? ', no progress for ' + Math.round(ageS / 60) + ' min, run may be stuck'
+          : ', last activity ' + fmtClock(run.last_activity));
+    }
     const holder = document.getElementById('ar-stages');
     holder.textContent = '';
     // Fixed pipeline order. Later stages only start once earlier ones
@@ -525,9 +550,12 @@ _PAGE_JS = """
         state.className = 'meta';
         // A bare "waiting" tells the user nothing about why. Name the stage
         // it is queued behind, so the panel reads as a chain rather than as
-        // four independent things that might be stuck.
+        // four independent things that might be stuck. On a finished run
+        // nothing is coming anymore, so "waiting" would be a lie.
         if (i <= lastActiveIdx) {
           state.textContent = 'nothing to do';
+        } else if (finished) {
+          state.textContent = 'did not run';
         } else {
           const blocker = ORDER.slice(0, i).reverse()
             .find(function (n) { return hasActivity(byName[n]); });
@@ -541,7 +569,7 @@ _PAGE_JS = """
       }
       const total = Number(s.total) || 0;
       const done = doneOf(s);
-      const isActive = i === lastActiveIdx && done < total;
+      const isActive = !finished && i === lastActiveIdx && done < total;
       const row = document.createElement('div');
       row.className = 'stagerow';
       const name = document.createElement('span');
@@ -595,7 +623,10 @@ _PAGE_JS = """
           let t = 'of ' + em.found + ' found: ' + (em.already_seen || 0)
                 + ' already known';
           if (em.too_old) t += ', ' + em.too_old + ' too old';
-          t += ' → ' + ((em.new || 0) + (em.retries || 0)) + ' to fetch';
+          t += ' → ' + (em.new || 0) + ' to fetch';
+          if (em.retries) {
+            t += ', plus ' + em.retries + ' retries from earlier runs';
+          }
           if (em.deferred_over_cap) {
             t += ' (' + em.deferred_over_cap + ' deferred to next run)';
           }
@@ -694,6 +725,9 @@ _PAGE_JS = """
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (d.active) { renderActiveRun(d.run); arSchedule(5000); }
+        // Idle: keep the last finished run on screen instead of hiding
+        // the panel at the exact moment it has the most to say.
+        else if (d.last_run) { renderActiveRun(d.last_run, true); arSchedule(30000); }
         else { arPanel.hidden = true; arSchedule(60000); }
       })
       .catch(function () { arPanel.hidden = true; arSchedule(120000); });
@@ -922,7 +956,7 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
   </div>
   <div id="active-run" hidden>
     <div class="arhead">
-      <h2><span id="ar-dot" class="running"></span>Active run <span id="ar-id"></span></h2>
+      <h2><span id="ar-dot" class="running"></span><span id="ar-title">Active run</span> <span id="ar-id"></span></h2>
       <span class="meta" id="ar-meta"></span>
     </div>
     <div id="ar-stages"></div>
