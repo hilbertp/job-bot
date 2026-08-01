@@ -161,7 +161,7 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
       <span id="run-now-status" class="meta"></span>
       <button id="run-now" class="btn" type="button"
         title="Starts a pipeline run on the Mac running jobbot (needs jobbot dashboard up)">Run now</button>
-      <span class="meta">Generated 2026-08-01 13:06 UTC</span>
+      <span class="meta">Generated 2026-08-01 14:07 UTC</span>
     </span>
   </div>
   <div id="active-run" hidden>
@@ -721,6 +721,21 @@ footer { margin-top: 28px; color: var(--muted); font-size: 12px; }
       const srcs = Object.keys(fb).sort(function (a, b) { return fb[b] - fb[a]; })
         .map(function (k) { return k + ' ×' + fb[k]; }).join(', ');
       if (srcs) parts.push('could not fetch details: ' + srcs);
+    }
+    if (emeta && emeta.gave_up) {
+      parts.push('gave up on ' + emeta.gave_up + ' dead page' +
+        (emeta.gave_up === 1 ? '' : 's') + ' (3 failed tries)');
+    }
+    // Permanently closed rows: walled boards and disabled sources are
+    // resolved without a fetch and never retried again.
+    const wb = (emeta && emeta.walled_by_source) || null;
+    if (wb) {
+      const wr = (emeta && emeta.walled_reasons) || {};
+      const srcs = Object.keys(wb).sort(function (a, b) { return wb[b] - wb[a]; })
+        .map(function (k) {
+          return k + ' ×' + wb[k] + (wr[k] ? ' (' + wr[k] + ')' : '');
+        }).join(', ');
+      if (srcs) parts.push("won't retry: " + srcs);
     }
     const fl = meta2.failures || [];
     if (fl.length) {
