@@ -1017,11 +1017,19 @@ def set_posted_at(conn: sqlite3.Connection, job_id: str, posted_at_iso: str) -> 
     )
 
 
-def jobs_needing_enrichment(conn: sqlite3.Connection) -> list[JobPosting]:
-    """Re-hydrate JobPosting objects for rows that still owe us a body fetch.
+def jobs_needing_enrichment(
+    conn: sqlite3.Connection,
+) -> list[tuple[JobPosting, str | None]]:
+    """Re-hydrate (JobPosting, first_seen_at) pairs still owing a body fetch.
 
     A row qualifies when it has no vouched-for body yet (`description_scraped`
     NULL or 0) and has not reached a terminal status.
+
+    `first_seen_at` rides along because the caller's market-age gate needs it
+    as a fallback: most of these rows come from boards that never publish a
+    posted_at (measured 2026-08-01: 83 of 84 pending retries had none), and
+    a posted_at-only gate makes them immortal — Xing rows from May were still
+    re-failing their fetch on every run three months later.
 
     The NULL case covers postings scraped before the enrichment phase existed;
     without it they would never get a body because dedup excludes them from
@@ -1053,16 +1061,19 @@ def jobs_needing_enrichment(conn: sqlite3.Connection) -> list[JobPosting]:
     )
     placeholders = ",".join("?" for _ in pending)
     rows = conn.execute(
-        "SELECT raw_json FROM seen_jobs "
+        "SELECT raw_json, first_seen_at FROM seen_jobs "
         "WHERE raw_json IS NOT NULL "
         "  AND (description_scraped IS NULL OR description_scraped = 0) "
         f"  AND status IN ({placeholders})",
         pending,
     ).fetchall()
-    out: list[JobPosting] = []
+    out: list[tuple[JobPosting, str | None]] = []
     for row in rows:
         try:
-            out.append(JobPosting.model_validate_json(row["raw_json"]))
+            out.append(
+                (JobPosting.model_validate_json(row["raw_json"]),
+                 row["first_seen_at"])
+            )
         except Exception:
             continue
     return out

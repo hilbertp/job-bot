@@ -62,6 +62,7 @@ def enrich_new_postings(
     run_id: int | None = None,
     config=None,
     secrets=None,
+    stage_metadata: dict | None = None,
 ) -> EnrichmentReport:
     """Walk new jobs, call each scraper's fetch_detail, persist enrichment cols.
 
@@ -70,6 +71,11 @@ def enrich_new_postings(
     to resolve the canonical employer apply URL (bounded by
     `config.apply_research_max_per_run`, results cached per company+title
     within the run).
+
+    `stage_metadata` (e.g. the caller's scrape→fetch funnel counts) is merged
+    into the stage's progress metadata, and per-source failure counts are
+    added live under `fail_by_source` so the dashboard can say WHICH boards
+    are failing while the stage runs, not just how many rows did.
 
     Returns counts suitable for the digest's per-source health table.
     """
@@ -84,12 +90,17 @@ def enrich_new_postings(
     n_researched = 0
     research_cache: dict[tuple[str, str], str | None] = {}
     log.info("enrichment_starting", n_jobs=len(jobs), n_scrapers=len(scraper_registry))
+    # One dict mutated in place; every metadata= write snapshots it whole.
+    stage_meta: dict = {
+        "stage_started_at": datetime.now(timezone.utc).isoformat(),
+        **(stage_metadata or {}),
+    }
     if run_id is not None:
         update_run_stage_progress(
             conn, run_id, "enrichment",
             total=len(jobs), started=0, completed=0, failed=0, skipped=0,
             current_index=0, current_item_id=None, current_label=None,
-            metadata={"stage_started_at": datetime.now(timezone.utc).isoformat()},
+            metadata=stage_meta,
         )
 
     for idx, job in enumerate(jobs, start=1):
@@ -107,6 +118,7 @@ def enrich_new_postings(
             log.warning("enrichment_no_fetch_detail", job_id=job.id, source=job.source)
             report.n_failed += 1
             report.per_source_failure[job.source] += 1
+            stage_meta["fail_by_source"] = dict(report.per_source_failure)
             update_enrichment(
                 conn,
                 job_id=job.id,
@@ -122,6 +134,7 @@ def enrich_new_postings(
                     conn, run_id, "enrichment",
                     completed=report.n_succeeded,
                     failed=report.n_failed,
+                    metadata=stage_meta,
                 )
             continue
 
@@ -154,6 +167,7 @@ def enrich_new_postings(
             log.debug("enrichment_no_description", job_id=job.id, source=job.source)
             report.n_failed += 1
             report.per_source_failure[job.source] += 1
+            stage_meta["fail_by_source"] = dict(report.per_source_failure)
             update_enrichment(
                 conn,
                 job_id=job.id,
@@ -169,6 +183,7 @@ def enrich_new_postings(
                     conn, run_id, "enrichment",
                     completed=report.n_succeeded,
                     failed=report.n_failed,
+                    metadata=stage_meta,
                 )
             continue
 
@@ -239,11 +254,13 @@ def enrich_new_postings(
         else:
             report.n_failed += 1
             report.per_source_failure[job.source] += 1
+            stage_meta["fail_by_source"] = dict(report.per_source_failure)
         if run_id is not None:
             update_run_stage_progress(
                 conn, run_id, "enrichment",
                 completed=report.n_succeeded,
                 failed=report.n_failed,
+                metadata=stage_meta if not description_scraped else None,
             )
     
     log.info("enrichment_complete", n_attempted=report.n_attempted, n_succeeded=report.n_succeeded, n_failed=report.n_failed)

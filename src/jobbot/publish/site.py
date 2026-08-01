@@ -321,6 +321,7 @@ tr:last-child td { border-bottom: none; }
 .stagerow .snum { flex: 0 0 auto; min-width: 90px; text-align: right;
   font-variant-numeric: tabular-nums; }
 .stagerow .sfail { color: var(--mid); }
+.funnelrow { margin: 3px 0 0 120px; font-size: 12px; color: var(--muted); }
 #ar-strong { margin-top: 10px; font-size: 13px; font-weight: 600;
   color: var(--good); }
 #ar-ticker { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
@@ -509,6 +510,7 @@ _PAGE_JS = """
     let currentLabel = '';
     let headerEta = '';
     let scoringMeta = null;
+    let enrichMeta = null;
     ORDER.forEach(function (stageName, i) {
       const s = byName[stageName];
       const isCore = i < 4;  // scrape/enrichment/scoring/generation always shown
@@ -559,6 +561,10 @@ _PAGE_JS = """
       if (stageName === 'scrape' && meta2.boards) {
         numTxt += ' across ' + meta2.boards + ' job boards';
       }
+      if (stageName === 'enrichment' && meta2.retries > 0) {
+        numTxt += ' (' + (meta2.new || 0) + ' new + '
+                + meta2.retries + ' retries)';
+      }
       if (stageName === 'scoring' && meta2.backlog > 0) {
         numTxt += ' (' + (meta2.from_this_run || 0) + ' new + '
                 + meta2.backlog + ' backlog)';
@@ -578,7 +584,32 @@ _PAGE_JS = """
       num.textContent = numTxt;
       row.appendChild(name); row.appendChild(bar); row.appendChild(num);
       holder.appendChild(row);
+      // Funnel note between "search job boards" and "fetch details": the
+      // narrowing from 333 found to 13 fetches is dedup + the age gate, and
+      // saying so is the difference between "efficient" and "broken".
+      if (stageName === 'scrape') {
+        const em = ((byName['enrichment'] || {}).metadata) || {};
+        const fr = document.createElement('div');
+        fr.className = 'funnelrow';
+        if (em.found != null) {
+          let t = 'of ' + em.found + ' found: ' + (em.already_seen || 0)
+                + ' already known';
+          if (em.too_old) t += ', ' + em.too_old + ' too old';
+          t += ' → ' + ((em.new || 0) + (em.retries || 0)) + ' to fetch';
+          if (em.deferred_over_cap) {
+            t += ' (' + em.deferred_over_cap + ' deferred to next run)';
+          }
+          fr.textContent = t;
+          holder.appendChild(fr);
+        } else if (meta2.hits_so_far != null && done > 0) {
+          fr.textContent = meta2.hits_so_far + ' found so far, '
+            + Math.max(0, meta2.hits_so_far - (meta2.new_so_far || 0))
+            + ' already known, ' + (meta2.new_so_far || 0) + ' new';
+          holder.appendChild(fr);
+        }
+      }
       if (isActive && s.current_label) currentLabel = (STAGE_LABELS[stageName] || stageName) + ': ' + s.current_label;
+      if (stageName === 'enrichment') enrichMeta = meta2;
       if (stageName === 'scoring') scoringMeta = meta2;
     });
     const cur = document.getElementById('ar-current');
@@ -586,7 +617,7 @@ _PAGE_JS = """
     if (headerEta) {
       document.getElementById('ar-meta').textContent += ', ' + headerEta;
     }
-    renderTicker(scoringMeta);
+    renderTicker(scoringMeta, enrichMeta);
     arPanel.hidden = false;
   }
   function stageElapsed(meta2, s, isActive) {
@@ -597,11 +628,12 @@ _PAGE_JS = """
     const m = Math.round((t1 - t0) / 60000);
     return m < 1 ? '<1 min' : m + ' min';
   }
-  function renderTicker(meta2) {
+  function renderTicker(meta2, emeta) {
     const strong = document.getElementById('ar-strong');
     const ticker = document.getElementById('ar-ticker');
     const fails = document.getElementById('ar-fails');
-    if (!meta2) { strong.hidden = ticker.hidden = fails.hidden = true; return; }
+    if (!meta2 && !emeta) { strong.hidden = ticker.hidden = fails.hidden = true; return; }
+    meta2 = meta2 || {};
     const thr = meta2.strong_threshold || 80;
     if (meta2.n_strong > 0) {
       strong.textContent = meta2.n_strong + ' match' +
@@ -620,11 +652,23 @@ _PAGE_JS = """
       ticker.appendChild(chip);
     });
     ticker.hidden = ticks.length === 0;
+    const parts = [];
+    // Fetch failures grouped by board: 84 individual "failed" ticks are
+    // noise, "brainville ×37, dailyremote ×17" is a diagnosis.
+    const fb = (emeta && emeta.fail_by_source) || null;
+    if (fb) {
+      const srcs = Object.keys(fb).sort(function (a, b) { return fb[b] - fb[a]; })
+        .map(function (k) { return k + ' ×' + fb[k]; }).join(', ');
+      if (srcs) parts.push('could not fetch details: ' + srcs);
+    }
     const fl = meta2.failures || [];
     if (fl.length) {
-      fails.textContent = 'could not score: ' + fl.slice().reverse()
+      parts.push('could not score: ' + fl.slice().reverse()
         .map(function (f) { return (f.c || '?') + ' (' + (f.e || 'error') + ')'; })
-        .join(', ');
+        .join(', '));
+    }
+    if (parts.length) {
+      fails.textContent = parts.join(' · ');
       fails.hidden = false;
     } else { fails.hidden = true; }
   }

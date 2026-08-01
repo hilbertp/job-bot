@@ -75,7 +75,7 @@ def test_expired_row_is_terminal_and_never_re_enriched(tmp_path: Path) -> None:
     with connect(db) as conn:
         upsert_new(conn, [job])
         enrich_new_postings([job], conn, registry={"stepstone": _GoneScraper()})
-        again = [j.id for j in jobs_needing_enrichment(conn)]
+        again = [j.id for j, _ in jobs_needing_enrichment(conn)]
 
     assert JobStatus.LISTING_EXPIRED.value in TERMINAL_STATUSES
     assert job.id not in again, "an expired listing must not re-enter the queue"
@@ -91,9 +91,13 @@ def test_transient_failure_still_gets_retried(tmp_path: Path) -> None:
         report = enrich_new_postings(
             [job], conn, registry={"stepstone": _TransientlyBrokenScraper()},
         )
-        again = [j.id for j in jobs_needing_enrichment(conn)]
+        pairs = jobs_needing_enrichment(conn)
+        again = [j.id for j, _ in pairs]
 
     assert report.n_failed == 1
     assert report.n_expired == 0
     assert _status(db, job.id) != JobStatus.LISTING_EXPIRED.value
     assert job.id in again, "a transient failure must remain retryable"
+    # first_seen_at rides along so the caller's age gate can retire rows
+    # whose board never publishes a posted_at (they were immortal before).
+    assert all(first_seen for _, first_seen in pairs)
