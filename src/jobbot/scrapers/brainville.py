@@ -27,6 +27,11 @@ _UA = (
 
 class BrainvilleScraper(BaseScraper):
     source = "brainville"
+    # Full bodies are account-gated: 0 of 96 detail fetches have ever
+    # cleared the 100-word floor (measured 2026-08-01). Declaring the wall
+    # lets the enrichment runner mark rows unfetchable instead of retrying
+    # them on every run.
+    detail_walled = "full text requires a Brainville account"
 
     def fetch(self, query: SearchQuery) -> list[JobPosting]:
         # query example: {"q": "product owner"}; anonymous search shows the

@@ -146,6 +146,8 @@ def test_build_site_writes_page_data_and_docs(db, tmp_path: Path):
     assert "funnelrow" in html         # the in-between row itself
     assert "could not fetch details" in html  # fetch failures named by board
     assert "retries)" in html          # fetch queue split new vs retries
+    assert "won't retry" in html       # walled/disabled boards, named + reasoned
+    assert "gave up on" in html        # dead pages retired after 3 tries
     assert 'id="ar-title"' in html     # header flips Active run / Last run
     assert "'Last run'" in html        # idle panel keeps the finished run
     assert "last_run" in html          # reads the endpoint's idle payload
