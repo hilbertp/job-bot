@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-01T14:11:03.154293+00:00",
+  "generated_at": "2026-08-02T12:08:28.037960+00:00",
   "jobs": [
     {
       "id": "linkedin_d256a20f0d5832e8",
@@ -87,23 +87,6 @@
       "documents": []
     },
     {
-      "id": "greenhouse_helsing_4936025101",
-      "source": "greenhouse",
-      "url": "https://helsing.ai/jobs/4936025101?gh_jid=4936025101",
-      "title": "Product Manager (Confidential role)",
-      "company": "Helsing",
-      "location": null,
-      "salary": null,
-      "score": 82,
-      "score_tailored": 93,
-      "status": "generated",
-      "first_seen_at": "2026-07-26 14:02:13",
-      "posted_at": null,
-      "apply_route": "url",
-      "apply_target": "https://helsing.ai/jobs/4936025101?gh_jid=4936025101",
-      "documents": []
-    },
-    {
       "id": "linkedin_32a86c0c1357c2c6",
       "source": "linkedin",
       "url": "https://de.linkedin.com/jobs/view/senior-product-manager-data-and-api-at-climatiq-4447530425",
@@ -174,6 +157,27 @@
       "apply_route": "url",
       "apply_target": "https://www.freelancermap.de/projekt/senior-product-owner-business-analyst-m-w-d-net-azure-agiles-team-100-prozent-remote",
       "documents": []
+    },
+    {
+      "id": "linkedin_6cfcc574d76c50cb",
+      "source": "linkedin",
+      "url": "https://de.linkedin.com/jobs/view/product-manager-installments-payments-m-w-d-at-riverty-4447856807",
+      "title": "Product Manager Installments & Payments (m/w/d)",
+      "company": "Riverty",
+      "location": "Berlin, Germany",
+      "salary": null,
+      "score": 82,
+      "score_tailored": 91,
+      "status": "generated",
+      "first_seen_at": "2026-08-02T09:00:47.378776+00:00",
+      "posted_at": "2026-08-02T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://de.linkedin.com/jobs/view/product-manager-installments-payments-m-w-d-at-riverty-4447856807",
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
     },
     {
       "id": "linkedin_dd931533293f9425",
@@ -291,23 +295,6 @@
       "posted_at": null,
       "apply_route": "url",
       "apply_target": "https://www.freelancermap.de/projekt/senior-product-owner-m-w-d-3028468",
-      "documents": []
-    },
-    {
-      "id": "freelancermap_e221c9236cf166f9",
-      "source": "freelancermap",
-      "url": "https://www.freelancermap.de/projekt/afra-10776-product-owner-m-w-d",
-      "title": "AFRA-10776-Product Owner (m/w/d)",
-      "company": "freelancermap (Auftraggeber anonym)",
-      "location": null,
-      "salary": null,
-      "score": 90,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:14:45.621452+00:00",
-      "posted_at": null,
-      "apply_route": "url",
-      "apply_target": "https://www.freelancermap.de/projekt/afra-10776-product-owner-m-w-d",
       "documents": []
     },
     {
@@ -591,23 +578,6 @@
       "documents": []
     },
     {
-      "id": "linkedin_a46a31a9a6e2c432",
-      "source": "linkedin",
-      "url": "https://de.linkedin.com/jobs/view/senior-product-manager-m-f-d-at-moss-4445251098",
-      "title": "Senior Product Manager (m/f/d)",
-      "company": "Moss",
-      "location": "Berlin, Berlin, Germany",
-      "salary": "\u20ac180",
-      "score": 86,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:29:39.687436+00:00",
-      "posted_at": "2026-07-24T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://de.linkedin.com/jobs/view/senior-product-manager-m-f-d-at-moss-4445251098",
-      "documents": []
-    },
-    {
       "id": "linkedin_59137fb4f7dd875f",
       "source": "linkedin",
       "url": "https://de.linkedin.com/jobs/view/founding-product-manager-at-circonomit-4447297808",
@@ -812,40 +782,6 @@
       "documents": []
     },
     {
-      "id": "linkedin_010bda36c25a0792",
-      "source": "linkedin",
-      "url": "https://de.linkedin.com/jobs/view/senior-product-manager-m-f-d-at-moss-4445244274",
-      "title": "Senior Product Manager (m/f/d)",
-      "company": "Moss",
-      "location": "Munich, Bavaria, Germany",
-      "salary": "\u20ac180",
-      "score": 85,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:29:39.690438+00:00",
-      "posted_at": "2026-07-24T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://de.linkedin.com/jobs/view/senior-product-manager-m-f-d-at-moss-4445244274",
-      "documents": []
-    },
-    {
-      "id": "stepstone_11d46858ceab73d6",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-m-w-d-CRM-System-Salesforce-Wiesbaden-R-V-Allgemeine-Versicherung-AG--14316244-inline.html",
-      "title": "Product Owner (m/w/d) CRM-System (Salesforce)",
-      "company": "R+V Allgemeine Versicherung AG",
-      "location": "Wiesbaden",
-      "salary": null,
-      "score": 85,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:14:58.737008+00:00",
-      "posted_at": "2026-07-23T12:09:21.387000+00:00",
-      "apply_route": "email",
-      "apply_target": "recruiting@ruv.de",
-      "documents": []
-    },
-    {
       "id": "linkedin_a5ecc039ad34ccd9",
       "source": "linkedin",
       "url": "https://de.linkedin.com/jobs/view/senior-product-manager-m-f-d-at-moss-4445900301",
@@ -860,23 +796,6 @@
       "posted_at": "2026-07-27T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://de.linkedin.com/jobs/view/senior-product-manager-m-f-d-at-moss-4445900301",
-      "documents": []
-    },
-    {
-      "id": "dailyremote_0605ac0c13e304da",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-manager-5360314",
-      "title": "Product Manager",
-      "company": "Limble",
-      "location": null,
-      "salary": null,
-      "score": 84,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:14:37.370238+00:00",
-      "posted_at": "2026-07-24T19:00:52+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
       "documents": []
     },
     {
@@ -1067,23 +986,6 @@
       "documents": []
     },
     {
-      "id": "dailyremote_ded80194250987fa",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-manager-5352577",
-      "title": "Product Manager",
-      "company": "Kpler",
-      "location": null,
-      "salary": null,
-      "score": 80,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:14:37.386529+00:00",
-      "posted_at": "2026-07-23T17:00:26+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
-      "documents": []
-    },
-    {
       "id": "linkedin_17e97dd1e9a595a5",
       "source": "linkedin",
       "url": "https://de.linkedin.com/jobs/view/product-owner-at-advice-consulting-4446810220",
@@ -1098,6 +1000,23 @@
       "posted_at": "2026-07-29T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://de.linkedin.com/jobs/view/product-owner-at-advice-consulting-4446810220",
+      "documents": []
+    },
+    {
+      "id": "linkedin_3a3bf8ef28df53f8",
+      "source": "linkedin",
+      "url": "https://de.linkedin.com/jobs/view/product-owner-m-w-d-at-riverty-4447248628",
+      "title": "Product Owner (m/w/d)",
+      "company": "Riverty",
+      "location": "Dortmund, North Rhine-Westphalia, Germany",
+      "salary": null,
+      "score": 78,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-01T17:00:47.735635+00:00",
+      "posted_at": "2026-07-31T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://de.linkedin.com/jobs/view/product-owner-m-w-d-at-riverty-4447248628",
       "documents": []
     },
     {
@@ -1271,40 +1190,6 @@
       "documents": []
     },
     {
-      "id": "dailyremote_bdf18e599452ebf0",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-owner-5352848",
-      "title": "Product Owner",
-      "company": "Suvoda",
-      "location": null,
-      "salary": null,
-      "score": 78,
-      "score_tailored": null,
-      "status": "listing_expired",
-      "first_seen_at": "2026-07-26T05:14:37.973377+00:00",
-      "posted_at": "2026-07-23T18:00:09+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
-      "documents": []
-    },
-    {
-      "id": "dailyremote_9a727bc74336ebc6",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-manager-5352712",
-      "title": "Product Manager",
-      "company": "Shuru Technologies Private Limited",
-      "location": null,
-      "salary": null,
-      "score": 78,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:14:37.386358+00:00",
-      "posted_at": "2026-07-23T17:00:55+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
-      "documents": []
-    },
-    {
       "id": "linkedin_268e8fe08e248615",
       "source": "linkedin",
       "url": "https://de.linkedin.com/jobs/view/senior-product-manager-m-w-d-at-skalar-4447022119",
@@ -1356,40 +1241,6 @@
       "documents": []
     },
     {
-      "id": "stepstone_1f66aef2d69d3e97",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Technischer-Product-Owner-m-w-d-Hamburg-mecom-Medien-Communikations-Gesellschaft-mbH--14312884-inline.html",
-      "title": "Technischer Product Owner (m/w/d)",
-      "company": "mecom Medien-Communikations-Gesellschaft mbH",
-      "location": "Hamburg",
-      "salary": null,
-      "score": 76,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:14:58.741578+00:00",
-      "posted_at": "2026-07-22T13:03:06.147000+00:00",
-      "apply_route": "email",
-      "apply_target": "bewerbung@dpa.com",
-      "documents": []
-    },
-    {
-      "id": "stepstone_bf445a9c75ad5596",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-d-m-w-KI-Enablement-Platform-Freiburg-im-Breisgau-Haufe-Group-SE--14313891-inline.html",
-      "title": "Product Owner (d/m/w) - KI-Enablement Platform",
-      "company": "Haufe Group SE",
-      "location": "Freiburg im Breisgau",
-      "salary": null,
-      "score": 76,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:14:58.738458+00:00",
-      "posted_at": "2026-07-22T19:52:18.230000+00:00",
-      "apply_route": "email",
-      "apply_target": "anna.becherer@haufegroup.com",
-      "documents": []
-    },
-    {
       "id": "dailyremote_6325892e8c37fa55",
       "source": "dailyremote",
       "url": "https://dailyremote.com/remote-job/product-manager-5374001",
@@ -1402,23 +1253,6 @@
       "status": "scored",
       "first_seen_at": "2026-07-28T17:11:11.227078+00:00",
       "posted_at": "2026-07-28T17:01:06+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
-      "documents": []
-    },
-    {
-      "id": "dailyremote_c4478c27c5aeef58",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-manager-5357449",
-      "title": "Product Manager",
-      "company": "Tort Experts",
-      "location": null,
-      "salary": "401k",
-      "score": 75,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:14:37.376286+00:00",
-      "posted_at": "2026-07-24T11:01:19+00:00",
       "apply_route": "missing",
       "apply_target": null,
       "documents": []
@@ -1489,23 +1323,6 @@
       "posted_at": "2026-07-27T13:00:20+00:00",
       "apply_route": "missing",
       "apply_target": null,
-      "documents": []
-    },
-    {
-      "id": "stepstone_09dc1ec9b505a1be",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-Internet-Filiale-m-w-d-Hannover-Muenster-Frankfurt-am-Main-Finanz-Informatik-GmbH-Co-KG--14305239-inline.html",
-      "title": "Product Owner Internet-Filiale (m/w/d)",
-      "company": "Finanz Informatik GmbH & Co. KG",
-      "location": "Hannover, M\u00fcnster, Frankfurt am Main",
-      "salary": null,
-      "score": 74,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:14:58.739260+00:00",
-      "posted_at": "2026-07-20T15:49:02.790000+00:00",
-      "apply_route": "email",
-      "apply_target": "karriere@f-i.de",
       "documents": []
     },
     {
@@ -1730,23 +1547,6 @@
       "documents": []
     },
     {
-      "id": "stepstone_cd97e80d70e3f5f4",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-m-w-d-Softwareentwicklung-Leitsystem-Langenfeld-Duecker-conveyor-systems-GmbH--14123633-inline.html",
-      "title": "Product Owner (m/w/d) - Softwareentwicklung Leitsystem",
-      "company": "D\u00fccker conveyor systems GmbH",
-      "location": "Langenfeld",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:14:58.742934+00:00",
-      "posted_at": "2026-07-24T05:03:07.350000+00:00",
-      "apply_route": "email",
-      "apply_target": "bewerbung@duecker.com",
-      "documents": []
-    },
-    {
       "id": "linkedin_e8474cae3cea363e",
       "source": "linkedin",
       "url": "https://de.linkedin.com/jobs/view/senior-staff-product-manager-growth-f-m-d-at-bunch-4446300613",
@@ -1795,57 +1595,6 @@
       "posted_at": "2026-07-26T11:12:09+00:00",
       "apply_route": "url",
       "apply_target": "https://www.xing.com/jobs/oldenburg-product-owner-jira-service-management-itsm-156725986",
-      "documents": []
-    },
-    {
-      "id": "linkedin_425286e9d3ee23b2",
-      "source": "linkedin",
-      "url": "https://de.linkedin.com/jobs/view/senior-product-manager-client-experience-engagement-f-m-d-at-liqid-4444457296",
-      "title": "Senior Product Manager - Client Experience & Engagement (f/m/d)",
-      "company": "LIQID",
-      "location": "Berlin, Berlin, Germany",
-      "salary": "\u20ac1,500.",
-      "score": 70,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:29:39.692088+00:00",
-      "posted_at": "2026-07-23T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://de.linkedin.com/jobs/view/senior-product-manager-client-experience-engagement-f-m-d-at-liqid-4444457296",
-      "documents": []
-    },
-    {
-      "id": "dailyremote_7b1c5786dcf70716",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-manager-5359639",
-      "title": "Product Manager",
-      "company": "Ensora Health",
-      "location": null,
-      "salary": null,
-      "score": 70,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:14:37.371301+00:00",
-      "posted_at": "2026-07-24T18:00:41+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
-      "documents": []
-    },
-    {
-      "id": "weworkremotely_b2c4119902e7edce",
-      "source": "weworkremotely",
-      "url": "https://weworkremotely.com/remote-jobs/mercury-ai-context-operations-lead",
-      "title": "AI Context Operations Lead",
-      "company": "Mercury",
-      "location": null,
-      "salary": null,
-      "score": 70,
-      "score_tailored": null,
-      "status": "listing_expired",
-      "first_seen_at": "2026-07-26T05:14:34.145967+00:00",
-      "posted_at": "2026-07-24T05:21:03Z",
-      "apply_route": "url",
-      "apply_target": "https://weworkremotely.com/remote-jobs/mercury-ai-context-operations-lead",
       "documents": []
     },
     {
@@ -2070,23 +1819,6 @@
       "documents": []
     },
     {
-      "id": "stepstone_f2300277866006aa",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-im-Bereich-Informationssicherheit-m-w-d-Bonn-Koeln-Meckenheim-BWI-GmbH--14316344-inline.html",
-      "title": "Product Owner im Bereich Informationssicherheit (m/w/d)",
-      "company": "BWI GmbH",
-      "location": "Bonn, K\u00f6ln, Meckenheim",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-26T05:14:58.741349+00:00",
-      "posted_at": "2026-07-23T12:39:40.530000+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.stepstone.de/stellenangebote--Product-Owner-im-Bereich-Informationssicherheit-m-w-d-Bonn-Koeln-Meckenheim-BWI-GmbH--14316344-inline.html",
-      "documents": []
-    },
-    {
       "id": "linkedin_3bdda54bc51bca34",
       "source": "linkedin",
       "url": "https://de.linkedin.com/jobs/view/senior-product-manager-vcs-ecosystem-at-jetbrains-4445487164",
@@ -2208,6 +1940,56 @@
   ],
   "runs": [
     {
+      "id": 313,
+      "started_at": "2026-08-02T12:07:11.474314+00:00",
+      "finished_at": "2026-08-02T12:08:28.016298+00:00",
+      "n_fetched": 262,
+      "n_new": 1,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 312,
+      "started_at": "2026-08-02T12:00:04.550672+00:00",
+      "finished_at": "2026-08-02T12:00:04.999103+00:00",
+      "n_fetched": 0,
+      "n_new": 0,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 311,
+      "started_at": "2026-08-02T09:00:00.698524+00:00",
+      "finished_at": "2026-08-02T09:02:54.377338+00:00",
+      "n_fetched": 266,
+      "n_new": 5,
+      "n_generated": 1,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 310,
+      "started_at": "2026-08-02T05:00:02.035593+00:00",
+      "finished_at": "2026-08-02T05:01:28.398114+00:00",
+      "n_fetched": 259,
+      "n_new": 7,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 309,
+      "started_at": "2026-08-01T17:00:02.546045+00:00",
+      "finished_at": "2026-08-01T17:01:32.238310+00:00",
+      "n_fetched": 292,
+      "n_new": 6,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
       "id": 308,
       "started_at": "2026-08-01T14:09:48.807687+00:00",
       "finished_at": "2026-08-01T14:11:03.121639+00:00",
@@ -2296,56 +2078,6 @@
       "n_generated": 2,
       "n_applied": 0,
       "n_errors": 1
-    },
-    {
-      "id": 299,
-      "started_at": "2026-07-31T19:59:16.987167+00:00",
-      "finished_at": "2026-07-31T20:08:11.970012+00:00",
-      "n_fetched": 301,
-      "n_new": 0,
-      "n_generated": 3,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 298,
-      "started_at": "2026-07-31T19:42:12.105206+00:00",
-      "finished_at": "2026-07-31T19:47:58.422770+00:00",
-      "n_fetched": 302,
-      "n_new": 4,
-      "n_generated": 1,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 297,
-      "started_at": "2026-07-31T17:57:36.446399+00:00",
-      "finished_at": "2026-07-31T18:31:19.502679+00:00",
-      "n_fetched": 333,
-      "n_new": 13,
-      "n_generated": 6,
-      "n_applied": 0,
-      "n_errors": 2
-    },
-    {
-      "id": 296,
-      "started_at": "2026-07-31T14:37:21.901877+00:00",
-      "finished_at": "2026-07-31T15:49:25.271322+00:00",
-      "n_fetched": 333,
-      "n_new": 48,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 178
-    },
-    {
-      "id": 295,
-      "started_at": "2026-07-31T13:26:02.092217+00:00",
-      "finished_at": "2026-07-31T14:13:55.445396+00:00",
-      "n_fetched": 254,
-      "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 143
     }
   ]
 }
