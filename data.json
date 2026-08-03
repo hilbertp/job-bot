@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-02T12:08:28.037960+00:00",
+  "generated_at": "2026-08-03T11:55:16.058756+00:00",
   "jobs": [
     {
       "id": "linkedin_d256a20f0d5832e8",
@@ -1428,6 +1428,57 @@
       "documents": []
     },
     {
+      "id": "xing_64394f7b8ed2d302",
+      "source": "xing",
+      "url": "https://www.xing.com/jobs/berlin-product-owner-data-analytics-marketing-technology-156940285",
+      "title": "Product Owner - Data & Analytics / Marketing Technology (m/w/d)",
+      "company": "Workwise GmbH",
+      "location": "Berlin,Karlsruhe,Hamburg,M\u00fcnchen,Leipzig,K\u00f6ln,Dresden,Hannover,Bremen,Stuttgart+ 0 weitere",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-03T11:54:13.832296+00:00",
+      "posted_at": "2026-08-03T11:34:14+00:00",
+      "apply_route": "url",
+      "apply_target": "https://www.xing.com/jobs/berlin-product-owner-data-analytics-marketing-technology-156940285",
+      "documents": []
+    },
+    {
+      "id": "xing_d577d0f37d15af8c",
+      "source": "xing",
+      "url": "https://www.xing.com/jobs/karlsruhe-senior-product-manager-cloud-services-saas-b2b-156940287",
+      "title": "Senior Product Manager - Cloud Services / SaaS / B2B (m/w/d)",
+      "company": "Workwise GmbH",
+      "location": "Karlsruhe+ 0 weitere",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-03T11:54:11.417171+00:00",
+      "posted_at": "2026-08-03T11:34:14+00:00",
+      "apply_route": "url",
+      "apply_target": "https://www.xing.com/jobs/karlsruhe-senior-product-manager-cloud-services-saas-b2b-156940287",
+      "documents": []
+    },
+    {
+      "id": "himalayas_c071fa98c5869512",
+      "source": "himalayas",
+      "url": "https://himalayas.app/companies/wing-assistant/jobs/product-manager-ai",
+      "title": "Product Manager, AI",
+      "company": "Wing Assistant",
+      "location": "Hong Kong",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-03T05:37:24.686219+00:00",
+      "posted_at": "2026-08-02T23:33:28",
+      "apply_route": "url",
+      "apply_target": "https://himalayas.app/companies/wing-assistant/jobs/product-manager-ai",
+      "documents": []
+    },
+    {
       "id": "dailyremote_56b9f3a5c4c6f15a",
       "source": "dailyremote",
       "url": "https://dailyremote.com/remote-job/product-manager-5393986",
@@ -1734,6 +1785,23 @@
       "documents": []
     },
     {
+      "id": "free_work_e43e63faff22519c",
+      "source": "free_work",
+      "url": "https://www.free-work.com/fr/tech-it/job-mission/senior-data-platform-product-manager",
+      "title": "Senior Data Platform Product Manager",
+      "company": "JCW Search Ltd",
+      "location": "\u00cele-de-France, France (remote: partial)",
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-03T09:32:09.257194+00:00",
+      "posted_at": "2026-08-03T10:25:33+02:00",
+      "apply_route": "url",
+      "apply_target": "https://www.free-work.com/fr/tech-it/job-mission/senior-data-platform-product-manager",
+      "documents": []
+    },
+    {
       "id": "dailyremote_241a71f07ff7c19f",
       "source": "dailyremote",
       "url": "https://dailyremote.com/remote-job/product-manager-5394882",
@@ -1940,6 +2008,56 @@
   ],
   "runs": [
     {
+      "id": 318,
+      "started_at": "2026-08-03T11:53:49.910795+00:00",
+      "finished_at": "2026-08-03T11:55:16.019273+00:00",
+      "n_fetched": 219,
+      "n_new": 15,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 317,
+      "started_at": "2026-08-03T09:05:14.761694+00:00",
+      "finished_at": "2026-08-03T10:16:35.626702+00:00",
+      "n_fetched": 194,
+      "n_new": 18,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 316,
+      "started_at": "2026-08-03T05:11:09.033941+00:00",
+      "finished_at": "2026-08-03T06:13:18.550308+00:00",
+      "n_fetched": 228,
+      "n_new": 9,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 315,
+      "started_at": "2026-08-02T17:00:00.975777+00:00",
+      "finished_at": "2026-08-02T17:01:34.292702+00:00",
+      "n_fetched": 242,
+      "n_new": 0,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 314,
+      "started_at": "2026-08-02T13:00:04.660178+00:00",
+      "finished_at": "2026-08-02T13:01:51.273079+00:00",
+      "n_fetched": 262,
+      "n_new": 1,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
       "id": 313,
       "started_at": "2026-08-02T12:07:11.474314+00:00",
       "finished_at": "2026-08-02T12:08:28.016298+00:00",
@@ -2026,56 +2144,6 @@
       "n_fetched": 291,
       "n_new": 1,
       "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 304,
-      "started_at": "2026-08-01T12:20:09.066812+00:00",
-      "finished_at": "2026-08-01T12:22:38.569540+00:00",
-      "n_fetched": 291,
-      "n_new": 1,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 303,
-      "started_at": "2026-08-01T12:00:01.346021+00:00",
-      "finished_at": "2026-08-01T12:00:27.362586+00:00",
-      "n_fetched": 0,
-      "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 302,
-      "started_at": "2026-08-01T09:00:02.291119+00:00",
-      "finished_at": "2026-08-01T09:02:37.413750+00:00",
-      "n_fetched": 291,
-      "n_new": 8,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 301,
-      "started_at": "2026-08-01T05:00:01.449558+00:00",
-      "finished_at": "2026-08-01T05:06:58.958866+00:00",
-      "n_fetched": 254,
-      "n_new": 9,
-      "n_generated": 2,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 300,
-      "started_at": "2026-07-31T23:13:52.246264+00:00",
-      "finished_at": "2026-07-31T23:20:40.151788+00:00",
-      "n_fetched": 300,
-      "n_new": 5,
-      "n_generated": 2,
       "n_applied": 0,
       "n_errors": 1
     }
