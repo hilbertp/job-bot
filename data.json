@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-03T11:55:16.058756+00:00",
+  "generated_at": "2026-08-03T12:01:51.941439+00:00",
   "jobs": [
     {
       "id": "linkedin_d256a20f0d5832e8",
@@ -1000,6 +1000,23 @@
       "posted_at": "2026-07-29T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://de.linkedin.com/jobs/view/product-owner-at-advice-consulting-4446810220",
+      "documents": []
+    },
+    {
+      "id": "stepstone_6e77de93825f80ee",
+      "source": "stepstone",
+      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-Data-Analytics-Marketing-Technology-m-w-d-Berlin-VGL-Publishing-AG--14346950-inline.html",
+      "title": "Product Owner - Data & Analytics / Marketing Technology (m/w/d)",
+      "company": "VGL Publishing AG",
+      "location": "Berlin",
+      "salary": null,
+      "score": 78,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-03T12:00:53.567061+00:00",
+      "posted_at": "2026-07-31T16:33:02.857000+00:00",
+      "apply_route": "url",
+      "apply_target": "https://www.stepstone.de/stellenangebote--Product-Owner-Data-Analytics-Marketing-Technology-m-w-d-Berlin-VGL-Publishing-AG--14346950-inline.html",
       "documents": []
     },
     {
@@ -2008,6 +2025,16 @@
   ],
   "runs": [
     {
+      "id": 319,
+      "started_at": "2026-08-03T12:00:03.888642+00:00",
+      "finished_at": "2026-08-03T12:01:51.908965+00:00",
+      "n_fetched": 212,
+      "n_new": 2,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
       "id": 318,
       "started_at": "2026-08-03T11:53:49.910795+00:00",
       "finished_at": "2026-08-03T11:55:16.019273+00:00",
@@ -2133,16 +2160,6 @@
       "finished_at": "2026-08-01T12:59:27.775437+00:00",
       "n_fetched": 291,
       "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 305,
-      "started_at": "2026-08-01T12:35:59.184610+00:00",
-      "finished_at": "2026-08-01T12:38:12.877793+00:00",
-      "n_fetched": 291,
-      "n_new": 1,
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 1
