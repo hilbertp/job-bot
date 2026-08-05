@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-04T16:18:51.930439+00:00",
+  "generated_at": "2026-08-05T11:42:37.600350+00:00",
   "jobs": [
     {
       "id": "freelancermap_a5908b76d8e20699",
@@ -55,6 +55,27 @@
       "apply_route": "url",
       "apply_target": "https://de.linkedin.com/jobs/view/product-manager-ai-platform-m-f-x-at-scalable-capital-4446082055",
       "documents": []
+    },
+    {
+      "id": "linkedin_f9b65386152d722c",
+      "source": "linkedin",
+      "url": "https://de.linkedin.com/jobs/view/senior-product-manager-bison-app-gn-at-boerse-stuttgart-digital-4449465356",
+      "title": "(Senior) Product Manager - BISON App (gn)",
+      "company": "Boerse Stuttgart Digital",
+      "location": "Berlin, Germany",
+      "salary": null,
+      "score": 88,
+      "score_tailored": 95,
+      "status": "generated",
+      "first_seen_at": "2026-08-05T09:00:51.270255+00:00",
+      "posted_at": "2026-08-05T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://de.linkedin.com/jobs/view/senior-product-manager-bison-app-gn-at-boerse-stuttgart-digital-4449465356",
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
     },
     {
       "id": "linkedin_7221c61ba66b81ea",
@@ -335,6 +356,69 @@
       ]
     },
     {
+      "id": "freelancermap_be64089f7e6cdcac",
+      "source": "freelancermap",
+      "url": "https://www.freelancermap.de/projekt/it-product-owner-m-w-d-79-90785-do-co",
+      "title": "IT-Product Owner (m/w/d) 79-90785-DO-CO",
+      "company": "freelancermap (Auftraggeber anonym)",
+      "location": null,
+      "salary": null,
+      "score": 82,
+      "score_tailored": 88,
+      "status": "generated",
+      "first_seen_at": "2026-08-05T09:00:28.143595+00:00",
+      "posted_at": null,
+      "apply_route": "url",
+      "apply_target": "https://www.freelancermap.de/projekt/it-product-owner-m-w-d-79-90785-do-co",
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
+    },
+    {
+      "id": "dailyremote_ab273e8f6a991dc9",
+      "source": "dailyremote",
+      "url": "https://dailyremote.com/remote-job/product-manager-5407824",
+      "title": "Product Manager",
+      "company": "Veritone",
+      "location": null,
+      "salary": null,
+      "score": 82,
+      "score_tailored": 88,
+      "status": "generated",
+      "first_seen_at": "2026-08-05T05:00:09.128047+00:00",
+      "posted_at": "2026-08-04T19:01:00+00:00",
+      "apply_route": "missing",
+      "apply_target": null,
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
+    },
+    {
+      "id": "dailyremote_820ae99353c34218",
+      "source": "dailyremote",
+      "url": "https://dailyremote.com/remote-job/product-manager-5408527",
+      "title": "Product Manager",
+      "company": "ArcSite",
+      "location": null,
+      "salary": "401K",
+      "score": 82,
+      "score_tailored": 88,
+      "status": "generated",
+      "first_seen_at": "2026-08-05T05:00:09.127270+00:00",
+      "posted_at": "2026-08-04T20:03:57+00:00",
+      "apply_route": "missing",
+      "apply_target": null,
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
+    },
+    {
       "id": "linkedin_46c6fdd1faa2b448",
       "source": "linkedin",
       "url": "https://de.linkedin.com/jobs/view/product-manager-m-f-d-at-alasco-4447992317",
@@ -447,6 +531,27 @@
       "apply_route": "email",
       "apply_target": "jobs@softproject.com",
       "documents": []
+    },
+    {
+      "id": "linkedin_685077feae47fdfb",
+      "source": "linkedin",
+      "url": "https://de.linkedin.com/jobs/view/product-manager-integration-m-w-d-at-riverty-4449063412",
+      "title": "Product Manager Integration (m/w/d)",
+      "company": "Riverty",
+      "location": "Berlin, Germany",
+      "salary": null,
+      "score": 82,
+      "score_tailored": 87,
+      "status": "generated",
+      "first_seen_at": "2026-08-05T09:00:51.267532+00:00",
+      "posted_at": "2026-08-04T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://de.linkedin.com/jobs/view/product-manager-integration-m-w-d-at-riverty-4449063412",
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
     },
     {
       "id": "linkedin_13d2b877c37cab2a",
@@ -593,23 +698,6 @@
       "documents": []
     },
     {
-      "id": "freelancermap_eb83b82f9a17b3cf",
-      "source": "freelancermap",
-      "url": "https://www.freelancermap.de/projekt/product-owner-epilot-m-w-d-3028930",
-      "title": "Product Owner ePilot (m/w/d)",
-      "company": "freelancermap (Auftraggeber anonym)",
-      "location": null,
-      "salary": null,
-      "score": 86,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-28T17:11:19.906490+00:00",
-      "posted_at": null,
-      "apply_route": "url",
-      "apply_target": "https://www.freelancermap.de/projekt/product-owner-epilot-m-w-d-3028930",
-      "documents": []
-    },
-    {
       "id": "linkedin_59137fb4f7dd875f",
       "source": "linkedin",
       "url": "https://de.linkedin.com/jobs/view/founding-product-manager-at-circonomit-4447297808",
@@ -687,7 +775,7 @@
       "salary": null,
       "score": 85,
       "score_tailored": null,
-      "status": "scored",
+      "status": "listing_expired",
       "first_seen_at": "2026-07-30T12:00:46.398156+00:00",
       "posted_at": "2026-07-30T11:00:13+00:00",
       "apply_route": "missing",
@@ -709,23 +797,6 @@
       "posted_at": "2026-07-29T21:00:11+00:00",
       "apply_route": "missing",
       "apply_target": null,
-      "documents": []
-    },
-    {
-      "id": "stepstone_d876386bcc402f5f",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-m-w-d-Wuerzburg-FLYERALARM-Bit-Labs-GmbH--14332087-inline.html",
-      "title": "Product Owner m/w/d",
-      "company": "FLYERALARM Bit Labs GmbH",
-      "location": "W\u00fcrzburg",
-      "salary": null,
-      "score": 85,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-28T17:11:30.017688+00:00",
-      "posted_at": "2026-07-28T07:28:17.430000+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.stepstone.de/stellenangebote--Product-Owner-m-w-d-Wuerzburg-FLYERALARM-Bit-Labs-GmbH--14332087-inline.html",
       "documents": []
     },
     {
@@ -760,23 +831,6 @@
       "posted_at": "2026-07-29T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://de.linkedin.com/jobs/view/product-owner-m-w-d-data-analytics-at-sthree-4446580063",
-      "documents": []
-    },
-    {
-      "id": "dailyremote_325f0e55f6d91e3c",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-manager-5372804",
-      "title": "Product Manager",
-      "company": "Everway",
-      "location": null,
-      "salary": null,
-      "score": 83,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-28T17:11:11.228927+00:00",
-      "posted_at": "2026-07-28T15:00:14+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
       "documents": []
     },
     {
@@ -836,23 +890,6 @@
       "posted_at": "2026-07-29T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://de.linkedin.com/jobs/view/product-manager-integration-m-w-d-at-riverty-4446858754",
-      "documents": []
-    },
-    {
-      "id": "dailyremote_5a55fe26a71f8c7e",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-manager-5374434",
-      "title": "Product Manager",
-      "company": "Edisyl",
-      "location": null,
-      "salary": null,
-      "score": 82,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-29T05:00:11.718432+00:00",
-      "posted_at": "2026-07-28T18:01:00+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
       "documents": []
     },
     {
@@ -921,6 +958,40 @@
       "posted_at": "2026-07-29T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://de.linkedin.com/jobs/view/product-owner-at-advice-consulting-4446810220",
+      "documents": []
+    },
+    {
+      "id": "linkedin_57040bf5514d924f",
+      "source": "linkedin",
+      "url": "https://de.linkedin.com/jobs/view/product-owner-m-w-d-at-riverty-4449443754",
+      "title": "Product Owner (m/w/d)",
+      "company": "Riverty",
+      "location": "Dortmund, North Rhine-Westphalia, Germany",
+      "salary": null,
+      "score": 78,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-05T05:00:50.557891+00:00",
+      "posted_at": "2026-08-05T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://de.linkedin.com/jobs/view/product-owner-m-w-d-at-riverty-4449443754",
+      "documents": []
+    },
+    {
+      "id": "linkedin_5058386593c75803",
+      "source": "linkedin",
+      "url": "https://de.linkedin.com/jobs/view/product-owner-m-f-d-%E2%80%93-b2b-saas-berlin-hybrid-at-packmatic-4447346302",
+      "title": "Product Owner (m/f/d) \u2013 B2B SaaS | Berlin (hybrid)",
+      "company": "Packmatic",
+      "location": "Berlin, Germany",
+      "salary": null,
+      "score": 78,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-05T05:00:50.557568+00:00",
+      "posted_at": "2026-08-05T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://de.linkedin.com/jobs/view/product-owner-m-f-d-%E2%80%93-b2b-saas-berlin-hybrid-at-packmatic-4447346302",
       "documents": []
     },
     {
@@ -1230,23 +1301,6 @@
       "documents": []
     },
     {
-      "id": "linkedin_46cb2c5a53c7f45a",
-      "source": "linkedin",
-      "url": "https://de.linkedin.com/jobs/view/senior-product-manager-at-hack-the-box-4445153384",
-      "title": "Senior Product Manager",
-      "company": "Hack The Box",
-      "location": "Berlin, Berlin, Germany",
-      "salary": null,
-      "score": 78,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-29T05:00:47.382638+00:00",
-      "posted_at": "2026-07-27T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://de.linkedin.com/jobs/view/senior-product-manager-at-hack-the-box-4445153384",
-      "documents": []
-    },
-    {
       "id": "linkedin_268e8fe08e248615",
       "source": "linkedin",
       "url": "https://de.linkedin.com/jobs/view/senior-product-manager-m-w-d-at-skalar-4447022119",
@@ -1281,23 +1335,6 @@
       "documents": []
     },
     {
-      "id": "dailyremote_6325892e8c37fa55",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-manager-5374001",
-      "title": "Product Manager",
-      "company": "AxisCare",
-      "location": null,
-      "salary": "401K",
-      "score": 75,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-28T17:11:11.227078+00:00",
-      "posted_at": "2026-07-28T17:01:06+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
-      "documents": []
-    },
-    {
       "id": "linkedin_5c06a8de1f2a8efd",
       "source": "linkedin",
       "url": "https://de.linkedin.com/jobs/view/product-owner-omnichannel-services-m-w-d-at-schwarz-digits-4444335972",
@@ -1312,23 +1349,6 @@
       "posted_at": "2026-07-27T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://de.linkedin.com/jobs/view/product-owner-omnichannel-services-m-w-d-at-schwarz-digits-4444335972",
-      "documents": []
-    },
-    {
-      "id": "xing_b2787e7ca459deca",
-      "source": "xing",
-      "url": "https://www.xing.com/jobs/ettlingen-product-owner-156597134",
-      "title": "Product Owner (m/f/d)",
-      "company": "SoftProject GmbH",
-      "location": "Ettlingen+ 0 weitere",
-      "salary": null,
-      "score": 74,
-      "score_tailored": null,
-      "status": "discarded",
-      "first_seen_at": "2026-07-29T09:00:33.741617+00:00",
-      "posted_at": "2026-07-21T23:42:56+00:00",
-      "apply_route": "email",
-      "apply_target": "jobs@softproject.de",
       "documents": []
     },
     {
@@ -1380,6 +1400,40 @@
       "posted_at": "2026-07-30T08:20:13.997000+00:00",
       "apply_route": "url",
       "apply_target": "https://www.stepstone.de/stellenangebote--Product-Owner-Cloud-Orchestration-Services-m-w-d-Muenchen-Frankfurt-Hamburg-Nuernberg-Ulm-Berlin-Bonn-Leipzig-BWI-GmbH--14341367-inline.html",
+      "documents": []
+    },
+    {
+      "id": "xing_719da3a4e80fd2e7",
+      "source": "xing",
+      "url": "https://www.xing.com/jobs/karlsruhe-senior-product-manager-cloud-services-saas-b2b-156990738",
+      "title": "Senior Product Manager - Cloud Services / SaaS / B2B (m/w/d)",
+      "company": "Workwise GmbH",
+      "location": "Karlsruhe+ 0 weitere",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-05T09:00:37.469146+00:00",
+      "posted_at": "2026-08-05T08:27:28+00:00",
+      "apply_route": "url",
+      "apply_target": "https://www.xing.com/jobs/karlsruhe-senior-product-manager-cloud-services-saas-b2b-156990738",
+      "documents": []
+    },
+    {
+      "id": "dailyremote_9b82cb2d1774b089",
+      "source": "dailyremote",
+      "url": "https://dailyremote.com/remote-job/product-manager-5408096",
+      "title": "Product Manager",
+      "company": "TripleTen",
+      "location": null,
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-05T05:00:09.127628+00:00",
+      "posted_at": "2026-08-04T20:00:35+00:00",
+      "apply_route": "missing",
+      "apply_target": null,
       "documents": []
     },
     {
@@ -1757,23 +1811,6 @@
       "documents": []
     },
     {
-      "id": "dailyremote_e9fac8a15a6a891d",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-manager-5377327",
-      "title": "Product Manager",
-      "company": "Berry Virtual",
-      "location": null,
-      "salary": null,
-      "score": 65,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-29T05:00:11.717822+00:00",
-      "posted_at": "2026-07-29T00:03:57+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
-      "documents": []
-    },
-    {
       "id": "linkedin_0f49ccde466f295b",
       "source": "linkedin",
       "url": "https://de.linkedin.com/jobs/view/senior-product-manager-m-w-d-at-skalar-4444590940",
@@ -1805,6 +1842,57 @@
       "posted_at": "2026-07-30T08:28:09+00:00",
       "apply_route": "url",
       "apply_target": "https://www.xing.com/jobs/frankfurt-main-product-manager-customer-onboarding-business-banking-156831061",
+      "documents": []
+    },
+    {
+      "id": "xing_8db714a0b7b35442",
+      "source": "xing",
+      "url": "https://www.xing.com/jobs/affing-produktmanager-product-owner-app-cloud-156990998",
+      "title": "Produktmanager / Product Owner App & Cloud (m/w)",
+      "company": "ABUS Security Center GmbH & Co. KG",
+      "location": "Affing+ 0 weitere",
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-05T09:00:41.300909+00:00",
+      "posted_at": "2026-08-05T08:28:59+00:00",
+      "apply_route": "url",
+      "apply_target": "https://www.xing.com/jobs/affing-produktmanager-product-owner-app-cloud-156990998",
+      "documents": []
+    },
+    {
+      "id": "braintrust_adf65eb9e237ce0e",
+      "source": "braintrust",
+      "url": "https://app.usebraintrust.com/jobs/17663/",
+      "title": "Product / Project Manager, AI Agent Team (Contract)",
+      "company": "Loansure",
+      "location": "EST/EDT",
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-04T17:00:57.259909+00:00",
+      "posted_at": "2026-08-04T16:24:47.113401Z",
+      "apply_route": "url",
+      "apply_target": "https://app.usebraintrust.com/jobs/17663/",
+      "documents": []
+    },
+    {
+      "id": "braintrust_c3d058a84f06f2ff",
+      "source": "braintrust",
+      "url": "https://app.usebraintrust.com/jobs/17664/",
+      "title": "Product / Project Manager, AI Agent Team (Contract)",
+      "company": "Loansure",
+      "location": "EST/EDT",
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-04T17:00:57.259572+00:00",
+      "posted_at": "2026-08-04T16:24:53.730889Z",
+      "apply_route": "url",
+      "apply_target": "https://app.usebraintrust.com/jobs/17664/",
       "documents": []
     },
     {
@@ -1978,23 +2066,6 @@
       "documents": []
     },
     {
-      "id": "dailyremote_73de52095bfee3b9",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-manager-5372790",
-      "title": "Product Manager",
-      "company": "Sardina Systems",
-      "location": null,
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-28T17:11:11.229137+00:00",
-      "posted_at": "2026-07-28T15:00:13+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
-      "documents": []
-    },
-    {
       "id": "linkedin_3bdda54bc51bca34",
       "source": "linkedin",
       "url": "https://de.linkedin.com/jobs/view/senior-product-manager-vcs-ecosystem-at-jetbrains-4445487164",
@@ -2064,6 +2135,46 @@
     }
   ],
   "runs": [
+    {
+      "id": 328,
+      "started_at": "2026-08-05T11:40:42.657705+00:00",
+      "finished_at": "2026-08-05T11:42:37.567888+00:00",
+      "n_fetched": 264,
+      "n_new": 12,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 327,
+      "started_at": "2026-08-05T09:00:02.953403+00:00",
+      "finished_at": "2026-08-05T09:05:57.118314+00:00",
+      "n_fetched": 265,
+      "n_new": 20,
+      "n_generated": 3,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 326,
+      "started_at": "2026-08-05T05:00:02.346343+00:00",
+      "finished_at": "2026-08-05T05:05:02.187446+00:00",
+      "n_fetched": 234,
+      "n_new": 29,
+      "n_generated": 2,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 325,
+      "started_at": "2026-08-04T17:00:03.991889+00:00",
+      "finished_at": "2026-08-04T17:01:28.119449+00:00",
+      "n_fetched": 257,
+      "n_new": 5,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
     {
       "id": 324,
       "started_at": "2026-08-04T16:12:08.147757+00:00",
@@ -2161,46 +2272,6 @@
       "n_fetched": 242,
       "n_new": 0,
       "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 314,
-      "started_at": "2026-08-02T13:00:04.660178+00:00",
-      "finished_at": "2026-08-02T13:01:51.273079+00:00",
-      "n_fetched": 262,
-      "n_new": 1,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 313,
-      "started_at": "2026-08-02T12:07:11.474314+00:00",
-      "finished_at": "2026-08-02T12:08:28.016298+00:00",
-      "n_fetched": 262,
-      "n_new": 1,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 312,
-      "started_at": "2026-08-02T12:00:04.550672+00:00",
-      "finished_at": "2026-08-02T12:00:04.999103+00:00",
-      "n_fetched": 0,
-      "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 311,
-      "started_at": "2026-08-02T09:00:00.698524+00:00",
-      "finished_at": "2026-08-02T09:02:54.377338+00:00",
-      "n_fetched": 266,
-      "n_new": 5,
-      "n_generated": 1,
       "n_applied": 0,
       "n_errors": 1
     }
