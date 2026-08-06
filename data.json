@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-06T12:00:30.482620+00:00",
+  "generated_at": "2026-08-06T12:05:56.467946+00:00",
   "jobs": [
     {
       "id": "freelancermap_a5908b76d8e20699",
@@ -166,6 +166,27 @@
       ]
     },
     {
+      "id": "linkedin_2f138656554f907b",
+      "source": "linkedin",
+      "url": "https://de.linkedin.com/jobs/view/product-owner-product-manager-all-genders-at-enopai-4448091713",
+      "title": "Product Owner / Product Manager (all genders)",
+      "company": "EnopAI",
+      "location": "Munich, Bavaria, Germany",
+      "salary": null,
+      "score": 82,
+      "score_tailored": 91,
+      "status": "generated",
+      "first_seen_at": "2026-08-06T12:00:57.937434+00:00",
+      "posted_at": "2026-08-06T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://de.linkedin.com/jobs/view/product-owner-product-manager-all-genders-at-enopai-4448091713",
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
+    },
+    {
       "id": "freelancermap_7ad8d35bd7df2f5c",
       "source": "freelancermap",
       "url": "https://www.freelancermap.de/projekt/product-owner-appsolutions-m-w-d-70-prozent-remote-einzugsgebiet-koeln-jba14742",
@@ -306,6 +327,48 @@
       "posted_at": "2026-07-31T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://de.linkedin.com/jobs/view/product-owner-m-w-d-at-doctari-4447529746",
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
+    },
+    {
+      "id": "linkedin_9fc6a96fdbe15713",
+      "source": "linkedin",
+      "url": "https://de.linkedin.com/jobs/view/senior-product-manager-at-develop-4450230755",
+      "title": "Senior Product Manager",
+      "company": "develop",
+      "location": "Munich, Bavaria, Germany",
+      "salary": "\u20ac90-",
+      "score": 82,
+      "score_tailored": 88,
+      "status": "generated",
+      "first_seen_at": "2026-08-06T12:00:57.938029+00:00",
+      "posted_at": "2026-08-06T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://de.linkedin.com/jobs/view/senior-product-manager-at-develop-4450230755",
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
+    },
+    {
+      "id": "linkedin_6f9e2595e0d0fc5b",
+      "source": "linkedin",
+      "url": "https://de.linkedin.com/jobs/view/senior-product-manager-at-develop-4450226247",
+      "title": "Senior Product Manager",
+      "company": "develop",
+      "location": "Berlin, Berlin, Germany",
+      "salary": "\u20ac90-",
+      "score": 82,
+      "score_tailored": 88,
+      "status": "generated",
+      "first_seen_at": "2026-08-06T12:00:57.937269+00:00",
+      "posted_at": "2026-08-06T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://de.linkedin.com/jobs/view/senior-product-manager-at-develop-4450226247",
       "documents": [
         "cv.pdf",
         "cover_letter.pdf",
@@ -595,23 +658,6 @@
       "documents": []
     },
     {
-      "id": "linkedin_47ab5cfff1cb3b96",
-      "source": "linkedin",
-      "url": "https://de.linkedin.com/jobs/view/product-manager-integration-m-w-d-at-riverty-4446494560",
-      "title": "Product Manager Integration (m/w/d)",
-      "company": "Riverty",
-      "location": "Berlin, Germany",
-      "salary": null,
-      "score": 87,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-30T12:01:23.705015+00:00",
-      "posted_at": "2026-07-30T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://de.linkedin.com/jobs/view/product-manager-integration-m-w-d-at-riverty-4446494560",
-      "documents": []
-    },
-    {
       "id": "linkedin_3b5ea6fb20bd8b70",
       "source": "linkedin",
       "url": "https://de.linkedin.com/jobs/view/product-manager-m-w-d-at-airlst-gmbh-4445687139",
@@ -626,23 +672,6 @@
       "posted_at": "2026-07-27T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://de.linkedin.com/jobs/view/product-manager-m-w-d-at-airlst-gmbh-4445687139",
-      "documents": []
-    },
-    {
-      "id": "linkedin_658ffac2ed126ede",
-      "source": "linkedin",
-      "url": "https://de.linkedin.com/jobs/view/product-owner-m-w-d-at-softproject-4444584573",
-      "title": "Product Owner (m/w/d)",
-      "company": "SoftProject",
-      "location": "Ettlingen, Baden-W\u00fcrttemberg, Germany",
-      "salary": null,
-      "score": 86,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-30T12:01:38.261128+00:00",
-      "posted_at": "2026-07-30T00:00:00Z",
-      "apply_route": "email",
-      "apply_target": "jobs@softproject.com",
       "documents": []
     },
     {
@@ -709,40 +738,6 @@
       "status": "scored",
       "first_seen_at": "2026-07-31T12:19:11.103529+00:00",
       "posted_at": "2026-07-30T18:00:18+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
-      "documents": []
-    },
-    {
-      "id": "dailyremote_62150ac1e92f01f9",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-owner-5384943",
-      "title": "Product Owner",
-      "company": "TLC Worldwide",
-      "location": null,
-      "salary": null,
-      "score": 85,
-      "score_tailored": null,
-      "status": "listing_expired",
-      "first_seen_at": "2026-07-30T12:00:46.398156+00:00",
-      "posted_at": "2026-07-30T11:00:13+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
-      "documents": []
-    },
-    {
-      "id": "dailyremote_5e36e1984c5b8ce2",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-manager-5382237",
-      "title": "Product Manager",
-      "company": "Newsela",
-      "location": null,
-      "salary": null,
-      "score": 85,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-30T12:00:45.692666+00:00",
-      "posted_at": "2026-07-29T21:00:11+00:00",
       "apply_route": "missing",
       "apply_target": null,
       "documents": []
@@ -872,23 +867,6 @@
       "posted_at": "2026-07-29T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://de.linkedin.com/jobs/view/senior-product-owner-m-w-d-at-qualityminds-gmbh-4444163868",
-      "documents": []
-    },
-    {
-      "id": "stepstone_f77bdecb23edeb38",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-Projektmanagerin-w-m-d-Teilzeit-Koeln-OPEN-Digitalgruppe-GmbH--14338647-inline.html",
-      "title": "Product Owner / Projektmanager*in (w/m/d) Teilzeit",
-      "company": "OPEN Digitalgruppe GmbH",
-      "location": "K\u00f6ln",
-      "salary": null,
-      "score": 80,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-30T12:01:00.979358+00:00",
-      "posted_at": "2026-07-30T07:29:08.630000+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.stepstone.de/stellenangebote--Product-Owner-Projektmanagerin-w-m-d-Teilzeit-Koeln-OPEN-Digitalgruppe-GmbH--14338647-inline.html",
       "documents": []
     },
     {
@@ -1402,20 +1380,54 @@
       "documents": []
     },
     {
-      "id": "stepstone_ecefae1c0b3cbfed",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-Cloud-Orchestration-Services-m-w-d-Muenchen-Frankfurt-Hamburg-Nuernberg-Ulm-Berlin-Bonn-Leipzig-BWI-GmbH--14341367-inline.html",
-      "title": "Product Owner Cloud Orchestration & Services (m/w/d)",
-      "company": "BWI GmbH",
-      "location": "M\u00fcnchen, Frankfurt, Hamburg, N\u00fcrnberg, Ulm, Berlin, Bonn, Leipzig",
+      "id": "linkedin_b056e54706730346",
+      "source": "linkedin",
+      "url": "https://de.linkedin.com/jobs/view/product-owner-at-haystack-4449391262",
+      "title": "Product Owner",
+      "company": "Haystack",
+      "location": "Greater Munich Metropolitan Area",
       "salary": null,
-      "score": 73,
+      "score": 72,
       "score_tailored": null,
       "status": "scored",
-      "first_seen_at": "2026-07-30T12:01:00.977657+00:00",
-      "posted_at": "2026-07-30T08:20:13.997000+00:00",
+      "first_seen_at": "2026-08-06T12:01:08.769617+00:00",
+      "posted_at": "2026-08-06T00:00:00Z",
       "apply_route": "url",
-      "apply_target": "https://www.stepstone.de/stellenangebote--Product-Owner-Cloud-Orchestration-Services-m-w-d-Muenchen-Frankfurt-Hamburg-Nuernberg-Ulm-Berlin-Bonn-Leipzig-BWI-GmbH--14341367-inline.html",
+      "apply_target": "https://de.linkedin.com/jobs/view/product-owner-at-haystack-4449391262",
+      "documents": []
+    },
+    {
+      "id": "linkedin_27f665e4b6cb1edb",
+      "source": "linkedin",
+      "url": "https://de.linkedin.com/jobs/view/product-manager-anti-financial-crime-m-f-x-at-scalable-capital-4449721257",
+      "title": "Product Manager - Anti Financial Crime (m/f/x)",
+      "company": "Scalable Capital",
+      "location": "Munich, Bavaria, Germany",
+      "salary": "\u20ac50",
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-06T12:00:57.937742+00:00",
+      "posted_at": "2026-08-06T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://de.linkedin.com/jobs/view/product-manager-anti-financial-crime-m-f-x-at-scalable-capital-4449721257",
+      "documents": []
+    },
+    {
+      "id": "dailyremote_599e4de44eff803f",
+      "source": "dailyremote",
+      "url": "https://dailyremote.com/remote-job/product-manager-5417973",
+      "title": "Product Manager",
+      "company": "Tuio",
+      "location": null,
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-06T12:00:26.616466+00:00",
+      "posted_at": "2026-08-06T11:00:12+00:00",
+      "apply_route": "email",
+      "apply_target": "jointheteam@tuio.com",
       "documents": []
     },
     {
@@ -2386,35 +2398,18 @@
       "apply_route": "missing",
       "apply_target": null,
       "documents": []
-    },
-    {
-      "id": "dailyremote_b180c4495f96030f",
-      "source": "dailyremote",
-      "url": "https://dailyremote.com/remote-job/product-owner-5383822",
-      "title": "Product Owner",
-      "company": "Neptune Technology Group",
-      "location": null,
-      "salary": null,
-      "score": 60,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-07-30T12:00:46.398512+00:00",
-      "posted_at": "2026-07-30T01:00:08+00:00",
-      "apply_route": "missing",
-      "apply_target": null,
-      "documents": []
     }
   ],
   "runs": [
     {
       "id": 334,
       "started_at": "2026-08-06T12:00:06.105205+00:00",
-      "finished_at": null,
-      "n_fetched": 0,
-      "n_new": 0,
-      "n_generated": 0,
+      "finished_at": "2026-08-06T12:05:56.432739+00:00",
+      "n_fetched": 286,
+      "n_new": 18,
+      "n_generated": 3,
       "n_applied": 0,
-      "n_errors": 0
+      "n_errors": 1
     },
     {
       "id": 333,
