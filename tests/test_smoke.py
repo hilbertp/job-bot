@@ -29,7 +29,7 @@ def test_imports():
         "freelancermap", "freelance_de",
         "indeed", "stepstone", "xing", "linkedin",
         "remotive", "remoteok", "himalayas",
-        "free_work", "braintrust", "brainville",
+        "free_work", "braintrust", "brainville", "talentmate",
     }
 
 

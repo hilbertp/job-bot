@@ -447,11 +447,30 @@ scraped → filtered                 (heuristic deal-breaker)
 | stepstone | HTML + selectolax | ✅ |
 | xing | Playwright | ✅ |
 | linkedin | Playwright (read-only; never auto-apply per ToS) | ✅ |
+| remotive / remoteok / himalayas | public JSON APIs | ✅ |
+| free_work / braintrust / brainville | HTML + JSON APIs (FR / US / Nordics) | ✅ |
+| talentmate | HTML search + JSON-LD detail (Gulf / UAE) | ✅ |
 | indeed | Playwright | 🟡 enabled per `data/config.yaml` |
-| freelance_de | HTML | 🟡 disabled (robots.txt issue) |
+| freelance_de | HTML | 🟡 disabled (robots.txt forbids crawling without written permission) |
 | remote.co | n/a | ⛔ blocked by Cloudflare TLS fingerprinting |
 
 `jobbot sources` prints the live registry.
+
+### Gulf / UAE coverage
+
+Evaluated 2026-08-07. Only `talentmate` is both permitted and machine-readable;
+LinkedIn covers the rest of the region via location-pinned queries
+(`keywords: "product manager", location: "United Arab Emirates"`), because its
+guest API caps each query at ~30 cards and a generic search never reaches Dubai.
+
+| Portal | Verdict |
+| --- | --- |
+| talentmate.com | ✅ robots.txt fully permissive, server-rendered, 20 cards/page, employer name in JSON-LD |
+| bayt.com | ⛔ robots.txt disallows `/en/jobs/?` and `/en/jobs/*-jobs/` for all agents (also 403) |
+| gulftalent.com | ⛔ robots.txt allows crawling, but the WAF 403s every non-browser client incl. the sitemap |
+| naukrigulf.com | ⛔ TLS handshake succeeds, then the request is dropped (no response) |
+| ae.indeed.com | ⛔ 403; same bot wall as the main `indeed` source |
+| dubizzle.com | ⛔ `/jobs/` is robots-allowed but a client-side SPA shell (6 KB, no listings in HTML) |
 
 ---
 
