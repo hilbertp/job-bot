@@ -93,14 +93,20 @@ def _sender(msg: Message) -> str:
 def connect(secrets: Secrets, mailbox: str = "gmail") -> imaplib.IMAP4_SSL | None:
     """Open an IMAP connection to the chosen mailbox, or None if unconfigured.
 
-    `mailbox="gmail"` uses the personal Gmail app password (where board
-    alerts normally land, because that is the address job-board accounts are
-    registered with). `mailbox="truenorth"` uses the outbound business
-    mailbox that the outcome scanner already reads.
+    Three mailboxes are supported, because board accounts are not always
+    registered to the address the bot already reads:
+
+      "gmail"     - the personal Gmail digest address (default).
+      "truenorth" - the outbound business box the outcome scanner reads.
+      "alerts"    - a dedicated read-only box (ALERTS_IMAP_* in .env), for
+                    boards registered to some other address entirely.
     """
     if mailbox == "truenorth":
         host, port = secrets.truenorth_imap_host, secrets.truenorth_imap_port
         user, password = secrets.truenorth_smtp_user, secrets.truenorth_smtp_pass
+    elif mailbox == "alerts":
+        host, port = secrets.alerts_imap_host, secrets.alerts_imap_port
+        user, password = secrets.alerts_imap_user, secrets.alerts_imap_pass
     else:
         host, port = secrets.imap_host, secrets.imap_port
         user, password = secrets.gmail_address, secrets.gmail_app_password

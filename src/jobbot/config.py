@@ -33,6 +33,14 @@ class Secrets(BaseModel):
     # SMTP on IONOS; defaults to imap.ionos.de:993.
     truenorth_imap_host: str = "imap.ionos.de"
     truenorth_imap_port: int = 993
+    # A third, read-only mailbox for job-alert emails, used when boards are
+    # registered to neither the Gmail digest address nor the outbound
+    # business box (e.g. an IONOS address on another domain). Read-only:
+    # the alert scanner never sends from it and never flags its mail.
+    alerts_imap_host: str = "imap.ionos.de"
+    alerts_imap_port: int = 993
+    alerts_imap_user: str = ""
+    alerts_imap_pass: str = ""
 
 
 class ApplyConfig(BaseModel):
@@ -258,6 +266,10 @@ def load_secrets(env_file: Path | None = None) -> Secrets:
         truenorth_smtp_pass=os.environ.get("TRUENORTH_SMTP_PASS", ""),
         truenorth_imap_host=os.environ.get("TRUENORTH_IMAP_HOST", "imap.ionos.de"),
         truenorth_imap_port=int(os.environ.get("TRUENORTH_IMAP_PORT", "993")),
+        alerts_imap_host=os.environ.get("ALERTS_IMAP_HOST", "imap.ionos.de"),
+        alerts_imap_port=int(os.environ.get("ALERTS_IMAP_PORT", "993")),
+        alerts_imap_user=os.environ.get("ALERTS_IMAP_USER", ""),
+        alerts_imap_pass=os.environ.get("ALERTS_IMAP_PASS", ""),
     )
 
 
