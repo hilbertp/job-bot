@@ -45,7 +45,17 @@ def cmd_publish(args) -> int:
 
 
 def cmd_daily(args) -> int:
-    """The 14:00 scheduled pass: full pipeline run, then publish."""
+    """The scheduled pass: ingest alert emails, full pipeline run, publish.
+
+    Alerts run FIRST so postings that only reach us by email (bayt,
+    freelance.de) are already in seen_jobs when the run builds its scoring
+    queue, and get scored in the same pass rather than a day later.
+    A failing alert scan must never block the run, so it is best-effort.
+    """
+    try:
+        cmd_scan_alerts(args)
+    except Exception as e:  # noqa: BLE001 - never let mail break the run
+        console.print(f"[yellow]alert scan failed, continuing: {e}[/yellow]")
     rc = cmd_run(args)
     publish_rc = cmd_publish(args)
     return rc or publish_rc
@@ -168,6 +178,26 @@ def cmd_scan_inbox(_args) -> int:
     with connect() as conn:
         summary = outcomes.scan_inbox(conn, secrets, config)
     console.print(f"inbox scan complete: {summary}")
+    return 0
+
+
+def cmd_scan_alerts(_args) -> int:
+    """Ingest job-alert emails (bayt, freelance.de, ...) into the pipeline."""
+    from .alerts import scan_alerts_standalone
+
+    config = load_config()
+    secrets = load_secrets()
+    summary = scan_alerts_standalone(config, secrets)
+    if summary.get("skipped"):
+        console.print(f"[yellow]alert scan skipped: {summary['skipped']}[/yellow]")
+        console.print("enable it with `alerts.enabled: true` in data/config.yaml")
+        return 0
+    console.print(
+        f"alert scan: {summary['emails']} emails, {summary['postings']} postings, "
+        f"{summary['new']} new, {summary['thin']} too short to score"
+    )
+    for source, counts in (summary.get("per_source") or {}).items():
+        console.print(f"  {source}: {counts['new']} new ({counts['thin']} thin)")
     return 0
 
 
@@ -827,6 +857,9 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("sources", help="List registered scrapers.").set_defaults(fn=cmd_sources)
     sub.add_parser("dashboard", help="Start web dashboard on localhost:5001.").set_defaults(fn=cmd_dashboard)
     sub.add_parser("db-status", help="Show SQLite writer-lock state and any holders.").set_defaults(fn=cmd_db_status)
+    sub.add_parser("scan-alerts",
+                   help="Ingest job-alert emails (boards that forbid crawling) "
+                        "into the scoring pipeline.").set_defaults(fn=cmd_scan_alerts)
     sub.add_parser("scan-inbox", help="Scan inbox for application outcomes.").set_defaults(fn=cmd_scan_inbox)
     sub.add_parser("inbox-scan", help="Alias for scan-inbox.").set_defaults(fn=cmd_scan_inbox)
     sub.add_parser("apply", help="Run the scheduled apply pipeline pass.").set_defaults(fn=cmd_apply)
