@@ -15,6 +15,7 @@ from .nodesk import NoDeskScraper
 from .remoteok import RemoteOkScraper
 from .remotive import RemotiveScraper
 from .stepstone import StepstoneScraper
+from .talentmate import TalentmateScraper
 from .weworkremotely import WeWorkRemotelyScraper
 from .working_nomads import WorkingNomadsScraper
 from .xing import XingScraper
@@ -28,6 +29,7 @@ REGISTRY: dict[str, BaseScraper] = {
     "freelance_de":   FreelanceDeScraper(),
     "indeed":         IndeedScraper(),
     "stepstone":      StepstoneScraper(),
+    "talentmate":     TalentmateScraper(),
     "xing":           XingScraper(),
     "linkedin":       LinkedInScraper(),
     "remotive":       RemotiveScraper(),
