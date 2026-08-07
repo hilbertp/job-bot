@@ -94,6 +94,25 @@ class EnrichmentConfig(BaseModel):
     per_run_cap: int = 100
 
 
+class AlertsConfig(BaseModel):
+    """Job-alert email ingestion.
+
+    The sanctioned route into boards that forbid crawling (bayt.com,
+    freelance.de): the board runs the saved search itself and emails the
+    matches, and `jobbot scan-alerts` reads them over IMAP, read-only.
+
+    `senders` are substrings matched against the From address; empty means
+    "every board the parsers know about". `mailbox` picks which credentials
+    to use: "gmail" (the personal address board accounts are registered
+    with) or "truenorth" (the outbound business mailbox).
+    """
+    enabled: bool = False
+    mailbox: str = "gmail"
+    folder: str = "INBOX"
+    lookback_days: int = 3
+    senders: list[str] = Field(default_factory=list)
+
+
 class PublishConfig(BaseModel):
     """Static-site publishing (GitHub Pages) + local Downloads export.
 
@@ -214,6 +233,7 @@ class Config(BaseModel):
     captcha: CaptchaConfig = Field(default_factory=CaptchaConfig)
     enrichment: EnrichmentConfig = Field(default_factory=EnrichmentConfig)
     publish: PublishConfig = Field(default_factory=PublishConfig)
+    alerts: AlertsConfig = Field(default_factory=AlertsConfig)
 
 
 def load_secrets(env_file: Path | None = None) -> Secrets:
