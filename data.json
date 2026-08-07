@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-07T11:40:06.287545+00:00",
+  "generated_at": "2026-08-07T12:02:06.551717+00:00",
   "jobs": [
     {
       "id": "freelancermap_a5908b76d8e20699",
@@ -2724,6 +2724,16 @@
   ],
   "runs": [
     {
+      "id": 340,
+      "started_at": "2026-08-07T12:00:01.371423+00:00",
+      "finished_at": "2026-08-07T12:02:06.510188+00:00",
+      "n_fetched": 257,
+      "n_new": 3,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
       "id": 339,
       "started_at": "2026-08-07T11:38:37.775200+00:00",
       "finished_at": "2026-08-07T11:40:06.257306+00:00",
@@ -2850,16 +2860,6 @@
       "n_fetched": 265,
       "n_new": 20,
       "n_generated": 3,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 326,
-      "started_at": "2026-08-05T05:00:02.346343+00:00",
-      "finished_at": "2026-08-05T05:05:02.187446+00:00",
-      "n_fetched": 234,
-      "n_new": 29,
-      "n_generated": 2,
       "n_applied": 0,
       "n_errors": 1
     }
