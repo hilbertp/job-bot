@@ -116,6 +116,16 @@ _SENIOR_TITLE_RE = re.compile(
     r"\b(senior|sr\.?|lead|staff|principal|head|director|chief|vp)\b",
     re.IGNORECASE,
 )
+# Explicit full-remote phrases; a bare "remote" is too weak to override an
+# excluded location (it matches "remote team", "remote-friendly culture").
+_REMOTE_STRONG_RE = re.compile(
+    r"(fully[\s-]*remote|100\s*%\s*remote|remote[\s-]*first|"
+    r"work\s+from\s+anywhere|from\s+anywhere\s+in\s+the\s+world|"
+    r"telecommut\w*|remote\s*\(\s*(?:global|worldwide|anywhere)|"
+    r"vollst[aä]ndig\s+remote|komplett\s+remote|100\s*%\s*homeoffice)",
+    re.IGNORECASE,
+)
+_HYBRID_RE = re.compile(r"\bhybrid\w*\b", re.IGNORECASE)
 
 
 def _contains_keyword(text: str, keyword: str) -> bool:
@@ -150,11 +160,41 @@ def _parse_score_json(text: str) -> dict:
     return data
 
 
+def _is_fully_remote(text: str) -> bool:
+    """Whether a posting explicitly advertises full remote work.
+
+    Deliberately demands an explicit phrase rather than a bare "remote":
+    this only ever RESCUES a posting from the excluded-location gate, so a
+    missed signal costs one wasted scoring call while a false positive would
+    put an on-site role in a no-go country on the shortlist. "hybrid"
+    disqualifies, because hybrid means being in commuting distance.
+    """
+    if _HYBRID_RE.search(text):
+        return False
+    return bool(_REMOTE_STRONG_RE.search(text))
+
+
 def passes_heuristic(job: JobPosting, profile: Profile) -> tuple[bool, str]:
     """Cheap, no-LLM filter. Returns (passes, reason_if_not)."""
     title_lower = (job.title or "").lower()
     text = ((job.description or "") + " " + (job.title or "")).lower()
     title_is_senior = bool(_SENIOR_TITLE_RE.search(job.title or ""))
+
+    # Excluded locations: countries/cities the candidate will not move to.
+    # Matched against the posting's LOCATION only, never the body, so a role
+    # in Dubai that happens to mention a Bangalore office is not dropped.
+    # Fully-remote postings are exempt: the objection is to living there,
+    # not to the employer's address. Runs 342-345 spent ~127 detail fetches
+    # and scoring calls per sweep on Indian on-site roles before this gate.
+    excluded = profile.preferences.get("excluded_locations") or []
+    location = (job.location or "").lower()
+    if excluded and location:
+        for entry in excluded:
+            needle = (entry or "").strip().lower()
+            if needle and _contains_keyword(location, needle):
+                if _is_fully_remote(text):
+                    break
+                return False, f"excluded location: {entry} (not fully remote)"
 
     # Deal-breaker keywords. Seniority-related keywords are scoped to the title
     # only when the title signals a senior+ role, see _SENIORITY_DEAL_BREAKERS.

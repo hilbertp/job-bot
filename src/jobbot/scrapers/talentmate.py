@@ -5,9 +5,17 @@ permissive (`User-agent: * / Disallow:` plus a sitemap), the search page needs
 no JavaScript, and `?search=<kw>&page=<n>` pages cleanly at 20 cards per page
 with no overlap between pages.
 
-Coverage note: the Gulf market is the reason this source exists. A bare
-`?search=product manager` already returns Dubai / Abu Dhabi roles first, so we
-do not pin a country path (`/jobs/uae/jobs-in-Dubai`) and keep the wider net.
+Coverage note, corrected 2026-08-08: an unpinned `?search=product manager`
+looks Gulf-heavy on page 1 and is not. Measured over 137 ingested rows it was
+35 Bengaluru, 20 Mumbai, 15 Hyderabad, 12 Chennai and only 10 UAE, i.e. we
+paid a detail fetch and a scoring call for ~127 postings in a country the
+candidate will not move to. Queries therefore pin a country
+(`/jobs/<country>?search=<kw>`), which returns 20 clean UAE cards, twice the
+UAE yield of three unpinned pages at a sixth of the cost.
+
+Paging is IGNORED on the country-scoped path: `&page=2` and `&page=3` return
+the same 20 cards as page 1 (verified). Coverage therefore comes from running
+several keyword variants, exactly as it does for brainville.
 
 Company names are NOT on the cards: every card renders the portal itself
 ("Talentmate") as the poster, so we hand the pipeline the "(see posting)"
@@ -97,22 +105,35 @@ class TalentmateScraper(BaseScraper):
     source = "talentmate"
 
     def fetch(self, query: SearchQuery) -> list[JobPosting]:
-        """query example: {"q": "product manager"}"""
+        """query example: {"q": "product manager", "country": "uae"}
+
+        `country` pins the search to one market. Omit it only when you
+        genuinely want every country, and note that paging is available only
+        on the unpinned path.
+        """
         keywords = (query.get("q") or "product manager").strip()
+        country = (query.get("country") or "").strip().lower()
+        search_url = f"{_SEARCH_URL}/{country}" if country else _SEARCH_URL
+        # Country-scoped search ignores &page; a single request is the whole
+        # result set. Asking for more pages would just re-ingest page 1.
+        max_pages = 1 if country else _MAX_PAGES
         out: list[JobPosting] = []
         seen: set[str] = set()
 
-        for page in range(1, _MAX_PAGES + 1):
-            params = {"search": keywords, "page": page}
+        for page in range(1, max_pages + 1):
+            params = {"search": keywords}
+            if not country:
+                params["page"] = page
             try:
                 r = httpx.get(
-                    _SEARCH_URL, params=params,
+                    search_url, params=params,
                     headers={"User-Agent": _UA, "Accept-Language": "en-US,en;q=0.9"},
                     timeout=20.0, follow_redirects=True,
                 )
                 r.raise_for_status()
             except Exception as exc:
-                log.warning("talentmate_fetch_failed", error=str(exc), page=page)
+                log.warning("talentmate_fetch_failed", error=str(exc), page=page,
+                            country=country or "all")
                 break
 
             cards = HTMLParser(r.text).css("div.job-details")
@@ -153,7 +174,8 @@ class TalentmateScraper(BaseScraper):
             if page_new == 0:
                 break
 
-        log.info("talentmate_fetched", n=len(out), q=keywords)
+        log.info("talentmate_fetched", n=len(out), q=keywords,
+                 country=country or "all")
         return out
 
     def fetch_detail(self, job: "JobPosting") -> JobPosting | None:

@@ -87,6 +87,45 @@ def test_fetch_parses_cards_and_pages(monkeypatch, scraper):
     assert len({j.id for j in jobs}) == 2
 
 
+def test_country_query_pins_the_path_and_makes_one_request(monkeypatch, scraper):
+    """Unpinned search returned 127 Indian rows per 137 (measured), and the
+    country path ignores &page, so it must be one request to /jobs/<country>
+    with no page param."""
+    calls = []
+
+    def fake_get(url, params=None, **kw):
+        calls.append((url, dict(params or {})))
+        return _Resp(_page([_CARD.format(
+            url="https://www.talentmate.com/jobs/uae/dubai/pm/2608-1",
+            title="Product Manager", loc="Dubai", posted="07 Aug 2026")]))
+
+    monkeypatch.setattr("jobbot.scrapers.talentmate.httpx.get", fake_get)
+    jobs = scraper.fetch({"q": "product manager", "country": "uae"})
+
+    assert len(calls) == 1, "country path ignores paging; one request only"
+    url, params = calls[0]
+    assert url == "https://www.talentmate.com/jobs/uae"
+    assert params == {"search": "product manager"}
+    assert "page" not in params
+    assert len(jobs) == 1
+
+
+def test_unpinned_query_still_pages(monkeypatch, scraper):
+    calls = []
+    monkeypatch.setattr(
+        "jobbot.scrapers.talentmate.httpx.get",
+        lambda url, params=None, **kw: (
+            calls.append((url, dict(params or {}))),
+            _Resp(_page([_CARD.format(
+                url=f"https://www.talentmate.com/jobs/uae/dubai/pm/2608-{len(calls)}",
+                title="Product Manager", loc="Dubai", posted="07 Aug 2026")])),
+        )[1],
+    )
+    scraper.fetch({"q": "product manager"})
+    assert [c[0] for c in calls] == ["https://www.talentmate.com/jobs"] * 3
+    assert [c[1]["page"] for c in calls] == [1, 2, 3]
+
+
 def test_duplicate_cards_are_deduped(monkeypatch, scraper):
     """Each posting is linked twice in the real markup (card + title)."""
     card = _CARD.format(url="https://www.talentmate.com/jobs/uae/dubai/pm/2608-9",
