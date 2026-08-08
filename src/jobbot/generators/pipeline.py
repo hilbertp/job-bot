@@ -539,6 +539,55 @@ def _trust_anchor_line(profile: Profile) -> str | None:
     return " · ".join(f"[{label}]({url})" for label, url in entries)
 
 
+_PREAMBLE_MAX_LINES = 12
+
+
+def _strip_llm_preamble(md: str) -> str:
+    """Drop conversational chatter the model emitted before the document.
+
+    The claude_cli backend is an agentic harness, not a bare text endpoint,
+    so it sometimes narrates before complying. Measured 2026-08-08, a real
+    package began with "The session doesn't have file-write permissions
+    granted yet. Here is the complete application package as rendered
+    Markdown:" and that sentence was rendered INTO application_package.pdf,
+    the file the email channel attaches to an employer.
+
+    It also broke the hero extraction (which anchors at the start of the
+    string), so the standalone cv.md lost its name and contact line and
+    opened cold at "## Bearing".
+
+    Only leading lines are considered, and only when a markdown H1 follows
+    within `_PREAMBLE_MAX_LINES`, so a document that legitimately starts
+    with body text is left untouched.
+    """
+    lines = md.lstrip().splitlines()
+    for i, raw in enumerate(lines[:_PREAMBLE_MAX_LINES]):
+        if raw.lstrip().startswith("# "):
+            return "\n".join(lines[i:]).strip() if i else md.strip()
+    return md.strip()
+
+
+# Em-dashes and en-dashes read as an "AI-written" tell, so no generated
+# artefact may carry them. The base CV has zero; the model reintroduces
+# them (6 in one measured cv.md), which is why this is enforced in code
+# rather than by review.
+_EM_DASH_RE = re.compile(r"\s*[—–]\s*")
+
+
+def _scrub_ai_tells(md: str) -> str:
+    """Replace em/en dashes with the comma-and-space the CV's own voice uses.
+
+    Fenced code blocks are left alone: a dash inside a snippet is data, not
+    prose. Nothing else about the text is altered.
+    """
+    parts = re.split(r"(```.*?```)", md, flags=re.DOTALL)
+    for i, part in enumerate(parts):
+        if part.startswith("```"):
+            continue
+        parts[i] = _EM_DASH_RE.sub(", ", part)
+    return "".join(parts)
+
+
 def _inject_trust_anchors(cv_md: str, profile: Profile) -> str:
     """Make LinkedIn / GitHub / personal-site links prominently visible at
     BOTH the top (right after the H1 header block) and the bottom of every
@@ -599,7 +648,12 @@ def _extract_hero(package_md: str) -> str:
     artefact the same opus visual signature as the unified package.
     """
     # Take from the first `# ` H1 line up to the line BEFORE the first `## ` H2.
-    m = re.match(r"\A\s*(#\s+[^\n]+\n+.*?)(?=^##\s)", package_md, re.DOTALL | re.MULTILINE)
+    # SEARCH rather than match-from-start: `_inject_trust_anchors` puts an
+    # anchor line above the hero, and model preambles used to sit there too,
+    # either of which silently returned "" and cost cv.md its name + contact
+    # line (measured 2026-08-08).
+    m = re.search(r"(^#\s+[^\n]+\n+.*?)(?=^##\s)", package_md,
+                  re.DOTALL | re.MULTILINE)
     if not m:
         return ""
     hero = m.group(1).rstrip()
@@ -703,6 +757,10 @@ def generate_application_package(
         secrets, package_prompt, payload,
         run_id=run_id, phase="generate_application_package", job_id=job.id,
     )
+    # Hygiene BEFORE anything parses or renders this: strip the model's
+    # conversational preamble (it has shipped into a sendable PDF) and the
+    # em-dashes it likes to add (the base CV has none).
+    package_md = _scrub_ai_tells(_strip_llm_preamble(package_md))
     # Pin trust anchors top + bottom so the band is guaranteed regardless of
     # what the LLM emitted in the hero block.
     package_md = _inject_trust_anchors(package_md, profile)
@@ -823,6 +881,7 @@ def generate_documents(
         secrets, cv_prompt, payload,
         run_id=run_id, phase="generate_cv", job_id=job.id,
     )
+    cv_md = _scrub_ai_tells(_strip_llm_preamble(cv_md))
     # Pin LinkedIn / GitHub / personal-site links visibly at top + bottom of
     # every tailored CV. Done post-LLM so the bands are guaranteed regardless
     # of what the model chose to keep from the base CV's header.
@@ -831,6 +890,7 @@ def generate_documents(
         secrets, cl_prompt, payload,
         run_id=run_id, phase="generate_cover_letter", job_id=job.id,
     )
+    cl_md = _scrub_ai_tells(_strip_llm_preamble(cl_md))
 
     out_root = REPO_ROOT / config.output_dir / date.today().isoformat()
     job_dir = out_root / f"{job.source}__{_slug(job.company)}__{_slug(job.title)}"
