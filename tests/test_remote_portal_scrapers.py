@@ -123,9 +123,12 @@ def test_nodesk_fetch_parses_feed_and_filters(monkeypatch):
             summary="",
         ),
     ])
+    # Seam moved from `feedparser.parse` to `base.fetch_feed`: feeds are now
+    # fetched by httpx with a hard timeout, because feedparser's own urllib
+    # fetch has none and hung a run for 32 hours. Assertions unchanged.
     monkeypatch.setattr(
-        "jobbot.scrapers.nodesk.feedparser.parse",
-        lambda url: fake_feed,
+        "jobbot.scrapers.nodesk.fetch_feed",
+        lambda *a, **k: fake_feed,
     )
 
     all_jobs = scraper.fetch({"q": ""})

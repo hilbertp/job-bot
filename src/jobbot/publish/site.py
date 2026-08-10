@@ -334,6 +334,9 @@ tr:last-child td { border-bottom: none; }
 #ar-ticker .tick.hit { background: rgba(63, 185, 111, 0.14); color: var(--good); }
 #ar-ticker .tick.hit b { color: var(--good); }
 #ar-fails { margin-top: 8px; font-size: 12.5px; color: var(--mid); }
+#ar-stuck { margin-top: 10px; padding: 8px 11px; border-radius: 8px;
+  font-size: 12.5px; font-weight: 550; color: var(--mid);
+  background: rgba(191, 135, 0, 0.12); }
 @media (prefers-reduced-motion: reduce) {
   .bar i { transition: none; }
 }
@@ -659,6 +662,17 @@ _PAGE_JS = """
     const m = Math.round((t1 - t0) / 60000);
     return m < 1 ? '<1 min' : m + ' min';
   }
+  function renderStuckWarning(d) {
+    // Only speak up once the stall is longer than any healthy run (90 min
+    // is the record), so a slow-but-working run is not called stuck.
+    const el = document.getElementById('ar-stuck');
+    const h = Number(d.stuck_for_hours);
+    if (!d.stale_run_id || !(h >= 3)) { el.hidden = true; return; }
+    el.textContent = 'run #' + d.stale_run_id + ' has been stuck for '
+      + Math.round(h) + 'h and is blocking every scheduled run behind it.'
+      + ' Kill it on the host, then press Run now.';
+    el.hidden = false;
+  }
   function renderTicker(meta2, emeta) {
     const strong = document.getElementById('ar-strong');
     const ticker = document.getElementById('ar-ticker');
@@ -742,7 +756,14 @@ _PAGE_JS = """
         if (d.active) { renderActiveRun(d.run); arSchedule(5000); }
         // Idle: keep the last finished run on screen instead of hiding
         // the panel at the exact moment it has the most to say.
-        else if (d.last_run) { renderActiveRun(d.last_run, true); arSchedule(30000); }
+        else if (d.last_run) {
+          renderActiveRun(d.last_run, true);
+          // A wedged run holds the single-run lock, so every scheduled run
+          // behind it is skipped. Showing only the last good run made a
+          // 32-hour stall look like a quiet day.
+          renderStuckWarning(d);
+          arSchedule(30000);
+        }
         else { arPanel.hidden = true; arSchedule(60000); }
       })
       .catch(function () { arPanel.hidden = true; arSchedule(120000); });
@@ -978,6 +999,7 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
     <div class="meta" id="ar-current" style="margin-top:8px"></div>
     <div id="ar-strong" hidden></div>
     <div id="ar-ticker" hidden></div>
+    <div id="ar-stuck" hidden></div>
     <div id="ar-fails" hidden></div>
   </div>
   <div class="statbar">

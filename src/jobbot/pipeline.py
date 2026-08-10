@@ -71,6 +71,36 @@ def _is_recent_posting(
     return posted_at >= now - timedelta(days=max_age_days)
 
 
+#
+
+# A run that outlives this is stuck, not busy: the longest healthy run on
+# record is 90 minutes.
+STUCK_RUN_AFTER_H = 3.0
+
+
+def _lock_holder_age(lock_path: Path) -> dict[str, Any]:
+    """Describe the process holding the run lock, for the skip log line.
+
+    The lock file carries "<pid> <iso timestamp>" written by the holder.
+    Returns pid / age_hours / stuck so one grep answers "is a run wedged?".
+    """
+    info: dict[str, Any] = {"holder_pid": None, "holder_age_hours": None,
+                            "holder_stuck": False}
+    try:
+        raw = lock_path.read_text().split()
+        if len(raw) >= 2:
+            info["holder_pid"] = raw[0]
+            started = datetime.fromisoformat(raw[1])
+            if started.tzinfo is None:
+                started = started.replace(tzinfo=timezone.utc)
+            hours = (datetime.now(tz=timezone.utc) - started).total_seconds() / 3600
+            info["holder_age_hours"] = round(hours, 1)
+            info["holder_stuck"] = hours > STUCK_RUN_AFTER_H
+    except Exception:
+        pass
+    return info
+
+
 @contextmanager
 def _single_run_lock() -> Any:
     """Refuse to start a second pipeline run while one is in flight.
@@ -89,6 +119,14 @@ def _single_run_lock() -> Any:
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:
+            # The holder may be hung rather than working. Run 347 blocked on
+            # an RSS fetch with no timeout and held this lock for 32 hours,
+            # so the eight scheduled runs behind it each logged one quiet
+            # "already running" line and did nothing, while the dashboard
+            # kept showing two-day-old results as if all were well. Say
+            # loudly how old the holder is so a stuck run is visible in the
+            # logs of every run it blocks.
+            log.warning("run_skipped_already_running", **_lock_holder_age(lock_path))
             yield False
             return
         os.ftruncate(fd, 0)
