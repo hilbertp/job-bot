@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-10T12:00:05.398742+00:00",
+  "generated_at": "2026-08-10T13:03:53.548763+00:00",
   "jobs": [
     {
       "id": "freelancermap_a5908b76d8e20699",
@@ -1292,23 +1292,6 @@
       "posted_at": "2026-08-03T16:04:06+00:00",
       "apply_route": "missing",
       "apply_target": null,
-      "documents": []
-    },
-    {
-      "id": "stepstone_6e77de93825f80ee",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-Data-Analytics-Marketing-Technology-m-w-d-Berlin-VGL-Publishing-AG--14346950-inline.html",
-      "title": "Product Owner - Data & Analytics / Marketing Technology (m/w/d)",
-      "company": "VGL Publishing AG",
-      "location": "Berlin",
-      "salary": null,
-      "score": 78,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-08-03T12:00:53.567061+00:00",
-      "posted_at": "2026-07-31T16:33:02.857000+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.stepstone.de/stellenangebote--Product-Owner-Data-Analytics-Marketing-Technology-m-w-d-Berlin-VGL-Publishing-AG--14346950-inline.html",
       "documents": []
     },
     {
