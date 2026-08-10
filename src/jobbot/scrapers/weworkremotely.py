@@ -1,12 +1,11 @@
 """weworkremotely.com, official RSS per category. Easiest source; start here."""
 from __future__ import annotations
 
-import feedparser
 import httpx
 from selectolax.parser import HTMLParser
 
 from ..models import JobPosting
-from .base import BaseScraper, SearchQuery, parse_posted_at, stable_id
+from .base import BaseScraper, SearchQuery, fetch_feed, parse_posted_at, stable_id
 
 
 class WeWorkRemotelyScraper(BaseScraper):
@@ -16,7 +15,8 @@ class WeWorkRemotelyScraper(BaseScraper):
         # query example: {"category": "remote-programming-jobs"}
         category = query.get("category", "remote-programming-jobs")
         url = f"https://weworkremotely.com/categories/{category}.rss"
-        feed = feedparser.parse(url)
+        # Timeout-bounded: a bare feedparser.parse(url) hung run 347 for 32h.
+        feed = fetch_feed(url)
         out: list[JobPosting] = []
         for e in feed.entries:
             link = e.link

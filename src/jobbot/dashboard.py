@@ -491,7 +491,17 @@ def api_active_run():
     if last_activity is None or (now - last_activity).total_seconds() > _ACTIVE_RUN_STALE_S:
         with connect() as conn:
             last_run = _last_finished(conn)
+        # A run row that is unfinished but silent is WEDGED, and while it
+        # holds the single-run lock every scheduled run behind it is skipped.
+        # Run 347 sat like this for 32 hours while the panel cheerfully
+        # showed run 346's results, so report it instead of hiding it.
+        stuck_for_h = None
+        if last_activity is not None:
+            stuck_for_h = round((now - last_activity).total_seconds() / 3600, 1)
         return jsonify({"active": False, "stale_run_id": row[0],
+                        "stuck_since": (last_activity.isoformat()
+                                        if last_activity else None),
+                        "stuck_for_hours": stuck_for_h,
                         "last_run": last_run})
 
     return jsonify({

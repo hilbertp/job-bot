@@ -8,13 +8,12 @@ from __future__ import annotations
 
 import time
 
-import feedparser
 import httpx
 import structlog
 from selectolax.parser import HTMLParser
 
 from ..models import JobPosting
-from .base import BaseScraper, SearchQuery, parse_posted_at, stable_id
+from .base import BaseScraper, SearchQuery, fetch_feed, parse_posted_at, stable_id
 
 log = structlog.get_logger()
 
@@ -43,7 +42,8 @@ class NoDeskScraper(BaseScraper):
         # query example: {"q": "product"}, case-insensitive substring filter on
         # the title. Empty query returns every feed item.
         needle = (query.get("q") or "").strip().lower()
-        feed = feedparser.parse(_FEED_URL)
+        # Timeout-bounded: feedparser's own urllib fetch has no timeout.
+        feed = fetch_feed(_FEED_URL)
         out: list[JobPosting] = []
         for e in feed.entries:
             link = getattr(e, "link", "") or ""

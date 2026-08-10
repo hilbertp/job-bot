@@ -7,7 +7,11 @@ import time as _time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Protocol
 
+import structlog
+
 from ..models import JobPosting
+
+log = structlog.get_logger()
 
 
 SearchQuery = dict[str, Any]
@@ -37,6 +41,35 @@ class ListingGone(Exception):
 def stable_id(source: str, url: str) -> str:
     h = hashlib.sha1(f"{source}::{url}".encode()).hexdigest()
     return f"{source}_{h[:16]}"
+
+
+# Feed fetches MUST go through here, never `feedparser.parse(<url>)`.
+# feedparser does its own fetch with urllib, which has NO default timeout, so
+# a server that accepts the connection and then never answers hangs the whole
+# run forever. That is not hypothetical: run 347 blocked on the
+# weworkremotely RSS feed at 2026-08-09 08:42 and was still blocked 32 hours
+# later, holding the single-run lock, so all eight scheduled runs after it
+# were skipped and the dashboard sat on two-day-old data.
+FEED_TIMEOUT_S = 20.0
+
+
+def fetch_feed(url: str, *, timeout: float = FEED_TIMEOUT_S, headers: dict | None = None):
+    """Fetch an RSS/Atom feed with a hard timeout, then parse the bytes.
+
+    Returns the parsed feedparser result, or a result with no entries when the
+    fetch fails, so callers keep their "return [] on failure" contract.
+    """
+    import feedparser  # local import: keeps this module importable without it
+    import httpx
+
+    try:
+        r = httpx.get(url, timeout=timeout, follow_redirects=True,
+                      headers=headers or {})
+        r.raise_for_status()
+    except Exception as exc:
+        log.warning("feed_fetch_failed", url=url, error=str(exc))
+        return feedparser.parse(b"")
+    return feedparser.parse(r.content)
 
 
 # Relative-date phrase units, English + German, mapped to a timedelta kind.
