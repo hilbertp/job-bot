@@ -113,7 +113,13 @@ def _single_run_lock() -> Any:
 
     Yields True when the lock was acquired, False when another run holds it.
     """
-    lock_path = Path(tempfile.gettempdir()) / "jobbot-run.lock"
+    # Overridable so the test suite never shares the production lock. Without
+    # this, running pytest while a real run is in flight made 18 pipeline
+    # tests fail: run_once() saw the live run's lock, returned
+    # "already running", and every assertion about scored rows came up empty.
+    # A red suite that depends on the time of day is worse than no suite.
+    lock_path = Path(os.environ.get("JOBBOT_RUN_LOCK_DIR")
+                     or tempfile.gettempdir()) / "jobbot-run.lock"
     fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR, 0o644)
     try:
         try:

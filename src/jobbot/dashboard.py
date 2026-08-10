@@ -421,7 +421,8 @@ def _cors_for_pages_trigger(resp):
     local endpoint. Scoped to the one trigger route and to the exact
     Pages origin; includes the Private Network Access preflight header
     Chromium requires for public-site -> localhost requests."""
-    if request.path in ("/api/runs/trigger", "/api/runs/active"):
+    if request.path in ("/api/runs/trigger", "/api/runs/active",
+                        "/api/runs/stop"):
         allowed = _pages_origin()
         if allowed and request.headers.get("Origin") == allowed:
             resp.headers["Access-Control-Allow-Origin"] = allowed
@@ -513,6 +514,39 @@ def api_active_run():
             "stages": stages,
         },
     })
+
+
+@app.route("/api/runs/stop", methods=["POST", "OPTIONS"])
+def api_stop_active_run():
+    """Stop the newest in-progress run, no run id needed.
+
+    The static Pages dashboard cannot know the run id, and asking the user to
+    find it defeats the purpose of a kill switch. The run notices at its next
+    checkpoint (between items) via `wait_while_paused` and unwinds cleanly,
+    which is why this reports "stopping" rather than claiming it is stopped:
+    a long LLM call in flight has to return first. That honesty matters more
+    than a satisfying button.
+    """
+    if request.method == "OPTIONS":
+        return "", 204
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT id FROM runs WHERE finished_at IS NULL"
+            " ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+        if row is None:
+            return jsonify({"ok": False, "status": "no_active_run"}), 409
+        run_id = row[0]
+        reason = "stopped from the published dashboard"
+        # Both, exactly as the local control route does: the control state is
+        # what a LIVE loop notices at its next checkpoint, and marking the row
+        # finished is what clears a run whose process is already wedged (run
+        # 347 sat unfinished for 32 hours). Without the second call the kill
+        # switch would be useless in the case it is needed most.
+        request_run_control(conn, run_id, "stopped", reason=reason)
+        mark_run_stopped(conn, run_id, reason=reason)
+        conn.commit()
+    return jsonify({"ok": True, "status": "stopping", "run_id": run_id})
 
 
 @app.route("/api/runs/trigger", methods=["POST", "OPTIONS"])

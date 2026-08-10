@@ -225,6 +225,13 @@ a:hover { text-decoration: underline; }
   font-family: inherit; }
 .btn:hover { filter: brightness(1.12); }
 .btn:disabled { opacity: 0.55; cursor: default; filter: none; }
+/* Stop is destructive-adjacent, so it reads as a secondary action: outlined
+   in the warning hue rather than a second filled button competing with
+   "Run now". It only exists while a run is live. */
+.btn-stop { background: transparent; color: var(--mid);
+  border: 1px solid color-mix(in oklab, var(--mid) 60%, transparent); }
+.btn-stop:hover { background: color-mix(in oklab, var(--mid) 12%, transparent);
+  filter: none; }
 .statbar { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 0;
   background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
   padding: 12px 16px; margin-bottom: 10px; }
@@ -267,6 +274,22 @@ th .grip { position: absolute; top: 0; right: 0; width: 8px; height: 100%;
 th .grip:hover, th .grip.active { background: var(--accent); opacity: 0.45; }
 table.resized { table-layout: fixed; }
 table.resized td { overflow: hidden; text-overflow: ellipsis; }
+/* Row height is the scanning budget. A long title used to stack five lines
+   and a comma-run location refused to wrap, so rows grew to ~140px and the
+   table stopped being scannable. Clamp both to two lines; the full value is
+   on the cell's title attribute and in data.json. */
+/* Clamp the TEXT, never the cell: `display: -webkit-box` on a <td> stops it
+   being a table cell, which collapses the column to one character per line.
+   Learned the hard way on this table. */
+.titlelink, .loctext, .cname { display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+/* A recruiter's legal name can run 60 characters ("Halian | Managed Services,
+   Recruitment Agency & Contract Staffing"); clamped like everything else,
+   full value on hover. */
+/* Give the two text-heavy columns a sane share instead of letting content
+   dictate it: without this, one 90-character location starves the title. */
+th:nth-child(2), td:nth-child(2) { width: 26%; }
+th:nth-child(3), td:nth-child(3) { width: 16%; }
 tr:last-child td { border-bottom: none; }
 .badge { display: inline-block; min-width: 38px; text-align: center; padding: 2px 8px;
   border-radius: 999px; font-weight: 650; font-size: 13px; }
@@ -301,6 +324,45 @@ tr:last-child td { border-bottom: none; }
   animation: ar-pulse 1.4s cubic-bezier(0.25, 1, 0.5, 1) infinite; }
 #ar-dot.stalled { background: var(--mid); animation: none; }
 #ar-dot.done { background: var(--good); animation: none; }
+/* A run takes up to 90 minutes and the user switches to another tab while it
+   works, so "in flight" has to be legible from the tab strip and from
+   peripheral vision, not only when the panel is being read. Three layers:
+   this viewport rail, the panel's live treatment below, and the tab title. */
+#run-rail { position: fixed; inset: 0 0 auto 0; height: 3px; z-index: 60;
+  background: color-mix(in oklab, var(--accent) 18%, transparent); }
+#run-rail i { display: block; height: 100%; width: 0%; background: var(--accent);
+  transition: width 400ms cubic-bezier(0.25, 1, 0.5, 1); }
+/* A stage that has just started sits at 0%, which would render an invisible
+   rail: the loudest signal would vanish exactly when a long stage begins.
+   Slide a short segment instead, so "starting" still reads as "running". */
+#run-rail.indeterminate i { width: 28%;
+  animation: rail-travel 1.9s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+@keyframes rail-travel { from { transform: translateX(-100%); }
+  to { transform: translateX(360%); } }
+/* Live panel: distinct surface + border, so a running run never reads the
+   same as a finished one. Full border, never a side stripe. */
+#active-run.live { border-color: color-mix(in oklab, var(--accent) 55%, var(--line));
+  background: color-mix(in oklab, var(--accent) 5%, var(--panel)); }
+#active-run.live h2 { font-size: 15px; }
+#active-run .runstate { font-weight: 650; color: var(--accent); }
+#active-run.live #ar-elapsed { font-variant-numeric: tabular-nums; }
+/* The count can sit still for minutes (7s per posting when scoring, longer
+   when tailoring), so the active bar carries a moving sheen: it says "alive"
+   exactly where the number cannot. */
+.bar.working i { position: relative; overflow: hidden; }
+.bar.working i::after { content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent,
+    color-mix(in oklab, var(--text) 45%, transparent), transparent);
+  animation: bar-sheen 1.6s ease-in-out infinite; }
+@keyframes bar-sheen { from { transform: translateX(-100%); }
+  to { transform: translateX(200%); } }
+@media (prefers-reduced-motion: reduce) {
+  .bar.working i::after { animation: none;
+    background: color-mix(in oklab, var(--text) 22%, transparent); }
+  #run-rail i { transition: none; }
+  /* Hold a visible sliver rather than sliding it. */
+  #run-rail.indeterminate i { animation: none; width: 12%; }
+}
 #active-run .stalled-note { color: var(--mid); font-weight: 550; }
 @keyframes ar-pulse {
   0% { box-shadow: 0 0 0 0 rgba(63, 185, 111, 0.45); }
@@ -467,7 +529,50 @@ _PAGE_JS = """
       ? clock
       : d.toLocaleDateString([], {month: 'short', day: 'numeric'}) + ' ' + clock;
   }
+  // Peripheral + out-of-tab signals for an in-flight run. The rail shows the
+  // ACTIVE stage's progress, not a synthesised whole-run percentage: stages
+  // are wildly unequal (35 searches take a minute, 200 scoring calls take
+  // 25), so a single global number would be fiction. State honesty first.
+  const AR_BASE_TITLE = document.title;
+  let arTick = null;
+  function setRunSignals(stageLabel, done, total, startedAt) {
+    const rail = document.getElementById('run-rail');
+    const pct = total ? Math.min(100, Math.round(done / total * 100)) : 0;
+    // Below 2% a determinate rail is indistinguishable from an empty one, so
+    // fall back to the travelling segment until there is progress to show.
+    const vague = pct < 2;
+    rail.classList.toggle('indeterminate', vague);
+    rail.firstElementChild.style.width = vague ? '' : pct + '%';
+    rail.hidden = false;
+    document.title = '▶ ' + done + '/' + total + ' ' + stageLabel
+      + ' · ' + AR_BASE_TITLE;
+    clearInterval(arTick);
+    const el = document.getElementById('ar-elapsed');
+    const paint = function () {
+      const t0 = Date.parse(startedAt);
+      if (isNaN(t0)) { el.textContent = ''; return; }
+      const s = Math.max(0, Math.round((Date.now() - t0) / 1000));
+      const m = Math.floor(s / 60);
+      el.textContent = m >= 1 ? ' running ' + m + 'm ' + (s % 60) + 's'
+                              : ' running ' + s + 's';
+    };
+    paint();
+    arTick = setInterval(paint, 1000);
+    document.getElementById('run-stop').hidden = false;
+  }
+  function clearRunSignals() {
+    document.getElementById('run-rail').hidden = true;
+    document.getElementById('ar-elapsed').textContent = '';
+    document.title = AR_BASE_TITLE;
+    clearInterval(arTick);
+    arTick = null;
+    const stop = document.getElementById('run-stop');
+    stop.hidden = true;
+    stop.disabled = false;
+  }
   function renderActiveRun(run, finished) {
+    arPanel.classList.toggle('live', !finished);
+    if (finished) clearRunSignals();
     document.getElementById('ar-title').textContent =
       finished ? 'Last run' : 'Active run';
     document.getElementById('ar-id').textContent = '#' + run.id;
@@ -579,7 +684,9 @@ _PAGE_JS = """
       name.className = 'sname';
       name.textContent = STAGE_LABELS[stageName] || stageName;
       const bar = document.createElement('span');
-      bar.className = 'bar';
+      // `working` adds the moving sheen; only the stage actually in flight
+      // gets it, so the eye lands on where the run currently is.
+      bar.className = 'bar' + (isActive ? ' working' : '');
       const fill = document.createElement('i');
       fill.style.width = (total ? Math.min(100, Math.round(done / total * 100)) : 100) + '%';
       bar.appendChild(fill);
@@ -641,6 +748,10 @@ _PAGE_JS = """
             + ' already known, ' + (meta2.new_so_far || 0) + ' new';
           holder.appendChild(fr);
         }
+      }
+      if (isActive) {
+        setRunSignals(STAGE_LABELS[stageName] || stageName, done, total,
+                      run.started_at);
       }
       if (isActive && s.current_label) currentLabel = (STAGE_LABELS[stageName] || stageName) + ': ' + s.current_label;
       if (stageName === 'enrichment') enrichMeta = meta2;
@@ -764,9 +875,11 @@ _PAGE_JS = """
           renderStuckWarning(d);
           arSchedule(30000);
         }
-        else { arPanel.hidden = true; arSchedule(60000); }
+        else { clearRunSignals(); arPanel.hidden = true; arSchedule(60000); }
       })
-      .catch(function () { arPanel.hidden = true; arSchedule(120000); });
+      // Local dashboard unreachable: drop the rail and the tab-title marker
+      // rather than leaving a run that looks eternally in flight.
+      .catch(function () { clearRunSignals(); arPanel.hidden = true; arSchedule(120000); });
   }
   pollActiveRun();
   // "Run now": POST to the jobbot dashboard on the machine that runs the
@@ -795,6 +908,34 @@ _PAGE_JS = """
       .catch(function () {
         runStatus.textContent = 'local dashboard not reachable: open this page on the Mac running jobbot and make sure `jobbot dashboard` is running';
         runBtn.disabled = false;
+      });
+  });
+  // Kill switch. The pipeline checks for a stop request between items, so a
+  // long LLM call already in flight has to return first: the copy says
+  // "stopping" and stays until the panel reports the run finished, rather
+  // than claiming success the moment the POST returns.
+  const stopBtn = document.getElementById('run-stop');
+  stopBtn.addEventListener('click', function () {
+    stopBtn.disabled = true;
+    runStatus.textContent = 'asking the run to stop…';
+    fetch('http://127.0.0.1:5001/api/runs/stop', {method: 'POST'})
+      .then(function (r) { return r.json().then(function (d) { return {ok: r.ok, d: d}; }); })
+      .then(function (x) {
+        if (x.ok) {
+          runStatus.textContent = 'stopping after the current item finishes; '
+            + 'a scoring or tailoring call in flight can take a minute';
+          arSchedule(3000);
+        } else if (x.d && x.d.status === 'no_active_run') {
+          runStatus.textContent = 'no run is in progress';
+          stopBtn.hidden = true;
+        } else {
+          runStatus.textContent = 'stop request failed, check the local dashboard';
+          stopBtn.disabled = false;
+        }
+      })
+      .catch(function () {
+        runStatus.textContent = 'local dashboard not reachable, so the run cannot be stopped from here';
+        stopBtn.disabled = false;
       });
   });
   // Resizable columns: drag the right edge of any header cell.
@@ -833,6 +974,37 @@ _PAGE_JS = """
   apply();
 })();
 """
+
+
+_MAX_LOCATIONS_SHOWN = 2
+# "City, Region, Country" is ONE place, and that is how LinkedIn writes every
+# location ("Munich, Bavaria, Germany"). Only past three parts is a value
+# actually a LIST of sites, which is the case worth collapsing. Measured on
+# the live table: a 2-part threshold turned 89 ordinary rows into
+# "Munich, Bavaria +1 more", which is worse than the original.
+_HIERARCHY_MAX_PARTS = 3
+
+
+def _short_location(raw: str | None) -> str:
+    """Collapse a multi-SITE location list to the first sites plus a count.
+
+    German boards ship things like "Essen,Fürstenwalde/Spree,Hamburg,Hannover,
+    Helmstedt,Landshut,Potsdam,Regensburg" with no spaces after the commas, so
+    the browser finds no wrap opportunity, the cell refuses to narrow, and
+    every other column is squeezed until titles stack five lines deep and the
+    row grows to ~140px. Abbreviating keeps rows scannable; the full string
+    stays in the cell's title attribute and in data.json, so nothing is lost.
+    """
+    text = (raw or "").strip()
+    if not text:
+        return ""
+    parts = [p.strip() for p in text.split(",") if p.strip()]
+    if len(parts) <= _HIERARCHY_MAX_PARTS:
+        # One place, however it was punctuated. Re-join with spaces so the
+        # cell has somewhere to wrap even when the source had none.
+        return ", ".join(parts)
+    shown = ", ".join(parts[:_MAX_LOCATIONS_SHOWN])
+    return f"{shown} +{len(parts) - _MAX_LOCATIONS_SHOWN} more"
 
 
 def _score_badge(score: int | None) -> str:
@@ -894,10 +1066,12 @@ def _job_row_html(job: dict, now: datetime) -> str:
         f' data-tailored="{job["score_tailored"] or 0}"'
         f' data-company="{e((job["company"] or "").lower())}"'
         f' data-seen="{e(first_seen)}">'
-        f'<td>{e(job["company"])}<div class="src">{e(job["source"])}</div></td>'
+        f'<td><span class="cname" title="{e(job["company"])}">{e(job["company"])}</span>'
+        f'<div class="src">{e(job["source"])}</div></td>'
         f'<td><a class="titlelink" href="{e(job["url"])}" target="_blank"'
-        f' rel="noopener">{e(job["title"])}</a>{newpill}</td>'
-        f'<td>{e(job["location"] or "")}</td>'
+        f' rel="noopener" title="{e(job["title"])}">{e(job["title"])}</a>{newpill}</td>'
+        f'<td class="loc"><span class="loctext" title="{e(job["location"] or "")}">'
+        f'{e(_short_location(job["location"]))}</span></td>'
         f'<td>{e(job["salary"] or "")}</td>'
         f'<td>{_score_badge(job["score"])}</td>'
         f'<td>{_score_badge(job["score_tailored"])}</td>'
@@ -980,11 +1154,14 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
 <style>{_PAGE_CSS}</style>
 </head>
 <body>
+<div id="run-rail" hidden aria-hidden="true"><i></i></div>
 <main>
   <div class="header">
     <h1>{e(config.publish.site_title)}</h1>
     <span class="actions">
       <span id="run-now-status" class="meta"></span>
+      <button id="run-stop" class="btn btn-stop" type="button" hidden
+        title="Asks the running pipeline to stop at its next checkpoint">Stop run</button>
       <button id="run-now" class="btn" type="button"
         title="Starts a pipeline run on the Mac running jobbot (needs jobbot dashboard up)">Run now</button>
       <span class="meta">Generated {e(_fmt_ts(now.isoformat()))} UTC</span>
@@ -992,7 +1169,7 @@ def render_index_html(config: Config, jobs: list[dict], runs: list[dict],
   </div>
   <div id="active-run" hidden>
     <div class="arhead">
-      <h2><span id="ar-dot" class="running"></span><span id="ar-title">Active run</span> <span id="ar-id"></span></h2>
+      <h2><span id="ar-dot" class="running"></span><span id="ar-title">Active run</span> <span id="ar-id"></span><span id="ar-elapsed" class="runstate"></span></h2>
       <span class="meta" id="ar-meta"></span>
     </div>
     <div id="ar-stages"></div>
