@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-09T12:00:02.587650+00:00",
+  "generated_at": "2026-08-10T12:00:05.398742+00:00",
   "jobs": [
     {
       "id": "freelancermap_a5908b76d8e20699",
@@ -1958,57 +1958,6 @@
       "documents": []
     },
     {
-      "id": "xing_64394f7b8ed2d302",
-      "source": "xing",
-      "url": "https://www.xing.com/jobs/berlin-product-owner-data-analytics-marketing-technology-156940285",
-      "title": "Product Owner - Data & Analytics / Marketing Technology (m/w/d)",
-      "company": "Workwise GmbH",
-      "location": "Berlin,Karlsruhe,Hamburg,M\u00fcnchen,Leipzig,K\u00f6ln,Dresden,Hannover,Bremen,Stuttgart+ 0 weitere",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-08-03T11:54:13.832296+00:00",
-      "posted_at": "2026-08-03T11:34:14+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.xing.com/jobs/berlin-product-owner-data-analytics-marketing-technology-156940285",
-      "documents": []
-    },
-    {
-      "id": "xing_d577d0f37d15af8c",
-      "source": "xing",
-      "url": "https://www.xing.com/jobs/karlsruhe-senior-product-manager-cloud-services-saas-b2b-156940287",
-      "title": "Senior Product Manager - Cloud Services / SaaS / B2B (m/w/d)",
-      "company": "Workwise GmbH",
-      "location": "Karlsruhe+ 0 weitere",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-08-03T11:54:11.417171+00:00",
-      "posted_at": "2026-08-03T11:34:14+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.xing.com/jobs/karlsruhe-senior-product-manager-cloud-services-saas-b2b-156940287",
-      "documents": []
-    },
-    {
-      "id": "himalayas_c071fa98c5869512",
-      "source": "himalayas",
-      "url": "https://himalayas.app/companies/wing-assistant/jobs/product-manager-ai",
-      "title": "Product Manager, AI",
-      "company": "Wing Assistant",
-      "location": "Hong Kong",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-08-03T05:37:24.686219+00:00",
-      "posted_at": "2026-08-02T23:33:28",
-      "apply_route": "url",
-      "apply_target": "https://himalayas.app/companies/wing-assistant/jobs/product-manager-ai",
-      "documents": []
-    },
-    {
       "id": "stepstone_3d765462f87b4637",
       "source": "stepstone",
       "url": "https://www.stepstone.de/stellenangebote--Product-Owner-Software-Loesungen-m-w-d-Nuernberg-meinestadt-de--14377411-inline.html",
@@ -2482,23 +2431,6 @@
       "posted_at": "2026-08-03T18:17:42",
       "apply_route": "url",
       "apply_target": "https://himalayas.app/companies/tailscale/jobs/product-manager-tailscale-native-apps-4907139016",
-      "documents": []
-    },
-    {
-      "id": "free_work_e43e63faff22519c",
-      "source": "free_work",
-      "url": "https://www.free-work.com/fr/tech-it/job-mission/senior-data-platform-product-manager",
-      "title": "Senior Data Platform Product Manager",
-      "company": "JCW Search Ltd",
-      "location": "\u00cele-de-France, France (remote: partial)",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-08-03T09:32:09.257194+00:00",
-      "posted_at": "2026-08-03T10:25:33+02:00",
-      "apply_route": "url",
-      "apply_target": "https://www.free-work.com/fr/tech-it/job-mission/senior-data-platform-product-manager",
       "documents": []
     }
   ],
