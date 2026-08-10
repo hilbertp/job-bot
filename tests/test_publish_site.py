@@ -149,6 +149,18 @@ def test_build_site_writes_page_data_and_docs(db, tmp_path: Path):
     assert "won't retry" in html       # walled/disabled boards, named + reasoned
     assert "gave up on" in html        # dead pages retired after 3 tries
     assert 'id="ar-title"' in html     # header flips Active run / Last run
+    assert 'id="run-rail"' in html     # viewport-top progress rail while live
+    assert "bar working" in html or "' working'" in html  # sheen on active stage
+    assert 'id="ar-elapsed"' in html   # live ticking elapsed timer
+    assert "AR_BASE_TITLE" in html     # tab title carries progress out of tab
+    assert "clearRunSignals" in html   # idle/error paths drop the rail
+    assert 'id="run-stop"' in html     # kill switch, visible only while live
+    assert "http://127.0.0.1:5001/api/runs/stop" in html
+    assert "stopping after the current item finishes" in html  # honest copy
+    # Long multi-site locations are abbreviated so rows stay scannable.
+    assert "-webkit-line-clamp" in html   # titles clamp to two lines
+    assert 'class="loctext"' in html      # clamp lives on a span, never the <td>
+    assert 'class="cname"' in html        # long recruiter names clamp too
     assert "'Last run'" in html        # idle panel keeps the finished run
     assert "last_run" in html          # reads the endpoint's idle payload
     assert "did not run" in html       # finished runs don't say "waiting"
@@ -187,3 +199,37 @@ def test_build_site_removes_stale_docs(db, tmp_path: Path):
     stale.write_bytes(b"old")
     build_site(db, _config(), site_dir, repo_root=tmp_path)
     assert not stale.exists()
+
+
+def test_multi_site_location_is_abbreviated_with_full_value_retained(db, tmp_path: Path):
+    """The E.ON case: eight comma-joined cities with no spaces after the
+    commas, so the browser found no wrap opportunity, the cell refused to
+    narrow, and every other column got squeezed until titles stacked five
+    lines deep and rows grew to ~140px."""
+    from jobbot.publish.site import _short_location
+
+    long_loc = ("Essen,Fürstenwalde/Spree,Hamburg,Hannover,Helmstedt,"
+                "Landshut,Potsdam,Regensburg")
+    assert _short_location(long_loc) == "Essen, Fürstenwalde/Spree +6 more"
+    # "City, Region, Country" is ONE place and must survive intact: that is
+    # how LinkedIn writes every location, and a 2-part threshold turned 89
+    # live rows into "Munich, Bavaria +1 more", worse than the original.
+    assert _short_location("Munich, Bavaria, Germany") == "Munich, Bavaria, Germany"
+    assert _short_location("Dubai, Dubai, United Arab Emirates") == \
+        "Dubai, Dubai, United Arab Emirates"
+    assert _short_location("Dubai, United Arab Emirates") == "Dubai, United Arab Emirates"
+    assert _short_location("Berlin") == "Berlin"
+    assert _short_location(None) == ""
+    # Commas with no following space still gain wrap opportunities.
+    assert _short_location("Berlin,Germany") == "Berlin, Germany"
+
+    j = _mk_job(1, location=long_loc)
+    _seed(db, [(j, 88)])
+    site_dir = tmp_path / "site"
+    build_site(db, _config(min_score=60), site_dir, repo_root=tmp_path)
+    html = (site_dir / "index.html").read_text()
+    assert "+6 more" in html
+    # Nothing is lost: the full list stays on hover and in data.json.
+    assert f'title="{long_loc}"' in html
+    data = json.loads((site_dir / "data.json").read_text())
+    assert data["jobs"][0]["location"] == long_loc
