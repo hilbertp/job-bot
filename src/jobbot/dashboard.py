@@ -435,6 +435,49 @@ def _cors_for_pages_trigger(resp):
 _ACTIVE_RUN_STALE_S = 15 * 60
 
 
+def _run_last_activity(conn, run_id: int, started_at) -> "datetime | None":
+    """Newest timestamp belonging to a run: its start or any stage update."""
+    from .state import run_stage_progress
+
+    def _dt(value):
+        try:
+            dt = datetime.fromisoformat(str(value))
+        except (TypeError, ValueError):
+            return None
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+    stamps = [d for d in ([_dt(started_at)]
+                          + [_dt(s["updated_at"])
+                             for s in run_stage_progress(conn, run_id)])
+              if d is not None]
+    return max(stamps, default=None)
+
+
+def _live_run_id(conn) -> int | None:
+    """The run that is genuinely RUNNING, or None.
+
+    "Newest unfinished" is not the same thing: the table is full of zombie
+    rows whose process was killed without closing them (runs 274, 291, 294).
+    Asking for the newest unfinished row therefore returns a corpse from days
+    ago. The kill switch used exactly that query and cheerfully reported
+    "stopping run 291" while nothing was running, which also disagreed with
+    the panel next to it. Both endpoints now share this one definition:
+    unfinished AND active within the staleness window.
+    """
+    row = conn.execute(
+        "SELECT id, started_at FROM runs WHERE finished_at IS NULL"
+        " ORDER BY id DESC LIMIT 1"
+    ).fetchone()
+    if row is None:
+        return None
+    last = _run_last_activity(conn, row[0], row[1])
+    if last is None:
+        return None
+    if (datetime.now(timezone.utc) - last).total_seconds() > _ACTIVE_RUN_STALE_S:
+        return None
+    return row[0]
+
+
 @app.route("/api/runs/active")
 def api_active_run():
     """The newest in-progress run with live per-stage progress.
@@ -530,13 +573,11 @@ def api_stop_active_run():
     if request.method == "OPTIONS":
         return "", 204
     with connect() as conn:
-        row = conn.execute(
-            "SELECT id FROM runs WHERE finished_at IS NULL"
-            " ORDER BY id DESC LIMIT 1"
-        ).fetchone()
-        if row is None:
+        # Must agree with /api/runs/active: a zombie row from days ago is not
+        # something to "stop", and reporting success for it is a lie.
+        run_id = _live_run_id(conn)
+        if run_id is None:
             return jsonify({"ok": False, "status": "no_active_run"}), 409
-        run_id = row[0]
         reason = "stopped from the published dashboard"
         # Both, exactly as the local control route does: the control state is
         # what a LIVE loop notices at its next checkpoint, and marking the row
