@@ -86,3 +86,38 @@ def test_other_origins_get_no_cors_grant(client, monkeypatch):
                         lambda: "https://hilbertp.github.io")
     resp = c.post("/api/runs/stop", headers={"Origin": "https://evil.example"})
     assert "Access-Control-Allow-Origin" not in resp.headers
+
+
+def test_a_zombie_row_is_not_stoppable(client):
+    """The bug this pairs with: "newest unfinished" is not "running".
+
+    The runs table carries rows whose process was killed without closing them
+    (274, 291, 294). Targeting the newest unfinished row made the kill switch
+    report "stopping run 291" while nothing was running, mutating July history
+    and contradicting the panel beside it.
+    """
+    c, db = client
+    with connect(db) as conn:
+        zombie = start_run(conn)
+        conn.execute("UPDATE runs SET started_at = '2026-07-30T10:00:00+00:00'"
+                     " WHERE id = ?", (zombie,))
+
+    resp = c.post("/api/runs/stop")
+    assert resp.status_code == 409
+    assert resp.get_json()["status"] == "no_active_run"
+    with connect(db) as conn:
+        # Untouched: no finished_at invented, no stop reason written.
+        row = conn.execute("SELECT finished_at FROM runs WHERE id = ?",
+                           (zombie,)).fetchone()
+        assert row["finished_at"] is None
+
+
+def test_stop_and_active_agree_on_what_is_running(client):
+    """One definition of "live", shared by both endpoints."""
+    c, db = client
+    with connect(db) as conn:
+        stale = start_run(conn)
+        conn.execute("UPDATE runs SET started_at = '2026-07-30T10:00:00+00:00'"
+                     " WHERE id = ?", (stale,))
+    assert c.get("/api/runs/active").get_json()["active"] is False
+    assert c.post("/api/runs/stop").status_code == 409
