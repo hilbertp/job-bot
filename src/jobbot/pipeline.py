@@ -38,7 +38,7 @@ from .scrapers import REGISTRY
 from .state import (
     apply_channel, apply_channel_ats_name, connect, finish_run, jobs_by_status,
     jobs_needing_enrichment, jobs_with_submitted_application,
-    mark_run_stopped, record_application, start_run,
+    mark_run_stopped, reap_abandoned_runs, record_application, start_run,
     update_score_tailored, update_run_stage_progress, update_status, upsert_new,
     wait_while_paused,
 )
@@ -178,6 +178,11 @@ def _run_once_locked(config: Config, secrets: Secrets) -> dict[str, Any]:
     fetched_ids: list[str] = []
 
     with connect() as conn:
+        # We hold the single-run lock, so nothing else is in flight and every
+        # still-open row belongs to a process that was killed. Close them here
+        # rather than leaving the dashboard to announce a corpse forever.
+        for dead in reap_abandoned_runs(conn, superseded_only=False):
+            log.info("reaped_abandoned_run", run_id=dead)
         run_id = start_run(conn)
 
         def _stopped_result(reason: str) -> dict[str, Any]:

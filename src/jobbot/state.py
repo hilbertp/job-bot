@@ -753,6 +753,55 @@ def mark_run_stopped(conn: sqlite3.Connection, run_id: int, *, reason: str) -> N
     request_run_control(conn, run_id, "stopped", reason=reason)
 
 
+def reap_abandoned_runs(
+    conn: sqlite3.Connection,
+    *,
+    superseded_only: bool = True,
+) -> list[int]:
+    """Close run rows whose process died without ever finishing them.
+
+    A killed pipeline leaves `finished_at IS NULL` forever, and the dashboard
+    then names that corpse in its stuck-run banner for as long as the database
+    lives. Run 274 died on 2026-07-23 and was still being announced as
+    "blocking every scheduled run behind it" nineteen days and seventy-nine
+    completed runs later.
+
+    `finished_at` is backdated to the run's last sign of life rather than to
+    now, so the runs history does not grow a fictional nineteen-day run.
+
+    With `superseded_only` (the default) only rows that a LATER run has
+    already overtaken are closed: those are provably dead, because the
+    file lock in `pipeline._single_run_lock` is held by a live process, so a
+    later run could not have started while this one still breathed. Pass
+    False only from inside that lock, where every unfinished row is a corpse
+    by the same argument.
+
+    Returns the ids that were closed.
+    """
+    newest = conn.execute("SELECT MAX(id) FROM runs").fetchone()[0]
+    rows = conn.execute(
+        "SELECT id, started_at FROM runs WHERE finished_at IS NULL ORDER BY id"
+    ).fetchall()
+    reaped: list[int] = []
+    for row in rows:
+        run_id = row["id"]
+        if superseded_only and run_id == newest:
+            continue
+        last_seen = conn.execute(
+            "SELECT MAX(updated_at) FROM run_stage_progress WHERE run_id = ?",
+            (run_id,),
+        ).fetchone()[0] or row["started_at"]
+        conn.execute(
+            "UPDATE runs SET finished_at = ?, summary_json = ? "
+            "WHERE id = ? AND finished_at IS NULL",
+            (last_seen, json.dumps({"abandoned": True}), run_id),
+        )
+        request_run_control(conn, run_id, "stopped",
+                            reason="abandoned: process died without finishing")
+        reaped.append(run_id)
+    return reaped
+
+
 def update_run_stage_progress(
     conn: sqlite3.Connection,
     run_id: int,
