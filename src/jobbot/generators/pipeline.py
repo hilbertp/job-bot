@@ -59,26 +59,29 @@ def _render_html(md: str) -> str:
   /* Full bleed: WeasyPrint does not propagate the root background into the
      @page margin area, so the paper tone is set on @page itself. The html
      rule keeps the standalone .html files bleeding in a browser too. */
-  @page {{ size: A4; margin: 20mm 22mm; background: var(--paper); }}
+  /* Density pass: the base CV is a two-page document, so the render must
+     not turn it into three. Tightened margins/leading, verified by page
+     count rather than by eye. */
+  @page {{ size: A4; margin: 14mm 16mm; background: var(--paper); }}
   html {{ background: var(--paper); }}
 
   body {{
     font-family: var(--serif);
     color: var(--ink);
     background: var(--paper);
-    line-height: 1.6;
-    font-size: 11pt;
+    line-height: 1.4;
+    font-size: 10pt;
     max-width: 780px;
-    margin: 2.2rem auto;
+    margin: 0 auto;
     padding: 0 1rem;
   }}
 
   /* Name, large editorial serif with italic role tag */
   h1 {{
     font-family: var(--serif);
-    font-size: 2.4rem;
+    font-size: 1.75rem;
     font-weight: 500;
-    line-height: 1.08;
+    line-height: 1.06;
     letter-spacing: -0.012em;
     margin: 0 0 0.6rem 0;
     color: var(--ink);
@@ -637,6 +640,20 @@ def _extract_section(pattern: "re.Pattern[str]", text: str) -> str:
     return m.group(0).strip() if m else ""
 
 
+def _strip_trailing_anchor_band(md: str) -> str:
+    """Drop a trailing `---` + trust-anchor line from an extracted section.
+
+    `_inject_trust_anchors` puts the link band at the top AND bottom of the
+    unified package. The CV is the package's LAST section, so extracting it
+    drags that bottom band along, and on a two-page CV that single line lands
+    alone on page three: 2,407 chars on page 1, 1,749 on page 2, and 69 on
+    page 3. The band already appears above the CV, so the copy is redundant
+    as well as expensive.
+    """
+    return re.sub(r"\n+-{3,}\s*\n+[^\n]*(?:LinkedIn|GitHub)[^\n]*\s*\Z", "",
+                  md).rstrip()
+
+
 def _extract_hero(package_md: str) -> str:
     """Pull the editorial hero block from the start of the unified package:
     `# {Name}. *{Role tag}*` + the positioning line + contact strip,
@@ -774,6 +791,9 @@ def generate_application_package(
     # render as a confusing H1 at the top of the standalone view.
     cl_md = _strip_section_heading(cl_md)
     cv_md = _strip_section_heading(cv_md)
+    # The CV is the package's last section, so it inherits the package's
+    # bottom link band, which pushed one line onto a third page.
+    cv_md = _strip_trailing_anchor_band(cv_md)
     # Prepend the package's hero block (name + role tag + positioning +
     # contact line) so the standalone CV / cover-letter views carry the
     # same opus-style editorial header as the unified package. Without

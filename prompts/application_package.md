@@ -119,34 +119,34 @@ Best regards,
 ## Bearing
 
 {1-paragraph summary of the candidate's positioning, tightened for this role.
-Max 5 sentences. Pull from base CV summary but reorder/rewrite for relevance.}
+Max 4 sentences. Pull from base CV summary but reorder/rewrite for relevance.
+This replaces the old "Core strengths" bullet list: the capability summary
+below is the single home for what the candidate can do, so do not restate it
+here as bullets.}
 
-## Core strengths
+## What I can do
 
-- {Bullet 1, ≤ 9 words, role-aligned}
-- {Bullet 2}
-- {Bullet 3}
-- {Bullet 4}
-- {Bullet 5}
-- {Bullet 6}
-- {Bullet 7}
-- {Bullet 8}
-- {Bullet 9}
+{Reproduce the base CV's "What I can do" capability summary, reordered so the
+groups this posting cares about come first. Keep the bold group label and its
+one-line list of tools. Drop groups with no bearing on the posting; never
+invent a tool that is not in the base CV. This section is where stack and
+tools live: do NOT scatter tool lists through the experience entries beyond
+what the base CV already has on each line.}
 
 ## Professional experience
 
-{For each role in the base CV's professional experience section, render:
+{For each role in the base CV's experience section, render the SAME compact
+two-line shape the base CV uses. Not a bullet list:
 
-### {Company Name}     {YYYY, YYYY}
+### {Company} · {Role} · {Domain}     {YYYY to YYYY}
 
-*{Role}*
+{One line: outcome and, where the base CV has it, the stack. Tighten the
+wording for this posting and lead with whatever transfers. One line, two at
+the absolute most for the single most relevant role.}
 
-- {Most relevant bullet for THIS posting}
-- {Next most relevant}
-- {3–5 bullets per role; drop bullets that don't transfer}
-
-Reorder bullets within each role so the most posting-relevant ones come
-first. Reorder roles only if the recency would otherwise mislead.}
+Keep every role, in the base CV's order. The base CV fits nine roles on two
+pages precisely because each is two lines; expanding them into 3-5 bullets
+each is what produced four-page CVs.}
 
 ## Founder & early-stage experience
 
@@ -161,6 +161,13 @@ professional experience. Otherwise omit this heading.}
 
 # Rules, follow strictly
 
+- **The CV is TWO PAGES. Hard limit.** Section II must fit two A4 pages when
+  rendered, which is roughly 4,500 characters including headings. The base CV
+  is itself a two-page document of about 4,000 characters: treat its length as
+  the budget, not as raw material to expand. If something has to give, cut
+  bullets from "Core strengths" and shorten the experience lines. Never pad,
+  never turn a two-line role into a bullet list, never repeat a fact in both
+  "What I can do" and an experience line.
 - **Never invent.** Only use facts from the base CV, profile, or user_facts.
   If the role asks for something the candidate doesn't have, leave it out OR
   surface it transparently in "Honest framing".
