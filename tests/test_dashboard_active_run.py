@@ -92,6 +92,42 @@ def test_stale_unfinished_run_reports_inactive(client):
     assert data["stale_run_id"] == run_id
 
 
+def test_overtaken_zombie_is_not_reported_as_stuck(client):
+    """Run 274 died in July and was still named as "blocking every scheduled
+    run behind it" nineteen days and seventy-nine completed runs later. A
+    later run finishing proves the older row's process is gone, so it blocks
+    nothing and must not be announced."""
+    c, db = client
+    old = (datetime.now(timezone.utc) - timedelta(days=19)).isoformat()
+    now = datetime.now(timezone.utc).isoformat()
+    with connect(db) as conn:
+        zombie = start_run(conn)
+        conn.execute("UPDATE runs SET started_at = ? WHERE id = ?", (old, zombie))
+        later = start_run(conn)
+        conn.execute("UPDATE runs SET finished_at = ? WHERE id = ?", (now, later))
+    data = c.get("/api/runs/active").get_json()
+    assert data["active"] is False
+    assert "stale_run_id" not in data
+    assert data["last_run"]["id"] == later
+
+
+def test_stop_run_ignores_overtaken_zombie(client):
+    """The kill switch must not claim to stop a corpse a later run overtook."""
+    c, db = client
+    old = (datetime.now(timezone.utc) - timedelta(days=19)).isoformat()
+    with connect(db) as conn:
+        zombie = start_run(conn)
+        conn.execute("UPDATE runs SET started_at = ? WHERE id = ?", (old, zombie))
+        later = start_run(conn)
+        conn.execute(
+            "UPDATE runs SET finished_at = ? WHERE id = ?",
+            (datetime.now(timezone.utc).isoformat(), later),
+        )
+    resp = c.post("/api/runs/stop")
+    assert resp.status_code == 409
+    assert resp.get_json()["status"] == "no_active_run"
+
+
 def test_active_endpoint_gets_cors_for_pages_origin(client, monkeypatch):
     c, _ = client
     monkeypatch.setattr(dashboard, "_pages_origin",

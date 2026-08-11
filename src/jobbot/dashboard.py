@@ -453,6 +453,27 @@ def _run_last_activity(conn, run_id: int, started_at) -> "datetime | None":
     return max(stamps, default=None)
 
 
+def _open_run_row(conn):
+    """The newest unfinished run, but only while it could still be alive.
+
+    An unfinished row that a LATER run has already overtaken is not a
+    candidate for anything: the pipeline's file lock is held by a live
+    process, so a later run starting proves this one's process was gone.
+    Run 274 died on 2026-07-23 and stayed the "newest unfinished" row through
+    seventy-nine completed runs, which is how the stuck-run banner ended up
+    naming it for nineteen days. `state.reap_abandoned_runs` closes such rows
+    on the next run; this keeps the endpoints right in the meantime.
+    """
+    row = conn.execute(
+        "SELECT id, started_at FROM runs WHERE finished_at IS NULL"
+        " ORDER BY id DESC LIMIT 1"
+    ).fetchone()
+    if row is None:
+        return None
+    newest = conn.execute("SELECT MAX(id) FROM runs").fetchone()[0]
+    return None if row[0] != newest else row
+
+
 def _live_run_id(conn) -> int | None:
     """The run that is genuinely RUNNING, or None.
 
@@ -462,12 +483,9 @@ def _live_run_id(conn) -> int | None:
     ago. The kill switch used exactly that query and cheerfully reported
     "stopping run 291" while nothing was running, which also disagreed with
     the panel next to it. Both endpoints now share this one definition:
-    unfinished AND active within the staleness window.
+    still open, not overtaken, AND active within the staleness window.
     """
-    row = conn.execute(
-        "SELECT id, started_at FROM runs WHERE finished_at IS NULL"
-        " ORDER BY id DESC LIMIT 1"
-    ).fetchone()
+    row = _open_run_row(conn)
     if row is None:
         return None
     last = _run_last_activity(conn, row[0], row[1])
@@ -484,8 +502,9 @@ def api_active_run():
 
     Feeds the static Pages dashboard's active-run panel (CORS via the
     after_request hook). A run counts as active only while its progress
-    rows are fresh; unfinished rows abandoned by a killed process (e.g.
-    run 274) must not be reported as running forever.
+    rows are fresh, and only while no later run has overtaken it; unfinished
+    rows abandoned by a killed process (e.g. run 274) must be reported
+    neither as running nor as stuck, because they block nothing.
     """
     from .state import run_stage_progress
 
@@ -510,10 +529,7 @@ def api_active_run():
         }
 
     with connect() as conn:
-        row = conn.execute(
-            "SELECT id, started_at FROM runs WHERE finished_at IS NULL"
-            " ORDER BY id DESC LIMIT 1"
-        ).fetchone()
+        row = _open_run_row(conn)
         if row is None:
             return jsonify({"active": False, "last_run": _last_finished(conn)})
         stages = run_stage_progress(conn, row[0])
