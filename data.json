@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-11T10:42:39.926746+00:00",
+  "generated_at": "2026-08-11T11:23:52.015529+00:00",
   "jobs": [
     {
       "id": "dailyremote_dbef5b03671e46f1",
@@ -972,6 +972,23 @@
       "posted_at": "2026-08-07T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://www.talentmate.com/jobs/uae/abu-dhabi/product-manager/2608-22895-9",
+      "documents": []
+    },
+    {
+      "id": "linkedin_bf36baa6c30ae549",
+      "source": "linkedin",
+      "url": "https://www.linkedin.com/jobs/view/4452098260",
+      "title": "Product Owner (w/m/d) - IT Collaboration & Digital Workplace",
+      "company": "50Hertz Transmission GmbH",
+      "location": null,
+      "salary": null,
+      "score": 78,
+      "score_tailored": null,
+      "status": "generated",
+      "first_seen_at": "2026-08-11T11:08:49.862048+00:00",
+      "posted_at": null,
+      "apply_route": "url",
+      "apply_target": "https://www.linkedin.com/jobs/view/4452098260",
       "documents": []
     },
     {
