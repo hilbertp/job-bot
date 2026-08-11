@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-11T11:28:00.185355+00:00",
+  "generated_at": "2026-08-11T12:02:30.573765+00:00",
   "jobs": [
     {
       "id": "dailyremote_dbef5b03671e46f1",
@@ -2660,6 +2660,16 @@
   ],
   "runs": [
     {
+      "id": 354,
+      "started_at": "2026-08-11T12:00:07.047005+00:00",
+      "finished_at": "2026-08-11T12:02:30.544509+00:00",
+      "n_fetched": 347,
+      "n_new": 10,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 4
+    },
+    {
       "id": 353,
       "started_at": "2026-08-11T10:40:34.826621+00:00",
       "finished_at": "2026-08-11T10:42:39.897814+00:00",
@@ -2785,16 +2795,6 @@
       "finished_at": "2026-08-07T13:02:12.065637+00:00",
       "n_fetched": 265,
       "n_new": 2,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 340,
-      "started_at": "2026-08-07T12:00:01.371423+00:00",
-      "finished_at": "2026-08-07T12:02:06.510188+00:00",
-      "n_fetched": 257,
-      "n_new": 3,
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 1
