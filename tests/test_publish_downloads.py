@@ -60,3 +60,38 @@ def test_export_ignores_rows_without_docs(db, tmp_path: Path):
     cfg = Config()
     cfg.publish.downloads_dir = str(tmp_path / "dl")
     assert export_documents(db, cfg, repo_root=tmp_path) == []
+
+
+def test_regenerated_docs_replace_the_exported_copy(db, tmp_path: Path):
+    """A rebuild must reach the folder the user actually opens.
+
+    The exporter skipped any folder that already existed, so after today's
+    CVs were regenerated from four pages to two, ~/Downloads/jobbot still
+    held the four-page copies and nothing said so.
+    """
+    import os
+    import time
+
+    _seed_generated(db, tmp_path)
+    out_dir = tmp_path / "output" / "pkg1"
+    cfg = Config()
+    cfg.publish.downloads_dir = str(tmp_path / "Downloads" / "jobbot")
+
+    folder = export_documents(db, cfg, repo_root=tmp_path)[0]
+    assert (folder / "cv.pdf").read_bytes() == b"%PDF cv"
+
+    # Age the exported copy, the way a copy taken this morning would be, then
+    # regenerate the source now. Backdating the target rather than
+    # future-dating the source keeps the ordering physically possible: a copy
+    # is always written after the file it came from.
+    old = time.time() - 3600
+    os.utime(folder / "cv.pdf", (old, old))
+    src = out_dir / "cv.pdf"
+    src.write_bytes(b"%PDF cv REBUILT two pages")
+
+    created = export_documents(db, cfg, repo_root=tmp_path)
+    assert created == [folder]
+    assert (folder / "cv.pdf").read_bytes() == b"%PDF cv REBUILT two pages"
+
+    # And it settles again: no further copying once it is current.
+    assert export_documents(db, cfg, repo_root=tmp_path) == []

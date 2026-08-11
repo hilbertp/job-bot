@@ -1,8 +1,10 @@
 """Copy generated application documents into the user's Downloads folder.
 
-Each generated job gets one folder named <company>__<title>__<id-suffix>;
-a folder that already exists is treated as exported and skipped, so daily
-runs only add the newly generated packages.
+Each generated job gets one folder named <company>__<title>__<id-suffix>.
+A file is copied when it is missing or when the generated one is newer, so
+daily runs stay cheap but a REGENERATED package actually reaches the folder
+the user opens. It previously skipped any folder that already existed, which
+left four-page CVs in Downloads after they had been rebuilt to two pages.
 """
 from __future__ import annotations
 
@@ -56,10 +58,21 @@ def export_documents(
         if not files:
             continue
         target = root / f"{_slug(row['company'])}__{_slug(row['title'])}__{row['id'][-8:]}"
-        if target.exists():
-            continue  # already exported on a previous run
-        target.mkdir(parents=True)
-        for name in files:
+        # Export a file when it is missing OR when the generated one is newer.
+        # A bare `if target.exists(): continue` meant a REGENERATED package
+        # never reached the folder the user actually opens: after the CVs were
+        # rebuilt to two pages, ~/Downloads/jobbot still held the four-page
+        # copies, and nothing said so. Comparing mtimes keeps the original
+        # intent (don't redo work every run) while letting a rebuild through.
+        stale = [
+            name for name in files
+            if not (target / name).exists()
+            or (out_dir / name).stat().st_mtime > (target / name).stat().st_mtime + 1
+        ]
+        if not stale:
+            continue
+        target.mkdir(parents=True, exist_ok=True)
+        for name in stale:
             shutil.copyfile(out_dir / name, target / name)
         created.append(target)
 
