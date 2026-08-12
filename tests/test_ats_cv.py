@@ -129,6 +129,18 @@ def test_docx_has_no_tables_and_keeps_the_text_layer(tmp_path):
     assert audit_ats_docx(paths["docx"]) == []
 
 
+def test_missing_strict_extractor_is_reported_not_silently_skipped(tmp_path, monkeypatch):
+    from jobbot.generators import ats
+
+    paths, _ = build_ats_cv(BASE_CV, tmp_path, stem="cv")
+    original = ats.extract_pdf_text
+    monkeypatch.setattr(
+        ats, "extract_pdf_text", lambda path: {"pypdf": original(path)["pypdf"]}
+    )
+    findings = ats.audit_ats_pdf(paths["pdf"])
+    assert any("pdfminer.six is not installed" in f for f in findings)
+
+
 def test_keyword_coverage_separates_echoed_from_missing_terms():
     from jobbot.generators.ats import keyword_coverage
 

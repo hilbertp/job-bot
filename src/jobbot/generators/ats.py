@@ -356,8 +356,12 @@ def extract_pdf_text(path: Path) -> dict[str, str]:
     import pypdf
 
     texts = {"pypdf": "\n".join(p.extract_text() for p in pypdf.PdfReader(str(path)).pages)}
-    from pdfminer.high_level import extract_text as _pdfminer_text
-
+    try:
+        from pdfminer.high_level import extract_text as _pdfminer_text
+    except ImportError:
+        # Not a hard dependency, but its absence disables the strictest check,
+        # so `audit_ats_pdf` reports the gap rather than quietly passing.
+        return texts
     texts["pdfminer"] = _pdfminer_text(str(path))
     return texts
 
@@ -394,7 +398,13 @@ def audit_ats_pdf(path: Path, max_pages: int = 2, doc: CVDoc | None = None) -> l
     pages = pdf_page_count(path)
     if pages > max_pages:
         findings.append(f"{pages} pages, budget is {max_pages}")
-    for text in extract_pdf_text(path).values():
+    texts = extract_pdf_text(path)
+    if "pdfminer" not in texts:
+        findings.append(
+            "pdfminer.six is not installed, so the letter-spacing check did not run "
+            "(pypdf silently repairs the very defect it looks for)"
+        )
+    for text in texts.values():
         for finding in audit_ats_text(text):
             if finding not in findings:
                 findings.append(finding)
