@@ -55,7 +55,7 @@ Healthcare. Mobile patient app for iOS and Android, piloted in hospitals.
 Insurance. B2B SaaS platform for insurers, reinsurers, brokers and underwriters.
 
 - An 18-person delivery organisation was losing its senior engineers and its client trust. I restructured it into three lean teams with their own leads: attrition fell from a near-total exodus to a single departure, and the teams were visibly happier for it.
-- Shipped the Claims Center from concept to production with no precedent, cutting time-to-market for a new insurance product from over a year to under a week.
+- Shipped the Claims Center from concept to production with no precedent, cutting time-to-market for a new insurance product from many months to less than a week.
 
 **Product Owner Integration Team, Scheidt & Bachmann Fuel & Convenience Retail, Mönchengladbach, 09/2021 - 03/2022**
 
