@@ -21,7 +21,6 @@ dependencies = [
   "markdown-it-py>=3.0",
   "flask>=3.0",               # web dashboard
   "pypdf>=4.2",
-  "pdfminer.six>=20231228",   # strict text-layer read-back for the ATS audit
   "python-docx>=1.1",
 ]
 
