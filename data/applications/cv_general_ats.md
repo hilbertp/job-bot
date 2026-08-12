@@ -8,7 +8,7 @@ www.true-north.berlin | linkedin.com/in/philipp-hilbert-34032275 | github.com/hi
 
 ## Profile
 
-Product manager and product owner with 13 years of end-to-end product ownership in regulated, data-intensive software: defence AI, public-sector analytics, insurance, healthcare, payments and retail. I run continuous discovery, turn strategy and technical constraints into a prioritised roadmap, and lead cross-functional teams through agile delivery (Scrum, Kanban, SAFe) to measurable outcomes.
+Product manager and product owner with 13 years of end-to-end product ownership in regulated, data-intensive software: defence AI, public-sector analytics, insurance, healthcare, payments and retail. I run continuous discovery, turn strategy and technical constraints into a prioritised roadmap, and lead cross-functional teams through agile delivery (Scrum, Kanban, SAFe).
 
 ## How I Work
 
