@@ -28,6 +28,7 @@ Independent product ownership for enterprise, public-sector and startup clients 
 Defence and aerospace. Internal AI and data platform for the FCAS European programme.
 
 - Rollout took days and could not carry a hotfix. I introduced GitOps delivery with ArgoCD across a multinational team of architects, data scientists and engineers: rollout time fell to 30 minutes and the platform became hotfix-capable.
+- I pushed my way into the customer workshops and instrumented two competing workflows. The beautiful UI-led one recorded exactly zero clicks, so I redirected the product to a developer-code-first design: plainer, and the one people actually used.
 
 *Kotlin (Spring Boot), Python, PostgreSQL, MongoDB, Kafka, Kubernetes, OpenShift, Red Hat, ArgoCD, GitLab*
 
@@ -35,61 +36,62 @@ Defence and aerospace. Internal AI and data platform for the FCAS European progr
 
 Public sector. National labour-market analytics platform for policymakers and researchers.
 
-- Quarterly data arrived by hand and new indicators took weeks. I introduced Dagster and dbt for automated ETL: imports and indicator generation became repeatable, and the platform absorbed a UI relaunch and a bare-metal-to-container migration without losing a release. Deputy IT Security Officer. Python, Django, PostgreSQL, Kubernetes, Jenkins.
+- Integrated test automation into the Jenkins pipeline and freed several QA hours every week, then introduced Dagster and dbt so quarterly imports and new indicators ran without hand-holding.
+- Migrated a bare-metal system fully into containers, which put the team in autonomous control of its own environments, and carried a full UI relaunch through the same period. Deputy IT Security Officer.
+
+*Python, Django, PostgreSQL, dbt, Dagster, Kubernetes, Jenkins*
 
 **Product Owner, CLINET Platforms, Berlin, 01/2023 - 07/2023**
 
 Healthcare. Mobile patient app for iOS and Android, piloted in hospitals.
 
-- A three-person team faced a roadmap it could not deliver. I cut it to the most important 10% of features and implemented the CGM (CompuGroup Medical) interface into hospital information system (KIS) workflows myself: the pilot shipped, with digital anamnesis, therapy plans and patient chat live.
+- A three-person team faced a roadmap it could not deliver. I cut it to the top 10% of features: user acceptance rose more than fivefold.
+- Implemented the CGM (CompuGroup Medical) interface into hospital information system (KIS) workflows myself: the digital anamnesis went from 30 minutes to 5 from form to database.
 
 **Product Manager, EMIL Group, Berlin, 04/2022 - 12/2022**
 
 Insurance. B2B SaaS platform for insurers, reinsurers, brokers and underwriters.
 
-- A 17-person delivery organisation was losing its senior engineers and its client trust. I restructured it into stable Scrum teams with their own leads and shipped the Claims Center from concept to production with no precedent: attrition fell from a near-total exodus to one departure, and time-to-market for a new insurance product went from over a year to under a week.
+- An 18-person delivery organisation was losing its senior engineers and its client trust. I restructured it into three lean teams with their own leads: attrition fell from a near-total exodus to a single departure, and the teams were visibly happier for it.
+- Shipped the Claims Center from concept to production with no precedent, cutting time-to-market for a new insurance product from over a year to under a week.
 
 **Product Owner Integration Team, Scheidt & Bachmann Fuel & Convenience Retail, Mönchengladbach, 09/2021 - 03/2022**
 
-Retail and payments. Integrated hardware and software: POS (point of sale), payment and forecourt systems for filling stations.
-
-- Research results stalled before reaching production. As PO of the integration team downstream of research, I moved them into production across a matrix organisation spanning geographies and disciplines, in a fully SAFe (Scaled Agile Framework) setup with agile release trains and PI planning.
+- Retail and payments, POS and forecourt systems. Moved research results into production across a matrix organisation, in a fully SAFe (Scaled Agile Framework) setup with agile release trains and PI planning.
 
 **Interim Product Owner, Bundesdruckerei, Berlin, 03/2021 - 06/2021**
 
-- Government, secure data platform and identity management. Delivered secure data structures for the Robert Koch Institute programmes DIM (vaccination-rate monitoring) and DESH (entry and mutation surveillance) under the highest privacy requirements, on a three-month interim mandate.
+- Government, secure data platform. Data structures and identity management for the Robert Koch Institute programmes DIM and DESH.
 
 **Proxy Product Owner, AOK ITSCare, Frankfurt, 03/2019 - 05/2020**
 
-Health insurance. B2B procurement webshop replacing a legacy system.
-
-- Three regional AOK insurers and roughly 20,000 employees procured hardware through a legacy application. Standing between the Krankenkassen business side and the dev team, I migrated it to Shopware with a complex catalogue, API integration into legacy systems and per-branch approval policies: still in production.
+- Health insurance, B2B procurement webshop. Migrated a legacy system to Shopware for three AOK insurers and roughly 20,000 employees; still in production.
 
 **Project Lead, Enercon, Wismar / Magdeburg, 04/2019 - 12/2019**
 
-- Wind energy and manufacturing, site IT infrastructure. Led the full IT modernisation of a manufacturing site end to end: end devices, servers, switches, communication lines and software.
+- Wind energy, full site IT modernisation end to end.
 
 **Product Owner, Waldburg-Zeil Kliniken, Isny, 08/2017 - 06/2018**
 
-- Healthcare, clinical network infrastructure. Supervised the WLAN rollout equipping nine hospitals with full coverage.
+- Healthcare, clinical network. WLAN rollout across nine hospitals.
 
 ## Founder Track
 
 **Founder and Product Manager, construct8, Limassol, 12/2025 - 06/2026**
 
-- Construction staffing, two-sided B2B marketplace matching firms with workers, built to take the headhunter out of the hire. Zero to one alone, owning discovery, strategy, UX and rollout for both sides: an anonymity-until-payment model that protects each side until commitment, WhatsApp and Telegram as the product surface, and LLM agents across the funnel so one person runs the day-to-day.
+- Construction staffing, two-sided B2B marketplace matching firms with workers, built to take the headhunter out of the hire. Zero to one alone: an anonymity-until-payment model that protects each side until commitment, WhatsApp and Telegram as the product surface, and LLM agents across the funnel so one person runs the day-to-day.
 
 **Co-Founder and Product Owner, Qcrypt AG, Berlin, 01/2016 - 12/2021**
 
-- IT security, integrated hardware and software for quantum-secure encryption. Enterprise buyers would not accept a long installation. I shipped a three-layer product (true-random hardware, Linux one-time-pad endpoints, server relay) that installs in under two minutes. Later Chair of the board; Deputy IT Security Officer.
+- IT security, integrated hardware and software for quantum-secure encryption. Enterprise buyers would not accept a long installation, so I shipped a three-layer product that installs in under two minutes. Later Chair of the board.
 
 **Co-Founder, CDO and CFO, Smart Soil Technologies, Berlin, 03/2018 - 08/2021**
 
-- Nanotechnology and agriculture, physical product for vertical indoor farming. Took a fertiliser and substrate product from laboratory to investor rounds, owning financial planning, investor reporting and an ERP rollout.
+- Nanotechnology and agriculture. Took a fertiliser product from laboratory to investor rounds, owning financial planning and investor reporting.
 
 **Founder and CFO, Kvitt Payment Solutions, Berlin, 02/2013 - 11/2018**
 
-- Fintech, mobile group-based P2P payments. Built from zero (PSP integration, settlement flows, onboarding, full UX) and taken to acquisition: acquired and operated by Sparkasse, inside the girocard ecosystem. As CFO owned accounting and financial planning.
+- Fintech, mobile group-based P2P payments. Built from zero and taken to acquisition: acquired and operated by Sparkasse, inside the girocard ecosystem.
 
 - Built and operated solo: Hyperion (aFRR balancing-market pipeline reconstructing marginal prices over merit-order data), phoenix882.com (trading-strategy backtesting), Liberation of Bajor (multi-agent coding framework).
 
