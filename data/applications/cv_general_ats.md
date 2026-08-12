@@ -2,9 +2,11 @@
 
 Product Manager | Product Owner
 
-Limassol, Cyprus / Berlin, Germany | +357 94101644 | hilbert@true-north.berlin
+Limassol, Cyprus / Berlin, Germany | ready to relocate anywhere | available at short notice
 
-www.true-north.berlin | linkedin.com/in/philipp-hilbert-34032275 | github.com/hilbertp
++357 94101644 | hilbert@true-north.berlin | www.true-north.berlin
+
+linkedin.com/in/philipp-hilbert-34032275 | github.com/hilbertp
 
 ## Profile
 
