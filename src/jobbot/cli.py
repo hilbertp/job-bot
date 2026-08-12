@@ -754,6 +754,34 @@ def _cmd_rescore_base(args) -> int:
     return 0 if n_failed == 0 else 1
 
 
+def cmd_cv_ats(args) -> int:
+    """Render an ATS-safe CV (DOCX + text PDF) and audit the rendered text layer."""
+    from .generators.ats import ATSFormatError, build_ats_cv
+
+    source = Path(args.source).expanduser()
+    if not source.is_file():
+        console.print(f"[red]missing CV source:[/red] {source}")
+        return 1
+    out_dir = Path(args.out).expanduser()
+    try:
+        paths, findings = build_ats_cv(
+            source, out_dir, stem=args.stem, max_pages=args.max_pages
+        )
+    except ATSFormatError as exc:
+        console.print(f"[red]source is not ATS-safe:[/red] {exc}")
+        return 1
+
+    for label, path in paths.items():
+        console.print(f"{label}: {path}")
+    if findings:
+        console.print(f"[red]{len(findings)} ATS finding(s):[/red]")
+        for finding in findings:
+            console.print(f"  - {finding}")
+        return 1
+    console.print("[green]ATS audit clean[/green]")
+    return 0
+
+
 def cmd_profile_rebuild(_args) -> int:
     """PRD §7.4 FR-PRO-02: rebuild data/profile.compiled.yaml from corpus."""
     output = rebuild_compiled_profile(secrets=load_secrets())
@@ -904,6 +932,21 @@ def main(argv: list[str] | None = None) -> int:
     research_ar.add_argument("--min-score", type=int, default=70,
                              help="Only research rows with score >= this (default 70).")
     research_ar.set_defaults(fn=cmd_research_apply_routes)
+
+    cv_ats = sub.add_parser(
+        "cv-ats",
+        help="Render an ATS-safe CV (single-column DOCX + text PDF) from a "
+             "Markdown source and audit the rendered text layer.",
+    )
+    cv_ats.add_argument("--source", default="data/applications/cv_general_ats.md",
+                        help="Markdown CV source (default: the general ATS base CV).")
+    cv_ats.add_argument("--out", default="output/ats",
+                        help="Output directory (default: output/ats).")
+    cv_ats.add_argument("--stem", default=None,
+                        help="Output filename stem (default: the source filename).")
+    cv_ats.add_argument("--max-pages", type=int, default=2,
+                        help="Page budget; more pages is an audit finding (default 2).")
+    cv_ats.set_defaults(fn=cmd_cv_ats)
 
     mark = sub.add_parser(
         "mark-applied",
