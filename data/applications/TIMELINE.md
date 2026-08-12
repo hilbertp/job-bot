@@ -56,7 +56,7 @@ www.true-north.berlin.
 | 04/2022 | 12/2022 | Product Owner, SaaS insurance platform | EMIL Group | Berlin | CONFIRMED |
 | 01/2023 | 07/2023 | Product Owner, mobile healthcare app | CLINET Platforms | Berlin | CONFIRMED |
 | 05/2023 | 07/2024 | Product Owner, Statistikplattform | Bundesagentur für Arbeit | Nürnberg / Remote | CONFIRMED |
-| 07/2024 | 11/2025 | Product Manager, AI Backbone Platform (FCAS) | Rohde & Schwarz (legal entity SSE) | München / Remote | OPEN (end month) |
+| 07/2024 | 05/2025 | Product Manager, AI Backbone Platform (FCAS) | Rohde & Schwarz (legal entity SSE) | München / Remote | CONFIRMED |
 | 12/2025 | 06/2026 | Founder and Product Manager | construct8 | Limassol | CONFIRMED |
 
 Overlaps are deliberate and correct for a freelancer; they are not errors:
@@ -112,15 +112,23 @@ Everything below was found by reading the live freelancermap profile on
 
 ## Still open
 
-Only one date is unresolved. **Rohde & Schwarz end month** is entered as
-11/2025, inferred so it runs up to construct8 starting 12/2025. Philipp gave
-the start (07/2024, the month the Bundesagentur ended) but not the end.
-Correct it here first if the inference is wrong.
+Every date is confirmed. Resolved on 2026-08-12: Rohde & Schwarz
+07/2024-05/2025, construct8 12/2025-06/2026, projuncta umbrella year-only
+from 2017, Scheidt & Bachmann fitted to 09/2021-03/2022, Smart Soil phase 1
+starting 03/2018, multitiv from 05/2014, Waldburg-Zeil 08/2017-06/2018,
+TU Berlin 2006-2014.
 
-Resolved on 2026-08-12: construct8 12/2025-06/2026, projuncta umbrella
-year-only from 2017, Scheidt & Bachmann fitted to 09/2021-03/2022, Smart Soil
-phase 1 starting 03/2018, multitiv from 05/2014, Waldburg-Zeil
-08/2017-06/2018, TU Berlin 2006-2014.
+**There is one genuine gap: 06/2025 to 11/2025**, between Rohde & Schwarz
+ending and construct8 starting. Six months, no engagement. This is exactly
+what the projuncta umbrella is for: on the CV and on a restructured LinkedIn
+the gap sits inside a continuous company entry and never surfaces. It stays
+visible on freelancermap, where the Projekthistorie is a list of discrete
+projects, which is normal for a freelance portal and needs no fixing.
+
+An earlier inference put the Rohde & Schwarz end at 11/2025, reasoning that
+it ran up to construct8. That was wrong: Philipp corrected it to 05/2025 on
+2026-08-12. The lesson is in this file's premise, that a gap is not evidence
+the surrounding dates should be stretched to close it.
 
 ## Overview for adapting LinkedIn and freelancermap
 
@@ -131,7 +139,7 @@ adapted to them, not the other way round. What has to change on each:
 
 | Entry | Currently | Change to |
 |---|---|---|
-| Rohde & Schwarz | `01.08.2025 - 01.08.2025` | `01.07.2024 - 01.11.2025` |
+| Rohde & Schwarz | `01.08.2025 - 01.08.2025` | `01.07.2024 - 01.05.2025` |
 | AOK ITSCare | ends 01.04.2020 | ends 01.05.2020 (the signed reference letter) |
 | multitiv | starts 01.05.2015 | starts 01.05.2014 |
 | Smart Soil, phase 1 | starts 01.07.2016 | starts 01.03.2018 |

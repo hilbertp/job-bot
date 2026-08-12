@@ -23,7 +23,7 @@ Product manager and product owner with 13 years of end-to-end product ownership 
 
 Independent product ownership for enterprise, public-sector and startup clients through my own company. Selected engagements below, most recent first.
 
-**Product Manager, Rohde & Schwarz, Munich / Remote, 07/2024 - 11/2025**
+**Product Manager, Rohde & Schwarz, Munich / Remote, 07/2024 - 05/2025**
 
 Defence and aerospace. Internal AI and data platform for the FCAS European programme.
 
