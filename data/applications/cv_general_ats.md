@@ -19,12 +19,6 @@ Product manager and product owner with 13 years of end-to-end product ownership 
 
 ## Work Experience
 
-**Founder and Product Manager, construct8, Limassol, 12/2025 - 06/2026**
-
-Construction staffing. Two-sided B2B marketplace matching firms with workers.
-
-- Built from zero to live alone, owning discovery, requirements, UX and rollout for both user groups, and automated order intake with LLM agents over the WhatsApp and Telegram APIs: it runs without an operations team.
-
 **Freelance Product Manager, projuncta GmbH, Berlin, 2017 - Present**
 
 Independent product ownership for enterprise, public-sector and startup clients through my own company. Selected engagements below, most recent first.
@@ -81,17 +75,21 @@ Health insurance. B2B procurement webshop replacing a legacy system.
 
 ## Founder Track
 
+**Founder and Product Manager, construct8, Limassol, 12/2025 - 06/2026**
+
+- Construction staffing, two-sided B2B marketplace matching firms with workers. Built from zero to live alone, owning discovery, requirements, UX and rollout for both user groups, and automated order intake with LLM agents over the WhatsApp and Telegram APIs: it runs without an operations team.
+
 **Co-Founder and Product Owner, Qcrypt AG, Berlin, 01/2016 - 12/2021**
 
 - IT security, integrated hardware and software for quantum-secure encryption. Enterprise buyers would not accept a long installation. I shipped a three-layer product (true-random hardware, Linux one-time-pad endpoints, server relay) that installs in under two minutes. Later Chair of the board; Deputy IT Security Officer.
 
-**Founder and CFO, Kvitt Payment Solutions, Berlin, 02/2013 - 11/2018**
-
-- Fintech, mobile group-based P2P payments. Built from zero (PSP integration, settlement flows, onboarding, full UX) and taken to acquisition: acquired and operated by Sparkasse, inside the girocard ecosystem. As CFO owned accounting and financial planning.
-
 **Co-Founder, CDO and CFO, Smart Soil Technologies, Berlin, 03/2018 - 08/2021**
 
 - Nanotechnology and agriculture, physical product for vertical indoor farming. Took a fertiliser and substrate product from laboratory to investor rounds, owning financial planning, investor reporting and an ERP rollout.
+
+**Founder and CFO, Kvitt Payment Solutions, Berlin, 02/2013 - 11/2018**
+
+- Fintech, mobile group-based P2P payments. Built from zero (PSP integration, settlement flows, onboarding, full UX) and taken to acquisition: acquired and operated by Sparkasse, inside the girocard ecosystem. As CFO owned accounting and financial planning.
 
 - Built and operated solo: Hyperion (aFRR balancing-market pipeline reconstructing marginal prices over merit-order data), phoenix882.com (trading-strategy backtesting), Liberation of Bajor (multi-agent coding framework).
 
