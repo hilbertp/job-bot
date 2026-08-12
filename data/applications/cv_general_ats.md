@@ -77,7 +77,7 @@ Health insurance. B2B procurement webshop replacing a legacy system.
 
 **Founder and Product Manager, construct8, Limassol, 12/2025 - 06/2026**
 
-- Construction staffing, two-sided B2B marketplace matching firms with workers, built to take the headhunter out of the hire. Zero to one alone, owning discovery, strategy, UX and rollout for both sides: an anonymity-until-payment model that protects each side until commitment, WhatsApp and Telegram in four languages (EN, GR, RU, AR), and LLM agents across the funnel so one person runs the day-to-day.
+- Construction staffing, two-sided B2B marketplace matching firms with workers, built to take the headhunter out of the hire. Zero to one alone, owning discovery, strategy, UX and rollout for both sides: an anonymity-until-payment model that protects each side until commitment, WhatsApp and Telegram as the product surface, and LLM agents across the funnel so one person runs the day-to-day.
 
 **Co-Founder and Product Owner, Qcrypt AG, Berlin, 01/2016 - 12/2021**
 
