@@ -331,7 +331,10 @@ def audit_ats_text(text: str) -> list[str]:
         findings.append("em-dash present (banned in every artefact)")
     if re.search(r"lovable\.(app|dev)", lowered):
         findings.append("lovable URL present (banned in every artefact)")
-    if "projuncta" in lowered:
+    # STORIES_AND_VOICE rule 2 bans projuncta as *contact data*, not as a word:
+    # projuncta GmbH is Philipp's own company and carries the freelance years on
+    # the CV as an employer. Only the domain is banned.
+    if re.search(r"projuncta\.(com|de)|@projuncta", lowered):
         findings.append("projuncta contact data present (banned)")
 
     transliterated = _TRANSLITERATIONS.findall(text)
