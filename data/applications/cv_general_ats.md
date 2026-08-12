@@ -19,6 +19,12 @@ Product manager and product owner with 13 years of end-to-end product ownership 
 
 ## Work Experience
 
+**Founder and Product Manager, construct8, Limassol, 12/2025 - 06/2026**
+
+Construction staffing. Two-sided B2B marketplace matching firms with workers.
+
+- Built from zero to live alone, owning discovery, requirements, UX and rollout for both user groups, and automated order intake with LLM agents over the WhatsApp and Telegram APIs: it runs without an operations team.
+
 **Freelance Product Manager, projuncta GmbH, Berlin, 2017 - Present**
 
 Independent product ownership for enterprise, public-sector and startup clients through my own company. Selected engagements below, most recent first.
@@ -74,10 +80,6 @@ Health insurance. B2B procurement webshop replacing a legacy system.
 - Healthcare, clinical network infrastructure. Supervised the WLAN rollout equipping nine hospitals with full coverage.
 
 ## Founder Track
-
-**Founder and Product Manager, construct8, Limassol, 12/2025 - 06/2026**
-
-- Construction staffing, two-sided B2B marketplace matching firms with workers. Built from zero to live alone, owning discovery, requirements, UX and rollout for both user groups, and automated order intake with LLM agents over the WhatsApp and Telegram APIs: it runs without an operations team.
 
 **Co-Founder and Product Owner, Qcrypt AG, Berlin, 01/2016 - 12/2021**
 
