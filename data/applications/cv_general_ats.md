@@ -10,13 +10,13 @@ linkedin.com/in/philipp-hilbert-34032275 | github.com/hilbertp
 
 ## Profile
 
-Product manager and product owner with 13 years of end-to-end product ownership in regulated industries for defence AI, public-sector analytics, insurance, healthcare, payments and retail. I run continuous discovery, turn strategy, user needs and technical constraints into requirements and a prioritised roadmap, and lead cross-functional teams through agile delivery (Scrum, Kanban, SAFe).
+Product manager and product owner with 13 years of product ownership in regulated industries for defence AI, public-sector analytics, insurance, healthcare, payments and retail. I run continuous discovery, turn strategy, user needs and technical constraints into requirements and a prioritised roadmap, and lead cross-functional teams through agile delivery (Scrum, Kanban, SAFe).
 
 ## How I Work
 
 - I leave my ego at home. I want to drive the decision, not to have the last word.
-- I fall in love with the problem, never with my own solution. Attachment ships the wrong thing in a beautiful way.
-- On a new product I spend a little to learn before spending a lot to build. Cheap experiments make expensive decisions safer.
+- I fall in love with the problem, never with my own solution. Being too attached leads to shipping the wrong thing in a beautiful way.
+- On a new product I spend a little to learn before spending a lot to build. Cheap experiments make expensive decisions safe(r).
 - I keep the whole value chain in view, not just the backlog. Defect-to-fix time is a product metric; architects and DevOps engineers build that chain, my job is to steer it into the right lanes.
 
 ## Work Experience
@@ -35,64 +35,63 @@ Defence and aerospace. Internal AI and data platform for the FCAS European progr
 
 **Product Manager, Bundesagentur für Arbeit (Federal Employment Agency), Nuremberg / Remote, 05/2023 - 07/2024**
 
-Public sector. National labour-market analytics platform for policymakers and researchers.
+Public sector. National labour-market analytics platform for policymakers and researchers. Deputy IT Security Officer.
 
-- Integrated test automation into the Jenkins pipeline and freed several QA hours every week, then introduced Dagster and dbt so quarterly imports and new indicators ran without hand-holding.
-- Migrated a bare-metal system fully into containers, which put the team in autonomous control of its own environments, and carried a full UI relaunch through the same period. Deputy IT Security Officer.
+- Integrated test automation into the Jenkins pipeline and freed several QA hours every week, then introduced Dagster and dbt so quarterly imports and new indicators ran without hand-holding and allowed almost a 75% time saved per data update.
+- Migrated a bare-metal system fully into containers, which put the team in autonomous control of its own environments, and carried a full UI relaunch through the same period.
 
 **Product Owner, CLINET Platforms, Berlin, 01/2023 - 07/2023**
 
 Healthcare. Mobile patient app for iOS and Android, piloted in hospitals.
 
-- A three-person team faced a roadmap it could not deliver. I cut it to the top 10% of features: user acceptance rose more than fivefold.
-- Implemented the CGM (CompuGroup Medical) interface into hospital information system (KIS) workflows myself: the digital anamnesis went from 30 minutes to 5 from form to database.
+- A five-person team faced a roadmap it could not deliver. I cut it to the top 10% of features: user acceptance rose more than fivefold.
+- Implemented the CGM (CompuGroup Medical) interface into hospital information system (KIS) workflows: the digital anamnesis went from 30 minutes to 5 from form to database.
 
 **Product Manager, EMIL Group, Berlin, 04/2022 - 12/2022**
 
 Insurance. B2B SaaS platform for insurers, reinsurers, brokers and underwriters.
 
 - An 18-person delivery organisation was losing its senior engineers and its client trust. I restructured it into three lean teams with their own leads: attrition fell from a near-total exodus to a single departure, and the teams were visibly happier for it.
-- Shipped the Claims Center from concept to production with no precedent, cutting time-to-market for a new insurance product from many months to less than a week.
+- Shipped the Claims Center from concept to production with no precedent.
+- Cut time-to-market for the launch of a new insurance product from months to less than a week.
 
 **Product Owner Integration Team, Scheidt & Bachmann Fuel & Convenience Retail, Mönchengladbach, 09/2021 - 03/2022**
 
-- Retail and payments, POS and forecourt systems. Moved research results into production across a matrix organisation, in a fully SAFe (Scaled Agile Framework) setup with agile release trains and PI planning.
+Retail and payments, POS and forecourt systems. Moved research results into production across a matrix organisation, in a fully SAFe (Scaled Agile Framework) setup with agile release trains and PI planning.
 
 **Interim Product Owner, Bundesdruckerei, Berlin, 03/2021 - 06/2021**
 
-- Government, secure data platform. Data structures and identity management for the Robert Koch Institute programmes DIM and DESH.
+Government, secure data platform. Data structures and identity management for the Robert Koch Institute programmes DIM and DESH.
 
 **Proxy Product Owner, AOK ITSCare, Frankfurt, 03/2019 - 05/2020**
 
-- Health insurance, B2B procurement webshop. Migrated a legacy system to Shopware for three AOK insurers and roughly 20,000 employees; still in production.
+Health insurance, B2B procurement webshop. Migrated a legacy system to Shopware for three AOK insurers and roughly 20,000 employees; still in production.
 
 **Project Lead, Enercon, Wismar / Magdeburg, 04/2019 - 12/2019**
 
-- Wind energy, full site IT modernisation end to end.
+Wind energy, full site IT modernisation end to end.
 
 **Product Owner, Waldburg-Zeil Kliniken, Isny, 08/2017 - 06/2018**
 
-- Healthcare, clinical network. WLAN rollout across nine hospitals.
+Healthcare, clinical network. Wifi infrastructure rollout across nine hospitals.
 
 ## Founder Track
 
 **Founder and Product Manager, construct8, Limassol, 12/2025 - 06/2026**
 
-- Construction staffing, two-sided B2B marketplace matching firms with workers, built to take the headhunter out of the hire. Zero to one alone: an anonymity-until-payment model that protects each side until commitment, WhatsApp and Telegram as the product surface, and LLM agents across the funnel so one person runs the day-to-day.
+Construction staffing, two-sided B2B marketplace matching firms with workers, built to take the headhunter out of the hire. Zero to one alone: an anonymity-until-payment model that protects each side until commitment, WhatsApp and Telegram as the product surface, and LLM agents across the funnel so one person runs the day-to-day.
 
 **Co-Founder and Product Owner, Qcrypt AG, Berlin, 01/2016 - 12/2021**
 
-- IT security, integrated hardware and software for quantum-secure encryption. Enterprise buyers would not accept a long installation, so I shipped a three-layer product that installs in under two minutes. Later Chair of the board.
+IT security, integrated hardware and software for quantum-secure encryption. Enterprise buyers would not accept a long installation, so I shipped a three-layer product that installs in under two minutes. Later Chair of the board.
 
 **Co-Founder, CDO and CFO, Smart Soil Technologies, Berlin, 03/2018 - 08/2021**
 
-- Nanotechnology and agriculture. Took a fertiliser product from laboratory to investor rounds, owning financial planning and investor reporting.
+Nanotechnology and agriculture. Took a fertiliser product from laboratory to investor rounds, owning financial planning and investor reporting.
 
 **Founder and CFO, Kvitt Payment Solutions, Berlin, 02/2013 - 11/2018**
 
-- Fintech, mobile group-based P2P payments. Built from zero and taken to acquisition: acquired and operated by Sparkasse, inside the girocard ecosystem.
-
-- Built and operated solo: Hyperion (aFRR balancing-market pipeline reconstructing marginal prices over merit-order data), phoenix882.com (trading-strategy backtesting), Liberation of Bajor (multi-agent coding framework).
+Fintech, mobile group-based P2P payments. Built from zero and taken to acquisition: acquired and operated by Sparkasse, inside the girocard ecosystem.
 
 ## Skills
 
@@ -109,7 +108,7 @@ Insurance. B2B SaaS platform for insurers, reinsurers, brokers and underwriters.
 
 **Diplom-Wirtschaftsingenieur (Industrial Engineering and Management), Technische Universität Berlin (TU Berlin), Germany, 2006 - 2014**
 
-- Specialisation: Logistics. Thesis with Siemens AG Energy Service on balancing-power market profitability.
+Specialisation: Logistics. Thesis with Siemens AG Energy Service on balancing-power market profitability.
 
 ## Languages
 

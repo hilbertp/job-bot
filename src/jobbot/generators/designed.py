@@ -125,8 +125,12 @@ p {{ margin: 4pt 0 0 0; }}
 p.para {{ margin-top: 5pt; }}
 
 /* The line under a role says industry and product type. It is orientation,
-   not argument, so it sits back from the bullets that follow it. */
-p.role + p.para {{
+   not argument, so it sits back from the bullets that follow it.
+
+   Only when bullets DO follow. On the compressed stations that single
+   paragraph is the whole entry, and muting it would grey out the content
+   instead of the label. `render_designed_html` decides which is which. */
+p.context {{
   font-style: italic;
   font-size: 8.1pt;
   color: #55605d;
@@ -239,7 +243,8 @@ def render_designed_html(doc: CVDoc) -> str:
         out.append(f"<section class='{css_class}'>")
         out.append(f"<h2>{_inline_html(section.heading)}</h2>")
         open_list = False
-        for block in section.blocks:
+        blocks = section.blocks
+        for i, block in enumerate(blocks):
             if block.kind == "bullet":
                 if not open_list:
                     out.append("<ul>")
@@ -254,7 +259,13 @@ def render_designed_html(doc: CVDoc) -> str:
             elif block.kind == "note":
                 out.append(f"<p class='note'>{_inline_html(block.text)}</p>")
             else:
-                out.append(f"<p class='para'>{_inline_html(block.text)}</p>")
+                # A paragraph under a role is a label only when bullets carry
+                # the substance after it. Where it is the entry's only line,
+                # it is the substance and keeps full weight.
+                follows_role = i > 0 and blocks[i - 1].kind == "role"
+                bullets_follow = i + 1 < len(blocks) and blocks[i + 1].kind == "bullet"
+                css = "para context" if (follows_role and bullets_follow) else "para"
+                out.append(f"<p class='{css}'>{_inline_html(block.text)}</p>")
         if open_list:
             out.append("</ul>")
         out.append("</section>")
