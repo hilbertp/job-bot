@@ -16,7 +16,7 @@ Product manager and product owner with 13 years of end-to-end product ownership 
 
 - I leave my ego at home. I want to drive the decision, not to have the last word.
 - I fall in love with the problem, never with my own solution. Attachment ships the wrong thing in a beautiful way.
-- On greenfield I buy information before I build. Cheap experiments make expensive decisions safer.
+- On a new product I spend a little to learn before spending a lot to build. Cheap experiments make expensive decisions safer.
 - I keep the whole value chain in view, not just the backlog. Defect-to-fix time is a product metric; architects and DevOps engineers build that chain, my job is to steer it into the right lanes.
 
 ## Work Experience
