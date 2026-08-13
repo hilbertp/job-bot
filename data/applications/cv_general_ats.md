@@ -14,7 +14,7 @@ Product manager and product owner with 13 years of end-to-end product ownership 
 
 ## How I Work
 
-- I leave my ego at home. I want the decision, not the last word.
+- I leave my ego at home. I want to drive the decision, not to have the last word.
 - I fall in love with the problem, never with my own solution. Attachment ships the wrong thing beautifully.
 - On greenfield I buy information before I build. Cheap experiments make expensive decisions safer.
 - I keep the whole value chain in view, not just the backlog. Defect-to-fix time is a product metric; architects and DevOps engineers build that chain, my job is to steer it into the right lanes.
