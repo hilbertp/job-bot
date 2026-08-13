@@ -28,10 +28,15 @@ Design decisions worth stating, since they are the reason this file exists:
 * **One accent, structural only.** A deep petrol carries the name, the
   section rules and nothing else. Colour that lands on content reads as
   decoration; colour that lands on structure reads as design.
-* **Tracking stays under 0.06em.** Wide letter-spacing is exactly what
-  destroys an extracted text layer (`1 0 +   Y E A R S`). This document is
-  for people, but it should degrade gracefully if a parser ever sees it, so
-  the effect is kept to a whisper.
+* **No letter-spacing at all.** Not "a little": none. Tracking is what
+  destroys an extracted text layer, and the damage starts far below the value
+  that looks tasteful on screen. An early version of this file set 0.13em on
+  the section headings, which reads beautifully and copy-pastes as
+  `WO R K E X P E R I E N C E`. Headings earn their separation from
+  uppercase, weight, colour and a rule instead. Anything that reintroduces
+  tracking here must be checked with pdfminer, never pypdf: pypdf silently
+  repairs the defect, so it will tell you the document is fine when it is
+  not.
 """
 from __future__ import annotations
 
@@ -66,7 +71,6 @@ h1 {{
   font-family: {_TEXT};
   font-size: 21pt;
   font-weight: 700;
-  letter-spacing: -0.012em;
   color: #10484a;
   margin: 0;
   line-height: 1.05;
@@ -76,7 +80,6 @@ p.target-title {{
   font-family: {_STRUCT};
   font-size: 8.8pt;
   font-weight: 600;
-  letter-spacing: 0.055em;
   text-transform: uppercase;
   color: #4d5654;
   margin: 3.5pt 0 0 0;
@@ -103,7 +106,6 @@ h2 {{
   font-family: {_STRUCT};
   font-size: 7.8pt;
   font-weight: 600;
-  letter-spacing: 0.13em;
   text-transform: uppercase;
   color: #10484a;
   margin: 0;
@@ -149,7 +151,6 @@ p.role .dates {{
   font-weight: 500;
   font-feature-settings: "tnum";
   color: #5b6462;
-  letter-spacing: 0.02em;
 }}
 
 p.role .sep {{ color: #b7c2bf; padding: 0 3pt; }}
@@ -192,7 +193,6 @@ section.skills li b {{
   font-family: {_STRUCT};
   font-size: 8.1pt;
   font-weight: 600;
-  letter-spacing: 0.015em;
 }}
 
 section.skills li {{ margin-top: 3pt; }}

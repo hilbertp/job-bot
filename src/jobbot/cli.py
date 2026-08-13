@@ -756,7 +756,12 @@ def _cmd_rescore_base(args) -> int:
 
 def cmd_cv_design(args) -> int:
     """Render the human-facing CV: same Markdown source, typeset for a reader."""
-    from .generators.ats import ATSFormatError, extract_pdf_text, pdf_page_count
+    from .generators.ats import (
+        ATSFormatError,
+        audit_ats_text,
+        extract_pdf_text,
+        pdf_page_count,
+    )
     from .generators.designed import build_designed_cv
 
     source = Path(args.source).expanduser()
@@ -771,15 +776,23 @@ def cmd_cv_design(args) -> int:
     console.print(f"pdf: {pdf}")
     pages = pdf_page_count(pdf)
     console.print(f"pages: {pages}" + ("" if pages <= args.max_pages else "  [yellow](over budget)[/yellow]"))
-    # The designed render is for humans, but a recruiter forwarding it into a
-    # portal should not lose the contact data, so the text layer is checked.
-    text = extract_pdf_text(pdf).get("pypdf", "")
-    missing = [s for s in ("hilbert@true-north.berlin", "true-north.berlin", "linkedin.com/in/")
-               if s not in text.replace("\n", "")]
-    if missing:
-        console.print(f"[yellow]not in the text layer:[/yellow] {missing}")
-    else:
-        console.print("contact and profile URLs survive text extraction")
+
+    # The designed render is for humans, but it gets uploaded and copy-pasted
+    # anyway, so it faces the same audit as the plain one. Read it back with
+    # the STRICT extractor: pypdf silently repairs letter-spacing, so auditing
+    # its output reports a clean document while the real text layer says
+    # "WO R K  E X P E R I E N C E".
+    texts = extract_pdf_text(pdf)
+    if "pdfminer" not in texts:
+        console.print("[yellow]pdfminer.six is not installed; the letter-spacing "
+                      "check did not run (pypdf repairs the very defect it looks for)[/yellow]")
+    findings = audit_ats_text(texts.get("pdfminer", texts["pypdf"]))
+    if findings:
+        console.print(f"[red]{len(findings)} finding(s) in the text layer:[/red]")
+        for f in findings:
+            console.print(f"  - {f}")
+        return 1
+    console.print("text layer clean: headings, contact and profile URLs all extract intact")
     return 0
 
 

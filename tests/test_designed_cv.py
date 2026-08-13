@@ -5,6 +5,7 @@ one Markdown source and one parser, so the risk is not that the facts differ,
 it is that the typesetting silently drops or mangles something the plain
 render carried.
 """
+import re
 from pathlib import Path
 
 import pytest
@@ -16,7 +17,11 @@ from jobbot.generators.ats import (
     parse_cv_markdown,
     pdf_page_count,
 )
-from jobbot.generators.designed import build_designed_cv, render_designed_html
+from jobbot.generators.designed import (
+    DESIGN_CSS,
+    build_designed_cv,
+    render_designed_html,
+)
 
 BASE_CV = Path("data/applications/cv_general_ats.md")
 
@@ -46,15 +51,45 @@ def test_contact_and_profile_urls_survive_extraction(tmp_path):
         assert needle in text, f"{needle} did not survive the designed render"
 
 
-def test_designed_render_still_passes_the_text_layer_audit(tmp_path):
-    """It is for people, but it should degrade gracefully if a parser sees it.
+def _strict_text(pdf) -> str:
+    """What a real parser sees.
 
-    In particular the tracking has to stay low enough that words do not
-    shatter into spaced characters, which is what the editorial track does.
+    Never audit the pypdf reading: it silently repairs letter-spacing, so it
+    reports a clean document while the actual content stream says
+    `WO R K  E X P E R I E N C E`. That is exactly how a broken render shipped
+    once already.
     """
+    texts = extract_pdf_text(pdf)
+    assert "pdfminer" in texts, "pdfminer.six required: pypdf hides the defect under test"
+    return texts["pdfminer"]
+
+
+def test_designed_render_still_passes_the_text_layer_audit(tmp_path):
     pdf = build_designed_cv(BASE_CV, tmp_path, stem="cv")
-    text = extract_pdf_text(pdf)["pypdf"]
-    assert audit_ats_text(text) == []
+    assert audit_ats_text(_strict_text(pdf)) == []
+
+
+def test_headings_copy_paste_as_words_not_spaced_characters(tmp_path):
+    """The regression that shipped: 0.13em tracking on the section headings.
+
+    It looks right on screen and copy-pastes as `WO R K E X P E R I E N C E`,
+    which an ATS cannot match against its own section schema.
+    """
+    text = _strict_text(build_designed_cv(BASE_CV, tmp_path, stem="cv"))
+    for heading in ("PROFILE", "WORK EXPERIENCE", "FOUNDER TRACK", "SKILLS",
+                    "EDUCATION", "LANGUAGES"):
+        assert heading in text, f"{heading!r} is not intact in the text layer"
+    assert not re.findall(r"(?:\b\w\s){3,}\w\b", text), "characters are spaced apart"
+
+
+def test_the_stylesheet_declares_no_letter_spacing_at_all():
+    """A guard on the cause, not just the symptom.
+
+    The rendered-text tests above catch tracking that survives to the PDF, but
+    this fails the moment anyone types the property, which is the point at
+    which it is cheap to reconsider.
+    """
+    assert "letter-spacing" not in DESIGN_CSS
 
 
 def test_both_renders_carry_the_same_dates(tmp_path):
