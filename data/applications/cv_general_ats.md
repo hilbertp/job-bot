@@ -21,10 +21,6 @@ Product manager and product owner with 13 years of product ownership in regulate
 
 ## Work Experience
 
-**Freelance Product Manager, projuncta GmbH, Berlin, 01/2017 - 08/2026**
-
-Independent product ownership for enterprise, public-sector and startup clients through my own company. Selected engagements below, most recent first.
-
 **Product Manager, Rohde & Schwarz, Munich / Remote, 07/2024 - 05/2025**
 
 Defence and aerospace. Internal AI and data platform for the FCAS European programme.

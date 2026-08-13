@@ -12,29 +12,29 @@ Status legend: CONFIRMED = Philipp confirmed it directly, or two independent
 records agree. SOURCED = one record only, not yet confirmed. OPEN = records
 disagree, decision needed.
 
-## Freelance umbrella (set by Philipp 2026-08-12)
+## Freelance framing (removed from the CV 2026-08-13)
 
-CVs present the freelance years as one headline entry, with the client
-projects underneath it:
+The CV briefly carried a headline entry, `Freelance Product Manager, projuncta
+GmbH, 01/2017 - 08/2026`, with the client engagements underneath it. Philipp
+removed it on 2026-08-13. The engagements now stand as ordinary roles, most
+recent first, with no umbrella above them.
 
-**Freiberuflicher Product Manager, projuncta GmbH, 01/2017 - 08/2026**
-(English documents: "Freelance Product Manager, projuncta GmbH")
+What that costs, recorded so the decision is not re-made by accident: the
+umbrella was what kept the engagement gaps inside a continuous company entry.
+Without it a reader of Work Experience sees 8 months in 2018-19, 9 months in
+2020-21 and everything after 05/2025. Smart Soil covers 03/2018 to 08/2021 in
+the Founder Track, so the first two are answerable, but only by a reader who
+cross-references two sections.
 
-Underneath it, the single best-fit project for the target job description is
-written out in full, and the remaining projects are compressed to one line
-each. The highlighted project changes per application; the umbrella entry
-does not.
+**Consequence for LinkedIn:** do NOT restructure it into a projuncta position.
+The earlier instruction in this file said to, because the CV had the umbrella.
+The CV no longer does, so LinkedIn should present the same engagements as
+roles, which is also how it reads today. The Freiberuflich tags on Rohde &
+Schwarz, the Bundesagentur, EMIL and CLINET can stay: they are accurate and
+they no longer contradict anything.
 
-The umbrella is why individual project gaps no longer need filling: a
-freelancer's engagement gaps sit inside a continuous company entry.
-
-The umbrella runs `01/2017 - 08/2026` (set 2026-08-13). It carried the
-open-ended `2017 - Present` until then. Closing it to the current month means
-no entry on the CV is still running, so availability rests entirely on the
-header: "ready to relocate anywhere | available at short notice".
-
-Note: `projuncta GmbH` as an employer name is fine. The banned item is the
-`projuncta.com` contact data on documents (STORIES_AND_VOICE rule 2). The
+`projuncta GmbH` as an employer name remains fine if it ever returns. The
+banned item is `projuncta.com` as contact data (STORIES_AND_VOICE rule 2). The
 contact line stays hilbert@true-north.berlin, +357 94101644,
 www.true-north.berlin.
 
@@ -157,7 +157,7 @@ adapted to them, not the other way round. What has to change on each:
 | Entry | Change |
 |---|---|
 | construct8 | currently ends 05/2026, correct to 06/2026 |
-| Freiberuflich tags | currently on Rohde & Schwarz, Bundesagentur, EMIL and CLINET only. Restructure to one `projuncta GmbH, Freiberuflicher Product Manager, 01/2017 - 08/2026` position with the client engagements underneath it, matching the CV |
+| Freiberuflich tags | leave them as they are, on Rohde & Schwarz, Bundesagentur, EMIL and CLINET. An earlier version of this file said to restructure LinkedIn into one projuncta position; the CV dropped that framing on 2026-08-13, so the instruction is withdrawn |
 | Scheidt & Bachmann | add if absent, 09/2021 - 03/2022 |
 | All dates | align to the table above, month precision |
 | TU Berlin | 2006 - 2014 |
