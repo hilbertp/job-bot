@@ -769,7 +769,11 @@ def cmd_cv_design(args) -> int:
         console.print(f"[red]missing CV source:[/red] {source}")
         return 1
     try:
-        pdf = build_designed_cv(source, Path(args.out).expanduser(), stem=args.stem)
+        photo = Path(args.photo).expanduser() if args.photo else None
+        if photo is not None and not photo.is_file():
+            console.print(f"[red]missing photo:[/red] {photo}")
+            return 1
+        pdf = build_designed_cv(source, Path(args.out).expanduser(), stem=args.stem, photo=photo)
     except ATSFormatError as exc:
         console.print(f"[red]source is not renderable:[/red] {exc}")
         return 1
@@ -1003,6 +1007,10 @@ def main(argv: list[str] | None = None) -> int:
                            help="Output filename stem (default: the source filename).")
     cv_design.add_argument("--max-pages", type=int, default=2,
                            help="Page budget to report against (default 2).")
+    cv_design.add_argument("--photo", default=None,
+                           help="Portrait to place in the header. Human render only; "
+                                "the ATS render never takes one. Keep the file outside "
+                                "this repository, it is public.")
     cv_design.set_defaults(fn=cmd_cv_design)
 
     mark = sub.add_parser(

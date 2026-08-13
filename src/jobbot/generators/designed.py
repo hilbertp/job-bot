@@ -40,6 +40,8 @@ Design decisions worth stating, since they are the reason this file exists:
 """
 from __future__ import annotations
 
+import base64
+import mimetypes
 from pathlib import Path
 
 from .ats import CVDoc, _inline_html, parse_cv_markdown
@@ -66,6 +68,26 @@ body {{
 }}
 
 /* ---- header ---------------------------------------------------------- */
+
+/* Photo right, identity left. The photo is decoration in the strictest
+   sense: it carries no text, so it cannot affect what a parser extracts. */
+.masthead {{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8mm;
+}}
+
+.masthead .who {{ flex: 1; }}
+
+.masthead img {{
+  width: 24mm;
+  height: 30mm;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 1.5pt;
+  flex: none;
+}}
 
 h1 {{
   font-family: {_TEXT};
@@ -225,17 +247,28 @@ def _role_html(text: str) -> str:
     )
 
 
-def render_designed_html(doc: CVDoc) -> str:
+def _photo_data_uri(path: Path) -> str:
+    """Inline the photo so the PDF is self-contained and leaks no local path."""
+    mime = mimetypes.guess_type(path.name)[0] or "image/jpeg"
+    return f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode("ascii")
+
+
+def render_designed_html(doc: CVDoc, photo: Path | None = None) -> str:
     out: list[str] = [
         "<!DOCTYPE html><html><head><meta charset='utf-8'>",
         f"<title>{_inline_html(doc.name)}</title>",
         f"<style>{DESIGN_CSS}</style></head><body>",
+        "<div class='masthead'><div class='who'>",
         f"<h1>{_inline_html(doc.name)}</h1>",
     ]
     if doc.title:
         out.append(f"<p class='target-title'>{_inline_html(doc.title)}</p>")
     for line in doc.contact:
         out.append(f"<p class='contact'>{_inline_html(line)}</p>")
+    out.append("</div>")
+    if photo is not None:
+        out.append(f"<img src='{_photo_data_uri(Path(photo))}' alt=''>")
+    out.append("</div>")
     out.append("<div class='rule'></div>")
 
     for section in doc.sections:
@@ -274,16 +307,24 @@ def render_designed_html(doc: CVDoc) -> str:
     return "".join(out)
 
 
-def render_designed_pdf(doc: CVDoc, dest: Path) -> Path:
+def render_designed_pdf(doc: CVDoc, dest: Path, photo: Path | None = None) -> Path:
     from weasyprint import HTML  # lazy: heavy import
 
     dest.parent.mkdir(parents=True, exist_ok=True)
-    HTML(string=render_designed_html(doc)).write_pdf(str(dest))
+    HTML(string=render_designed_html(doc, photo=photo)).write_pdf(str(dest))
     return dest
 
 
-def build_designed_cv(source: Path, out_dir: Path, stem: str | None = None) -> Path:
-    """Render `source` as the human-facing PDF and return its path."""
+def build_designed_cv(
+    source: Path, out_dir: Path, stem: str | None = None, photo: Path | None = None
+) -> Path:
+    """Render `source` as the human-facing PDF and return its path.
+
+    `photo` is passed in rather than read from a fixed location on purpose.
+    The repository is public, so a portrait must never live inside it, and the
+    ATS render never takes one at all: images are a parsing hazard, and in the
+    US and UK a photo on a CV is a screening liability rather than a nicety.
+    """
     doc = parse_cv_markdown(Path(source).read_text(encoding="utf-8"))
     stem = stem or Path(source).stem
-    return render_designed_pdf(doc, Path(out_dir) / f"{stem}.pdf")
+    return render_designed_pdf(doc, Path(out_dir) / f"{stem}.pdf", photo=photo)
