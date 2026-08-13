@@ -21,7 +21,7 @@ Product manager and product owner with 13 years of product ownership in regulate
 
 ## Work Experience
 
-**Freelance Product Manager, projuncta GmbH, Berlin, 2017 - Present**
+**Freelance Product Manager, projuncta GmbH, Berlin, 01/2017 - 08/2026**
 
 Independent product ownership for enterprise, public-sector and startup clients through my own company. Selected engagements below, most recent first.
 
