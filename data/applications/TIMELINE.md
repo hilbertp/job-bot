@@ -17,7 +17,7 @@ disagree, decision needed.
 CVs present the freelance years as one headline entry, with the client
 projects underneath it:
 
-**Freiberuflicher Product Manager, projuncta GmbH, 2017 - Present**
+**Freiberuflicher Product Manager, projuncta GmbH, 01/2017 - 08/2026**
 (English documents: "Freelance Product Manager, projuncta GmbH")
 
 Underneath it, the single best-fit project for the target job description is
@@ -28,8 +28,10 @@ does not.
 The umbrella is why individual project gaps no longer need filling: a
 freelancer's engagement gaps sit inside a continuous company entry.
 
-The umbrella carries a year, not a month: `2017 - Present` (confirmed
-2026-08-12, "not important, in this case 2017 is enough").
+The umbrella runs `01/2017 - 08/2026` (set 2026-08-13). It carried the
+open-ended `2017 - Present` until then. Closing it to the current month means
+no entry on the CV is still running, so availability rests entirely on the
+header: "ready to relocate anywhere | available at short notice".
 
 Note: `projuncta GmbH` as an employer name is fine. The banned item is the
 `projuncta.com` contact data on documents (STORIES_AND_VOICE rule 2). The
@@ -113,10 +115,10 @@ Everything below was found by reading the live freelancermap profile on
 ## Still open
 
 Every date is confirmed. Resolved on 2026-08-12: Rohde & Schwarz
-07/2024-05/2025, construct8 12/2025-06/2026, projuncta umbrella year-only
-from 2017, Scheidt & Bachmann fitted to 09/2021-03/2022, Smart Soil phase 1
-starting 03/2018, multitiv from 05/2014, Waldburg-Zeil 08/2017-06/2018,
-TU Berlin 2006-2014.
+07/2024-05/2025, construct8 12/2025-06/2026, Scheidt & Bachmann fitted to
+09/2021-03/2022, Smart Soil phase 1 starting 03/2018, multitiv from 05/2014,
+Waldburg-Zeil 08/2017-06/2018, TU Berlin 2006-2014. Resolved 2026-08-13: the
+projuncta umbrella closed to 01/2017-08/2026.
 
 **There is one genuine gap: 06/2025 to 11/2025**, between Rohde & Schwarz
 ending and construct8 starting. Six months, no engagement. This is exactly
@@ -155,7 +157,7 @@ adapted to them, not the other way round. What has to change on each:
 | Entry | Change |
 |---|---|
 | construct8 | currently ends 05/2026, correct to 06/2026 |
-| Freiberuflich tags | currently on Rohde & Schwarz, Bundesagentur, EMIL and CLINET only. Restructure to one `projuncta GmbH, Freiberuflicher Product Manager, 2017 - heute` position with the client engagements underneath it, matching the CV |
+| Freiberuflich tags | currently on Rohde & Schwarz, Bundesagentur, EMIL and CLINET only. Restructure to one `projuncta GmbH, Freiberuflicher Product Manager, 01/2017 - 08/2026` position with the client engagements underneath it, matching the CV |
 | Scheidt & Bachmann | add if absent, 09/2021 - 03/2022 |
 | All dates | align to the table above, month precision |
 | TU Berlin | 2006 - 2014 |
