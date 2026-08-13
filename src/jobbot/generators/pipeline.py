@@ -103,7 +103,7 @@ def _render_html(md: str) -> str:
     font-family: var(--sans);
     color: var(--ink-mute);
     font-size: 0.78rem;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     margin-bottom: 0;
   }}
@@ -112,7 +112,7 @@ def _render_html(md: str) -> str:
   h2 {{
     font-family: var(--sans);
     text-transform: uppercase;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.08em;
     font-size: 0.74rem;
     font-weight: 600;
     color: var(--ink-mute);
@@ -276,7 +276,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
     font-size: 0.72rem;
     font-weight: 600;
     color: var(--ink-mute);
-    letter-spacing: 0.18em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     border-bottom: 1px solid var(--rule);
     padding-bottom: 0.7rem;
@@ -319,7 +319,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
     font-family: var(--sans);
     color: var(--ink-mute);
     font-size: 0.78rem;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     margin-bottom: 0;
   }}
@@ -328,7 +328,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
   h2 {{
     font-family: var(--sans);
     text-transform: uppercase;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.08em;
     font-size: 0.74rem;
     font-weight: 600;
     color: var(--ink-mute);
@@ -344,7 +344,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
     font-size: 0.78rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.08em;
     color: var(--ink-mute);
     margin: 1.2rem 0 0.2rem 0;
   }}
@@ -408,7 +408,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
   .section-title {{
     font-family: var(--sans);
     text-transform: uppercase;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.08em;
     font-size: 0.78rem;
     font-weight: 600;
     color: var(--ink-mute);
