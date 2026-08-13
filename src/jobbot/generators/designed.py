@@ -44,7 +44,7 @@ import base64
 import mimetypes
 from pathlib import Path
 
-from .ats import CVDoc, _inline_html, parse_cv_markdown
+from .ats import ATSFormatError, CVDoc, _inline_html, parse_cv_markdown
 
 # Families verified present on the target machine; each falls back to a
 # widely available cousin so the render never silently drops to a default.
@@ -328,3 +328,91 @@ def build_designed_cv(
     doc = parse_cv_markdown(Path(source).read_text(encoding="utf-8"))
     stem = stem or Path(source).stem
     return render_designed_pdf(doc, Path(out_dir) / f"{stem}.pdf", photo=photo)
+
+
+# --------------------------------------------------------------------------
+# Cover letters
+#
+# A letter is not a CV, so it does not go through parse_cv_markdown: it has no
+# sections, no roles and no dates to typeset. It shares the typography, the
+# masthead and the audit, which is the part that matters. The editorial
+# renderer in pipeline.py is what the older letters in data/applications use,
+# and it is the one whose text layer shatters, so new letters come through
+# here instead.
+# --------------------------------------------------------------------------
+
+LETTER_CSS = DESIGN_CSS + f"""
+body {{ font-size: 9.4pt; line-height: 1.58; }}
+.letter p {{ margin: 7.5pt 0 0 0; }}
+.letter p.subject {{
+  font-family: {_STRUCT};
+  font-weight: 600;
+  font-size: 8.8pt;
+  text-transform: uppercase;
+  color: #10484a;
+  margin-top: 13pt;
+}}
+.letter p.salutation {{ margin-top: 13pt; }}
+.letter p.signoff {{ margin-top: 13pt; }}
+"""
+
+
+def render_letter_html(md: str, photo: Path | None = None) -> str:
+    """Render a cover letter written in the letterhead shape.
+
+        # Name. *Subtitle.*
+        Contact line
+        Re: subject line
+        Salutation
+        ...body paragraphs...
+        Best regards,
+        Name
+    """
+    lines = [ln.strip() for ln in md.splitlines() if ln.strip()]
+    if not lines or not lines[0].startswith("# "):
+        raise ATSFormatError("a letter must open with '# Name. *Subtitle.*'")
+
+    head = lines[0][2:].strip()
+    name, _, subtitle = head.partition(".")
+    subtitle = subtitle.strip().strip("*").strip(". ")
+    contact, subject, body = lines[1], "", []
+    for i, ln in enumerate(lines[2:], start=2):
+        if not subject and (ln.startswith("Re:") or ln.startswith("Betreff:")):
+            subject = ln
+            body = lines[i + 1:]
+            break
+    else:
+        body = lines[2:]
+
+    out = [
+        "<!DOCTYPE html><html><head><meta charset='utf-8'>",
+        f"<title>{_inline_html(name)}</title>",
+        f"<style>{LETTER_CSS}</style></head><body>",
+        "<div class='masthead'><div class='who'>",
+        f"<h1>{_inline_html(name.strip())}</h1>",
+    ]
+    if subtitle:
+        out.append(f"<p class='target-title'>{_inline_html(subtitle)}</p>")
+    out.append(f"<p class='contact'>{_inline_html(contact)}</p>")
+    out.append("</div>")
+    if photo is not None:
+        out.append(f"<img src='{_photo_data_uri(Path(photo))}' alt=''>")
+    out.append("</div><div class='rule'></div><div class='letter'>")
+    if subject:
+        out.append(f"<p class='subject'>{_inline_html(subject)}</p>")
+    for i, para in enumerate(body):
+        css = "salutation" if i == 0 else ("signoff" if para.startswith("Best regards") else "")
+        out.append(f"<p class='{css}'>{_inline_html(para)}</p>")
+    out.append("</div></body></html>")
+    return "".join(out)
+
+
+def build_letter(source: Path, out_dir: Path, stem: str | None = None,
+                 photo: Path | None = None) -> Path:
+    from weasyprint import HTML
+
+    md = Path(source).read_text(encoding="utf-8")
+    dest = Path(out_dir) / f"{stem or Path(source).stem}.pdf"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    HTML(string=render_letter_html(md, photo=photo)).write_pdf(str(dest))
+    return dest
