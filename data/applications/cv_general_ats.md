@@ -10,7 +10,7 @@ linkedin.com/in/philipp-hilbert-34032275 | github.com/hilbertp
 
 ## Profile
 
-Product manager and product owner with 13 years of end-to-end product ownership in regulated industries for defence AI, public-sector analytics, insurance, healthcare, payments and retail. I run continuous discovery, turn strategy and technical constraints into a prioritised roadmap, and lead cross-functional teams through agile delivery (Scrum, Kanban, SAFe).
+Product manager and product owner with 13 years of end-to-end product ownership in regulated industries for defence AI, public-sector analytics, insurance, healthcare, payments and retail. I run continuous discovery, turn strategy, user needs and technical constraints into requirements and a prioritised roadmap, and lead cross-functional teams through agile delivery (Scrum, Kanban, SAFe).
 
 ## How I Work
 
