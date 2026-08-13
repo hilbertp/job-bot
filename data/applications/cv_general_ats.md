@@ -29,8 +29,9 @@ Independent product ownership for enterprise, public-sector and startup clients 
 
 Defence and aerospace. Internal AI and data platform for the FCAS European programme.
 
-- Rollout took days and could not carry a hotfix. I introduced GitOps delivery with ArgoCD across a multinational team of architects, data scientists and engineers: rollout time fell to 30 minutes and the platform became hotfix-capable.
-- I pushed my way into the customer workshops and instrumented two competing workflows. The beautiful UI-led one recorded exactly zero clicks, so I redirected the product to a developer-code-first design: plainer, and the one people actually used.
+- Championed GitOps delivery and test automation, reducing rollout time from days to 30 minutes across multinational teams.
+- Redirected product strategy based on user workflow analysis, increasing pipeline runs by 200% by prioritising developer-code-first over UI-led design.
+- Spearheaded development of the platform for the FCAS European programme, managing a cross-functional team of 15+ engineers and data scientists.
 
 **Product Manager, Bundesagentur für Arbeit (Federal Employment Agency), Nuremberg / Remote, 05/2023 - 07/2024**
 
