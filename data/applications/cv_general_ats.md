@@ -32,16 +32,12 @@ Defence and aerospace. Internal AI and data platform for the FCAS European progr
 - Rollout took days and could not carry a hotfix. I introduced GitOps delivery with ArgoCD across a multinational team of architects, data scientists and engineers: rollout time fell to 30 minutes and the platform became hotfix-capable.
 - I pushed my way into the customer workshops and instrumented two competing workflows. The beautiful UI-led one recorded exactly zero clicks, so I redirected the product to a developer-code-first design: plainer, and the one people actually used.
 
-*Kotlin (Spring Boot), Python, PostgreSQL, MongoDB, Kafka, Kubernetes, OpenShift, Red Hat, ArgoCD, GitLab*
-
 **Product Manager, Bundesagentur für Arbeit (Federal Employment Agency), Nuremberg / Remote, 05/2023 - 07/2024**
 
 Public sector. National labour-market analytics platform for policymakers and researchers.
 
 - Integrated test automation into the Jenkins pipeline and freed several QA hours every week, then introduced Dagster and dbt so quarterly imports and new indicators ran without hand-holding.
 - Migrated a bare-metal system fully into containers, which put the team in autonomous control of its own environments, and carried a full UI relaunch through the same period. Deputy IT Security Officer.
-
-*Python, Django, PostgreSQL, dbt, Dagster, Kubernetes, Jenkins*
 
 **Product Owner, CLINET Platforms, Berlin, 01/2023 - 07/2023**
 
@@ -104,7 +100,7 @@ Insurance. B2B SaaS platform for insurers, reinsurers, brokers and underwriters.
 - **Agile and Scaled Delivery (SDLC, software development lifecycle):** Agile, Scrum, Kanban, WIP (work in progress) limits, SAFe (Scaled Agile Framework), ART (agile release train), PI (program increment) planning.
 - **Stakeholder and Leadership:** stakeholder management and expectation alignment, cross-functional team leadership, C-level and executive reporting, workshop facilitation, conflict resolution, change management.
 - **Analytics and Data:** funnel and churn analysis, KPI (key performance indicator) definition, Matomo, MicroStrategy, ETL (extract, transform, load), Dagster, dbt (data build tool), PostgreSQL.
-- **Technical Environments Owned:** Kubernetes (K8s), OpenShift, Red Hat, Docker, GitOps with ArgoCD, CI/CD (continuous integration and continuous delivery), Jenkins, Git, GitLab, Azure DevOps, REST APIs, Python, SQL, Kafka.
+- **Technical Environments Owned:** Kubernetes (K8s), OpenShift, Red Hat, Docker, GitOps with ArgoCD, CI/CD (continuous integration and continuous delivery), Jenkins, Git, GitLab, Azure DevOps, REST APIs, Python, Kotlin (Spring Boot), Django, SQL, PostgreSQL, MongoDB, Kafka.
 - **AI Products and Tooling:** LLM (large language model) agents, agentic workflows, prompt and context engineering, evaluation loops, human-in-the-loop design, AI governance, EU AI Act, Explainable AI (XAI); full prototyping with Claude Code, GitHub Copilot, Cursor and Lovable.
 - **Governance and Business:** GDPR (General Data Protection Regulation, DSGVO), Deputy IT Security Officer, identity management, budget ownership and financial planning as CFO, ROI (return on investment) reasoning.
 
