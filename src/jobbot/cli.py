@@ -754,6 +754,35 @@ def _cmd_rescore_base(args) -> int:
     return 0 if n_failed == 0 else 1
 
 
+def cmd_cv_design(args) -> int:
+    """Render the human-facing CV: same Markdown source, typeset for a reader."""
+    from .generators.ats import ATSFormatError, extract_pdf_text, pdf_page_count
+    from .generators.designed import build_designed_cv
+
+    source = Path(args.source).expanduser()
+    if not source.is_file():
+        console.print(f"[red]missing CV source:[/red] {source}")
+        return 1
+    try:
+        pdf = build_designed_cv(source, Path(args.out).expanduser(), stem=args.stem)
+    except ATSFormatError as exc:
+        console.print(f"[red]source is not renderable:[/red] {exc}")
+        return 1
+    console.print(f"pdf: {pdf}")
+    pages = pdf_page_count(pdf)
+    console.print(f"pages: {pages}" + ("" if pages <= args.max_pages else "  [yellow](over budget)[/yellow]"))
+    # The designed render is for humans, but a recruiter forwarding it into a
+    # portal should not lose the contact data, so the text layer is checked.
+    text = extract_pdf_text(pdf).get("pypdf", "")
+    missing = [s for s in ("hilbert@true-north.berlin", "true-north.berlin", "linkedin.com/in/")
+               if s not in text.replace("\n", "")]
+    if missing:
+        console.print(f"[yellow]not in the text layer:[/yellow] {missing}")
+    else:
+        console.print("contact and profile URLs survive text extraction")
+    return 0
+
+
 def cmd_cv_ats(args) -> int:
     """Render an ATS-safe CV (DOCX + text PDF) and audit the rendered text layer."""
     from .generators.ats import ATSFormatError, build_ats_cv
@@ -947,6 +976,21 @@ def main(argv: list[str] | None = None) -> int:
     cv_ats.add_argument("--max-pages", type=int, default=2,
                         help="Page budget; more pages is an audit finding (default 2).")
     cv_ats.set_defaults(fn=cmd_cv_ats)
+
+    cv_design = sub.add_parser(
+        "cv-design",
+        help="Render the human-facing CV (typeset PDF) from the same Markdown "
+             "source the ATS render uses.",
+    )
+    cv_design.add_argument("--source", default="data/applications/cv_general_ats.md",
+                           help="Markdown CV source (default: the general base CV).")
+    cv_design.add_argument("--out", default="output/designed",
+                           help="Output directory (default: output/designed).")
+    cv_design.add_argument("--stem", default=None,
+                           help="Output filename stem (default: the source filename).")
+    cv_design.add_argument("--max-pages", type=int, default=2,
+                           help="Page budget to report against (default 2).")
+    cv_design.set_defaults(fn=cmd_cv_design)
 
     mark = sub.add_parser(
         "mark-applied",
