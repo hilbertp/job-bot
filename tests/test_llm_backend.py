@@ -102,6 +102,24 @@ def test_cli_backend_nonzero_exit_raises(monkeypatch, tmp_path):
         llm.complete(_secrets(), system="s", user="u", max_tokens=10)
 
 
+def test_cli_backend_nonzero_exit_falls_back_to_stdout(monkeypatch, tmp_path):
+    """The CLI prints auth failures on stdout and leaves stderr empty, which
+    used to surface as a bare "exited 1:" and hid an expired OAuth session
+    behind a generic LlmError for a whole day of runs."""
+    monkeypatch.setenv("JOBBOT_LLM_BACKEND", "claude_cli")
+    cli = tmp_path / "claude"
+    cli.write_text("#!/bin/sh\n")
+    monkeypatch.setenv("JOBBOT_CLAUDE_CLI", str(cli))
+    monkeypatch.setattr(llm.subprocess, "run", lambda cmd, **kw:
+                        subprocess.CompletedProcess(
+                            cmd, 1,
+                            stdout="Failed to authenticate: OAuth session expired"
+                                   " and could not be refreshed",
+                            stderr=""))
+    with pytest.raises(llm.LlmError, match="OAuth session expired"):
+        llm.complete(_secrets(), system="s", user="u", max_tokens=10)
+
+
 def test_cli_backend_error_payload_raises(monkeypatch, tmp_path):
     monkeypatch.setenv("JOBBOT_LLM_BACKEND", "claude_cli")
     cli = tmp_path / "claude"

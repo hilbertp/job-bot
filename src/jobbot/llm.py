@@ -168,8 +168,12 @@ def _complete_cli(*, system: str, user: str, model: str,
     except subprocess.TimeoutExpired as exc:
         raise LlmError(f"claude -p timed out after {timeout_s}s") from exc
     if proc.returncode != 0:
+        # Auth failures ("OAuth session expired and could not be refreshed")
+        # go to stdout, not stderr, so a stderr-only message reads as a bare
+        # "exited 1:" and the real cause never reaches the dashboard.
+        detail = proc.stderr.strip() or proc.stdout.strip()
         raise LlmError(
-            f"claude -p exited {proc.returncode}: {proc.stderr.strip()[-500:]}"
+            f"claude -p exited {proc.returncode}: {detail[-500:]}"
         )
     try:
         data = json.loads(proc.stdout)
