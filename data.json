@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-14T13:16:31.664487+00:00",
+  "generated_at": "2026-08-14T13:27:46.911945+00:00",
   "jobs": [
     {
       "id": "linkedin_6b3743da627546f7",
@@ -76,6 +76,27 @@
       "apply_route": "url",
       "apply_target": "https://fundraiseup.com/careers/4703448005/",
       "documents": []
+    },
+    {
+      "id": "linkedin_f09432909918e33c",
+      "source": "linkedin",
+      "url": "https://ae.linkedin.com/jobs/view/product-manager-trading-at-salt-4451204828",
+      "title": "Product Manager, Trading",
+      "company": "Salt",
+      "location": "Dubai, United Arab Emirates",
+      "salary": null,
+      "score": 88,
+      "score_tailored": 95,
+      "status": "generated",
+      "first_seen_at": "2026-08-14T12:22:02.897719+00:00",
+      "posted_at": "2026-08-14T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://ae.linkedin.com/jobs/view/product-manager-trading-at-salt-4451204828",
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
     },
     {
       "id": "linkedin_06174b751be07587",
@@ -417,6 +438,48 @@
       "apply_route": "url",
       "apply_target": "https://careers.criteo.com/en/jobs/r20871/senior-product-manager/",
       "documents": []
+    },
+    {
+      "id": "freelancermap_5aba297f4be21868",
+      "source": "freelancermap",
+      "url": "https://www.freelancermap.de/projekt/operativer-product-manager-m-w-d-ki-public-sector-anue",
+      "title": "Operativer Product Manager (m/w/d) \u2013 KI / Public Sector | AN\u00dc",
+      "company": "freelancermap (Auftraggeber anonym)",
+      "location": null,
+      "salary": null,
+      "score": 82,
+      "score_tailored": 91,
+      "status": "generated",
+      "first_seen_at": "2026-08-14T12:21:16.715435+00:00",
+      "posted_at": null,
+      "apply_route": "url",
+      "apply_target": "https://www.freelancermap.de/projekt/operativer-product-manager-m-w-d-ki-public-sector-anue",
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
+    },
+    {
+      "id": "dailyremote_5ce7a0edf72d2654",
+      "source": "dailyremote",
+      "url": "https://dailyremote.com/remote-job/product-manager-5456513",
+      "title": "Product Manager",
+      "company": "Customer.io",
+      "location": null,
+      "salary": "137k",
+      "score": 82,
+      "score_tailored": 91,
+      "status": "generated",
+      "first_seen_at": "2026-08-14T05:07:03.216514+00:00",
+      "posted_at": "2026-08-13T21:00:26+00:00",
+      "apply_route": "email",
+      "apply_target": "jobs@customer.io",
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
     },
     {
       "id": "dailyremote_d00beb396f0c4017",
@@ -1078,6 +1141,74 @@
       "documents": []
     },
     {
+      "id": "linkedin_a3688c57579c8c61",
+      "source": "linkedin",
+      "url": "https://ae.linkedin.com/jobs/view/senior-product-manager-payments-business-account-at-reap-4453526623",
+      "title": "Senior Product Manager, Payments (Business Account)",
+      "company": "Reap",
+      "location": "Dubai, Dubai, United Arab Emirates",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-14T13:01:28.098134+00:00",
+      "posted_at": "2026-08-14T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://ae.linkedin.com/jobs/view/senior-product-manager-payments-business-account-at-reap-4453526623",
+      "documents": []
+    },
+    {
+      "id": "linkedin_f8e798f60e6acc2d",
+      "source": "linkedin",
+      "url": "https://ae.linkedin.com/jobs/view/senior-product-manager-%E2%80%93-payments-at-salt-4451208897",
+      "title": "Senior Product Manager \u2013 Payments",
+      "company": "Salt",
+      "location": "Dubai, United Arab Emirates",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-14T12:22:14.569824+00:00",
+      "posted_at": "2026-08-14T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://ae.linkedin.com/jobs/view/senior-product-manager-%E2%80%93-payments-at-salt-4451208897",
+      "documents": []
+    },
+    {
+      "id": "stepstone_d6eff6346030784e",
+      "source": "stepstone",
+      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-Project-Enablement-m-w-d-Mannheim-BAUHAUS--14399075-inline.html",
+      "title": "Product Owner Project Enablement (m/w/d)",
+      "company": "BAUHAUS",
+      "location": "Mannheim",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-14T12:21:26.066120+00:00",
+      "posted_at": "2026-08-14T11:24:09.750000+00:00",
+      "apply_route": "url",
+      "apply_target": "https://www.stepstone.de/stellenangebote--Product-Owner-Project-Enablement-m-w-d-Mannheim-BAUHAUS--14399075-inline.html",
+      "documents": []
+    },
+    {
+      "id": "himalayas_c7e2c7ab6c87113a",
+      "source": "himalayas",
+      "url": "https://himalayas.app/companies/vcluster-labs/jobs/senior-product-manager",
+      "title": "Senior Product Manager",
+      "company": "vCluster Labs",
+      "location": "United States",
+      "salary": "10k",
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-14T09:19:19.088144+00:00",
+      "posted_at": "2026-08-14T04:00:14",
+      "apply_route": "url",
+      "apply_target": "https://himalayas.app/companies/vcluster-labs/jobs/senior-product-manager",
+      "documents": []
+    },
+    {
       "id": "linkedin_0428d30f975b2c8b",
       "source": "linkedin",
       "url": "https://ae.linkedin.com/jobs/view/technical-product-manager-%E2%80%93-enterprise-data-management-at-etihad-4450482044",
@@ -1656,6 +1787,74 @@
       "documents": []
     },
     {
+      "id": "linkedin_f0e852964842be0f",
+      "source": "linkedin",
+      "url": "https://ae.linkedin.com/jobs/view/lead-product-owner-trading-wealth-platform-at-involved-solutions-4454509256",
+      "title": "Lead Product Owner - Trading/Wealth Platform",
+      "company": "Involved Solutions",
+      "location": "Dubai, Dubai, United Arab Emirates",
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-14T12:22:14.569351+00:00",
+      "posted_at": "2026-08-14T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://ae.linkedin.com/jobs/view/lead-product-owner-trading-wealth-platform-at-involved-solutions-4454509256",
+      "documents": []
+    },
+    {
+      "id": "linkedin_5f25244170617d1a",
+      "source": "linkedin",
+      "url": "https://www.linkedin.com/jobs/view/sr-product-manager-cloud-volumes-ontap-at-netapp-4450159026",
+      "title": "Sr. Product Manager- Cloud Volumes ONTAP",
+      "company": "NetApp",
+      "location": "Morrisville, NC",
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-14T12:21:42.523281+00:00",
+      "posted_at": "2026-08-12T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://www.linkedin.com/jobs/view/sr-product-manager-cloud-volumes-ontap-at-netapp-4450159026",
+      "documents": []
+    },
+    {
+      "id": "linkedin_5b4d723d9ae557f2",
+      "source": "linkedin",
+      "url": "https://ae.linkedin.com/jobs/view/fx-solution-product-manager-maritime-at-ebury-4454003416",
+      "title": "FX Solution Product Manager - Maritime",
+      "company": "Ebury",
+      "location": "Dubai, Dubai, United Arab Emirates",
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-14T09:19:04.843885+00:00",
+      "posted_at": "2026-08-13T00:00:00Z",
+      "apply_route": "email",
+      "apply_target": "an@ebury.comdomain",
+      "documents": []
+    },
+    {
+      "id": "stepstone_362d32b0fca1bf7e",
+      "source": "stepstone",
+      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-m-w-d-Neuss-Creditreform--14392335-inline.html",
+      "title": "Product Owner (m/w/d)",
+      "company": "Creditreform",
+      "location": "Neuss",
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-14T09:03:01.301774+00:00",
+      "posted_at": "2026-08-12T13:48:56.757000+00:00",
+      "apply_route": "url",
+      "apply_target": "https://www.stepstone.de/stellenangebote--Product-Owner-m-w-d-Neuss-Creditreform--14392335-inline.html",
+      "documents": []
+    },
+    {
       "id": "freelancermap_6c60c35c2667ec77",
       "source": "freelancermap",
       "url": "https://www.freelancermap.de/projekt/technischer-product-owner-m-w-d-manufacturing-produktion-software",
@@ -2066,6 +2265,16 @@
   ],
   "runs": [
     {
+      "id": 371,
+      "started_at": "2026-08-14T13:20:31.209842+00:00",
+      "finished_at": "2026-08-14T13:27:46.886636+00:00",
+      "n_fetched": 377,
+      "n_new": 1,
+      "n_generated": 3,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
       "id": 370,
       "started_at": "2026-08-14T13:14:36.060091+00:00",
       "finished_at": "2026-08-14T13:16:31.637704+00:00",
@@ -2194,16 +2403,6 @@
       "n_generated": 8,
       "n_applied": 0,
       "n_errors": 2
-    },
-    {
-      "id": 357,
-      "started_at": "2026-08-12T05:00:03.104493+00:00",
-      "finished_at": "2026-08-12T13:25:03.158848+00:00",
-      "n_fetched": 364,
-      "n_new": 25,
-      "n_generated": 1,
-      "n_applied": 0,
-      "n_errors": 3
     }
   ]
 }
