@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-14T12:23:22.145135+00:00",
+  "generated_at": "2026-08-14T13:16:31.664487+00:00",
   "jobs": [
     {
       "id": "linkedin_6b3743da627546f7",
@@ -1078,23 +1078,6 @@
       "documents": []
     },
     {
-      "id": "linkedin_05c0d8643f3b1a61",
-      "source": "linkedin",
-      "url": "https://de.linkedin.com/jobs/view/senior-product-manager-w-m-d-at-flinn-ai-4448773856",
-      "title": "Senior Product Manager (w/m/d)",
-      "company": "Flinn.ai",
-      "location": "Berlin, Germany",
-      "salary": null,
-      "score": 78,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-08-07T13:00:53.015622+00:00",
-      "posted_at": "2026-08-07T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://de.linkedin.com/jobs/view/senior-product-manager-w-m-d-at-flinn-ai-4448773856",
-      "documents": []
-    },
-    {
       "id": "linkedin_0428d30f975b2c8b",
       "source": "linkedin",
       "url": "https://ae.linkedin.com/jobs/view/technical-product-manager-%E2%80%93-enterprise-data-management-at-etihad-4450482044",
@@ -2083,6 +2066,26 @@
   ],
   "runs": [
     {
+      "id": 370,
+      "started_at": "2026-08-14T13:14:36.060091+00:00",
+      "finished_at": "2026-08-14T13:16:31.637704+00:00",
+      "n_fetched": 378,
+      "n_new": 5,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 7
+    },
+    {
+      "id": 369,
+      "started_at": "2026-08-14T13:00:05.796466+00:00",
+      "finished_at": "2026-08-14T13:02:36.681930+00:00",
+      "n_fetched": 380,
+      "n_new": 3,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 7
+    },
+    {
       "id": 368,
       "started_at": "2026-08-14T12:21:07.646219+00:00",
       "finished_at": "2026-08-14T12:23:22.116662+00:00",
@@ -2201,26 +2204,6 @@
       "n_generated": 1,
       "n_applied": 0,
       "n_errors": 3
-    },
-    {
-      "id": 356,
-      "started_at": "2026-08-11T17:00:05.881415+00:00",
-      "finished_at": "2026-08-11T17:06:00.497727+00:00",
-      "n_fetched": 364,
-      "n_new": 20,
-      "n_generated": 2,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 355,
-      "started_at": "2026-08-11T13:00:01.642208+00:00",
-      "finished_at": "2026-08-11T13:02:38.967904+00:00",
-      "n_fetched": 354,
-      "n_new": 7,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 7
     }
   ]
 }
