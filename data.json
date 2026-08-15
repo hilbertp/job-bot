@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-15T11:42:48.849870+00:00",
+  "generated_at": "2026-08-15T12:02:45.771648+00:00",
   "jobs": [
     {
       "id": "linkedin_6b3743da627546f7",
@@ -788,23 +788,6 @@
       ]
     },
     {
-      "id": "talentmate_dc1bac65a89a9ac7",
-      "source": "talentmate",
-      "url": "https://www.talentmate.com/jobs/uae/abu-dhabi/AI_Product_Manager/2608-2827-203",
-      "title": "AI Product Manager",
-      "company": "Accenture Middle East",
-      "location": "Abu Dhabi",
-      "salary": null,
-      "score": 82,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-08-08T12:02:19.773246+00:00",
-      "posted_at": "2026-08-07T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://www.talentmate.com/jobs/uae/abu-dhabi/AI_Product_Manager/2608-2827-203",
-      "documents": []
-    },
-    {
       "id": "xing_f516e434b48c7074",
       "source": "xing",
       "url": "https://www.xing.com/jobs/karlsruhe-product-owner-commerce-conversion-kpi-157182693",
@@ -887,6 +870,23 @@
       "posted_at": null,
       "apply_route": "url",
       "apply_target": "https://www.linkedin.com/jobs/view/4452098260",
+      "documents": []
+    },
+    {
+      "id": "linkedin_3eed318a339551e4",
+      "source": "linkedin",
+      "url": "https://www.linkedin.com/jobs/view/product-manager-link-local-payment-methods-at-stripe-4454535381",
+      "title": "Product Manager, Link - Local Payment Methods",
+      "company": "Stripe",
+      "location": "Chicago, IL",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-15T12:01:08.186450+00:00",
+      "posted_at": "2026-08-14T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://www.linkedin.com/jobs/view/product-manager-link-local-payment-methods-at-stripe-4454535381",
       "documents": []
     },
     {
@@ -1759,6 +1759,16 @@
   ],
   "runs": [
     {
+      "id": 375,
+      "started_at": "2026-08-15T12:00:02.182699+00:00",
+      "finished_at": "2026-08-15T12:02:45.737252+00:00",
+      "n_fetched": 341,
+      "n_new": 4,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
       "id": 374,
       "started_at": "2026-08-15T11:40:06.331190+00:00",
       "finished_at": "2026-08-15T11:42:48.809467+00:00",
@@ -1884,16 +1894,6 @@
       "finished_at": "2026-08-13T13:05:11.069255+00:00",
       "n_fetched": 0,
       "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 361,
-      "started_at": "2026-08-13T12:09:44.250221+00:00",
-      "finished_at": "2026-08-13T12:14:04.131704+00:00",
-      "n_fetched": 216,
-      "n_new": 1,
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 1
