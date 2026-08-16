@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-15T12:02:45.771648+00:00",
+  "generated_at": "2026-08-16T12:02:29.159577+00:00",
   "jobs": [
     {
       "id": "linkedin_6b3743da627546f7",
@@ -53,7 +53,7 @@
       "salary": null,
       "score": 82,
       "score_tailored": 95,
-      "status": "generated",
+      "status": "listing_expired",
       "first_seen_at": "2026-08-14T17:01:12.552464+00:00",
       "posted_at": "2026-08-14T00:00:00Z",
       "apply_route": "url",
@@ -870,6 +870,74 @@
       "posted_at": null,
       "apply_route": "url",
       "apply_target": "https://www.linkedin.com/jobs/view/4452098260",
+      "documents": []
+    },
+    {
+      "id": "linkedin_07d6cc39194d1e8e",
+      "source": "linkedin",
+      "url": "https://ae.linkedin.com/jobs/view/product-owner-at-cntxt-ai-4455197131",
+      "title": "Product Owner",
+      "company": "CNTXT AI",
+      "location": "Dubai, United Arab Emirates",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-16T12:01:23.809137+00:00",
+      "posted_at": "2026-08-16T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://ae.linkedin.com/jobs/view/product-owner-at-cntxt-ai-4455197131",
+      "documents": []
+    },
+    {
+      "id": "linkedin_5fcbead756fb6780",
+      "source": "linkedin",
+      "url": "https://ae.linkedin.com/jobs/view/lead-product-manager-discovery-at-floward-4455150078",
+      "title": "Lead Product Manager - Discovery",
+      "company": "Floward",
+      "location": "Dubai, United Arab Emirates",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-16T06:50:07.771946+00:00",
+      "posted_at": "2026-08-15T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://ae.linkedin.com/jobs/view/lead-product-manager-discovery-at-floward-4455150078",
+      "documents": []
+    },
+    {
+      "id": "stepstone_c61c334287aa4f08",
+      "source": "stepstone",
+      "url": "https://www.stepstone.de/stellenangebote--Product-Manager-Classifieds-d-m-w-Hannover-MADSACK--14347243-inline.html",
+      "title": "Product Manager Classifieds (d/m/w)",
+      "company": "MADSACK",
+      "location": "Hannover",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-16T05:01:05.328799+00:00",
+      "posted_at": "2026-08-15T17:03:25.350000+00:00",
+      "apply_route": "url",
+      "apply_target": "https://www.stepstone.de/stellenangebote--Product-Manager-Classifieds-d-m-w-Hannover-MADSACK--14347243-inline.html",
+      "documents": []
+    },
+    {
+      "id": "dailyremote_9c7b4ae739e61405",
+      "source": "dailyremote",
+      "url": "https://dailyremote.com/remote-job/product-manager-5465694",
+      "title": "Product Manager",
+      "company": "Ensora Health",
+      "location": null,
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-15T17:00:13.846349+00:00",
+      "posted_at": "2026-08-15T16:00:10+00:00",
+      "apply_route": "missing",
+      "apply_target": null,
       "documents": []
     },
     {
@@ -1759,6 +1827,56 @@
   ],
   "runs": [
     {
+      "id": 380,
+      "started_at": "2026-08-16T12:00:05.481050+00:00",
+      "finished_at": "2026-08-16T12:02:29.125046+00:00",
+      "n_fetched": 335,
+      "n_new": 5,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 379,
+      "started_at": "2026-08-16T09:12:36.933507+00:00",
+      "finished_at": "2026-08-16T09:19:27.746446+00:00",
+      "n_fetched": 336,
+      "n_new": 6,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 378,
+      "started_at": "2026-08-16T05:00:45.963171+00:00",
+      "finished_at": "2026-08-16T07:17:23.291036+00:00",
+      "n_fetched": 323,
+      "n_new": 6,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 377,
+      "started_at": "2026-08-15T17:00:05.151700+00:00",
+      "finished_at": "2026-08-15T17:02:15.054658+00:00",
+      "n_fetched": 343,
+      "n_new": 2,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 376,
+      "started_at": "2026-08-15T13:00:00.928920+00:00",
+      "finished_at": "2026-08-15T13:02:06.943361+00:00",
+      "n_fetched": 341,
+      "n_new": 0,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
       "id": 375,
       "started_at": "2026-08-15T12:00:02.182699+00:00",
       "finished_at": "2026-08-15T12:02:45.737252+00:00",
@@ -1847,56 +1965,6 @@
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 7
-    },
-    {
-      "id": 366,
-      "started_at": "2026-08-14T09:02:41.655941+00:00",
-      "finished_at": "2026-08-14T10:06:46.743497+00:00",
-      "n_fetched": 350,
-      "n_new": 20,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 7
-    },
-    {
-      "id": 365,
-      "started_at": "2026-08-14T05:06:56.591793+00:00",
-      "finished_at": "2026-08-14T05:48:36.828098+00:00",
-      "n_fetched": 355,
-      "n_new": 16,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 7
-    },
-    {
-      "id": 364,
-      "started_at": "2026-08-13T17:00:02.779836+00:00",
-      "finished_at": "2026-08-13T17:02:30.989680+00:00",
-      "n_fetched": 389,
-      "n_new": 1,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 363,
-      "started_at": "2026-08-13T16:43:31.782083+00:00",
-      "finished_at": "2026-08-13T16:48:37.470618+00:00",
-      "n_fetched": 388,
-      "n_new": 23,
-      "n_generated": 2,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 362,
-      "started_at": "2026-08-13T13:05:10.395228+00:00",
-      "finished_at": "2026-08-13T13:05:11.069255+00:00",
-      "n_fetched": 0,
-      "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
     }
   ]
 }
