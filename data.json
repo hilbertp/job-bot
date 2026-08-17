@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-16T12:02:29.159577+00:00",
+  "generated_at": "2026-08-17T12:05:45.045835+00:00",
   "jobs": [
     {
       "id": "linkedin_6b3743da627546f7",
@@ -180,6 +180,27 @@
       "posted_at": "2026-08-10T18:00:53+00:00",
       "apply_route": "missing",
       "apply_target": null,
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
+    },
+    {
+      "id": "linkedin_830d43a399f0a3e5",
+      "source": "linkedin",
+      "url": "https://ae.linkedin.com/jobs/view/product-manager-ai-products-at-spidersilk-4417144347",
+      "title": "Product Manager (AI Products)",
+      "company": "spiderSilk",
+      "location": "Dubai, Dubai, United Arab Emirates",
+      "salary": null,
+      "score": 87,
+      "score_tailored": 92,
+      "status": "generated",
+      "first_seen_at": "2026-08-16T17:57:12.591231+00:00",
+      "posted_at": "2026-08-16T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://ae.linkedin.com/jobs/view/product-manager-ai-products-at-spidersilk-4417144347",
       "documents": [
         "cv.pdf",
         "cover_letter.pdf",
@@ -603,6 +624,27 @@
       "documents": []
     },
     {
+      "id": "dailyremote_c2d99a3b1efd13e0",
+      "source": "dailyremote",
+      "url": "https://dailyremote.com/remote-job/product-manager-5467949",
+      "title": "Product Manager",
+      "company": "Primer.io",
+      "location": null,
+      "salary": null,
+      "score": 88,
+      "score_tailored": 88,
+      "status": "generated",
+      "first_seen_at": "2026-08-17T12:00:38.414628+00:00",
+      "posted_at": "2026-08-17T12:00:31+00:00",
+      "apply_route": "missing",
+      "apply_target": null,
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
+    },
+    {
       "id": "linkedin_bfbcb15dcb15fa2f",
       "source": "linkedin",
       "url": "https://ae.linkedin.com/jobs/view/ai-product-manager-m-f-d-at-halian-managed-services-recruitment-agency-contract-staffing-4453577563",
@@ -722,6 +764,27 @@
       "posted_at": "2026-08-09T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://ae.linkedin.com/jobs/view/product-owner-ux-at-revolut-3811296961",
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
+    },
+    {
+      "id": "dailyremote_25e7f9d55ab86a80",
+      "source": "dailyremote",
+      "url": "https://dailyremote.com/remote-job/product-manager-5467907",
+      "title": "Product Manager",
+      "company": "Safeguard Global",
+      "location": null,
+      "salary": "\u20ac50,000",
+      "score": 82,
+      "score_tailored": 87,
+      "status": "generated",
+      "first_seen_at": "2026-08-17T12:00:38.416058+00:00",
+      "posted_at": "2026-08-17T12:00:17+00:00",
+      "apply_route": "missing",
+      "apply_target": null,
       "documents": [
         "cv.pdf",
         "cover_letter.pdf",
@@ -870,6 +933,125 @@
       "posted_at": null,
       "apply_route": "url",
       "apply_target": "https://www.linkedin.com/jobs/view/4452098260",
+      "documents": []
+    },
+    {
+      "id": "linkedin_ce4e7c7a8bfe8d3e",
+      "source": "linkedin",
+      "url": "https://ae.linkedin.com/jobs/view/ai-product-management-lead-at-confidential-4454252903",
+      "title": "AI Product Management Lead",
+      "company": "Confidential",
+      "location": "Abu Dhabi Emirate, United Arab Emirates",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-17T12:01:21.574657+00:00",
+      "posted_at": "2026-08-17T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://ae.linkedin.com/jobs/view/ai-product-management-lead-at-confidential-4454252903",
+      "documents": []
+    },
+    {
+      "id": "stepstone_3ab46c75f501819d",
+      "source": "stepstone",
+      "url": "https://www.stepstone.de/stellenangebote--Manager-Product-Owner-eCommerce-Platform-m-w-d-Mannheim-FUCHS-SE--14403035-inline.html",
+      "title": "Manager / Product Owner eCommerce Platform (m/w/d)",
+      "company": "FUCHS SE",
+      "location": "Mannheim",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-17T12:00:54.008607+00:00",
+      "posted_at": "2026-08-17T09:24:04.407000+00:00",
+      "apply_route": "email",
+      "apply_target": "kathrin.fricke@fuchs.com",
+      "documents": []
+    },
+    {
+      "id": "linkedin_48c84e3b5566b204",
+      "source": "linkedin",
+      "url": "https://ae.linkedin.com/jobs/view/licensing-product-manager-at-general-commercial-gaming-regulatory-authority-gcgra-4452232593",
+      "title": "Licensing - Product Manager",
+      "company": "General Commercial Gaming Regulatory Authority - GCGRA",
+      "location": "Abu Dhabi Emirate, United Arab Emirates",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-17T09:46:30.532820+00:00",
+      "posted_at": "2026-08-17T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://ae.linkedin.com/jobs/view/licensing-product-manager-at-general-commercial-gaming-regulatory-authority-gcgra-4452232593",
+      "documents": []
+    },
+    {
+      "id": "linkedin_cc6620ac37330494",
+      "source": "linkedin",
+      "url": "https://ae.linkedin.com/jobs/view/growth-product-manager-at-fasset-4454231668",
+      "title": "Growth Product Manager",
+      "company": "Fasset",
+      "location": "Dubai, United Arab Emirates",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-17T09:46:30.532729+00:00",
+      "posted_at": "2026-08-17T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://ae.linkedin.com/jobs/view/growth-product-manager-at-fasset-4454231668",
+      "documents": []
+    },
+    {
+      "id": "linkedin_e86e78971440c3e4",
+      "source": "linkedin",
+      "url": "https://ae.linkedin.com/jobs/view/product-manager-payroll-business-services-at-astra-tech-4454235362",
+      "title": "Product Manager (Payroll & Business Services)",
+      "company": "Astra Tech",
+      "location": "Dubai, Dubai, United Arab Emirates",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-17T09:46:20.418288+00:00",
+      "posted_at": "2026-08-17T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://ae.linkedin.com/jobs/view/product-manager-payroll-business-services-at-astra-tech-4454235362",
+      "documents": []
+    },
+    {
+      "id": "freelancermap_a0624615279917e7",
+      "source": "freelancermap",
+      "url": "https://www.freelancermap.de/projekt/product-owner-m-w-d-opendesk-souveraener-arbeitsplatz-open-source",
+      "title": "Product Owner (m/w/d) \u2013 openDesk / Souver\u00e4ner Arbeitsplatz (Open Source)",
+      "company": "freelancermap (Auftraggeber anonym)",
+      "location": null,
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-17T09:45:31.535813+00:00",
+      "posted_at": null,
+      "apply_route": "url",
+      "apply_target": "https://www.freelancermap.de/projekt/product-owner-m-w-d-opendesk-souveraener-arbeitsplatz-open-source",
+      "documents": []
+    },
+    {
+      "id": "linkedin_5450c7452ebdac59",
+      "source": "linkedin",
+      "url": "https://www.linkedin.com/jobs/view/product-manager-link-consumer-at-stripe-4454539373",
+      "title": "Product Manager, Link - Consumer",
+      "company": "Stripe",
+      "location": "Chicago, IL",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-16T17:56:40.430781+00:00",
+      "posted_at": "2026-08-16T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://www.linkedin.com/jobs/view/product-manager-link-consumer-at-stripe-4454539373",
       "documents": []
     },
     {
@@ -1383,6 +1565,40 @@
       "documents": []
     },
     {
+      "id": "dailyremote_c0ec645429891df7",
+      "source": "dailyremote",
+      "url": "https://dailyremote.com/remote-job/product-manager-5467046",
+      "title": "Product Manager",
+      "company": "Campus Connect, Inc",
+      "location": null,
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-17T05:03:35.683771+00:00",
+      "posted_at": "2026-08-17T03:00:16+00:00",
+      "apply_route": "missing",
+      "apply_target": null,
+      "documents": []
+    },
+    {
+      "id": "himalayas_61af5efefb89ca08",
+      "source": "himalayas",
+      "url": "https://himalayas.app/companies/startale/jobs/senior-product-manager-trading",
+      "title": "Senior Product Manager, Trading",
+      "company": "Startale",
+      "location": "Japan, Singapore",
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-16T17:57:17.442382+00:00",
+      "posted_at": "2026-08-16T19:04:44",
+      "apply_route": "url",
+      "apply_target": "https://himalayas.app/companies/startale/jobs/senior-product-manager-trading",
+      "documents": []
+    },
+    {
       "id": "linkedin_480303ae186996c3",
       "source": "linkedin",
       "url": "https://www.linkedin.com/jobs/view/platform-product-owner-at-take-two-interactive-4443882409",
@@ -1827,6 +2043,56 @@
   ],
   "runs": [
     {
+      "id": 385,
+      "started_at": "2026-08-17T12:00:06.439337+00:00",
+      "finished_at": "2026-08-17T12:05:45.006249+00:00",
+      "n_fetched": 309,
+      "n_new": 9,
+      "n_generated": 2,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 384,
+      "started_at": "2026-08-17T09:15:35.924176+00:00",
+      "finished_at": "2026-08-17T09:47:41.168507+00:00",
+      "n_fetched": 278,
+      "n_new": 21,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 383,
+      "started_at": "2026-08-17T05:03:28.036829+00:00",
+      "finished_at": "2026-08-17T08:15:48.737291+00:00",
+      "n_fetched": 275,
+      "n_new": 8,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 382,
+      "started_at": "2026-08-16T17:05:09.454790+00:00",
+      "finished_at": "2026-08-16T18:00:02.252310+00:00",
+      "n_fetched": 333,
+      "n_new": 11,
+      "n_generated": 1,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 381,
+      "started_at": "2026-08-16T13:00:01.113124+00:00",
+      "finished_at": "2026-08-16T13:02:01.830575+00:00",
+      "n_fetched": 338,
+      "n_new": 2,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
       "id": 380,
       "started_at": "2026-08-16T12:00:05.481050+00:00",
       "finished_at": "2026-08-16T12:02:29.125046+00:00",
@@ -1915,56 +2181,6 @@
       "n_generated": 5,
       "n_applied": 0,
       "n_errors": 1
-    },
-    {
-      "id": 371,
-      "started_at": "2026-08-14T13:20:31.209842+00:00",
-      "finished_at": "2026-08-14T13:27:46.886636+00:00",
-      "n_fetched": 377,
-      "n_new": 1,
-      "n_generated": 3,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 370,
-      "started_at": "2026-08-14T13:14:36.060091+00:00",
-      "finished_at": "2026-08-14T13:16:31.637704+00:00",
-      "n_fetched": 378,
-      "n_new": 5,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 7
-    },
-    {
-      "id": 369,
-      "started_at": "2026-08-14T13:00:05.796466+00:00",
-      "finished_at": "2026-08-14T13:02:36.681930+00:00",
-      "n_fetched": 380,
-      "n_new": 3,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 7
-    },
-    {
-      "id": 368,
-      "started_at": "2026-08-14T12:21:07.646219+00:00",
-      "finished_at": "2026-08-14T12:23:22.116662+00:00",
-      "n_fetched": 378,
-      "n_new": 24,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 7
-    },
-    {
-      "id": 367,
-      "started_at": "2026-08-14T12:05:19.393106+00:00",
-      "finished_at": "2026-08-14T12:05:27.531094+00:00",
-      "n_fetched": 0,
-      "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 7
     }
   ]
 }
