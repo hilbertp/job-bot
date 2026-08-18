@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-18T11:44:52.177555+00:00",
+  "generated_at": "2026-08-18T12:02:31.188454+00:00",
   "jobs": [
     {
       "id": "linkedin_e8fe52ddec2f9d5c",
@@ -436,27 +436,6 @@
       "posted_at": "2026-08-12T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://ae.linkedin.com/jobs/view/ai-product-manager-m-f-d-at-halian-managed-services-recruitment-agency-contract-staffing-4452369459",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
-      "id": "linkedin_c6a3288cdac76791",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/product-manager-at-ai71-4443315980",
-      "title": "Product Manager",
-      "company": "ai71",
-      "location": "Abu Dhabi, Abu Dhabi Emirate, United Arab Emirates",
-      "salary": null,
-      "score": 88,
-      "score_tailored": 91,
-      "status": "generated",
-      "first_seen_at": "2026-08-11T12:01:38.739716+00:00",
-      "posted_at": "2026-08-11T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/product-manager-at-ai71-4443315980",
       "documents": [
         "cv.pdf",
         "cover_letter.pdf",
@@ -1968,6 +1947,16 @@
   ],
   "runs": [
     {
+      "id": 391,
+      "started_at": "2026-08-18T12:00:05.329718+00:00",
+      "finished_at": "2026-08-18T12:02:31.149755+00:00",
+      "n_fetched": 341,
+      "n_new": 5,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
       "id": 390,
       "started_at": "2026-08-18T11:39:42.243481+00:00",
       "finished_at": "2026-08-18T11:44:52.148648+00:00",
@@ -2093,16 +2082,6 @@
       "finished_at": "2026-08-16T07:17:23.291036+00:00",
       "n_fetched": 323,
       "n_new": 6,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 377,
-      "started_at": "2026-08-15T17:00:05.151700+00:00",
-      "finished_at": "2026-08-15T17:02:15.054658+00:00",
-      "n_fetched": 343,
-      "n_new": 2,
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 1
