@@ -62,15 +62,15 @@ def _render_html(md: str) -> str:
   /* Density pass: the base CV is a two-page document, so the render must
      not turn it into three. Tightened margins/leading, verified by page
      count rather than by eye. */
-  @page {{ size: A4; margin: 14mm 16mm; background: var(--paper); }}
+  @page {{ size: A4; margin: 10mm 12mm; background: var(--paper); }}
   html {{ background: var(--paper); }}
 
   body {{
     font-family: var(--serif);
     color: var(--ink);
     background: var(--paper);
-    line-height: 1.4;
-    font-size: 10pt;
+    line-height: 1.26;
+    font-size: 8.5pt;
     max-width: 780px;
     margin: 0 auto;
     padding: 0 1rem;
@@ -79,7 +79,7 @@ def _render_html(md: str) -> str:
   /* Name, large editorial serif with italic role tag */
   h1 {{
     font-family: var(--serif);
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 500;
     line-height: 1.06;
     letter-spacing: -0.012em;
@@ -103,7 +103,7 @@ def _render_html(md: str) -> str:
     font-family: var(--sans);
     color: var(--ink-mute);
     font-size: 0.78rem;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     margin-bottom: 0;
   }}
@@ -112,24 +112,24 @@ def _render_html(md: str) -> str:
   h2 {{
     font-family: var(--sans);
     text-transform: uppercase;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.08em;
     font-size: 0.74rem;
     font-weight: 600;
     color: var(--ink-mute);
     border-top: 1px solid var(--rule);
-    padding-top: 1.6rem;
-    margin: 2.2rem 0 1rem 0;
+    padding-top: 0.5rem;
+    margin: 0.85rem 0 0.35rem 0;
   }}
   h2::before {{ content: "§ "; color: var(--ink-mute); }}
 
   /* Job/Company heading (serif, slightly heavier) */
   h3 {{
     font-family: var(--serif);
-    font-size: 1.2rem;
+    font-size: 0.98rem;
     font-weight: 500;
     color: var(--ink);
-    margin: 1.4rem 0 0.15rem 0;
-    line-height: 1.3;
+    margin: 0.6rem 0 0.08rem 0;
+    line-height: 1.25;
   }}
 
   /* H4, sub-label like role title / week label */
@@ -148,11 +148,11 @@ def _render_html(md: str) -> str:
   p > em:only-child {{ font-size: 0.95em; }}
 
   /* Body paragraphs */
-  p {{ margin: 0.5rem 0; }}
+  p {{ margin: 0.26rem 0; }}
 
   /* Bullets, middle-dot marker, soft warm gray */
-  ul {{ padding-left: 1.1rem; margin: 0.45rem 0 0.7rem 0; }}
-  li {{ margin: 0.2rem 0; }}
+  ul {{ padding-left: 1.1rem; margin: 0.2rem 0 0.35rem 0; }}
+  li {{ margin: 0.1rem 0; }}
   li::marker {{ color: var(--ink-mute); }}
 
   /* Two-column treatment: any UL preceded by a small italic intro
@@ -276,7 +276,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
     font-size: 0.72rem;
     font-weight: 600;
     color: var(--ink-mute);
-    letter-spacing: 0.18em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     border-bottom: 1px solid var(--rule);
     padding-bottom: 0.7rem;
@@ -319,7 +319,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
     font-family: var(--sans);
     color: var(--ink-mute);
     font-size: 0.78rem;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     margin-bottom: 0;
   }}
@@ -328,7 +328,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
   h2 {{
     font-family: var(--sans);
     text-transform: uppercase;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.08em;
     font-size: 0.74rem;
     font-weight: 600;
     color: var(--ink-mute);
@@ -344,7 +344,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
     font-size: 0.78rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.08em;
     color: var(--ink-mute);
     margin: 1.2rem 0 0.2rem 0;
   }}
@@ -408,7 +408,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
   .section-title {{
     font-family: var(--sans);
     text-transform: uppercase;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.08em;
     font-size: 0.78rem;
     font-weight: 600;
     color: var(--ink-mute);
