@@ -754,6 +754,80 @@ def _cmd_rescore_base(args) -> int:
     return 0 if n_failed == 0 else 1
 
 
+def cmd_cv_design(args) -> int:
+    """Render the human-facing CV: same Markdown source, typeset for a reader."""
+    from .generators.ats import (
+        ATSFormatError,
+        audit_ats_text,
+        extract_pdf_text,
+        pdf_page_count,
+    )
+    from .generators.designed import build_designed_cv
+
+    source = Path(args.source).expanduser()
+    if not source.is_file():
+        console.print(f"[red]missing CV source:[/red] {source}")
+        return 1
+    try:
+        photo = Path(args.photo).expanduser() if args.photo else None
+        if photo is not None and not photo.is_file():
+            console.print(f"[red]missing photo:[/red] {photo}")
+            return 1
+        pdf = build_designed_cv(source, Path(args.out).expanduser(), stem=args.stem, photo=photo)
+    except ATSFormatError as exc:
+        console.print(f"[red]source is not renderable:[/red] {exc}")
+        return 1
+    console.print(f"pdf: {pdf}")
+    pages = pdf_page_count(pdf)
+    console.print(f"pages: {pages}" + ("" if pages <= args.max_pages else "  [yellow](over budget)[/yellow]"))
+
+    # The designed render is for humans, but it gets uploaded and copy-pasted
+    # anyway, so it faces the same audit as the plain one. Read it back with
+    # the STRICT extractor: pypdf silently repairs letter-spacing, so auditing
+    # its output reports a clean document while the real text layer says
+    # "WO R K  E X P E R I E N C E".
+    texts = extract_pdf_text(pdf)
+    if "pdfminer" not in texts:
+        console.print("[yellow]pdfminer.six is not installed; the letter-spacing "
+                      "check did not run (pypdf repairs the very defect it looks for)[/yellow]")
+    findings = audit_ats_text(texts.get("pdfminer", texts["pypdf"]))
+    if findings:
+        console.print(f"[red]{len(findings)} finding(s) in the text layer:[/red]")
+        for f in findings:
+            console.print(f"  - {f}")
+        return 1
+    console.print("text layer clean: headings, contact and profile URLs all extract intact")
+    return 0
+
+
+def cmd_cv_ats(args) -> int:
+    """Render an ATS-safe CV (DOCX + text PDF) and audit the rendered text layer."""
+    from .generators.ats import ATSFormatError, build_ats_cv
+
+    source = Path(args.source).expanduser()
+    if not source.is_file():
+        console.print(f"[red]missing CV source:[/red] {source}")
+        return 1
+    out_dir = Path(args.out).expanduser()
+    try:
+        paths, findings = build_ats_cv(
+            source, out_dir, stem=args.stem, max_pages=args.max_pages
+        )
+    except ATSFormatError as exc:
+        console.print(f"[red]source is not ATS-safe:[/red] {exc}")
+        return 1
+
+    for label, path in paths.items():
+        console.print(f"{label}: {path}")
+    if findings:
+        console.print(f"[red]{len(findings)} ATS finding(s):[/red]")
+        for finding in findings:
+            console.print(f"  - {finding}")
+        return 1
+    console.print("[green]ATS audit clean[/green]")
+    return 0
+
+
 def cmd_profile_rebuild(_args) -> int:
     """PRD §7.4 FR-PRO-02: rebuild data/profile.compiled.yaml from corpus."""
     output = rebuild_compiled_profile(secrets=load_secrets())
@@ -904,6 +978,40 @@ def main(argv: list[str] | None = None) -> int:
     research_ar.add_argument("--min-score", type=int, default=70,
                              help="Only research rows with score >= this (default 70).")
     research_ar.set_defaults(fn=cmd_research_apply_routes)
+
+    cv_ats = sub.add_parser(
+        "cv-ats",
+        help="Render an ATS-safe CV (single-column DOCX + text PDF) from a "
+             "Markdown source and audit the rendered text layer.",
+    )
+    cv_ats.add_argument("--source", default="data/applications/cv_general_ats.md",
+                        help="Markdown CV source (default: the general ATS base CV).")
+    cv_ats.add_argument("--out", default="output/ats",
+                        help="Output directory (default: output/ats).")
+    cv_ats.add_argument("--stem", default=None,
+                        help="Output filename stem (default: the source filename).")
+    cv_ats.add_argument("--max-pages", type=int, default=2,
+                        help="Page budget; more pages is an audit finding (default 2).")
+    cv_ats.set_defaults(fn=cmd_cv_ats)
+
+    cv_design = sub.add_parser(
+        "cv-design",
+        help="Render the human-facing CV (typeset PDF) from the same Markdown "
+             "source the ATS render uses.",
+    )
+    cv_design.add_argument("--source", default="data/applications/cv_general_ats.md",
+                           help="Markdown CV source (default: the general base CV).")
+    cv_design.add_argument("--out", default="output/designed",
+                           help="Output directory (default: output/designed).")
+    cv_design.add_argument("--stem", default=None,
+                           help="Output filename stem (default: the source filename).")
+    cv_design.add_argument("--max-pages", type=int, default=2,
+                           help="Page budget to report against (default 2).")
+    cv_design.add_argument("--photo", default=None,
+                           help="Portrait to place in the header. Human render only; "
+                                "the ATS render never takes one. Keep the file outside "
+                                "this repository, it is public.")
+    cv_design.set_defaults(fn=cmd_cv_design)
 
     mark = sub.add_parser(
         "mark-applied",
