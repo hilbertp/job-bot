@@ -11,7 +11,11 @@ Subject template, language-aware:
     EN → "Application: <Title>, <Candidate Name>"
 
 Body = the cover letter, plain-text + HTML alternatives.
-Attachments = `cv.pdf` + `cover_letter.pdf` from `docs.output_dir`.
+Attachments = the unified `application_package.pdf` plus the standalone
+parser-safe CV as `CV_<Nachname>.pdf` (ATS email intake identifies the CV
+by that prefix and rejects combined multi-document PDFs for parsing);
+fallback when the package didn't render = `CV_<Nachname>.pdf` +
+`cover_letter.pdf` from `docs.output_dir`.
 
 SMTP creds come from secrets (TRUENORTH_SMTP_*). Never use Gmail for
 outbound applications, Gmail is reserved for the digest + fallback only.
@@ -82,6 +86,19 @@ def _missing_smtp_creds(secrets: Secrets) -> list[str]:
     return missing
 
 
+def _cv_attachment_name(profile: Profile) -> str:
+    """`CV_<Nachname>.pdf`, the intake-friendly CV filename.
+
+    DACH ATS email intake (softgarden documents this explicitly) uses a
+    `CV_` filename prefix to identify which attachment is the parseable
+    CV among several, and human recruiters triage by filename too.
+    """
+    full_name = str((profile.personal or {}).get("full_name", "") or "")
+    last = full_name.split()[-1] if full_name.split() else "Candidate"
+    last = re.sub(r"[^A-Za-z0-9_-]", "", last) or "Candidate"
+    return f"CV_{last}.pdf"
+
+
 def _build_message(
     job: JobPosting, profile: Profile, docs: GeneratedDocs, secrets: Secrets,
 ) -> EmailMessage:
@@ -93,17 +110,22 @@ def _build_message(
     if docs.cover_letter_html:
         msg.add_alternative(docs.cover_letter_html, subtype="html")
 
-    # Prefer the unified opus-style application package (one polished PDF
-    # with cover letter as Section I and CV as Section II). Fall back to
-    # the separate cv.pdf + cover_letter.pdf when the package didn't render
-    #, recruiters get something either way.
+    # The unified opus-style package (cover letter as Section I, CV as
+    # Section II) is the polished human-facing attachment, but it is
+    # exactly the combined multi-document PDF ("Kompendiumsdatei") that
+    # ATS email-intake parsers reject, so the standalone parser-safe CV
+    # rides along under its intake-friendly `CV_<Nachname>.pdf` name.
+    # Fall back to the separate cv.pdf + cover_letter.pdf when the package
+    # didn't render, recruiters get something either way.
+    cv_name = _cv_attachment_name(profile)
     if docs.application_package_pdf and Path(docs.application_package_pdf).exists():
         attachments: list[tuple[str, str]] = [
             ("application_package.pdf", docs.application_package_pdf),
+            (cv_name, docs.cv_pdf or ""),
         ]
     else:
         attachments = [
-            ("cv.pdf", docs.cv_pdf or ""),
+            (cv_name, docs.cv_pdf or ""),
             ("cover_letter.pdf", docs.cover_letter_pdf or ""),
         ]
     for filename, pdf_path in attachments:

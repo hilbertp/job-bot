@@ -229,8 +229,11 @@ def test_email_channel_prefers_application_package_pdf(tmp_path: Path) -> None:
                                 truenorth_smtp_user="hilbert@true-north.berlin"))
 
     attachments = {a.get_filename(): a for a in msg.iter_attachments()}
-    assert set(attachments) == {"application_package.pdf"}, (
-        "the unified package should be the sole attachment when available"
+    assert set(attachments) == {"application_package.pdf", "CV_Hilbert.pdf"}, (
+        "the unified package is the polished attachment, but the standalone "
+        "parser-safe CV must ride along: the package is a combined "
+        "multi-document PDF, exactly what ATS email intake rejects for "
+        "parsing, and the CV_ filename prefix is what intake systems key on"
     )
 
 
@@ -256,4 +259,4 @@ def test_email_channel_falls_back_to_cv_and_cl_when_package_missing(tmp_path: Pa
                                 truenorth_smtp_user="hilbert@true-north.berlin"))
 
     attachments = {a.get_filename(): a for a in msg.iter_attachments()}
-    assert set(attachments) == {"cv.pdf", "cover_letter.pdf"}
+    assert set(attachments) == {"CV_Hilbert.pdf", "cover_letter.pdf"}

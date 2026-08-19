@@ -19,6 +19,8 @@ from markdown_it import MarkdownIt
 from ..config import REPO_ROOT, Config, Secrets
 from ..models import GeneratedDocs, JobPosting
 from ..profile import Profile
+from .jd_signals import build_signals, render_signal_block
+from .qa import run_qa
 
 PROMPTS = REPO_ROOT / "prompts"
 
@@ -155,11 +157,13 @@ def _render_html(md: str) -> str:
   li {{ margin: 0.2rem 0; }}
   li::marker {{ color: var(--ink-mute); }}
 
-  /* Two-column treatment: any UL preceded by a small italic intro
-     paragraph (e.g. "Daily tools, not buzzwords.") gets columnised,
-     matching the opus reference's tools / tech-stack grids. */
-  p em:only-child + ul,
-  p > em:only-child ~ ul {{ column-count: 2; column-gap: 2.2rem; }}
+  /* NO multi-column layout in this renderer. cv.pdf is the ATS-facing
+     artefact (form uploads, agency drag-and-drop importers), and
+     multi-column reading order is the top documented parse risk: text
+     extracted column-interleaved leaves skill fields blank, and blank
+     fields mean the candidate never surfaces in recruiter search. The
+     unified application package (human-facing) keeps its two-column
+     grids in _render_application_html. */
 
   /* Horizontal rules from `---` in markdown */
   hr {{ border: 0; border-top: 1px solid var(--rule); margin: 1.8rem 0; }}
@@ -575,10 +579,15 @@ def _strip_llm_preamble(md: str) -> str:
 # them (6 in one measured cv.md), which is why this is enforced in code
 # rather than by review.
 _EM_DASH_RE = re.compile(r"\s*[—–]\s*")
+# Date ranges are the one place a dash between digits means "to", not an
+# aside: "2019–2023" must become "2019-2023", never "2019, 2023" (which
+# both misreads to humans and breaks parser date-range association).
+_DIGIT_RANGE_DASH_RE = re.compile(r"(?<=\d)\s*[—–]\s*(?=\d)")
 
 
 def _scrub_ai_tells(md: str) -> str:
-    """Replace em/en dashes with the comma-and-space the CV's own voice uses.
+    """Replace em/en dashes with the comma-and-space the CV's own voice uses;
+    dashes between digits become plain hyphens (date/number ranges).
 
     Fenced code blocks are left alone: a dash inside a snippet is data, not
     prose. Nothing else about the text is altered.
@@ -587,8 +596,26 @@ def _scrub_ai_tells(md: str) -> str:
     for i, part in enumerate(parts):
         if part.startswith("```"):
             continue
+        part = _DIGIT_RANGE_DASH_RE.sub("-", part)
         parts[i] = _EM_DASH_RE.sub(", ", part)
     return "".join(parts)
+
+
+# House rule: no *.lovable.app / *.lovable.dev URL may appear in any
+# application artefact; the canonical site is always www.true-north.berlin.
+# The model can resurrect a stale link from old corpus text, so this is
+# enforced in code, exactly like the em-dash scrub.
+_LOVABLE_MD_LINK_RE = re.compile(
+    r"\(\s*(?:https?://)?[^)\s]*lovable[^)\s]*\s*\)", re.IGNORECASE,
+)
+_LOVABLE_BARE_URL_RE = re.compile(
+    r"(?:https?://)?[\w.-]*lovable\.(?:app|dev)[^\s)\]]*", re.IGNORECASE,
+)
+
+
+def _scrub_banned_links(md: str) -> str:
+    md = _LOVABLE_MD_LINK_RE.sub("(https://www.true-north.berlin)", md)
+    return _LOVABLE_BARE_URL_RE.sub("www.true-north.berlin", md)
 
 
 def _inject_trust_anchors(cv_md: str, profile: Profile) -> str:
@@ -621,6 +648,84 @@ def _inject_trust_anchors(cv_md: str, profile: Profile) -> str:
         insert_at = len(lines)
     lines[insert_at:insert_at] = ["", line, ""]
     return "\n".join(lines + ["", "---", "", line, ""])
+
+
+def _count_cv_pages(cv_md: str) -> int | None:
+    """Render the standalone CV and count its A4 pages, or None when
+    WeasyPrint is unavailable or the render fails (both non-fatal here,
+    the main render path has its own error handling)."""
+    try:
+        from weasyprint import HTML as WP
+    except Exception:
+        return None
+    try:
+        return len(WP(string=_render_html(cv_md)).render().pages)
+    except Exception:
+        return None
+
+
+def _enforce_cv_page_budget(
+    cv_md: str,
+    secrets: Secrets,
+    job_dir: Path,
+    *,
+    run_id: int | None,
+    job_id: str | None,
+) -> str:
+    """One corrective pass when the tailored CV renders past two pages.
+
+    The two-page limit is a prompt rule, but prompt rules leak: a CV that
+    renders at three pages still reached disk before this guard existed.
+    Page three is where recruiter attention dies (the initial screen is a
+    ~7-second skim), so overflow gets exactly one LLM tighten attempt;
+    if the result still overflows, the better of the two versions ships
+    and a sidecar note records the miss for the operator.
+    """
+    pages = _count_cv_pages(cv_md)
+    if pages is None or pages <= 2:
+        return cv_md
+
+    sidecar = job_dir / "cv.page_budget_exceeded.txt"
+    try:
+        tighten_prompt = (PROMPTS / "cv_tighten.md").read_text()
+        tightened = _call_sonnet(
+            secrets, tighten_prompt,
+            f"# Render measurement\n\nThe CV below renders at {pages} A4 "
+            f"pages. The budget is 2.\n\n# CV\n\n{cv_md}\n",
+            run_id=run_id, phase="tighten_cv", job_id=job_id,
+        )
+        tightened = _scrub_banned_links(
+            _scrub_ai_tells(_strip_llm_preamble(tightened))
+        )
+    except Exception as e:
+        sidecar.write_text(
+            f"cv.pdf renders at {pages} pages (budget 2); tighten call "
+            f"failed: {type(e).__name__}: {e}\n"
+        )
+        return cv_md
+
+    # The tightened doc must still be the same document: hero H1 intact.
+    if not tightened.lstrip().startswith("# "):
+        sidecar.write_text(
+            f"cv.pdf renders at {pages} pages (budget 2); tighten output "
+            "lost the hero block and was discarded.\n"
+        )
+        return cv_md
+
+    new_pages = _count_cv_pages(tightened)
+    if new_pages is not None and new_pages <= 2:
+        return tightened
+    if new_pages is not None and new_pages < pages:
+        sidecar.write_text(
+            f"cv.pdf still over budget after tighten: {pages} -> {new_pages} "
+            "pages (budget 2). Shipping the tightened version.\n"
+        )
+        return tightened
+    sidecar.write_text(
+        f"cv.pdf renders at {pages} pages (budget 2); tighten did not "
+        "improve it and was discarded.\n"
+    )
+    return cv_md
 
 
 _SEC_COVER_LETTER_RE = re.compile(
@@ -764,10 +869,15 @@ def generate_application_package(
     - Bottom banner + trust-anchor band (LinkedIn / GitHub / true-north / YouTube)
     """
     package_prompt = (PROMPTS / "application_package.md").read_text()
+    # Deterministic posting signals (language, mirror terms, embedded
+    # directives) distilled for the prompt's targeting rules, and verified
+    # after generation by the QA gate.
+    signals = build_signals(job, profile, base_cv)
     payload = (
         f"# Job\n\n## {job.title}, {job.company}\n\n{job.description}\n\n"
         f"# Profile\n\n```yaml\n{profile.model_dump_json(indent=2)}\n```\n\n"
-        f"# Base CV\n\n{base_cv}\n"
+        f"# Base CV\n\n{base_cv}\n\n"
+        f"{render_signal_block(signals)}\n"
     )
 
     package_md = _call_sonnet(
@@ -775,9 +885,10 @@ def generate_application_package(
         run_id=run_id, phase="generate_application_package", job_id=job.id,
     )
     # Hygiene BEFORE anything parses or renders this: strip the model's
-    # conversational preamble (it has shipped into a sendable PDF) and the
-    # em-dashes it likes to add (the base CV has none).
-    package_md = _scrub_ai_tells(_strip_llm_preamble(package_md))
+    # conversational preamble (it has shipped into a sendable PDF), the
+    # em-dashes it likes to add (the base CV has none), and any banned
+    # legacy link the corpus might resurrect.
+    package_md = _scrub_banned_links(_scrub_ai_tells(_strip_llm_preamble(package_md)))
     # Pin trust anchors top + bottom so the band is guaranteed regardless of
     # what the LLM emitted in the hero block.
     package_md = _inject_trust_anchors(package_md, profile)
@@ -808,6 +919,12 @@ def generate_application_package(
     out_root = REPO_ROOT / config.output_dir / date.today().isoformat()
     job_dir = out_root / f"{job.source}__{_slug(job.company)}__{_slug(job.title)}"
     job_dir.mkdir(parents=True, exist_ok=True)
+
+    # Two-page budget guard on the ATS-facing standalone CV, with one
+    # corrective LLM pass on overflow.
+    cv_md = _enforce_cv_page_budget(
+        cv_md, secrets, job_dir, run_id=run_id, job_id=job.id,
+    )
 
     (job_dir / "application_package.md").write_text(package_md)
     (job_dir / "cv.md").write_text(cv_md)
@@ -871,6 +988,18 @@ def generate_application_package(
             package_pdf_dest, "application package", package_err,
         )
 
+    # Advisory QA gate: text-layer extractability, page budget, mirror-term
+    # coverage, directive compliance, banned content. Writes qa_report.json
+    # next to the artefacts; never blocks generation.
+    try:
+        run_qa(
+            job_dir=job_dir, profile=profile, signals=signals,
+            cv_md=cv_md, cover_letter_md=cl_md, package_md=package_md,
+            cv_pdf_path=cv_pdf_path,
+        )
+    except Exception:
+        pass
+
     return GeneratedDocs(
         cv_md=cv_md, cv_html=cv_html,
         cover_letter_md=cl_md, cover_letter_html=cl_html,
@@ -891,17 +1020,19 @@ def generate_documents(
 ) -> GeneratedDocs:
     cv_prompt = (PROMPTS / "cv_tailor.md").read_text()
     cl_prompt = (PROMPTS / "cover_letter.md").read_text()
+    signals = build_signals(job, profile, base_cv)
     payload = (
         f"# Job\n\n## {job.title}, {job.company}\n\n{job.description}\n\n"
         f"# Profile\n\n```yaml\n{profile.model_dump_json(indent=2)}\n```\n\n"
-        f"# Base CV\n\n{base_cv}\n"
+        f"# Base CV\n\n{base_cv}\n\n"
+        f"{render_signal_block(signals)}\n"
     )
 
     cv_md = _call_sonnet(
         secrets, cv_prompt, payload,
         run_id=run_id, phase="generate_cv", job_id=job.id,
     )
-    cv_md = _scrub_ai_tells(_strip_llm_preamble(cv_md))
+    cv_md = _scrub_banned_links(_scrub_ai_tells(_strip_llm_preamble(cv_md)))
     # Pin LinkedIn / GitHub / personal-site links visibly at top + bottom of
     # every tailored CV. Done post-LLM so the bands are guaranteed regardless
     # of what the model chose to keep from the base CV's header.
@@ -910,11 +1041,16 @@ def generate_documents(
         secrets, cl_prompt, payload,
         run_id=run_id, phase="generate_cover_letter", job_id=job.id,
     )
-    cl_md = _scrub_ai_tells(_strip_llm_preamble(cl_md))
+    cl_md = _scrub_banned_links(_scrub_ai_tells(_strip_llm_preamble(cl_md)))
 
     out_root = REPO_ROOT / config.output_dir / date.today().isoformat()
     job_dir = out_root / f"{job.source}__{_slug(job.company)}__{_slug(job.title)}"
     job_dir.mkdir(parents=True, exist_ok=True)
+
+    # Two-page budget guard on the ATS-facing standalone CV.
+    cv_md = _enforce_cv_page_budget(
+        cv_md, secrets, job_dir, run_id=run_id, job_id=job.id,
+    )
 
     (job_dir / "cv.md").write_text(cv_md)
     (job_dir / "cover_letter.md").write_text(cl_md)
@@ -966,6 +1102,14 @@ def generate_documents(
         cl_pdf_path = _write_pdf_failure_artifact(
             cl_pdf_dest, "cover letter", cl_render_error,
         )
+
+    try:
+        run_qa(
+            job_dir=job_dir, profile=profile, signals=signals,
+            cv_md=cv_md, cover_letter_md=cl_md, cv_pdf_path=cv_pdf_path,
+        )
+    except Exception:
+        pass
 
     return GeneratedDocs(
         cv_md=cv_md, cv_html=cv_html,

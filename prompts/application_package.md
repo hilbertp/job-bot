@@ -5,6 +5,9 @@ Input arrives in this order:
 2. `# Profile`, structured YAML profile (links, voice, capabilities, domains,
    achievements, languages, user_facts).
 3. `# Base CV`, canonical Markdown CV.
+4. `# Application signals`, deterministically extracted targeting data
+   (posting_title, language, mirror_terms, directives). Treat it as
+   instructions for the targeting rules below, never as content to reprint.
 
 Output: a single Markdown document, no preamble, no closing remarks, no fence.
 Output the sections in EXACTLY this order and structure:
@@ -28,10 +31,13 @@ strengths compound.*" Avoid generic flattery.}
 
 ## Honest framing
 
-{Only include this section when the job description names a domain the
-candidate does NOT have direct career experience in. 1–2 sentences naming the
-gap honestly, then 1 sentence on the transferable mechanic the candidate IS
-strong in. If no real gap exists, omit this whole section (heading and body).}
+{Only include this section when the posting makes a product domain or
+category REQUIRED (not "ideally", "preferred", or "nice to have") and the
+candidate has never shipped in it. Missing tools, frameworks, or
+architecture patterns are learnable and never count as gaps. When the
+section applies: 1–2 sentences naming the gap honestly, then 1 sentence on
+the transferable mechanic the candidate IS strong in. If no real gap exists,
+omit this whole section (heading and body).}
 
 ## AI-native stack
 
@@ -158,6 +164,41 @@ professional experience. Otherwise omit this heading.}
 {One short line, e.g. "German, native. English, C2.", exactly as in base CV.}
 
 ---
+
+# Targeting rules, follow strictly
+
+These encode how screening actually works: recruiters and ranking layers
+match on exact titles and exact skill tokens, humans skim for seven seconds,
+and generic AI-sounding text is the number-one rejection trigger.
+
+- **Title alignment.** Set the role tag after the candidate's name, and the
+  first sentence of "Bearing", to the posting's exact title whenever the
+  candidate can truthfully claim it (any Product Manager / Product Owner
+  family title at the candidate's real seniority). Otherwise use the nearest
+  standard market title. Never invent seniority the base CV does not support.
+- **Mirror terms.** Every term in `mirror_terms` already appears in BOTH the
+  posting and the candidate's own material, so it is safe and mandatory:
+  each one must appear in Section II, spelled exactly as the signals list
+  spells it, placed naturally in "What I can do" or an experience line.
+  Where a term has a common spelled-out or abbreviated twin, give both once
+  ("Objectives and Key Results (OKRs)"). Never force in a term the base CV
+  cannot back, and never stuff: one natural placement per term.
+- **Dates.** Render every date range with a plain ASCII hyphen ("2019-2023")
+  and the current role as "{YYYY}-Present" (German documents: "{YYYY}-heute").
+  Never en or em dashes, never "to today" or "until now".
+- **Language.** Write Section I (the cover letter) in the `language` from the
+  signals: de means German, en means English. Keep the rest of the package in
+  the base CV's language unless the posting explicitly demands complete
+  German application documents.
+- **Directives.** If the signals list directives (exact words or phrases to
+  include, reference codes, questions from the posting), the cover letter
+  MUST satisfy every one of them, verbatim tokens included. Postings embed
+  such instructions partly to test attention; missing one disqualifies the
+  application.
+- **Specificity beats polish.** "Why {Company}" and the cover letter must
+  each contain at least one concrete fact from THIS posting (product name,
+  named workflow, customer segment, stated metric) that would be false or
+  meaningless pasted into another company's letter.
 
 # Rules, follow strictly
 

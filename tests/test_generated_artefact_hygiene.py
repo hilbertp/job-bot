@@ -16,7 +16,7 @@ for a live 88-score Abu Dhabi posting:
 from __future__ import annotations
 
 from jobbot.generators.pipeline import (
-    _extract_hero, _scrub_ai_tells, _strip_llm_preamble,
+    _extract_hero, _scrub_ai_tells, _scrub_banned_links, _strip_llm_preamble,
 )
 
 _REAL_PREAMBLE = (
@@ -91,3 +91,33 @@ def test_scrub_leaves_code_fences_alone():
 def test_scrub_is_idempotent():
     once = _scrub_ai_tells("A — B")
     assert _scrub_ai_tells(once) == once
+
+
+def test_dashes_between_digits_become_hyphens_not_commas():
+    """"2019–2023" must stay a date range. The comma replacement both
+    misreads to humans ("2019, 2023") and breaks parser date-range
+    association, the field recruiter search filters on."""
+    assert _scrub_ai_tells("CFO, 2019–2023") == "CFO, 2019-2023"
+    assert _scrub_ai_tells("Kvitt, 2016—2018") == "Kvitt, 2016-2018"
+
+
+def test_prose_dashes_still_become_commas():
+    assert _scrub_ai_tells("Roadmaps — never fiction") == "Roadmaps, never fiction"
+
+
+def test_lovable_markdown_link_is_rewritten_to_canonical_site():
+    md = "See [my portfolio](https://foo.lovable.app/home) for details."
+    out = _scrub_banned_links(md)
+    assert "lovable" not in out.lower()
+    assert "(https://www.true-north.berlin)" in out
+
+
+def test_bare_lovable_domain_is_rewritten():
+    out = _scrub_banned_links("Demo at myproject.lovable.dev/x today.")
+    assert "lovable" not in out.lower()
+    assert "www.true-north.berlin" in out
+
+
+def test_clean_text_is_untouched_by_link_scrub():
+    md = "Site: [true-north](https://www.true-north.berlin)."
+    assert _scrub_banned_links(md) == md
