@@ -23,7 +23,7 @@ Live, shipped solo end-to-end. Use as the AI-native-builder evidence set for any
 - **construct8.com** = two-sided workforce-matching platform (Bauunternehmen <-> Bauarbeiter). See [[project-construct8-business-model]].
 - **Liberation of Bajor** = multi-agent **team-compatible "vibecoder" framework** (agent orchestration over a shared work queue).
 - **job_bot** = autonomous job-application agent (this repo).
-- **HyperMVP (private repo hilbertp/hypermvp, active through 2025-07).** Python/DuckDB/Polars pipeline for the current aFRR balancing market: provider bids (4h buckets, regelleistung.net) + activation deltas (15-min, netztransparenz.de), idempotent re-imports, merit-order engine reconstructing marginal prices; `filter_negative_50hertz` targets the 50Hertz control zone. Purpose: economic evaluation of grid-balancing flexibility (frame as "Elektrolyse oder flexible Rechenlast" for conservative audiences). ~5.7k LOC, tests, Streamlit viewer. Clone via `gh repo clone hilbertp/hypermvp` (404 on plain web).
+- **Hyperion (formerly HyperMVP; private repo hilbertp/hypermvp, active through 2025-07). RENAMED by Philipp 2026-08-08: always call it Hyperion in documents.** Python/DuckDB/Polars pipeline for the current aFRR balancing market: provider bids (4h buckets, regelleistung.net) + activation deltas (15-min, netztransparenz.de), idempotent re-imports, merit-order engine reconstructing marginal prices; `filter_negative_50hertz` targets the 50Hertz control zone. Purpose: economic evaluation of grid-balancing flexibility (frame as "Elektrolyse oder flexible Rechenlast" for conservative audiences). ~5.7k LOC, tests, Streamlit viewer. Clone via `gh repo clone hilbertp/hypermvp` (404 on plain web).
 - **construct8 (www.construct8.com).** Zweiseitige Matching-Plattform für Bauunternehmen und Bauarbeiter; Philipp = Gründer mit Produktverantwortung über beide Nutzergruppen. AI-first gebaut. Underlying business model: construction labour leasing (hire workers, lend to contractors, ~20% wage markup, ~15.4% CY employer costs). USE as the multi-tenant / multi-user-groups platform proof for "Digitale Plattformen" / marketplace JDs (confirmed by Philipp 2026-06-29; supersedes earlier "business-model stage only" framing).
 
 ## Employment stations (deep facts beyond the CV bullet)
@@ -69,6 +69,7 @@ Eight years hands-on practitioner: hot/cold wallets, DEXes + aggregators, perpet
 - **Hospital Chain WiFi rollout (early career, in 5 CV variants):** supervised IT rollout equipping 9 hospitals with full WiFi coverage. Pre-dates the AOK/Enercon era; healthcare-infrastructure proof point.
 - **Liberation of Bajor** (github.com/hilbertp/liberation-of-bajor): self-built multi-agent AI orchestration over a local file queue; agents Kira (coordinator), O'Brien (implementor via Claude Code CLI) plus evaluator; 669+ commits across 298 thin slices, ADR-driven refactors, mutex-gated merges, real-time dashboard. Strongest agentic-engineering proof besides job_bot.
 - **in_vis:** founder-level structuring engagement incl. virtual stock option plan design; he personally holds VSOP options.
+- **EQUITY / CAP-TABLE COMPETENCE (confirmed by Philipp 2026-08-09: "ich bin sehr vertraut mit equity deals als gründer").** Across three co-founded companies (one a German **AG**) plus eight years as their CFO he has negotiated and lived equity deals: funding rounds, dilution, founder and investor agreements, investor reporting. Plus the in_vis VSOP design above. This is REAL domain evidence for equity/comp/cap-table roles, do not soften it to "adjacent finance experience". The honest boundary: he has NOT operated a stock administration platform (Carta, Shareworks, Fidelity) or a cap-table SYSTEM as a product. Frame as deal-side and instrument-design experience, never as platform-operations experience.
 - **R&S detail:** self-taught OpenShift, delivered the year-blocked feature SOLO within one week (project-leader quote in STORIES_AND_VOICE.md).
 - **EMIL detail:** 17-person org split into exactly 2 stable teams; senior-dev attrition went from near-total exodus to a single departure.
 - **CLINET detail:** 3-person dev team, overambitious roadmap cut to "the most important 10% of features"; stakeholders = hospital leadership and middle management. The opus CV titles this "Founding Product Owner".
@@ -92,11 +93,53 @@ Eight years hands-on practitioner: hot/cold wallets, DEXes + aggregators, perpet
 ## Salary & rate doctrine (his rules, verbatim where quoted)
 
 - **Permanent anchor: 125k EUR/year.** "for any future application take 125k per year okay?" Rule: "if they provide one themselve, use the lower end. if they dont provide apply with 125k."
-- **Hard floor: filter out sub-90k** ("absolutely LAUGHABLE for a strong international PM"). Profile range recorded as 125k-170k.
+- **Hard floor: 70k EUR/year since 2026-08-08** ("lets go to 70.000 per annum minimum"), lowered from the previous 90k. Target range for negotiation stays 125k-170k; the floor only decides what gets filtered before scoring, not what he asks for. Historic context: the 90k era called sub-90k "absolutely LAUGHABLE for a strong international PM", and the Cyprus job market (Fundraise Up 71-78k approved 2026-07-14, BnBerry, Kraken Cyprus bands) is what motivated the lower gate.
 - **Currency calibration:** UK = 107k GBP (ApprovalMax precedent after "is 125000 GBP viable?"); German Mittelstand calibrated down case-by-case (procilon at 105k); USD roles 125000 USD (Chili Piper).
 - **Freelance: 80 EUR/h all-in, remote** ("then use freelancermap as PO freelance position only. thats fine at 80 EUR per hour remote!"; reaffirmed "offer me for 80 EUR allin"). freelancermap is for freelance PO gigs only.
 - **Availability: always ASAP** ("enter asap availability always").
 - **Apply threshold: tailored score 80+ triggers package creation** ("if higher than 80, create application package").
+
+## CV FORMAT RULE: 2 pages hard cap (set by Philipp 2026-08-08)
+
+**CAPITALIZATION RULE (set 2026-08-09, applies everywhere):** sentence capitalization is banned
+unless the text is an actual sentence. Headings and labels get Title Case ("Stack & Tools",
+"Founder Track"); list items and fragments start lowercase ("- three different branches").
+His words: "sentence cap is extremely bad style!"
+
+**Portfolio canon for CVs (set 2026-08-08):** cloud-nine.store/Cloud9 and job_bot are KILLED from
+CVs, never mention them again in application documents. The balancing-power pipeline is called
+**Hyperion** (renamed from HyperMVP). Enercon stays in the CV. The ATS keyword line is mandatory:
+Kubernetes, OpenShift, Red Hat, GitOps, ArgoCD, Jenkins, Git, GitLab, Azure DevOps, Jira,
+Confluence, plus full prototyping with Claude Code, GitHub Copilot, Cursor, Lovable (tool NAMES
+only, never lovable.app/lovable.dev URLs).
+
+The master CV (`cv_general_problem_first.md`) and every variant derived from it must fit **2 A4
+pages** in the standard renderer. His instruction, verbatim: stations state "industries professions
+and tool/technologies mainly. instead of describing the project nature"; strengths are snappy
+one-liners; "my method is the only thing that still is allow Fließtext". Concretely:
+
+- **Stations:** one `###` heading (Company · Role · Industry) plus ONE italic line in the density
+  he dictated on 2026-08-08: WHAT THE PRODUCT DOES + BIGGEST ACCOMPLISHMENTS + tools, no project
+  prose. His canonical content per station, verbatim source of truth:
+  R&S/FCAS = transform AI data to a homogeneous standard and train AI models; rollout days->30min
+  fully hotfix-capable; steered product from UI-heavy to dev-code-friendly. BA = public data
+  searchable/filterable/trend-sharp, fit for social media; bare-metal(Blech)-to-container
+  migration, full UI relaunch, big ETL migration. EMIL = insurers launch products in a low-code
+  SaaS in days not months; full Claims Center launch; fat 17-man team -> three nimble teams with
+  one lead each. AOK = full migration of a legacy webshop to a modern Shopware application.
+  Enercon = full site IT modernisation from end devices to servers/switches, lines and software.
+  Minor stations (Bundesdruckerei, Enercon) are demoted to bold one-line paragraphs without ###
+  headings to save the heading margins.
+- **Strengths:** four one-liners, bold claim + one short sentence.
+- **My method:** the only prose section. Thesis paragraph + one compressed paragraph walking the
+  five failure patterns with their evidence anchors (EMIL 17-person org, R&S zero clicks) + the
+  AI-first close. Trim here LAST; it is the differentiator.
+- **Founder track + Education:** folded into two compact paragraphs at the end, no § headings.
+- The pre-cut 6-page version is preserved as `cv_general_problem_first_long.md` for tailored
+  variants that need the full evidence (interview prep, senior roles asking for detail).
+- ALWAYS verify the rendered page count after editing any variant: render, `pdfinfo | grep Pages`,
+  and cut until it reads 2. Cheap places to reclaim lines, in order: wrapped italic lines, the
+  header detail line, paragraph merges at the tail. The method section is cut last.
 
 ## CANONICAL POSITIONING: technical PM, NOT a developer (set by Philipp 2026-07-31)
 
