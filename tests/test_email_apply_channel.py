@@ -120,7 +120,7 @@ def test_build_message_has_correct_headers_and_attachments(tmp_path: Path) -> No
     assert msg["To"] == "careers@beta.com"
     assert "Application: Senior Product Manager" in msg["Subject"]
     attachments = {a.get_filename(): a for a in msg.iter_attachments()}
-    assert set(attachments) == {"cv.pdf", "cover_letter.pdf"}
+    assert set(attachments) == {"CV_Hilbert.pdf", "cover_letter.pdf"}
 
 
 def test_dry_run_writes_eml_and_returns_dry_run_true(tmp_path: Path) -> None:
