@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-20T11:44:17.472636+00:00",
+  "generated_at": "2026-08-20T12:06:22.416977+00:00",
   "jobs": [
     {
       "id": "linkedin_4b283bfba242e06c",
@@ -906,6 +906,23 @@
       "posted_at": "2026-08-17T17:00:50+00:00",
       "apply_route": "missing",
       "apply_target": null,
+      "documents": []
+    },
+    {
+      "id": "linkedin_ad803ce56b266327",
+      "source": "linkedin",
+      "url": "https://ae.linkedin.com/jobs/view/retail-platforms-product-manager-dnata-catering-retail-at-dnata-4453891002",
+      "title": "Retail Platforms & Product Manager, dnata Catering & Retail",
+      "company": "dnata",
+      "location": "Dubai, Dubai, United Arab Emirates",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-20T12:01:22.783915+00:00",
+      "posted_at": "2026-08-20T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://ae.linkedin.com/jobs/view/retail-platforms-product-manager-dnata-catering-retail-at-dnata-4453891002",
       "documents": []
     },
     {
@@ -2577,6 +2594,16 @@
   ],
   "runs": [
     {
+      "id": 403,
+      "started_at": "2026-08-20T12:00:07.316389+00:00",
+      "finished_at": "2026-08-20T12:06:22.376861+00:00",
+      "n_fetched": 483,
+      "n_new": 13,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 2
+    },
+    {
       "id": 402,
       "started_at": "2026-08-20T11:41:28.537640+00:00",
       "finished_at": "2026-08-20T11:44:17.423830+00:00",
@@ -2703,16 +2730,6 @@
       "n_fetched": 341,
       "n_new": 16,
       "n_generated": 2,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 389,
-      "started_at": "2026-08-18T09:00:00.709999+00:00",
-      "finished_at": "2026-08-18T09:45:34.832451+00:00",
-      "n_fetched": 336,
-      "n_new": 14,
-      "n_generated": 0,
       "n_applied": 0,
       "n_errors": 1
     }
