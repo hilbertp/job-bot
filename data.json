@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-29T12:05:01.196412+00:00",
+  "generated_at": "2026-08-30T12:00:02.036583+00:00",
   "jobs": [
     {
       "id": "linkedin_c51f744f20080d7a",
@@ -268,27 +268,6 @@
       "posted_at": "2026-08-24T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://ae.linkedin.com/jobs/view/product-manager-superhive-at-ai71-4458184787",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
-      "id": "stepstone_9afe629a086dbc58",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-Manager-DEXIOS-SaaS-Plattform-m-w-d-Muenchen-PCS-Systemtechnik-GmbH--14376438-inline.html",
-      "title": "Product Owner / Manager \u2013 DEXIOS SaaS-Plattform (m/w/d)",
-      "company": "PCS Systemtechnik GmbH",
-      "location": "M\u00fcnchen",
-      "salary": null,
-      "score": 82,
-      "score_tailored": 92,
-      "status": "generated",
-      "first_seen_at": "2026-08-22T17:36:21.327971+00:00",
-      "posted_at": "2026-08-22T10:03:14.640000+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.stepstone.de/stellenangebote--Product-Owner-Manager-DEXIOS-SaaS-Plattform-m-w-d-Muenchen-PCS-Systemtechnik-GmbH--14376438-inline.html",
       "documents": [
         "cv.pdf",
         "cover_letter.pdf",
@@ -570,20 +549,20 @@
       "documents": []
     },
     {
-      "id": "stepstone_477fd1b78bf053ca",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-Digital-Applications-w-m-d-Muenchen-Arthrex-GmbH--14420897-inline.html",
-      "title": "Product Owner - Digital Applications (w/m/d)",
-      "company": "Arthrex GmbH",
-      "location": "M\u00fcnchen",
+      "id": "braintrust_3e794351bd84d865",
+      "source": "braintrust",
+      "url": "https://app.usebraintrust.com/jobs/17799/",
+      "title": "Product Owner \u2014 Clinical Digital Products",
+      "company": "SCAN Health",
+      "location": "Remote (US network)",
       "salary": null,
-      "score": 78,
+      "score": 72,
       "score_tailored": null,
       "status": "scored",
-      "first_seen_at": "2026-08-22T13:00:36.005252+00:00",
-      "posted_at": "2026-08-22T06:58:14.187000+00:00",
-      "apply_route": "email",
-      "apply_target": "recruiting@arthrex.de",
+      "first_seen_at": "2026-08-30T05:16:52.562303+00:00",
+      "posted_at": "2026-08-30T04:25:26.383666Z",
+      "apply_route": "url",
+      "apply_target": "https://app.usebraintrust.com/jobs/17799/",
       "documents": []
     },
     {
@@ -1131,20 +1110,37 @@
       "documents": []
     },
     {
-      "id": "weworkremotely_c40b2e4303d1990a",
-      "source": "weworkremotely",
-      "url": "https://weworkremotely.com/remote-jobs/gitlab-ai-transformation-owner-product-design",
-      "title": "AI Transformation Owner, Product & Design",
-      "company": "GitLab",
-      "location": null,
+      "id": "xing_42c51e7d895f4a48",
+      "source": "xing",
+      "url": "https://www.xing.com/jobs/zuerich-product-owner-digital-products-data-solutions-157188505",
+      "title": "Product Owner: Digital Products & Data Solutions",
+      "company": "ZFV",
+      "location": "Z\u00fcrich+ 0 weitere",
       "salary": null,
-      "score": 72,
+      "score": 62,
       "score_tailored": null,
       "status": "scored",
-      "first_seen_at": "2026-08-23T09:10:16.527670+00:00",
-      "posted_at": "2026-08-23T07:30:51Z",
+      "first_seen_at": "2026-08-30T09:21:03.167240+00:00",
+      "posted_at": "2026-08-29T05:41:08+00:00",
       "apply_route": "url",
-      "apply_target": "https://weworkremotely.com/remote-jobs/gitlab-ai-transformation-owner-product-design",
+      "apply_target": "https://www.xing.com/jobs/zuerich-product-owner-digital-products-data-solutions-157188505",
+      "documents": []
+    },
+    {
+      "id": "himalayas_07aff2cd2cd3fc00",
+      "source": "himalayas",
+      "url": "https://himalayas.app/companies/mozilla/jobs/staff-product-manager-search-experiences-2655461942",
+      "title": "Staff Product Manager, Search Experiences",
+      "company": "Mozilla",
+      "location": "United States",
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-08-30T05:16:44.127223+00:00",
+      "posted_at": "2026-08-30T07:27:50",
+      "apply_route": "url",
+      "apply_target": "https://himalayas.app/companies/mozilla/jobs/staff-product-manager-search-experiences-2655461942",
       "documents": []
     },
     {
@@ -1486,43 +1482,49 @@
       "apply_route": "url",
       "apply_target": "https://www.linkedin.com/jobs/view/sr-product-manager-cloud-volumes-ontap-at-netapp-4455096230",
       "documents": []
-    },
-    {
-      "id": "linkedin_9bfcd0b5392df222",
-      "source": "linkedin",
-      "url": "https://www.linkedin.com/jobs/view/sr-product-manager-cloud-volumes-ontap-at-netapp-4455031787",
-      "title": "Sr. Product Manager- Cloud Volumes ONTAP",
-      "company": "NetApp",
-      "location": "Morrisville, NC",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-08-23T06:07:18.041178+00:00",
-      "posted_at": "2026-08-22T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://www.linkedin.com/jobs/view/sr-product-manager-cloud-volumes-ontap-at-netapp-4455031787",
-      "documents": []
-    },
-    {
-      "id": "stepstone_1c0f24dc2769b158",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Senior-Product-Owner-m-w-d-Bochum-CompuGroup-Medical-SE-Co-KGaA--14371457-inline.html",
-      "title": "Senior Product Owner (m/w/d)",
-      "company": "CompuGroup Medical SE & Co. KGaA",
-      "location": "Bochum",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-08-22T17:36:21.327182+00:00",
-      "posted_at": "2026-08-21T04:03:19.633000+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.stepstone.de/stellenangebote--Senior-Product-Owner-m-w-d-Bochum-CompuGroup-Medical-SE-Co-KGaA--14371457-inline.html",
-      "documents": []
     }
   ],
   "runs": [
+    {
+      "id": 451,
+      "started_at": "2026-08-30T09:09:44.199647+00:00",
+      "finished_at": null,
+      "n_fetched": 0,
+      "n_new": 0,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 0
+    },
+    {
+      "id": 450,
+      "started_at": "2026-08-30T05:07:11.457400+00:00",
+      "finished_at": "2026-08-30T06:18:05.211897+00:00",
+      "n_fetched": 314,
+      "n_new": 7,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 449,
+      "started_at": "2026-08-29T17:06:55.207674+00:00",
+      "finished_at": "2026-08-29T17:06:55.918098+00:00",
+      "n_fetched": 0,
+      "n_new": 0,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 448,
+      "started_at": "2026-08-29T13:00:01.220869+00:00",
+      "finished_at": "2026-08-29T13:02:18.958231+00:00",
+      "n_fetched": 373,
+      "n_new": 1,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
     {
       "id": 447,
       "started_at": "2026-08-29T12:00:02.428205+00:00",
@@ -1620,46 +1622,6 @@
       "n_fetched": 386,
       "n_new": 27,
       "n_generated": 1,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 437,
-      "started_at": "2026-08-27T12:04:51.738455+00:00",
-      "finished_at": "2026-08-27T12:04:52.441723+00:00",
-      "n_fetched": 0,
-      "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 436,
-      "started_at": "2026-08-27T09:10:23.931812+00:00",
-      "finished_at": "2026-08-27T09:59:25.057212+00:00",
-      "n_fetched": 363,
-      "n_new": 24,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 435,
-      "started_at": "2026-08-27T05:00:01.152737+00:00",
-      "finished_at": "2026-08-27T05:02:59.447592+00:00",
-      "n_fetched": 371,
-      "n_new": 27,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 434,
-      "started_at": "2026-08-26T17:13:32.053710+00:00",
-      "finished_at": "2026-08-26T17:37:02.976043+00:00",
-      "n_fetched": 382,
-      "n_new": 21,
-      "n_generated": 0,
       "n_applied": 0,
       "n_errors": 1
     }
