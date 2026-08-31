@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import email
 import imaplib
+
+from ..notify.email import MAIL_TIMEOUT_S
 import re
 import time
 from email.message import Message
@@ -28,7 +30,8 @@ class OtpFetcher:
         return None
 
     def _scan_once(self, sender_domain: str) -> str | None:
-        m = imaplib.IMAP4_SSL(self.s.imap_host, self.s.imap_port)
+        m = imaplib.IMAP4_SSL(self.s.imap_host, self.s.imap_port,
+                              timeout=MAIL_TIMEOUT_S)
         try:
             m.login(self.s.gmail_address, self.s.gmail_app_password)
             m.select("INBOX")
