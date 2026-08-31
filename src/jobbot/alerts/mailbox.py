@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import email
 import imaplib
+
+from ..notify.email import MAIL_TIMEOUT_S
 import ssl
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -113,7 +115,9 @@ def connect(secrets: Secrets, mailbox: str = "gmail") -> imaplib.IMAP4_SSL | Non
     if not (user and password and host):
         log.info("alert_scan_skipped_no_creds", mailbox=mailbox)
         return None
-    imap = imaplib.IMAP4_SSL(host, port, ssl_context=ssl.create_default_context())
+    imap = imaplib.IMAP4_SSL(host, port,
+                             ssl_context=ssl.create_default_context(),
+                             timeout=MAIL_TIMEOUT_S)
     imap.login(user, password)
     return imap
 
