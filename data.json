@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-11T12:02:53.355328+00:00",
+  "generated_at": "2026-09-11T13:23:13.851480+00:00",
   "jobs": [
     {
       "id": "himalayas_709f010e59562262",
@@ -100,27 +100,6 @@
       "posted_at": "2026-09-08T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://ae.linkedin.com/jobs/view/senior-product-owner-at-sbs-4464491190",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
-      "id": "linkedin_fed78ee12b429369",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/senior-product-manager-on-chain-at-coinmarketcap-4463134717",
-      "title": "Senior Product Manager - On-chain",
-      "company": "CoinMarketCap",
-      "location": "Dubai, Dubai, United Arab Emirates",
-      "salary": null,
-      "score": 88,
-      "score_tailored": 95,
-      "status": "generated",
-      "first_seen_at": "2026-09-04T12:12:52.584733+00:00",
-      "posted_at": "2026-09-03T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/senior-product-manager-on-chain-at-coinmarketcap-4463134717",
       "documents": [
         "cv.pdf",
         "cover_letter.pdf",
@@ -394,48 +373,6 @@
       "posted_at": null,
       "apply_route": "url",
       "apply_target": "https://www.freelancermap.de/projekt/senior-product-manager-m-w-d-b2b-saas-3045681",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
-      "id": "linkedin_f993a5a7fc5c8edd",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/digital-product-expert-injaz-rbg-head-%2B-product-retail-banking-group-at-mashreq-corporate-investment-banking-group-4461664063",
-      "title": "Digital Product Expert.Injaz - RBG - Head + Product.Retail Banking Group",
-      "company": "Mashreq Corporate & Investment Banking Group",
-      "location": "United Arab Emirates",
-      "salary": null,
-      "score": 82,
-      "score_tailored": 92,
-      "status": "generated",
-      "first_seen_at": "2026-09-04T12:12:52.584314+00:00",
-      "posted_at": "2026-09-03T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/digital-product-expert-injaz-rbg-head-%2B-product-retail-banking-group-at-mashreq-corporate-investment-banking-group-4461664063",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
-      "id": "linkedin_b09a5d74cd392db7",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/digital-product-delivery-manager-mobile-app-at-miral-destinations-4461157718",
-      "title": "Digital Product Delivery Manager (Mobile App)",
-      "company": "Miral Destinations",
-      "location": "Abu Dhabi Emirate, United Arab Emirates",
-      "salary": null,
-      "score": 82,
-      "score_tailored": 92,
-      "status": "generated",
-      "first_seen_at": "2026-09-04T12:12:40.895389+00:00",
-      "posted_at": "2026-09-04T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/digital-product-delivery-manager-mobile-app-at-miral-destinations-4461157718",
       "documents": [
         "cv.pdf",
         "cover_letter.pdf",
@@ -793,27 +730,6 @@
       "posted_at": "2026-09-04T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://www.linkedin.com/jobs/view/product-manager-link-local-payment-methods-at-stripe-4454533495",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
-      "id": "xing_7a544591eff83ee5",
-      "source": "xing",
-      "url": "https://www.xing.com/jobs/karlsruhe-senior-product-manager-cloud-services-saas-b2b-157639156",
-      "title": "Senior Product Manager - Cloud Services / SaaS / B2B (m/w/d)",
-      "company": "Workwise GmbH",
-      "location": "Karlsruhe+ 0 weitere",
-      "salary": null,
-      "score": 82,
-      "score_tailored": 82,
-      "status": "listing_expired",
-      "first_seen_at": "2026-09-04T12:11:38.248825+00:00",
-      "posted_at": "2026-09-04T11:15:28+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.xing.com/jobs/karlsruhe-senior-product-manager-cloud-services-saas-b2b-157639156",
       "documents": [
         "cv.pdf",
         "cover_letter.pdf",
@@ -1348,23 +1264,6 @@
       "documents": []
     },
     {
-      "id": "linkedin_85233b3a3a028243",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/product-manager-at-nabat-4463331036",
-      "title": "Product Manager",
-      "company": "Nabat",
-      "location": "Abu Dhabi, Abu Dhabi Emirate, United Arab Emirates",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-04T12:12:40.894418+00:00",
-      "posted_at": "2026-09-04T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/product-manager-at-nabat-4463331036",
-      "documents": []
-    },
-    {
       "id": "linkedin_b44919280be82129",
       "source": "linkedin",
       "url": "https://ae.linkedin.com/jobs/view/senior-executive-digital-cx-at-lancesoft-middle-east-4464536079",
@@ -1686,60 +1585,29 @@
       "apply_route": "url",
       "apply_target": "https://www.stepstone.de/stellenangebote--Product-Manager-ZEISS-Collaborative-Care-m-w-x-Muenchen-ZEISS--14457024-inline.html",
       "documents": []
-    },
-    {
-      "id": "linkedin_c705480554e7e42b",
-      "source": "linkedin",
-      "url": "https://www.linkedin.com/jobs/view/product-owner-at-reesmarx-4446239259",
-      "title": "Product Owner",
-      "company": "reesmarx",
-      "location": "Fort Lauderdale, FL",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-04T12:12:29.325098+00:00",
-      "posted_at": "2026-09-02T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://www.linkedin.com/jobs/view/product-owner-at-reesmarx-4446239259",
-      "documents": []
-    },
-    {
-      "id": "linkedin_220e0076f77e4047",
-      "source": "linkedin",
-      "url": "https://www.linkedin.com/jobs/view/senior-product-manager-it-infrastructure-at-netapp-4461131818",
-      "title": "Senior Product Manager, IT Infrastructure",
-      "company": "NetApp",
-      "location": "Morrisville, NC",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-04T12:11:54.405986+00:00",
-      "posted_at": "2026-09-04T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://www.linkedin.com/jobs/view/senior-product-manager-it-infrastructure-at-netapp-4461131818",
-      "documents": []
-    },
-    {
-      "id": "xing_8ba47a2980c3458c",
-      "source": "xing",
-      "url": "https://www.xing.com/jobs/frankfurt-main-senior-consumer-lending-digital-sales-product-manager-retail-banking-157637665",
-      "title": "Senior Consumer Lending Digital Sales & Product Manager \u2013 Retail Banking (w/m/d)",
-      "company": "ING Deutschland",
-      "location": "Frankfurt am Main+ 0 weitere",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-04T12:11:38.249441+00:00",
-      "posted_at": "2026-09-04T08:15:39+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.xing.com/jobs/frankfurt-main-senior-consumer-lending-digital-sales-product-manager-retail-banking-157637665",
-      "documents": []
     }
   ],
   "runs": [
+    {
+      "id": 498,
+      "started_at": "2026-09-11T13:20:55.650000+00:00",
+      "finished_at": "2026-09-11T13:23:13.818316+00:00",
+      "n_fetched": 343,
+      "n_new": 1,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 497,
+      "started_at": "2026-09-11T13:14:03.174632+00:00",
+      "finished_at": "2026-09-11T13:16:46.823000+00:00",
+      "n_fetched": 342,
+      "n_new": 5,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
     {
       "id": 496,
       "started_at": "2026-09-11T12:00:07.080696+00:00",
@@ -1854,26 +1722,6 @@
       "id": 485,
       "started_at": "2026-09-08T17:15:09.843770+00:00",
       "finished_at": "2026-09-08T18:14:29.055780+00:00",
-      "n_fetched": 0,
-      "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 484,
-      "started_at": "2026-09-08T13:06:09.034174+00:00",
-      "finished_at": "2026-09-08T13:06:09.780534+00:00",
-      "n_fetched": 0,
-      "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 483,
-      "started_at": "2026-09-07T17:06:34.878582+00:00",
-      "finished_at": "2026-09-08T12:24:18.697990+00:00",
       "n_fetched": 0,
       "n_new": 0,
       "n_generated": 0,
