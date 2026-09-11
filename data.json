@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-11T13:23:13.851480+00:00",
+  "generated_at": "2026-09-11T15:35:21.047540+00:00",
   "jobs": [
     {
       "id": "himalayas_709f010e59562262",
@@ -373,6 +373,27 @@
       "posted_at": null,
       "apply_route": "url",
       "apply_target": "https://www.freelancermap.de/projekt/senior-product-manager-m-w-d-b2b-saas-3045681",
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
+    },
+    {
+      "id": "freelancermap_7da41fe49e68db3f",
+      "source": "freelancermap",
+      "url": "https://www.freelancermap.de/projekt/agentic-product-owner-m-w-d-in-anue-afra-11044",
+      "title": "Agentic Product Owner (m/w/d) in AN\u00dc \u2013 AFRA-11044",
+      "company": "freelancermap (Auftraggeber anonym)",
+      "location": null,
+      "salary": null,
+      "score": 82,
+      "score_tailored": 91,
+      "status": "generated",
+      "first_seen_at": "2026-09-11T15:30:41.954216+00:00",
+      "posted_at": null,
+      "apply_route": "url",
+      "apply_target": "https://www.freelancermap.de/projekt/agentic-product-owner-m-w-d-in-anue-afra-11044",
       "documents": [
         "cv.pdf",
         "cover_letter.pdf",
@@ -822,6 +843,40 @@
       "documents": []
     },
     {
+      "id": "linkedin_7906a9ec07a7e957",
+      "source": "linkedin",
+      "url": "https://www.linkedin.com/jobs/view/product-manager-connect-at-stripe-4466099770",
+      "title": "Product Manager, Connect",
+      "company": "Stripe",
+      "location": "San Francisco, CA",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-09-11T15:31:03.414767+00:00",
+      "posted_at": "2026-09-11T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://www.linkedin.com/jobs/view/product-manager-connect-at-stripe-4466099770",
+      "documents": []
+    },
+    {
+      "id": "linkedin_ebb604fa35117c6d",
+      "source": "linkedin",
+      "url": "https://www.linkedin.com/jobs/view/product-manager-connect-at-stripe-4466303743",
+      "title": "Product Manager, Connect",
+      "company": "Stripe",
+      "location": "Seattle, WA",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-09-11T15:31:03.412296+00:00",
+      "posted_at": "2026-09-11T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://www.linkedin.com/jobs/view/product-manager-connect-at-stripe-4466303743",
+      "documents": []
+    },
+    {
       "id": "free_work_43129752e33f70a9",
       "source": "free_work",
       "url": "https://www.free-work.com/fr/tech-it/job-mission/cloud-product-owner",
@@ -1264,6 +1319,23 @@
       "documents": []
     },
     {
+      "id": "free_work_ce7b52c3a97a329e",
+      "source": "free_work",
+      "url": "https://www.free-work.com/fr/tech-it/job-mission/product-owner-paiement-ecard",
+      "title": "Product Owner Paiement/eCard",
+      "company": "Gamme solutions",
+      "location": "Lille, Hauts-de-France (remote: partial)",
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-09-11T15:31:47.510723+00:00",
+      "posted_at": "2026-09-11T16:25:58+02:00",
+      "apply_route": "url",
+      "apply_target": "https://www.free-work.com/fr/tech-it/job-mission/product-owner-paiement-ecard",
+      "documents": []
+    },
+    {
       "id": "linkedin_b44919280be82129",
       "source": "linkedin",
       "url": "https://ae.linkedin.com/jobs/view/senior-executive-digital-cx-at-lancesoft-middle-east-4464536079",
@@ -1589,6 +1661,16 @@
   ],
   "runs": [
     {
+      "id": 499,
+      "started_at": "2026-09-11T15:30:29.612133+00:00",
+      "finished_at": "2026-09-11T15:35:20.998168+00:00",
+      "n_fetched": 346,
+      "n_new": 18,
+      "n_generated": 1,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
       "id": 498,
       "started_at": "2026-09-11T13:20:55.650000+00:00",
       "finished_at": "2026-09-11T13:23:13.818316+00:00",
@@ -1712,16 +1794,6 @@
       "id": 486,
       "started_at": "2026-09-09T05:02:41.673452+00:00",
       "finished_at": "2026-09-09T07:20:26.105549+00:00",
-      "n_fetched": 0,
-      "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 485,
-      "started_at": "2026-09-08T17:15:09.843770+00:00",
-      "finished_at": "2026-09-08T18:14:29.055780+00:00",
       "n_fetched": 0,
       "n_new": 0,
       "n_generated": 0,
