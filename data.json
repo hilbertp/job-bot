@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-12T14:06:45.985160+00:00",
+  "generated_at": "2026-09-13T12:08:09.689068+00:00",
   "jobs": [
     {
       "id": "himalayas_709f010e59562262",
@@ -147,6 +147,23 @@
         "cover_letter.pdf",
         "application_package.pdf"
       ]
+    },
+    {
+      "id": "himalayas_08e6c338757ebe80",
+      "source": "himalayas",
+      "url": "https://himalayas.app/companies/clera/jobs/senior-product-manager-2109153456",
+      "title": "Senior Product Manager",
+      "company": "Clera",
+      "location": "Worldwide",
+      "salary": null,
+      "score": 92,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-09-13T05:33:18.385413+00:00",
+      "posted_at": "2026-09-13T04:49:16",
+      "apply_route": "url",
+      "apply_target": "https://himalayas.app/companies/clera/jobs/senior-product-manager-2109153456",
+      "documents": []
     },
     {
       "id": "linkedin_bc14ba6a87a16784",
@@ -590,27 +607,6 @@
       ]
     },
     {
-      "id": "linkedin_24d2951ec0ea1bef",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/product-manager-at-tasc-outsourcing-4444953652",
-      "title": "Product Manager",
-      "company": "TASC Outsourcing",
-      "location": "United Arab Emirates",
-      "salary": null,
-      "score": 82,
-      "score_tailored": 88,
-      "status": "generated",
-      "first_seen_at": "2026-09-06T05:01:04.221067+00:00",
-      "posted_at": "2026-09-06T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/product-manager-at-tasc-outsourcing-4444953652",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
       "id": "linkedin_00cb0790f55f90ea",
       "source": "linkedin",
       "url": "https://ae.linkedin.com/jobs/view/product-owner-sme-online-banking-at-people-strategist-4465001066",
@@ -630,6 +626,23 @@
         "cover_letter.pdf",
         "application_package.pdf"
       ]
+    },
+    {
+      "id": "himalayas_670b1c1ddbfc734f",
+      "source": "himalayas",
+      "url": "https://himalayas.app/companies/percona/jobs/product-manager-percona-monitoring-and-management-1382774702",
+      "title": "Product Manager - Percona Monitoring and Management",
+      "company": "Percona",
+      "location": "Bulgaria, Croatia, Hungary, Ireland, Italy, Poland, Portugal, Spain",
+      "salary": null,
+      "score": 82,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-09-13T05:33:18.384892+00:00",
+      "posted_at": "2026-09-13T05:34:34",
+      "apply_route": "url",
+      "apply_target": "https://himalayas.app/companies/percona/jobs/product-manager-percona-monitoring-and-management-1382774702",
+      "documents": []
     },
     {
       "id": "himalayas_1b4e5ce63c874264",
@@ -1006,37 +1019,20 @@
       "documents": []
     },
     {
-      "id": "linkedin_7c3c92746ad065d2",
+      "id": "linkedin_e49ba6af627879b8",
       "source": "linkedin",
-      "url": "https://www.linkedin.com/jobs/view/product-manager-link-consumer-at-stripe-4454545366",
-      "title": "Product Manager, Link - Consumer",
-      "company": "Stripe",
-      "location": "Seattle, WA",
+      "url": "https://ae.linkedin.com/jobs/view/engineering-product-lead-%E2%80%93-trading-platforms-at-confidential-jobs-4466725021",
+      "title": "Engineering Product Lead \u2013 Trading Platforms",
+      "company": "Confidential Jobs",
+      "location": "Dubai, United Arab Emirates",
       "salary": null,
-      "score": 72,
+      "score": 62,
       "score_tailored": null,
       "status": "scored",
-      "first_seen_at": "2026-09-06T05:00:43.642313+00:00",
-      "posted_at": "2026-09-04T00:00:00Z",
+      "first_seen_at": "2026-09-13T05:33:13.654695+00:00",
+      "posted_at": "2026-09-12T00:00:00Z",
       "apply_route": "url",
-      "apply_target": "https://www.linkedin.com/jobs/view/product-manager-link-consumer-at-stripe-4454545366",
-      "documents": []
-    },
-    {
-      "id": "stepstone_0a62c80c2377260e",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Product-Owner-Workforcemanagement-w-m-d-Muenchen-ADAC-e-V--14469458-inline.html",
-      "title": "Product Owner Workforcemanagement (w/m/d)",
-      "company": "ADAC e.V.",
-      "location": "M\u00fcnchen",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-05T17:00:29.354556+00:00",
-      "posted_at": "2026-09-04T11:15:45.493000+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.stepstone.de/stellenangebote--Product-Owner-Workforcemanagement-w-m-d-Muenchen-ADAC-e-V--14469458-inline.html",
+      "apply_target": "https://ae.linkedin.com/jobs/view/engineering-product-lead-%E2%80%93-trading-platforms-at-confidential-jobs-4466725021",
       "documents": []
     },
     {
@@ -1344,43 +1340,29 @@
       "apply_route": "url",
       "apply_target": "https://www.linkedin.com/jobs/view/product-manager-payments-at-stripe-4454555321",
       "documents": []
-    },
-    {
-      "id": "linkedin_2c336942ac9bfa5b",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/product-manager-airport-operations-technology-at-talentmate-4464000334",
-      "title": "Product Manager Airport Operations Technology",
-      "company": "TALENTMATE",
-      "location": "Abu Dhabi, Abu Dhabi Emirate, United Arab Emirates",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-06T09:32:21.171287+00:00",
-      "posted_at": "2026-09-04T00:00:00Z",
-      "apply_route": "email",
-      "apply_target": "abuse@talentmate.com",
-      "documents": []
-    },
-    {
-      "id": "linkedin_dcb76309cdd3679b",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/manager-network-performance-analytics-at-mastercard-4450833764",
-      "title": "Manager, Network Performance & Analytics",
-      "company": "Mastercard",
-      "location": "Dubai, Dubai, United Arab Emirates",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-05T17:01:06.376915+00:00",
-      "posted_at": "2026-09-05T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/manager-network-performance-analytics-at-mastercard-4450833764",
-      "documents": []
     }
   ],
   "runs": [
+    {
+      "id": 505,
+      "started_at": "2026-09-13T05:12:44.222978+00:00",
+      "finished_at": null,
+      "n_fetched": 0,
+      "n_new": 0,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 0
+    },
+    {
+      "id": 504,
+      "started_at": "2026-09-12T17:00:24.206953+00:00",
+      "finished_at": "2026-09-12T20:11:57.180152+00:00",
+      "n_fetched": 322,
+      "n_new": 1,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
     {
       "id": 503,
       "started_at": "2026-09-12T12:04:17.064327+00:00",
@@ -1498,26 +1480,6 @@
       "n_fetched": 327,
       "n_new": 29,
       "n_generated": 1,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 491,
-      "started_at": "2026-09-10T05:12:29.129581+00:00",
-      "finished_at": "2026-09-10T12:54:28.869660+00:00",
-      "n_fetched": 318,
-      "n_new": 24,
-      "n_generated": 3,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 490,
-      "started_at": "2026-09-09T17:00:01.468354+00:00",
-      "finished_at": "2026-09-09T17:40:31.459312+00:00",
-      "n_fetched": 337,
-      "n_new": 148,
-      "n_generated": 15,
       "n_applied": 0,
       "n_errors": 1
     }
