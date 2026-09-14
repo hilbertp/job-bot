@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-13T12:08:09.689068+00:00",
+  "generated_at": "2026-09-14T12:44:39.314866+00:00",
   "jobs": [
     {
       "id": "himalayas_709f010e59562262",
@@ -128,27 +128,6 @@
       ]
     },
     {
-      "id": "linkedin_e0f1cb88b26a2f3f",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/product-manager-user-notification-control-at-talentmate-4464013268",
-      "title": "Product Manager - User Notification Control",
-      "company": "TALENTMATE",
-      "location": "Dubai, Dubai, United Arab Emirates",
-      "salary": null,
-      "score": 82,
-      "score_tailored": 93,
-      "status": "generated",
-      "first_seen_at": "2026-09-06T17:01:16.906211+00:00",
-      "posted_at": "2026-09-04T00:00:00Z",
-      "apply_route": "email",
-      "apply_target": "abuse@talentmate.com",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
       "id": "himalayas_08e6c338757ebe80",
       "source": "himalayas",
       "url": "https://himalayas.app/companies/clera/jobs/senior-product-manager-2109153456",
@@ -164,6 +143,27 @@
       "apply_route": "url",
       "apply_target": "https://himalayas.app/companies/clera/jobs/senior-product-manager-2109153456",
       "documents": []
+    },
+    {
+      "id": "himalayas_670b1c1ddbfc734f",
+      "source": "himalayas",
+      "url": "https://himalayas.app/companies/percona/jobs/product-manager-percona-monitoring-and-management-1382774702",
+      "title": "Product Manager - Percona Monitoring and Management",
+      "company": "Percona",
+      "location": "Bulgaria, Croatia, Hungary, Ireland, Italy, Poland, Portugal, Spain",
+      "salary": null,
+      "score": 82,
+      "score_tailored": 92,
+      "status": "generated",
+      "first_seen_at": "2026-09-13T05:33:18.384892+00:00",
+      "posted_at": "2026-09-13T05:34:34",
+      "apply_route": "url",
+      "apply_target": "https://himalayas.app/companies/percona/jobs/product-manager-percona-monitoring-and-management-1382774702",
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
     },
     {
       "id": "linkedin_bc14ba6a87a16784",
@@ -628,23 +628,6 @@
       ]
     },
     {
-      "id": "himalayas_670b1c1ddbfc734f",
-      "source": "himalayas",
-      "url": "https://himalayas.app/companies/percona/jobs/product-manager-percona-monitoring-and-management-1382774702",
-      "title": "Product Manager - Percona Monitoring and Management",
-      "company": "Percona",
-      "location": "Bulgaria, Croatia, Hungary, Ireland, Italy, Poland, Portugal, Spain",
-      "salary": null,
-      "score": 82,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-13T05:33:18.384892+00:00",
-      "posted_at": "2026-09-13T05:34:34",
-      "apply_route": "url",
-      "apply_target": "https://himalayas.app/companies/percona/jobs/product-manager-percona-monitoring-and-management-1382774702",
-      "documents": []
-    },
-    {
       "id": "himalayas_1b4e5ce63c874264",
       "source": "himalayas",
       "url": "https://himalayas.app/companies/emerging-travel-group/jobs/senior-product-manager-content-3075283859",
@@ -693,6 +676,23 @@
       "posted_at": "2026-09-09T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://ae.linkedin.com/jobs/view/product-manager-at-aspire-technology-4463042915",
+      "documents": []
+    },
+    {
+      "id": "free_work_9c9bec3207c94d4f",
+      "source": "free_work",
+      "url": "https://www.free-work.com/fr/tech-it/job-mission/product-owner-senior-produits-numeriques-api",
+      "title": "Product Owner Senior \u2013 Produits num\u00e9riques / API",
+      "company": "Octopus Group",
+      "location": "Paris, France (remote: partial)",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-09-13T13:01:51.720786+00:00",
+      "posted_at": "2026-09-11T11:03:19+02:00",
+      "apply_route": "url",
+      "apply_target": "https://www.free-work.com/fr/tech-it/job-mission/product-owner-senior-produits-numeriques-api",
       "documents": []
     },
     {
@@ -1002,23 +1002,6 @@
       "documents": []
     },
     {
-      "id": "himalayas_d19f53fef960050d",
-      "source": "himalayas",
-      "url": "https://himalayas.app/companies/ci-t/jobs/job-31450-senior-product-manager-brazil",
-      "title": "[Job-31450] Senior Product Manager, Brazil",
-      "company": "CI&T",
-      "location": "Brazil",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-06T17:01:28.610777+00:00",
-      "posted_at": "2026-09-06T13:38:46",
-      "apply_route": "url",
-      "apply_target": "https://himalayas.app/companies/ci-t/jobs/job-31450-senior-product-manager-brazil",
-      "documents": []
-    },
-    {
       "id": "linkedin_e49ba6af627879b8",
       "source": "linkedin",
       "url": "https://ae.linkedin.com/jobs/view/engineering-product-lead-%E2%80%93-trading-platforms-at-confidential-jobs-4466725021",
@@ -1323,35 +1306,68 @@
       "apply_route": "url",
       "apply_target": "https://www.freelancermap.de/projekt/data-product-manager-m-w-d-recommendation-engine-remote-id-30640",
       "documents": []
-    },
-    {
-      "id": "linkedin_f7031f14c79ff2cb",
-      "source": "linkedin",
-      "url": "https://www.linkedin.com/jobs/view/product-manager-payments-at-stripe-4454555321",
-      "title": "Product Manager, Payments",
-      "company": "Stripe",
-      "location": "Chicago, IL",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-06T17:00:55.176402+00:00",
-      "posted_at": "2026-09-06T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://www.linkedin.com/jobs/view/product-manager-payments-at-stripe-4454555321",
-      "documents": []
     }
   ],
   "runs": [
     {
-      "id": 505,
-      "started_at": "2026-09-13T05:12:44.222978+00:00",
-      "finished_at": null,
-      "n_fetched": 0,
-      "n_new": 0,
+      "id": 510,
+      "started_at": "2026-09-14T12:11:14.909013+00:00",
+      "finished_at": "2026-09-14T12:44:39.251264+00:00",
+      "n_fetched": 336,
+      "n_new": 25,
       "n_generated": 0,
       "n_applied": 0,
-      "n_errors": 0
+      "n_errors": 7
+    },
+    {
+      "id": 509,
+      "started_at": "2026-09-14T09:06:14.961415+00:00",
+      "finished_at": "2026-09-14T09:35:51.133223+00:00",
+      "n_fetched": 334,
+      "n_new": 11,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 7
+    },
+    {
+      "id": 508,
+      "started_at": "2026-09-14T05:02:32.870362+00:00",
+      "finished_at": "2026-09-14T05:31:08.070612+00:00",
+      "n_fetched": 325,
+      "n_new": 6,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 7
+    },
+    {
+      "id": 507,
+      "started_at": "2026-09-13T17:00:04.039747+00:00",
+      "finished_at": "2026-09-13T17:02:52.547785+00:00",
+      "n_fetched": 371,
+      "n_new": 17,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 7
+    },
+    {
+      "id": 506,
+      "started_at": "2026-09-13T13:00:05.752047+00:00",
+      "finished_at": "2026-09-13T13:03:01.603612+00:00",
+      "n_fetched": 297,
+      "n_new": 5,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 505,
+      "started_at": "2026-09-13T05:12:44.222978+00:00",
+      "finished_at": "2026-09-13T12:16:09.715259+00:00",
+      "n_fetched": 289,
+      "n_new": 8,
+      "n_generated": 1,
+      "n_applied": 0,
+      "n_errors": 2
     },
     {
       "id": 504,
@@ -1430,56 +1446,6 @@
       "n_fetched": 342,
       "n_new": 5,
       "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 496,
-      "started_at": "2026-09-11T12:00:07.080696+00:00",
-      "finished_at": "2026-09-11T12:02:53.298637+00:00",
-      "n_fetched": 338,
-      "n_new": 17,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 495,
-      "started_at": "2026-09-11T09:00:05.629517+00:00",
-      "finished_at": "2026-09-11T09:02:39.964098+00:00",
-      "n_fetched": 328,
-      "n_new": 21,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 494,
-      "started_at": "2026-09-11T05:00:04.681172+00:00",
-      "finished_at": "2026-09-11T05:20:00.379448+00:00",
-      "n_fetched": 330,
-      "n_new": 25,
-      "n_generated": 8,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 493,
-      "started_at": "2026-09-10T17:00:05.686558+00:00",
-      "finished_at": "2026-09-10T17:03:13.632318+00:00",
-      "n_fetched": 333,
-      "n_new": 34,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 7
-    },
-    {
-      "id": 492,
-      "started_at": "2026-09-10T13:00:03.324838+00:00",
-      "finished_at": "2026-09-10T13:05:41.577352+00:00",
-      "n_fetched": 327,
-      "n_new": 29,
-      "n_generated": 1,
       "n_applied": 0,
       "n_errors": 1
     }
