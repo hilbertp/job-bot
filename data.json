@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-16T12:11:49.730824+00:00",
+  "generated_at": "2026-09-16T13:45:52.012437+00:00",
   "jobs": [
     {
       "id": "himalayas_709f010e59562262",
@@ -1310,14 +1310,24 @@
   ],
   "runs": [
     {
-      "id": 518,
-      "started_at": "2026-09-16T05:07:13.074154+00:00",
-      "finished_at": null,
-      "n_fetched": 0,
-      "n_new": 0,
+      "id": 519,
+      "started_at": "2026-09-16T13:43:07.102694+00:00",
+      "finished_at": "2026-09-16T13:45:51.994125+00:00",
+      "n_fetched": 422,
+      "n_new": 33,
       "n_generated": 0,
       "n_applied": 0,
-      "n_errors": 0
+      "n_errors": 7
+    },
+    {
+      "id": 518,
+      "started_at": "2026-09-16T05:07:13.074154+00:00",
+      "finished_at": "2026-09-16T13:06:33.091569+00:00",
+      "n_fetched": 276,
+      "n_new": 56,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 7
     },
     {
       "id": 517,
@@ -1438,16 +1448,6 @@
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 1
-    },
-    {
-      "id": 505,
-      "started_at": "2026-09-13T05:12:44.222978+00:00",
-      "finished_at": "2026-09-13T12:16:09.715259+00:00",
-      "n_fetched": 289,
-      "n_new": 8,
-      "n_generated": 1,
-      "n_applied": 0,
-      "n_errors": 2
     }
   ]
 }
