@@ -110,9 +110,16 @@ class TalentmateScraper(BaseScraper):
         `country` pins the search to one market. Omit it only when you
         genuinely want every country, and note that paging is available only
         on the unpinned path.
+
+        The country path IGNORES `search` (measured 2026-09-17: the UAE
+        page returned Office Boy, Light Vehicle Driver, Real Estate Agent
+        for "product manager"; every card was fetched, then filtered). The
+        pin stays, because the unpinned path is India-heavy, and the
+        keyword is applied to the title here instead.
         """
         keywords = (query.get("q") or "product manager").strip()
         country = (query.get("country") or "").strip().lower()
+        needles = [t for t in keywords.lower().split() if t] if country else []
         search_url = f"{_SEARCH_URL}/{country}" if country else _SEARCH_URL
         # Country-scoped search ignores &page; a single request is the whole
         # result set. Asking for more pages would just re-ingest page 1.
@@ -149,6 +156,8 @@ class TalentmateScraper(BaseScraper):
                 url = (link.attributes.get("href") or "").strip()
                 title = title_el.text(strip=True)
                 if not url or not title or url in seen:
+                    continue
+                if needles and not all(n in title.lower() for n in needles):
                     continue
                 seen.add(url)
                 page_new += 1

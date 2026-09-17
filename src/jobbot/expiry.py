@@ -10,6 +10,14 @@ Two callers:
 
 Both use `is_expired_listing(final_url, status)`. Keeping the rule in one
 file means the two probes stay in lockstep.
+
+HTTP 403 is deliberately NOT an expiry signal. Boards behind a bot wall
+(We Work Remotely answers every plain-client request with a Cloudflare
+"Just a moment" 403) return it whether or not the job is live. Measured
+over the 30 days to 2026-09-17: housekeeping discarded 7 rows for 403,
+all 7 were We Work Remotely, all 7 scored 80 or above, and none was
+closed. The 404 and 410 discards in the same window were all genuine.
+A 403 means "could not check", the same verdict as a network error.
 """
 from __future__ import annotations
 
@@ -68,15 +76,15 @@ def is_expired_listing(final_url: str, response_status: int) -> tuple[bool, str]
     """Return (is_expired, reason) for a listing whose apply_url no longer
     resolves to an application form. Two signals:
 
-      1. HTTP 403 / 404 / 410 on the apply_url (the job was deleted).
+      1. HTTP 404 / 410 on the apply_url (the job was deleted).
       2. The URL after redirects lands on a known "generic" path
          (e.g. /open-roles, /careers/index, /jobs/search), meaning the
          specific posting redirected to the company's hiring index.
 
     Both signals are strong; if either fires the caller should treat the
-    row as LISTING_EXPIRED.
+    row as LISTING_EXPIRED. A 403 is neither: see the module docstring.
     """
-    if response_status in (403, 404, 410):
+    if response_status in (404, 410):
         return True, f"HTTP {response_status} from apply_url"
     if final_url:
         lower = final_url.lower()
