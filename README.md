@@ -442,13 +442,18 @@ scraped → filtered                 (heuristic deal-breaker)
 | weworkremotely | RSS per category | ✅ |
 | working_nomads | public JSON API | ✅ |
 | nodesk | RSS + detail HTML | ✅ |
-| dailyremote | JSON-LD on listing + per-job detail | ✅ |
+| dailyremote | JSON-LD on listing + per-job detail | ⛔ disabled 2026-09-17: the JobPosting JSON-LD block is gone, every detail fetch failed, and apply is paywalled |
 | freelancermap | RSS | ✅ |
 | stepstone | HTML + selectolax | ✅ |
 | xing | Playwright | ✅ |
 | linkedin | Playwright (read-only; never auto-apply per ToS) | ✅ |
 | remotive / remoteok / himalayas | public JSON APIs | ✅ |
-| free_work / braintrust / brainville | HTML + JSON APIs (FR / US / Nordics) | ✅ |
+| free_work / braintrust | HTML + JSON APIs (FR / US) | ✅ |
+| brainville | HTML (Nordics) | ⛔ disabled 2026-09-17: full text is account-walled, 0 of 506 rows fetched in 30 days |
+| remoterocketship | Next.js page data, employer ATS links | ✅ added 2026-09-17 |
+| jobgether | HTML list + JSON-LD detail, employer apply link, 3s throttle | ✅ added 2026-09-17 |
+| wellfound | Next.js page data + JSON-LD detail, 30-day freshness rule | ✅ added 2026-09-17 (apply needs an account) |
+| builtin | HTML list + HTML detail, US remote | ✅ added 2026-09-17 (apply needs an account) |
 | talentmate | HTML search + JSON-LD detail (Gulf / UAE) | ✅ |
 | indeed | Playwright | 🟡 enabled per `data/config.yaml` |
 | freelance_de | HTML | 🟡 disabled (robots.txt forbids crawling without written permission) |
