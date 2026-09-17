@@ -4,6 +4,7 @@ runner before launching a browser, just batched.
 
 Pinned behaviours:
   - HTTP 410 → mark as expired with reason naming the status.
+  - HTTP 403 → leave row alone (bot wall, not evidence).
   - Redirect to /open-roles → mark as expired even when status is 200.
   - HTTP 200 on a real-looking apply URL → leave row alone.
   - apply_email set → skip the probe (email-apply rows have no URL).
@@ -199,3 +200,23 @@ def test_terminal_status_rows_are_skipped(tmp_path: Path, monkeypatch) -> None:
         with connect(db) as conn:
             report = housekeep_shortlist(conn)
     assert report.scanned == 0
+
+
+def test_http_403_row_is_left_alone(tmp_path: Path, monkeypatch) -> None:
+    """We Work Remotely answers plain clients with a Cloudflare 403 whether
+    or not the job is live. Treating that as expiry discarded all seven of
+    the source's 80+ matches in one month. 403 must not touch the row."""
+    db = tmp_path / "jobbot.db"
+    monkeypatch.setattr("jobbot.state.DB_PATH", db)
+    _seed(db, [{
+        "id": "wwr_walled", "status": JobStatus.SCORED.value, "score": 88,
+        "apply_url": "https://weworkremotely.com/remote-jobs/smartcat-senior-pm",
+    }])
+    with _mock_head_for({"weworkremotely": (403, None)}):
+        with connect(db) as conn:
+            report = housekeep_shortlist(conn, min_score=70)
+    with connect(db) as conn:
+        row = conn.execute("SELECT status, discard_reason FROM seen_jobs WHERE id = 'wwr_walled'").fetchone()
+    assert row["status"] == JobStatus.SCORED.value
+    assert not row["discard_reason"]
+    assert report.marked_expired == 0
