@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-17T15:13:38.369095+00:00",
+  "generated_at": "2026-09-17T15:13:45.053890+00:00",
   "jobs": [
     {
       "id": "himalayas_709f010e59562262",
@@ -1457,12 +1457,12 @@
     {
       "id": 526,
       "started_at": "2026-09-17T15:03:50.652641+00:00",
-      "finished_at": null,
+      "finished_at": "2026-09-17T15:13:41.488165+00:00",
       "n_fetched": 0,
       "n_new": 0,
       "n_generated": 0,
       "n_applied": 0,
-      "n_errors": 0
+      "n_errors": 1
     },
     {
       "id": 525,
