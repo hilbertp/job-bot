@@ -1,27 +1,6 @@
 {
-  "generated_at": "2026-09-17T15:13:45.053890+00:00",
+  "generated_at": "2026-09-18T12:12:59.876830+00:00",
   "jobs": [
-    {
-      "id": "himalayas_709f010e59562262",
-      "source": "himalayas",
-      "url": "https://himalayas.app/companies/growe/jobs/payment-product-manager",
-      "title": "Payment Product Manager",
-      "company": "Growe",
-      "location": "Worldwide",
-      "salary": null,
-      "score": 82,
-      "score_tailored": 97,
-      "status": "generated",
-      "first_seen_at": "2026-09-11T05:01:48.177197+00:00",
-      "posted_at": "2026-09-11T05:16:49",
-      "apply_route": "url",
-      "apply_target": "https://himalayas.app/companies/growe/jobs/payment-product-manager",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
     {
       "id": "himalayas_08e6c338757ebe80",
       "source": "himalayas",
@@ -61,90 +40,6 @@
       ]
     },
     {
-      "id": "linkedin_bc14ba6a87a16784",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/staff-product-manager-tabby-card-at-tabby-%D8%AA%D8%A7%D8%A8%D9%8A-4466000950",
-      "title": "Staff Product Manager Tabby Card",
-      "company": "Tabby | \u062a\u0627\u0628\u064a",
-      "location": "Dubai, Dubai, United Arab Emirates",
-      "salary": null,
-      "score": 88,
-      "score_tailored": 92,
-      "status": "generated",
-      "first_seen_at": "2026-09-11T05:01:30.975379+00:00",
-      "posted_at": "2026-09-11T00:00:00Z",
-      "apply_route": "email",
-      "apply_target": "abuse@talentmate.com",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
-      "id": "linkedin_a7f7c75ba0b6c727",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/senior-product-owner-at-digycorp-4463475433",
-      "title": "Senior Product Owner",
-      "company": "DigyCorp",
-      "location": "Dubai, United Arab Emirates",
-      "salary": null,
-      "score": 88,
-      "score_tailored": 92,
-      "status": "generated",
-      "first_seen_at": "2026-09-10T17:01:30.197949+00:00",
-      "posted_at": "2026-09-10T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/senior-product-owner-at-digycorp-4463475433",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
-      "id": "freelancermap_176c8203afbc0361",
-      "source": "freelancermap",
-      "url": "https://www.freelancermap.de/projekt/agentic-product-owner-m-w-d-remote-gr-frankfurt-oktober-monate",
-      "title": "Agentic Product Owner (m/w/d) // Remote/GR Frankfurt // Oktober ***** Monate",
-      "company": "freelancermap (Auftraggeber anonym)",
-      "location": null,
-      "salary": null,
-      "score": 88,
-      "score_tailored": 92,
-      "status": "generated",
-      "first_seen_at": "2026-09-10T17:00:33.345976+00:00",
-      "posted_at": null,
-      "apply_route": "url",
-      "apply_target": "https://www.freelancermap.de/projekt/agentic-product-owner-m-w-d-remote-gr-frankfurt-oktober-monate",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
-      "id": "freelancermap_e976ad269babc576",
-      "source": "freelancermap",
-      "url": "https://www.freelancermap.de/projekt/agentic-product-owner-m-w-d-frankfurt-80-prozent-remote-mma14913",
-      "title": "Agentic Product Owner (m/w/d) | Frankfurt | 80% Remote | MMA14913",
-      "company": "freelancermap (Auftraggeber anonym)",
-      "location": null,
-      "salary": null,
-      "score": 88,
-      "score_tailored": 92,
-      "status": "generated",
-      "first_seen_at": "2026-09-10T17:00:29.424085+00:00",
-      "posted_at": null,
-      "apply_route": "url",
-      "apply_target": "https://www.freelancermap.de/projekt/agentic-product-owner-m-w-d-frankfurt-80-prozent-remote-mma14913",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
       "id": "freelancermap_7da41fe49e68db3f",
       "source": "freelancermap",
       "url": "https://www.freelancermap.de/projekt/agentic-product-owner-m-w-d-in-anue-afra-11044",
@@ -159,27 +54,6 @@
       "posted_at": null,
       "apply_route": "url",
       "apply_target": "https://www.freelancermap.de/projekt/agentic-product-owner-m-w-d-in-anue-afra-11044",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
-      "id": "freelancermap_2d6a56e85e4f6653",
-      "source": "freelancermap",
-      "url": "https://www.freelancermap.de/projekt/product-owner-m-w-d-id-1892",
-      "title": "Product Owner (m/w/d) (ID: 1892)",
-      "company": "freelancermap (Auftraggeber anonym)",
-      "location": null,
-      "salary": null,
-      "score": 82,
-      "score_tailored": 91,
-      "status": "generated",
-      "first_seen_at": "2026-09-10T17:00:29.421507+00:00",
-      "posted_at": null,
-      "apply_route": "url",
-      "apply_target": "https://www.freelancermap.de/projekt/product-owner-m-w-d-id-1892",
       "documents": [
         "cv.pdf",
         "cover_letter.pdf",
@@ -230,12 +104,16 @@
       "salary": null,
       "score": 88,
       "score_tailored": null,
-      "status": "scored",
+      "status": "generated",
       "first_seen_at": "2026-09-17T15:04:59.553178+00:00",
       "posted_at": "2026-09-17T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://ae.linkedin.com/jobs/view/head-of-travel-platform-founding-product-lead-at-longevium-holding-4466286306",
-      "documents": []
+      "documents": [
+        "cv.pdf",
+        "cover_letter.pdf",
+        "application_package.pdf"
+      ]
     },
     {
       "id": "linkedin_b33137da172666ce",
@@ -253,48 +131,6 @@
       "apply_route": "url",
       "apply_target": "https://ae.linkedin.com/jobs/view/ai-product-manager-at-open-innovation-ai-4467176605",
       "documents": []
-    },
-    {
-      "id": "himalayas_72434223772fbfc9",
-      "source": "himalayas",
-      "url": "https://himalayas.app/companies/versapay/jobs/senior-product-manager-6258177819",
-      "title": "Senior Product Manager",
-      "company": "Versapay",
-      "location": "Canada",
-      "salary": null,
-      "score": 82,
-      "score_tailored": 88,
-      "status": "generated",
-      "first_seen_at": "2026-09-10T17:01:36.947729+00:00",
-      "posted_at": "2026-09-10T18:16:56",
-      "apply_route": "url",
-      "apply_target": "https://himalayas.app/companies/versapay/jobs/senior-product-manager-6258177819",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
-      "id": "linkedin_bb51b2339fef1710",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/staff-product-manager-tabby-card-at-tabby-%D8%AA%D8%A7%D8%A8%D9%8A-4465808293",
-      "title": "Staff Product Manager, Tabby Card",
-      "company": "Tabby | \u062a\u0627\u0628\u064a",
-      "location": "United Arab Emirates",
-      "salary": null,
-      "score": 88,
-      "score_tailored": 88,
-      "status": "generated",
-      "first_seen_at": "2026-09-10T17:01:30.200025+00:00",
-      "posted_at": "2026-09-10T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/staff-product-manager-tabby-card-at-tabby-%D8%AA%D8%A7%D8%A8%D9%8A-4465808293",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
     },
     {
       "id": "himalayas_26aac5ba484f4ad1",
@@ -1028,108 +864,6 @@
       "documents": []
     },
     {
-      "id": "free_work_43129752e33f70a9",
-      "source": "free_work",
-      "url": "https://www.free-work.com/fr/tech-it/job-mission/cloud-product-owner",
-      "title": "Cloud Product Owner",
-      "company": "ALLEGIS GROUP",
-      "location": "Saint-Denis, \u00cele-de-France (remote: partial)",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-11T12:01:42.786412+00:00",
-      "posted_at": "2026-09-11T11:20:30+02:00",
-      "apply_route": "url",
-      "apply_target": "https://www.free-work.com/fr/tech-it/job-mission/cloud-product-owner",
-      "documents": []
-    },
-    {
-      "id": "linkedin_68a63258de1d8b56",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/technical-product-manager-regulatory-data-products-at-ten-xer-4464129281",
-      "title": "Technical Product Manager, Regulatory Data Products",
-      "company": "TEN-XER",
-      "location": "Dubai, Dubai, United Arab Emirates",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-11T12:01:22.264294+00:00",
-      "posted_at": "2026-09-09T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/technical-product-manager-regulatory-data-products-at-ten-xer-4464129281",
-      "documents": []
-    },
-    {
-      "id": "linkedin_25dc04174390514f",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/senior-product-manager-%E2%80%93-merchant-acquiring-payments-at-impetus-executive-4464840921",
-      "title": "Senior Product Manager \u2013 Merchant Acquiring & Payments",
-      "company": "IMPETUS EXECUTIVE",
-      "location": "Dubai, United Arab Emirates",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-11T09:01:10.943217+00:00",
-      "posted_at": "2026-09-11T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/senior-product-manager-%E2%80%93-merchant-acquiring-payments-at-impetus-executive-4464840921",
-      "documents": []
-    },
-    {
-      "id": "himalayas_356dca77c4bb3dff",
-      "source": "himalayas",
-      "url": "https://himalayas.app/companies/wing-assistant/jobs/product-manager-ai-7624714570",
-      "title": "Product Manager - AI",
-      "company": "Wing Assistant",
-      "location": "Indonesia",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-11T05:01:48.223033+00:00",
-      "posted_at": "2026-09-11T04:46:28",
-      "apply_route": "url",
-      "apply_target": "https://himalayas.app/companies/wing-assistant/jobs/product-manager-ai-7624714570",
-      "documents": []
-    },
-    {
-      "id": "linkedin_8092f14c7e99f3a2",
-      "source": "linkedin",
-      "url": "https://www.linkedin.com/jobs/view/product-manager-at-evlo-ai-4464106038",
-      "title": "Product Manager",
-      "company": "Evlo AI",
-      "location": "New York, NY",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-11T05:01:03.773475+00:00",
-      "posted_at": "2026-09-09T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://www.linkedin.com/jobs/view/product-manager-at-evlo-ai-4464106038",
-      "documents": []
-    },
-    {
-      "id": "linkedin_3354205e16b9bf71",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/product-manager-at-startx-med-4464156175",
-      "title": "Product Manager",
-      "company": "StartX Med",
-      "location": "New Shwaib, Abu Dhabi Emirate, United Arab Emirates",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-10T17:01:30.199385+00:00",
-      "posted_at": "2026-09-10T00:00:00Z",
-      "apply_route": "email",
-      "apply_target": "talent@siena.cx.siena",
-      "documents": []
-    },
-    {
       "id": "remoterocketship_c06031b7ec9e7d7b",
       "source": "remoterocketship",
       "url": "https://www.remoterocketship.com/company/spassu-com-br/jobs/service-designer-mid-level-product-owner-worldwide-remote/",
@@ -1417,43 +1151,29 @@
       "apply_route": "url",
       "apply_target": "https://www.free-work.com/fr/tech-it/job-mission/product-owner-paiement-ecard",
       "documents": []
-    },
-    {
-      "id": "linkedin_b44919280be82129",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/senior-executive-digital-cx-at-lancesoft-middle-east-4464536079",
-      "title": "Senior Executive - Digital & CX",
-      "company": "LanceSoft Middle East",
-      "location": "Dubai, United Arab Emirates",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-11T05:01:43.251132+00:00",
-      "posted_at": "2026-09-10T00:00:00Z",
-      "apply_route": "email",
-      "apply_target": "tonazreen.muhamed@lancesoft.comtitle",
-      "documents": []
-    },
-    {
-      "id": "free_work_c252f65024ae82aa",
-      "source": "free_work",
-      "url": "https://www.free-work.com/fr/tech-it/job-mission/product-owner-senior-rennes-35",
-      "title": "Product Owner Senior - Rennes (35)",
-      "company": "LeHibou",
-      "location": "Rennes, Bretagne (remote: partial)",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-10T17:01:40.356088+00:00",
-      "posted_at": "2026-09-10T18:28:41+02:00",
-      "apply_route": "url",
-      "apply_target": "https://www.free-work.com/fr/tech-it/job-mission/product-owner-senior-rennes-35",
-      "documents": []
     }
   ],
   "runs": [
+    {
+      "id": 528,
+      "started_at": "2026-09-18T05:03:46.062611+00:00",
+      "finished_at": null,
+      "n_fetched": 0,
+      "n_new": 0,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 0
+    },
+    {
+      "id": 527,
+      "started_at": "2026-09-17T17:00:06.063356+00:00",
+      "finished_at": "2026-09-17T17:05:47.652541+00:00",
+      "n_fetched": 407,
+      "n_new": 53,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 7
+    },
     {
       "id": 526,
       "started_at": "2026-09-17T15:03:50.652641+00:00",
@@ -1570,26 +1290,6 @@
       "finished_at": "2026-09-15T08:39:40.703710+00:00",
       "n_fetched": 269,
       "n_new": 15,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 7
-    },
-    {
-      "id": 514,
-      "started_at": "2026-09-14T17:00:01.430601+00:00",
-      "finished_at": "2026-09-14T17:02:37.177745+00:00",
-      "n_fetched": 348,
-      "n_new": 1,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 7
-    },
-    {
-      "id": 513,
-      "started_at": "2026-09-14T15:44:05.097566+00:00",
-      "finished_at": "2026-09-14T15:46:30.648349+00:00",
-      "n_fetched": 346,
-      "n_new": 6,
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 7
