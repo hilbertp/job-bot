@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-21T12:26:47.697646+00:00",
+  "generated_at": "2026-09-21T15:19:24.214945+00:00",
   "jobs": [
     {
       "id": "jobgether_72aee836a439dd50",
@@ -1943,6 +1943,40 @@
       "documents": []
     },
     {
+      "id": "himalayas_b79725b1c6a0f327",
+      "source": "himalayas",
+      "url": "https://himalayas.app/companies/franki/jobs/product-manager-b2b-merchant-platform",
+      "title": "Product Manager B2B (Merchant Platform)",
+      "company": "Franki",
+      "location": "United States",
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-09-21T15:18:07.613108+00:00",
+      "posted_at": "2026-09-21T16:06:04",
+      "apply_route": "url",
+      "apply_target": "https://himalayas.app/companies/franki/jobs/product-manager-b2b-merchant-platform",
+      "documents": []
+    },
+    {
+      "id": "free_work_e2524328a564ac82",
+      "source": "free_work",
+      "url": "https://www.free-work.com/fr/tech-it/job-mission/product-owner-confirme-h-f-21",
+      "title": "Product Owner Confirm\u00e9 H/F",
+      "company": "REACTIS",
+      "location": "Marseille, Provence-Alpes-C\u00f4te d'Azur (remote: partial)",
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-09-21T13:01:25.744786+00:00",
+      "posted_at": "2026-09-21T14:42:05+02:00",
+      "apply_route": "url",
+      "apply_target": "https://www.free-work.com/fr/tech-it/job-mission/product-owner-confirme-h-f-21",
+      "documents": []
+    },
+    {
       "id": "himalayas_56ecc4744f5ef84d",
       "source": "himalayas",
       "url": "https://himalayas.app/companies/jouster/jobs/founder-type-product-manager-deeplaw-952661351",
@@ -2727,6 +2761,26 @@
   ],
   "runs": [
     {
+      "id": 538,
+      "started_at": "2026-09-21T15:16:51.987578+00:00",
+      "finished_at": "2026-09-21T15:19:24.182273+00:00",
+      "n_fetched": 303,
+      "n_new": 3,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 537,
+      "started_at": "2026-09-21T13:00:05.901504+00:00",
+      "finished_at": "2026-09-21T13:02:22.938030+00:00",
+      "n_fetched": 303,
+      "n_new": 3,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
       "id": 536,
       "started_at": "2026-09-21T12:24:57.173027+00:00",
       "finished_at": "2026-09-21T12:26:47.666249+00:00",
@@ -2842,26 +2896,6 @@
       "finished_at": "2026-09-17T13:54:40.749490+00:00",
       "n_fetched": 402,
       "n_new": 13,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 7
-    },
-    {
-      "id": 524,
-      "started_at": "2026-09-17T12:10:59.597294+00:00",
-      "finished_at": "2026-09-17T13:43:59.818808+00:00",
-      "n_fetched": 369,
-      "n_new": 17,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 7
-    },
-    {
-      "id": 523,
-      "started_at": "2026-09-17T09:00:05.513040+00:00",
-      "finished_at": "2026-09-17T09:03:10.058320+00:00",
-      "n_fetched": 430,
-      "n_new": 20,
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 7
