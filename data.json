@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-23T19:49:14.160234+00:00",
+  "generated_at": "2026-09-24T12:10:06.912857+00:00",
   "jobs": [
     {
       "id": "linkedin_92e58d6f34b03eea",
@@ -876,23 +876,6 @@
       ]
     },
     {
-      "id": "linkedin_b33137da172666ce",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/ai-product-manager-at-open-innovation-ai-4467176605",
-      "title": "AI Product Manager",
-      "company": "Open Innovation AI",
-      "location": "Abu Dhabi Emirate, United Arab Emirates",
-      "salary": null,
-      "score": 88,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-17T09:01:11.930722+00:00",
-      "posted_at": "2026-09-17T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/ai-product-manager-at-open-innovation-ai-4467176605",
-      "documents": []
-    },
-    {
       "id": "jobgether_8e90fdd2989d6bcc",
       "source": "jobgether",
       "url": "https://jobgether.com/offer/6ab3aa6f865119c687e0b8b9-product-manager-reusable-kyb",
@@ -1076,23 +1059,6 @@
       "posted_at": "2026-09-17T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://ae.linkedin.com/jobs/view/digital-product-manager-at-confidential-4466262803",
-      "documents": []
-    },
-    {
-      "id": "linkedin_bc25f6cc89f4e2b2",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/government-products-platforms-product-lead-at-genius-hrtech-services-l-l-c-fz-dubai-4467194369",
-      "title": "Government Products & Platforms - Product Lead",
-      "company": "Genius HRTech Services L.L.C - FZ - Dubai",
-      "location": "Abu Dhabi Emirate, United Arab Emirates",
-      "salary": null,
-      "score": 82,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-17T09:01:11.932650+00:00",
-      "posted_at": "2026-09-17T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/government-products-platforms-product-lead-at-genius-hrtech-services-l-l-c-fz-dubai-4467194369",
       "documents": []
     },
     {
@@ -2592,23 +2558,6 @@
       "documents": []
     },
     {
-      "id": "weworkremotely_64aa09e4f1247376",
-      "source": "weworkremotely",
-      "url": "https://weworkremotely.com/remote-jobs/typeform-ai-product-operations-lead",
-      "title": "AI Product Operations Lead",
-      "company": "Typeform",
-      "location": null,
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-17T09:00:08.194434+00:00",
-      "posted_at": "2026-09-17T07:30:57Z",
-      "apply_route": "url",
-      "apply_target": "https://weworkremotely.com/remote-jobs/typeform-ai-product-operations-lead",
-      "documents": []
-    },
-    {
       "id": "remoterocketship_8900dc19730de469",
       "source": "remoterocketship",
       "url": "https://www.remoterocketship.com/company/stefanini-3/jobs/scrum-master-product-owner-data-worldwide-remote/",
@@ -3780,43 +3729,19 @@
       "apply_route": "email",
       "apply_target": "anjaly@hirerightt.com",
       "documents": []
-    },
-    {
-      "id": "linkedin_6ce083d0052be9df",
-      "source": "linkedin",
-      "url": "https://www.linkedin.com/jobs/view/product-owner-i-ii-at-clm-dallas-chapter-4468372799",
-      "title": "Product Owner I/II",
-      "company": "CLM Dallas Chapter",
-      "location": "Seattle, WA",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-17T09:01:00.158318+00:00",
-      "posted_at": "2026-09-17T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://www.linkedin.com/jobs/view/product-owner-i-ii-at-clm-dallas-chapter-4468372799",
-      "documents": []
-    },
-    {
-      "id": "linkedin_7e7471826f8502ce",
-      "source": "linkedin",
-      "url": "https://www.linkedin.com/jobs/view/product-owner-i-ii-at-clm-dallas-chapter-4468362864",
-      "title": "Product Owner I/II",
-      "company": "CLM Dallas Chapter",
-      "location": "Plano, TX",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-17T09:01:00.157900+00:00",
-      "posted_at": "2026-09-17T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://www.linkedin.com/jobs/view/product-owner-i-ii-at-clm-dallas-chapter-4468362864",
-      "documents": []
     }
   ],
   "runs": [
+    {
+      "id": 548,
+      "started_at": "2026-09-24T05:00:18.056577+00:00",
+      "finished_at": null,
+      "n_fetched": 0,
+      "n_new": 0,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 0
+    },
     {
       "id": 547,
       "started_at": "2026-09-23T19:41:36.041728+00:00",
@@ -3942,16 +3867,6 @@
       "started_at": "2026-09-21T12:21:28.427481+00:00",
       "finished_at": "2026-09-21T12:24:09.819876+00:00",
       "n_fetched": 302,
-      "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 534,
-      "started_at": "2026-09-21T12:20:20.203402+00:00",
-      "finished_at": "2026-09-21T12:21:18.905370+00:00",
-      "n_fetched": 0,
       "n_new": 0,
       "n_generated": 0,
       "n_applied": 0,
