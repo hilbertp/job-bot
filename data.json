@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-27T12:12:44.611995+00:00",
+  "generated_at": "2026-09-28T12:10:22.843558+00:00",
   "jobs": [
     {
       "id": "linkedin_92e58d6f34b03eea",
@@ -16,27 +16,6 @@
       "posted_at": "2026-09-22T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://ae.linkedin.com/jobs/view/senior-product-manager-trading-crypto-com-app-at-crypto-com-4470279164",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
-      "id": "jobgether_72aee836a439dd50",
-      "source": "jobgether",
-      "url": "https://jobgether.com/offer/6aaf5383865119c687d03d5e-senior-product-manager",
-      "title": "Senior Product Manager",
-      "company": "Clera",
-      "location": "Remote",
-      "salary": null,
-      "score": 92,
-      "score_tailored": 97,
-      "status": "generated",
-      "first_seen_at": "2026-09-21T05:55:51.421076+00:00",
-      "posted_at": "2026-09-20T03:31:15+00:00",
-      "apply_route": "url",
-      "apply_target": "https://jobgether.com/offer/6aaf5383865119c687d03d5e-senior-product-manager",
       "documents": [
         "cv.pdf",
         "cover_letter.pdf",
@@ -184,48 +163,6 @@
       "posted_at": "2026-09-22T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://ae.linkedin.com/jobs/view/product-owner-at-uniqpay-4469059014",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
-      "id": "jobgether_b59113aa5723fcf9",
-      "source": "jobgether",
-      "url": "https://jobgether.com/offer/6aaf5383865119c687d03d66-senior-product-manager",
-      "title": "Senior Product Manager",
-      "company": "Clera Inc.",
-      "location": "Remote",
-      "salary": null,
-      "score": 91,
-      "score_tailored": 95,
-      "status": "generated",
-      "first_seen_at": "2026-09-21T05:55:51.419899+00:00",
-      "posted_at": "2026-09-20T03:31:15+00:00",
-      "apply_route": "url",
-      "apply_target": "https://jobgether.com/offer/6aaf5383865119c687d03d66-senior-product-manager",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
-      "id": "linkedin_46440f6fe580a01c",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/lead-product-manager-platform-at-fanatics-momentum-4469813091",
-      "title": "Lead Product Manager, Platform",
-      "company": "Fanatics Momentum",
-      "location": "Abu Dhabi, Abu Dhabi Emirate, United Arab Emirates",
-      "salary": null,
-      "score": 88,
-      "score_tailored": 95,
-      "status": "generated",
-      "first_seen_at": "2026-09-21T05:39:50.911021+00:00",
-      "posted_at": "2026-09-20T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/lead-product-manager-platform-at-fanatics-momentum-4469813091",
       "documents": [
         "cv.pdf",
         "cover_letter.pdf",
@@ -1241,27 +1178,6 @@
       ]
     },
     {
-      "id": "xing_3bd34bba176718d4",
-      "source": "xing",
-      "url": "https://www.xing.com/jobs/karlsruhe-senior-product-manager-cloud-saas-b2b-158019088",
-      "title": "Senior Product Manager - Cloud & SaaS / B2B (m/w/d)",
-      "company": "Workwise GmbH",
-      "location": "Karlsruhe+ 0 weitere",
-      "salary": null,
-      "score": 87,
-      "score_tailored": 82,
-      "status": "generated",
-      "first_seen_at": "2026-09-21T05:23:55.501702+00:00",
-      "posted_at": "2026-09-20T00:32:29+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.xing.com/jobs/karlsruhe-senior-product-manager-cloud-saas-b2b-158019088",
-      "documents": [
-        "cv.pdf",
-        "cover_letter.pdf",
-        "application_package.pdf"
-      ]
-    },
-    {
       "id": "remoterocketship_0fcd8c16344e967c",
       "source": "remoterocketship",
       "url": "https://www.remoterocketship.com/company/neumo-3/jobs/product-owner-united-states-remote-2/",
@@ -1497,40 +1413,6 @@
       "posted_at": "2026-09-21T19:21:25Z",
       "apply_route": "url",
       "apply_target": "https://wellfound.com/jobs/4748746-product-manager",
-      "documents": []
-    },
-    {
-      "id": "linkedin_66f260982a9e956f",
-      "source": "linkedin",
-      "url": "https://www.linkedin.com/jobs/view/senior-product-manager-fireblocks-trust-company-at-fireblocks-4422464351",
-      "title": "Senior Product Manager, Fireblocks Trust Company",
-      "company": "Fireblocks",
-      "location": "New York City Metropolitan Area",
-      "salary": null,
-      "score": 78,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-21T05:24:10.032882+00:00",
-      "posted_at": "2026-09-20T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://www.linkedin.com/jobs/view/senior-product-manager-fireblocks-trust-company-at-fireblocks-4422464351",
-      "documents": []
-    },
-    {
-      "id": "stepstone_f20ac645b4a5acf9",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Product-Manager-m-w-d-Digitale-Loesungen-Halle-Saale-Berlin-S-Markt-Mehrwert-GmbH-Co-KG--14516155-inline.html",
-      "title": "Product Manager (m/w/d) Digitale L\u00f6sungen",
-      "company": "S-Markt & Mehrwert GmbH & Co. KG",
-      "location": "Halle (Saale), Berlin",
-      "salary": null,
-      "score": 78,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-21T05:23:46.630571+00:00",
-      "posted_at": "2026-09-17T13:51:41.407000+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.stepstone.de/stellenangebote--Product-Manager-m-w-d-Digitale-Loesungen-Halle-Saale-Berlin-S-Markt-Mehrwert-GmbH-Co-KG--14516155-inline.html",
       "documents": []
     },
     {
@@ -2690,71 +2572,20 @@
       "documents": []
     },
     {
-      "id": "remoterocketship_a7181eefc066a7b2",
+      "id": "remoterocketship_2cca840499e8b889",
       "source": "remoterocketship",
-      "url": "https://www.remoterocketship.com/company/deque-systems-inc/jobs/director-of-product-management-united-states-remote/",
-      "title": "Director of Product Management",
-      "company": "Deque Systems, Inc",
+      "url": "https://www.remoterocketship.com/company/thomsonreuters/jobs/principal-product-manager-united-states-remote/",
+      "title": "Principal Product Manager",
+      "company": "Thomson Reuters",
       "location": "United States",
       "salary": null,
-      "score": 72,
+      "score": 62,
       "score_tailored": null,
       "status": "scored",
-      "first_seen_at": "2026-09-21T05:55:46.191328+00:00",
-      "posted_at": "2026-09-19T11:17:04.592000Z",
+      "first_seen_at": "2026-09-27T11:55:03.801788+00:00",
+      "posted_at": "2026-09-26T20:54:12.872000Z",
       "apply_route": "url",
-      "apply_target": "https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html?cid=c85239eb-ea06-47bc-b513-bb00e0a15f72&ccId=19000101_000001&jobId=567372",
-      "documents": []
-    },
-    {
-      "id": "linkedin_0b7531807e5ed8d5",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/lead-product-manager-trading-platform-at-fanatics-momentum-4469800079",
-      "title": "Lead Product Manager, Trading Platform",
-      "company": "Fanatics Momentum",
-      "location": "Abu Dhabi, Abu Dhabi Emirate, United Arab Emirates",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-21T05:55:17.318831+00:00",
-      "posted_at": "2026-09-20T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/lead-product-manager-trading-platform-at-fanatics-momentum-4469800079",
-      "documents": []
-    },
-    {
-      "id": "linkedin_66b634fdefade7a5",
-      "source": "linkedin",
-      "url": "https://ae.linkedin.com/jobs/view/lead-product-manager-sportsbook-at-fanatics-momentum-4469588420",
-      "title": "Lead Product Manager, Sportsbook",
-      "company": "Fanatics Momentum",
-      "location": "Abu Dhabi, Abu Dhabi Emirate, United Arab Emirates",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-21T05:39:50.912459+00:00",
-      "posted_at": "2026-09-20T00:00:00Z",
-      "apply_route": "url",
-      "apply_target": "https://ae.linkedin.com/jobs/view/lead-product-manager-sportsbook-at-fanatics-momentum-4469588420",
-      "documents": []
-    },
-    {
-      "id": "stepstone_211ffebef6344550",
-      "source": "stepstone",
-      "url": "https://www.stepstone.de/stellenangebote--Productowner-fuer-Personen-und-Firmendatenservices-m-w-d-Hannover-Muenster-Frankfurt-am-Main-Finanz-Informatik-GmbH-Co-KG--14517889-inline.html",
-      "title": "Productowner f\u00fcr Personen und Firmendatenservices (m/w/d)",
-      "company": "Finanz Informatik GmbH & Co. KG",
-      "location": "Hannover, M\u00fcnster, Frankfurt am Main",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-21T05:23:51.209663+00:00",
-      "posted_at": "2026-09-17T17:18:57.563000+00:00",
-      "apply_route": "email",
-      "apply_target": "karriere@f-i.de",
+      "apply_target": "https://thomsonreuters.wd5.myworkdayjobs.com/external_career_site/job/united-states-of-america-san-francisco-california/principal-product-management_jreq203951",
       "documents": []
     },
     {
@@ -3708,52 +3539,28 @@
       "apply_route": "url",
       "apply_target": "https://himalayas.app/companies/jouster/jobs/founder-type-product-manager-deeplaw-952661351",
       "documents": []
-    },
-    {
-      "id": "himalayas_6741df6c7c1fd373",
-      "source": "himalayas",
-      "url": "https://himalayas.app/companies/tilt-com/jobs/lead-product-manager-growth-3549542567",
-      "title": "Lead Product Manager, Growth",
-      "company": "Tilt",
-      "location": "United States",
-      "salary": "200K",
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-21T05:55:20.830151+00:00",
-      "posted_at": "2026-09-21T08:15:36",
-      "apply_route": "url",
-      "apply_target": "https://himalayas.app/companies/tilt-com/jobs/lead-product-manager-growth-3549542567",
-      "documents": []
-    },
-    {
-      "id": "himalayas_000cab6b3fc8c342",
-      "source": "himalayas",
-      "url": "https://himalayas.app/companies/fabulous/jobs/product-manager",
-      "title": "Product Manager",
-      "company": "Fabulous",
-      "location": "France",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-09-21T05:55:20.828730+00:00",
-      "posted_at": "2026-09-21T08:19:23",
-      "apply_route": "url",
-      "apply_target": "https://himalayas.app/companies/fabulous/jobs/product-manager",
-      "documents": []
     }
   ],
   "runs": [
     {
-      "id": 556,
-      "started_at": "2026-09-27T05:03:13.676888+00:00",
+      "id": 557,
+      "started_at": "2026-09-28T05:04:48.980141+00:00",
       "finished_at": null,
       "n_fetched": 0,
       "n_new": 0,
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 0
+    },
+    {
+      "id": 556,
+      "started_at": "2026-09-27T05:03:13.676888+00:00",
+      "finished_at": "2026-09-27T17:35:54.926790+00:00",
+      "n_fetched": 282,
+      "n_new": 1,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
     },
     {
       "id": 555,
@@ -3872,16 +3679,6 @@
       "n_fetched": 365,
       "n_new": 85,
       "n_generated": 3,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 543,
-      "started_at": "2026-09-22T17:00:16.849040+00:00",
-      "finished_at": "2026-09-22T17:00:27.288620+00:00",
-      "n_fetched": 0,
-      "n_new": 0,
-      "n_generated": 0,
       "n_applied": 0,
       "n_errors": 1
     }
