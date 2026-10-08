@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-08T04:38:33.101641+00:00",
+  "generated_at": "2026-10-08T10:19:05.070655+00:00",
   "jobs": [
     {
       "id": "linkedin_07348a8eeb51f985",
@@ -254,23 +254,6 @@
       "posted_at": "2026-10-01T00:00:00Z",
       "apply_route": "url",
       "apply_target": "https://ae.linkedin.com/jobs/view/product-manager-at-rhr-4472551718",
-      "documents": []
-    },
-    {
-      "id": "remoterocketship_6024c72238319103",
-      "source": "remoterocketship",
-      "url": "https://www.remoterocketship.com/company/teveo/jobs/technical-product-owner-projects-m-f-d-worldwide-remote/",
-      "title": "Technical Product Owner \u2013 Projects, m/f/d",
-      "company": "teVeo",
-      "location": "Germany",
-      "salary": null,
-      "score": 88,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-10-01T09:40:52.941608+00:00",
-      "posted_at": "2026-09-30T17:33:14.808000Z",
-      "apply_route": "url",
-      "apply_target": "https://teveo-gmbh.jobs.personio.com/job/2821149",
       "documents": []
     },
     {
@@ -594,23 +577,6 @@
       "posted_at": "2026-10-01T07:20:54.817000Z",
       "apply_route": "url",
       "apply_target": "https://boards.greenhouse.io/okx/jobs/8010187003",
-      "documents": []
-    },
-    {
-      "id": "xing_ff0917c7aecf5687",
-      "source": "xing",
-      "url": "https://www.xing.com/jobs/homeoffice-technical-product-owner-projects-remote-de-158246941",
-      "title": "Technical Product Owner \u2013 Projects (m/w/d), Remote (DE)",
-      "company": "TEVEO GmbH",
-      "location": "Homeoffice+ 0 weitere",
-      "salary": null,
-      "score": 82,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-10-01T05:44:51.067239+00:00",
-      "posted_at": "2026-10-01T01:46:36+00:00",
-      "apply_route": "url",
-      "apply_target": "https://www.xing.com/jobs/homeoffice-technical-product-owner-projects-remote-de-158246941",
       "documents": []
     },
     {
@@ -1515,74 +1481,6 @@
       "documents": []
     },
     {
-      "id": "jobgether_9031e2918a210a54",
-      "source": "jobgether",
-      "url": "https://jobgether.com/offer/6abdc60b8a27695aea13ec12-forward-deployed-product-manager",
-      "title": "Forward Deployed Product Manager",
-      "company": "Code and Theory",
-      "location": "Remote",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-10-01T09:58:20.051697+00:00",
-      "posted_at": "2026-10-01T02:31:39+00:00",
-      "apply_route": "url",
-      "apply_target": "https://jobgether.com/offer/6abdc60b8a27695aea13ec12-forward-deployed-product-manager",
-      "documents": []
-    },
-    {
-      "id": "jobgether_0045c5ad39147791",
-      "source": "jobgether",
-      "url": "https://jobgether.com/offer/6abd71bf8a27695aea126dd6-product-manager-b2b-saas",
-      "title": "Product Manager B2B SaaS",
-      "company": "Revalize",
-      "location": "Remote",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-10-01T09:58:20.051374+00:00",
-      "posted_at": "2026-09-30T20:31:59+00:00",
-      "apply_route": "url",
-      "apply_target": "https://jobgether.com/offer/6abd71bf8a27695aea126dd6-product-manager-b2b-saas",
-      "documents": []
-    },
-    {
-      "id": "jobgether_e60eebc297e940a5",
-      "source": "jobgether",
-      "url": "https://jobgether.com/offer/6abd71d38a27695aea127186-senior-product-manager-all-genders",
-      "title": "Senior Product Manager (all genders)",
-      "company": "ABOUT YOU",
-      "location": "Remote",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-10-01T09:58:20.051298+00:00",
-      "posted_at": "2026-09-30T20:32:19+00:00",
-      "apply_route": "url",
-      "apply_target": "https://jobgether.com/offer/6abd71d38a27695aea127186-senior-product-manager-all-genders",
-      "documents": []
-    },
-    {
-      "id": "remoterocketship_890d5aa684375688",
-      "source": "remoterocketship",
-      "url": "https://www.remoterocketship.com/company/tiger-resourcing-group-group/jobs/senior-digital-twin-product-owner-united-states-remote/",
-      "title": "Senior Digital Twin Product Owner",
-      "company": "Tiger Resourcing Group",
-      "location": "United States",
-      "salary": null,
-      "score": 72,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-10-01T09:40:52.941417+00:00",
-      "posted_at": "2026-09-30T19:56:39.132000Z",
-      "apply_route": "url",
-      "apply_target": "https://tigerres.zohorecruit.eu/jobs/careers/66178000028744595/Senior-Digital-Twin-Product-Owner?source=CareerSite",
-      "documents": []
-    },
-    {
       "id": "free_work_0299c0602c98628a",
       "source": "free_work",
       "url": "https://www.free-work.com/fr/tech-it/job-mission/product-owner-technique-61",
@@ -2380,43 +2278,39 @@
       "apply_route": "url",
       "apply_target": "https://weworkremotely.com/remote-jobs/vercel-product-manager-dashboard",
       "documents": []
-    },
-    {
-      "id": "remoterocketship_1ae21af9214134c4",
-      "source": "remoterocketship",
-      "url": "https://www.remoterocketship.com/company/tiger-resourcing-group-group/jobs/senior-oss-product-owner-united-states-remote/",
-      "title": "Senior OSS Product Owner",
-      "company": "Tiger Resourcing Group",
-      "location": "United States",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-10-01T09:40:52.941512+00:00",
-      "posted_at": "2026-09-30T19:56:39.132000Z",
-      "apply_route": "url",
-      "apply_target": "https://tigerres.zohorecruit.eu/jobs/careers/66178000028744602/Senior-OSS-Product-Owner?source=CareerSite",
-      "documents": []
-    },
-    {
-      "id": "remoterocketship_0a5598a61432dd9f",
-      "source": "remoterocketship",
-      "url": "https://www.remoterocketship.com/company/cengage/jobs/business-product-owner-manager-ohio-remote/",
-      "title": "Business Product Owner, Manager",
-      "company": "Cengage Group",
-      "location": "United States",
-      "salary": null,
-      "score": 62,
-      "score_tailored": null,
-      "status": "scored",
-      "first_seen_at": "2026-10-01T09:40:52.940145+00:00",
-      "posted_at": "2026-10-01T07:04:41.849000Z",
-      "apply_route": "url",
-      "apply_target": "https://cengage.wd5.myworkdayjobs.com/cengagenorthamericacareers/job/cincinnati-oh-usa/business-product-owner-manager--remote--us_r2026-1241-1",
-      "documents": []
     }
   ],
   "runs": [
+    {
+      "id": 591,
+      "started_at": "2026-10-08T10:12:57.222558+00:00",
+      "finished_at": "2026-10-08T10:19:05.035854+00:00",
+      "n_fetched": 416,
+      "n_new": 40,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 6
+    },
+    {
+      "id": 590,
+      "started_at": "2026-10-08T09:01:14.851112+00:00",
+      "finished_at": "2026-10-08T10:12:55.906129+00:00",
+      "n_fetched": 0,
+      "n_new": 0,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 1
+    },
+    {
+      "id": 589,
+      "started_at": "2026-10-08T05:00:01.962440+00:00",
+      "finished_at": "2026-10-08T05:05:36.923484+00:00",
+      "n_fetched": 399,
+      "n_new": 2,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 6
+    },
     {
       "id": 588,
       "started_at": "2026-10-08T04:30:05.768293+00:00",
@@ -2523,36 +2417,6 @@
       "finished_at": "2026-10-04T13:03:06.232708+00:00",
       "n_fetched": 346,
       "n_new": 11,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 577,
-      "started_at": "2026-10-04T12:01:03.672264+00:00",
-      "finished_at": "2026-10-04T12:35:21.183191+00:00",
-      "n_fetched": 0,
-      "n_new": 0,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 1
-    },
-    {
-      "id": 576,
-      "started_at": "2026-10-03T17:06:05.505616+00:00",
-      "finished_at": "2026-10-04T09:04:24.289446+00:00",
-      "n_fetched": 304,
-      "n_new": 18,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 7
-    },
-    {
-      "id": 575,
-      "started_at": "2026-10-03T05:00:04.885716+00:00",
-      "finished_at": "2026-10-03T15:26:58.224583+00:00",
-      "n_fetched": 371,
-      "n_new": 15,
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 1
