@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-09T16:11:25.168217+00:00",
+  "generated_at": "2026-10-09T19:23:47.832319+00:00",
   "jobs": [
     {
       "id": "linkedin_07348a8eeb51f985",
@@ -427,6 +427,23 @@
       "documents": []
     },
     {
+      "id": "builtin_7f775e6deebb7996",
+      "source": "builtin",
+      "url": "https://builtin.com/job/product-manager-eu/11599665",
+      "title": "Product Manager (EU)",
+      "company": "Arionkoder",
+      "location": "United States (Remote)",
+      "salary": null,
+      "score": 87,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-10-09T19:22:33.305240+00:00",
+      "posted_at": "2026-10-09T19:22:29.035093Z",
+      "apply_route": "url",
+      "apply_target": "https://builtin.com/job/product-manager-eu/11599665",
+      "documents": []
+    },
+    {
       "id": "remoterocketship_347d609529edd6f3",
       "source": "remoterocketship",
       "url": "https://www.remoterocketship.com/company/nagarro/jobs/digital-product-owner-home-automation-iot-romania-remote/",
@@ -441,6 +458,23 @@
       "posted_at": "2026-10-09T09:13:11.418000Z",
       "apply_route": "url",
       "apply_target": "https://jobs.smartrecruiters.com/nagarro1/744000154625569-digital-product-owner-home-automation-iot",
+      "documents": []
+    },
+    {
+      "id": "jobgether_bbdb9a3613885a33",
+      "source": "jobgether",
+      "url": "https://jobgether.com/offer/6ac8facb48048577319c469e-senior-product-manager---arr-subscriptions-m-f-d",
+      "title": "Senior Product Manager - ARR & Subscriptions (m/f/d)",
+      "company": "1KOMMA5\u00b0",
+      "location": "Remote",
+      "salary": null,
+      "score": 82,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-10-09T19:22:20.822074+00:00",
+      "posted_at": "2026-10-09T14:31:39+00:00",
+      "apply_route": "url",
+      "apply_target": "https://jobgether.com/offer/6ac8facb48048577319c469e-senior-product-manager---arr-subscriptions-m-f-d",
       "documents": []
     },
     {
@@ -1124,6 +1158,40 @@
       "documents": []
     },
     {
+      "id": "jobgether_6204c45060d7ad14",
+      "source": "jobgether",
+      "url": "https://jobgether.com/offer/6ac908d448048577319c82f9-senior-staff-product-manager---growth",
+      "title": "(Senior/Staff) Product Manager - Growth",
+      "company": "bunch",
+      "location": "Remote",
+      "salary": null,
+      "score": 78,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-10-09T19:22:20.821858+00:00",
+      "posted_at": "2026-10-09T15:31:32+00:00",
+      "apply_route": "email",
+      "apply_target": "recruiting@bunch.capital",
+      "documents": []
+    },
+    {
+      "id": "jobgether_f454875b1e0e3634",
+      "source": "jobgether",
+      "url": "https://jobgether.com/offer/6ac908d448048577319c8319-senior-product-manager",
+      "title": "Senior Product Manager",
+      "company": "South Geeks",
+      "location": "Remote",
+      "salary": null,
+      "score": 78,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-10-09T19:22:20.821611+00:00",
+      "posted_at": "2026-10-09T15:31:32+00:00",
+      "apply_route": "url",
+      "apply_target": "https://jobgether.com/offer/6ac908d448048577319c8319-senior-product-manager",
+      "documents": []
+    },
+    {
       "id": "jobgether_06907a3890d7c535",
       "source": "jobgether",
       "url": "https://jobgether.com/offer/6ac7efa4480485773197d155-sr.-product-manager",
@@ -1308,6 +1376,40 @@
       "posted_at": "2026-10-02T03:32:13+00:00",
       "apply_route": "email",
       "apply_target": "careers@nuitee.com",
+      "documents": []
+    },
+    {
+      "id": "jobgether_8c175c34c70098bd",
+      "source": "jobgether",
+      "url": "https://jobgether.com/offer/6ac908d448048577319c82cf-senior-product-manager-technology",
+      "title": "Senior Product Manager, Technology",
+      "company": "Rush Street Interactive",
+      "location": "Remote",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-10-09T19:22:20.821738+00:00",
+      "posted_at": "2026-10-09T15:31:32+00:00",
+      "apply_route": "url",
+      "apply_target": "https://jobgether.com/offer/6ac908d448048577319c82cf-senior-product-manager-technology",
+      "documents": []
+    },
+    {
+      "id": "jobgether_d0298fe4af98f6c3",
+      "source": "jobgether",
+      "url": "https://jobgether.com/offer/6ac908d448048577319c8315-senior-product-manager-enterprise-creative-tools-outbound-product",
+      "title": "Senior Product Manager, Enterprise Creative Tools & Outbound Product",
+      "company": "Instacart",
+      "location": "Remote",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-10-09T19:22:20.820865+00:00",
+      "posted_at": "2026-10-09T15:31:32+00:00",
+      "apply_route": "url",
+      "apply_target": "https://jobgether.com/offer/6ac908d448048577319c8315-senior-product-manager-enterprise-creative-tools-outbound-product",
       "documents": []
     },
     {
@@ -2824,6 +2926,23 @@
       "documents": []
     },
     {
+      "id": "linkedin_5096db020f401e10",
+      "source": "linkedin",
+      "url": "https://www.linkedin.com/jobs/view/senior-product-manager-hyperforce-at-salesforce-4477850352",
+      "title": "Senior Product Manager, Hyperforce",
+      "company": "Salesforce",
+      "location": "Seattle, WA",
+      "salary": null,
+      "score": 62,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-10-09T19:21:09.646068+00:00",
+      "posted_at": "2026-10-09T00:00:00Z",
+      "apply_route": "url",
+      "apply_target": "https://www.linkedin.com/jobs/view/senior-product-manager-hyperforce-at-salesforce-4477850352",
+      "documents": []
+    },
+    {
       "id": "jobgether_6162caed510dd908",
       "source": "jobgether",
       "url": "https://jobgether.com/offer/6ac86e1b48048577319a0e41-senior-product-manager-caremark-member-advocacy",
@@ -4118,6 +4237,26 @@
   ],
   "runs": [
     {
+      "id": 602,
+      "started_at": "2026-10-09T19:20:35.482144+00:00",
+      "finished_at": "2026-10-09T19:23:47.804552+00:00",
+      "n_fetched": 391,
+      "n_new": 11,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 0
+    },
+    {
+      "id": 601,
+      "started_at": "2026-10-09T17:00:06.240188+00:00",
+      "finished_at": "2026-10-09T17:03:09.431211+00:00",
+      "n_fetched": 390,
+      "n_new": 3,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 0
+    },
+    {
       "id": 600,
       "started_at": "2026-10-09T16:04:34.958526+00:00",
       "finished_at": "2026-10-09T16:11:25.082484+00:00",
@@ -4233,26 +4372,6 @@
       "finished_at": "2026-10-08T05:05:36.923484+00:00",
       "n_fetched": 399,
       "n_new": 2,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 6
-    },
-    {
-      "id": 588,
-      "started_at": "2026-10-08T04:30:05.768293+00:00",
-      "finished_at": "2026-10-08T04:38:33.073771+00:00",
-      "n_fetched": 410,
-      "n_new": 98,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 6
-    },
-    {
-      "id": 587,
-      "started_at": "2026-10-07T09:09:16.411207+00:00",
-      "finished_at": "2026-10-07T21:28:30.332607+00:00",
-      "n_fetched": 229,
-      "n_new": 11,
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 6
