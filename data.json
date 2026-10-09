@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-09T14:02:21.309640+00:00",
+  "generated_at": "2026-10-09T16:11:25.168217+00:00",
   "jobs": [
     {
       "id": "linkedin_07348a8eeb51f985",
@@ -1308,6 +1308,40 @@
       "posted_at": "2026-10-02T03:32:13+00:00",
       "apply_route": "email",
       "apply_target": "careers@nuitee.com",
+      "documents": []
+    },
+    {
+      "id": "wellfound_54eda90602bb9e1d",
+      "source": "wellfound",
+      "url": "https://wellfound.com/jobs/4824084-senior-product-manager",
+      "title": "Senior Product Manager",
+      "company": "Raenest Technology Solutions",
+      "location": "Philippines, Manila",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-10-09T16:10:36.053027+00:00",
+      "posted_at": "2026-10-09T14:57:50Z",
+      "apply_route": "url",
+      "apply_target": "https://wellfound.com/jobs/4824084-senior-product-manager",
+      "documents": []
+    },
+    {
+      "id": "himalayas_fafdf838b4bcd6c9",
+      "source": "himalayas",
+      "url": "https://himalayas.app/companies/robusta/jobs/product-owner-service-designer-mid-level-4-5-months-remote-octopus",
+      "title": "Product Owner / Service Designer (Mid level) - 4.5 Months - Remote - Octopus",
+      "company": "robusta",
+      "location": "Egypt",
+      "salary": null,
+      "score": 72,
+      "score_tailored": null,
+      "status": "scored",
+      "first_seen_at": "2026-10-09T16:10:01.928727+00:00",
+      "posted_at": "2026-10-09T17:28:52",
+      "apply_route": "url",
+      "apply_target": "https://himalayas.app/companies/robusta/jobs/product-owner-service-designer-mid-level-4-5-months-remote-octopus",
       "documents": []
     },
     {
@@ -4084,6 +4118,16 @@
   ],
   "runs": [
     {
+      "id": 600,
+      "started_at": "2026-10-09T16:04:34.958526+00:00",
+      "finished_at": "2026-10-09T16:11:25.082484+00:00",
+      "n_fetched": 359,
+      "n_new": 7,
+      "n_generated": 0,
+      "n_applied": 0,
+      "n_errors": 0
+    },
+    {
       "id": 599,
       "started_at": "2026-10-09T13:57:01.127844+00:00",
       "finished_at": "2026-10-09T14:02:21.273229+00:00",
@@ -4209,16 +4253,6 @@
       "finished_at": "2026-10-07T21:28:30.332607+00:00",
       "n_fetched": 229,
       "n_new": 11,
-      "n_generated": 0,
-      "n_applied": 0,
-      "n_errors": 6
-    },
-    {
-      "id": 586,
-      "started_at": "2026-10-07T05:00:05.514799+00:00",
-      "finished_at": "2026-10-07T05:04:46.181763+00:00",
-      "n_fetched": 395,
-      "n_new": 56,
       "n_generated": 0,
       "n_applied": 0,
       "n_errors": 6
