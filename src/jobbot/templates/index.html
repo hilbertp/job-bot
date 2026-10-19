@@ -38,6 +38,18 @@
     <a id="run-banner-link" class="underline ml-auto text-amber-100/90" href="#">view details</a>
 </div>
 
+<!-- "All done for today": shown by updateAllDoneBanner() when the shortlist
+     has rows but none are still OPEN, i.e. every position has been applied to
+     or expired. Hidden whenever there's at least one open position left, and
+     when the shortlist is empty (that's "no jobs yet", not "done"). -->
+<div id="all-done-banner" class="hidden mb-8 bg-emerald-400/20 border border-emerald-300/40 text-emerald-50 rounded-xl px-5 py-4 flex flex-wrap items-center gap-3">
+    <span class="text-2xl leading-none" aria-hidden="true">✅</span>
+    <div>
+        <div class="font-bold text-lg">All done for today</div>
+        <div id="all-done-detail" class="text-sm text-emerald-100/90">Every shortlisted position has been applied to or expired.</div>
+    </div>
+</div>
+
 <section id="discovery-panel" class="bg-white/10 rounded-2xl border border-white/20 mb-8 overflow-hidden" data-collapsible-panel>
     <div class="flex w-full flex-wrap items-start justify-between gap-3 cursor-pointer select-none px-6 py-5 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60" data-panel-header role="button" tabindex="0" aria-controls="discovery-panel-body" aria-expanded="false" aria-label="Toggle Discovery: new prospects per day and week" title="Expand panel">
         <div class="flex flex-wrap items-baseline gap-3">
@@ -1135,11 +1147,16 @@ function sortShortlistJobs(jobs) {
 }
 
 // Lifecycle bucket a job belongs to, used by the filter chips.
-//   open    → not expired AND not applied (= still actionable)
-//   applied → any apply attempt OR any post-apply lifecycle state
+//   open     → not expired, not applied, not filtered (= still actionable)
+//   applied  → any apply attempt OR any post-apply lifecycle state
 //             (submitted, dry_run, needs_review, failed, employer_received,
 //             waiting_response, rejected, interview_invited, apply_queued)
-//   expired → listing was pulled from the source board
+//   expired  → listing was pulled from the source board
+//   filtered → demoted post-scoring (e.g. below the salary floor); NOT
+//              actionable, so it's kept out of "open" and only surfaces
+//              under the "Show all" chip. Without this exclusion a single
+//              filtered row would keep "open" above zero forever and the
+//              "All done for today" banner could never fire.
 //
 // "Applied" is intentionally broad: once the bot or the user has touched
 // the row, it should not re-appear in the "open" bucket even if the
@@ -1160,6 +1177,9 @@ function lifecycleBucket(job) {
     if (_POST_APPLY_STATUSES.has(job.status)
         || _APPLIED_STATE_VALUES.has(job.applied_state)) {
         return 'applied';
+    }
+    if (job.status === 'filtered') {
+        return 'filtered';
     }
     return 'open';
 }
@@ -1187,13 +1207,34 @@ function applyShortlistFilter() {
     return filtered;
 }
 
+// Toggle the "All done for today" banner. We're "done" when the shortlist
+// has at least one row AND none of them are still open to apply to (every
+// position is applied-to or expired). An empty shortlist is NOT "done", // that's "no jobs yet", so we require counts.all > 0.
+function updateAllDoneBanner(counts) {
+    const banner = document.getElementById('all-done-banner');
+    if (!banner) return;
+    const done = counts.all > 0 && counts.open === 0;
+    if (done) {
+        const detail = document.getElementById('all-done-detail');
+        if (detail) {
+            detail.textContent =
+                `Every shortlisted position has been applied to or expired `
+                + `(${counts.applied} applied, ${counts.expired} expired).`;
+        }
+        banner.classList.remove('hidden');
+    } else {
+        banner.classList.add('hidden');
+    }
+}
+
 function updateFilterChipCounts() {
-    const counts = { open: 0, applied: 0, expired: 0, all: _shortlistAllJobs.length };
+    const counts = { open: 0, applied: 0, expired: 0, filtered: 0, all: _shortlistAllJobs.length };
     for (const job of _shortlistAllJobs) counts[lifecycleBucket(job)] += 1;
     for (const which of ['open', 'applied', 'expired', 'all']) {
         const el = document.querySelector(`[data-filter-count="${which}"]`);
         if (el) el.textContent = counts[which];
     }
+    updateAllDoneBanner(counts);
     // Visually mark the active chip.
     document.querySelectorAll('[data-shortlist-filter-controls] [data-filter]').forEach(btn => {
         const active = btn.dataset.filter === _shortlistFilter;
