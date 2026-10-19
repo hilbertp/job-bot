@@ -64,28 +64,28 @@ def _render_html(md: str) -> str:
   /* Density pass: the base CV is a two-page document, so the render must
      not turn it into three. Tightened margins/leading, verified by page
      count rather than by eye. */
-  @page {{ size: A4; margin: 14mm 16mm; background: var(--paper); }}
+  @page {{ size: A4; margin: 13mm 15mm 11mm 15mm; background: var(--paper); }}
   html {{ background: var(--paper); }}
 
   body {{
     font-family: var(--serif);
     color: var(--ink);
     background: var(--paper);
-    line-height: 1.4;
-    font-size: 10pt;
+    line-height: 1.28;
+    font-size: 8.9pt;
     max-width: 780px;
     margin: 0 auto;
-    padding: 0 1rem;
+    padding: 0;
   }}
 
   /* Name, large editorial serif with italic role tag */
   h1 {{
     font-family: var(--serif);
-    font-size: 1.75rem;
+    font-size: 1.55rem;
     font-weight: 500;
-    line-height: 1.06;
+    line-height: 1.04;
     letter-spacing: -0.012em;
-    margin: 0 0 0.6rem 0;
+    margin: 0 0 0.2rem 0;
     color: var(--ink);
   }}
   h1 em {{ font-style: italic; font-weight: 500; color: var(--ink); }}
@@ -93,9 +93,9 @@ def _render_html(md: str) -> str:
   /* "Senior Product Owner" / positioning line under the name */
   h1 + p {{
     font-family: var(--serif);
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     color: var(--ink-soft);
-    margin: 0 0 1.2rem 0;
+    margin: 0 0 0.4rem 0;
   }}
   h1 + p em {{ color: var(--accent); font-style: italic; }}
   h1 + p strong:only-child {{ font-weight: 500; color: var(--ink-soft); }}
@@ -105,7 +105,7 @@ def _render_html(md: str) -> str:
     font-family: var(--sans);
     color: var(--ink-mute);
     font-size: 0.78rem;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     margin-bottom: 0;
   }}
@@ -114,35 +114,36 @@ def _render_html(md: str) -> str:
   h2 {{
     font-family: var(--sans);
     text-transform: uppercase;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.08em;
     font-size: 0.74rem;
     font-weight: 600;
     color: var(--ink-mute);
     border-top: 1px solid var(--rule);
-    padding-top: 1.6rem;
-    margin: 2.2rem 0 1rem 0;
+    padding-top: 0.38rem;
+    margin: 0.6rem 0 0.28rem 0;
   }}
   h2::before {{ content: "§ "; color: var(--ink-mute); }}
+  h2 + * {{ margin-top: 0.2rem; }}
 
   /* Job/Company heading (serif, slightly heavier) */
   h3 {{
     font-family: var(--serif);
-    font-size: 1.2rem;
-    font-weight: 500;
+    font-size: 1.05rem;
+    font-weight: 600;
     color: var(--ink);
-    margin: 1.4rem 0 0.15rem 0;
-    line-height: 1.3;
+    margin: 0.5rem 0 0.1rem 0;
+    line-height: 1.25;
   }}
 
   /* H4, sub-label like role title / week label */
   h4 {{
     font-family: var(--serif);
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     font-style: italic;
     font-weight: 500;
     color: var(--ink-soft);
-    margin: 0 0 0.3rem 0;
-    line-height: 1.35;
+    margin: 0 0 0.15rem 0;
+    line-height: 1.28;
   }}
 
   /* Italics → rust accent (matches opus reference italic emphasis) */
@@ -150,11 +151,11 @@ def _render_html(md: str) -> str:
   p > em:only-child {{ font-size: 0.95em; }}
 
   /* Body paragraphs */
-  p {{ margin: 0.5rem 0; }}
+  p {{ margin: 0 0 0.18rem 0; }}
 
   /* Bullets, middle-dot marker, soft warm gray */
-  ul {{ padding-left: 1.1rem; margin: 0.45rem 0 0.7rem 0; }}
-  li {{ margin: 0.2rem 0; }}
+  ul {{ padding-left: 1rem; margin: 0.12rem 0 0.22rem 0; }}
+  li {{ margin: 0 0 0.1rem 0; }}
   li::marker {{ color: var(--ink-mute); }}
 
   /* NO multi-column layout in this renderer. cv.pdf is the ATS-facing
@@ -166,8 +167,8 @@ def _render_html(md: str) -> str:
      grids in _render_application_html. */
 
   /* Horizontal rules from `---` in markdown */
-  hr {{ border: 0; border-top: 1px solid var(--rule); margin: 1.8rem 0; }}
-  hr + h2 {{ border-top: 0; padding-top: 0; margin-top: 0.6rem; }}
+  hr {{ border: 0; border-top: 1px solid var(--rule); margin: 0.6rem 0; }}
+  hr + h2 {{ border-top: 0; padding-top: 0; margin-top: 0.3rem; }}
 
   strong {{ font-weight: 600; color: var(--ink); }}
   code {{
@@ -280,7 +281,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
     font-size: 0.72rem;
     font-weight: 600;
     color: var(--ink-mute);
-    letter-spacing: 0.18em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     border-bottom: 1px solid var(--rule);
     padding-bottom: 0.7rem;
@@ -323,7 +324,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
     font-family: var(--sans);
     color: var(--ink-mute);
     font-size: 0.78rem;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     margin-bottom: 0;
   }}
@@ -332,7 +333,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
   h2 {{
     font-family: var(--sans);
     text-transform: uppercase;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.08em;
     font-size: 0.74rem;
     font-weight: 600;
     color: var(--ink-mute);
@@ -348,7 +349,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
     font-size: 0.78rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.08em;
     color: var(--ink-mute);
     margin: 1.2rem 0 0.2rem 0;
   }}
@@ -412,7 +413,7 @@ def _render_application_html(md: str, job: JobPosting | None = None) -> str:
   .section-title {{
     font-family: var(--sans);
     text-transform: uppercase;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.08em;
     font-size: 0.78rem;
     font-weight: 600;
     color: var(--ink-mute);

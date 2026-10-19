@@ -146,3 +146,117 @@ def test_generation_payload_carries_signals_and_qa_report_lands(
     assert names.get("directive_compliance") == "pass"
     assert names.get("mirror_coverage") == "pass"
     assert report["worst"] in {"pass", "warn"}
+
+
+# --- ATS parse fidelity: the letter-spacing defect ------------------------
+#
+# Research: docs/ats_gates.md §8 Finding 1. CSS letter-spacing above 0.08em
+# makes poppler and pdfminer insert spaces between characters, which
+# destroys the contact block. pypdf tolerates it, so a QA gate that only
+# consults pypdf passes a CV that Daxtra would refuse to parse outright.
+
+import re as _re
+import subprocess as _subprocess
+
+import pytest as _pytest
+
+from jobbot.generators import pipeline as _pipeline
+from jobbot.generators.qa import (
+    CANONICAL_HEADINGS as _HEADINGS,
+    check_pdf_text_layer as _check_text_layer,
+)
+
+_MIN_CV = """# Philipp Hilbert
+
+**Product Manager | Product Owner**
+
++357 94101644 · hilbert@true-north.berlin · www.true-north.berlin
+
+## Profile
+
+Product manager and product owner in regulated industries.
+
+## Work Experience
+
+### Product Manager, Rohde & Schwarz, Munich | 07/2024 - 05/2025
+
+- Cut rollout time from days to 30 minutes with GitOps and ArgoCD.
+
+## Skills
+
+**Product Ownership:** backlog refinement, user stories, Jira, Confluence.
+
+## Education
+
+### Diplom-Wirtschaftsingenieur, TU Berlin | 10/2006 - 09/2014
+
+- Specialisation: Logistics.
+
+## Languages
+
+German (native speaker, C2) · English (C2)
+"""
+
+
+def _render_to(tmp_path, md):
+    import weasyprint
+
+    out = tmp_path / "cv.pdf"
+    weasyprint.HTML(string=_pipeline._render_html(md)).write_pdf(str(out))
+    return out
+
+
+def _poppler(pdf):
+    proc = _subprocess.run(["pdftotext", str(pdf), "-"],
+                           capture_output=True, text=True)
+    if proc.returncode != 0:
+        _pytest.skip("poppler/pdftotext not available")
+    return proc.stdout
+
+
+def test_renderer_letter_spacing_stays_parser_safe():
+    """No CSS declaration may exceed the measured 0.08em break threshold."""
+    src = _pipeline.__file__
+    values = [float(m) for m in _re.findall(
+        r"letter-spacing:\s*(-?\d*\.?\d+)em;", open(src).read())]
+    assert values, "expected letter-spacing declarations in the renderer"
+    over = [v for v in values if v > 0.08]
+    assert not over, (
+        f"letter-spacing {over} exceeds 0.08em; poppler and pdfminer will "
+        f"shred the contact block (docs/ats_gates.md §8)")
+
+
+def test_rendered_cv_contact_block_survives_strict_extraction(tmp_path):
+    """Email and phone must survive poppler, not just the lenient pypdf."""
+    pdf = _render_to(tmp_path, _MIN_CV)
+    text = _poppler(pdf)
+    assert _re.search(r"[\w.+-]+@[\w-]+\.[\w.]+", text), (
+        "no email in the poppler text layer; Daxtra fails outright without "
+        "a name plus phone or email")
+    assert _re.search(r"\+\d[\d\s()/-]{7,}\d", text), "no phone in the text layer"
+
+
+def test_rendered_cv_canonical_headings_survive_strict_extraction(tmp_path):
+    pdf = _render_to(tmp_path, _MIN_CV)
+    upper = _poppler(pdf).upper()
+    missing = [h for h in _HEADINGS if h not in upper]
+    assert not missing, f"headings unparseable by poppler: {missing}"
+
+
+def test_qa_text_layer_check_consults_more_than_pypdf(tmp_path, monkeypatch):
+    """A defect only pypdf survives must still be reported."""
+    pdf = _render_to(tmp_path, _MIN_CV)
+
+    def _shredded(_path):
+        return {
+            "pypdf": "Philipp Hilbert hilbert@true-north.berlin +357 94101644 "
+                     "WORK EXPERIENCE SKILLS EDUCATION LANGUAGES",
+            "poppler": "P h i l i p p H i l b e r t "
+                       "H I L B E R T @ T R U E - N O R T H . B E R L I N",
+        }
+
+    monkeypatch.setattr("jobbot.generators.qa._pdf_texts", _shredded)
+    check = _check_text_layer(str(pdf), "Philipp Hilbert",
+                              "hilbert@true-north.berlin")
+    assert check.status == "fail"
+    assert "poppler" in check.detail

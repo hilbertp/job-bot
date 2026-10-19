@@ -60,11 +60,55 @@ class QAReport:
 # --- individual checks ---------------------------------------------------
 
 
-def _pdf_text(pdf_path: str | Path) -> str:
-    from pypdf import PdfReader
+#: Section headings a parser maps onto its `sectionType` enum. Absent
+#: headings do not reject the candidate, they empty the structured record
+#: that every downstream filter and recruiter search runs on.
+CANONICAL_HEADINGS = ("WORK EXPERIENCE", "SKILLS", "EDUCATION", "LANGUAGES")
 
-    reader = PdfReader(str(pdf_path))
-    return "\n".join((page.extract_text() or "") for page in reader.pages)
+#: A phone number is half of the contact pair Daxtra needs; without a name
+#: plus phone or email its parser fails outright rather than degrading.
+_PHONE_RE = re.compile(r"\+\d[\d\s()/-]{7,}\d")
+
+
+def _pdf_texts(pdf_path: str | Path) -> dict[str, str]:
+    """Extract the text layer with every engine available.
+
+    pypdf alone is not enough. It reconstructs spacing from the font
+    matrix and so tolerates CSS letter-spacing that shreds poppler and
+    pdfminer output into "H I L B E R T @ ...". Real parsers behave like
+    the strict engines, so a check that only consults pypdf reports a
+    clean pass on a CV whose contact block is already destroyed.
+    """
+    out: dict[str, str] = {}
+    try:
+        from pypdf import PdfReader
+
+        reader = PdfReader(str(pdf_path))
+        out["pypdf"] = "\n".join((page.extract_text() or "")
+                                 for page in reader.pages)
+    except Exception as exc:  # pragma: no cover - engine availability
+        out["pypdf"] = ""
+        out["_pypdf_error"] = str(exc)
+    try:
+        import subprocess
+
+        proc = subprocess.run(["pdftotext", str(pdf_path), "-"],
+                              capture_output=True, text=True, timeout=60)
+        if proc.returncode == 0:
+            out["poppler"] = proc.stdout
+    except Exception:
+        pass  # poppler is optional; absence must not fail the package
+    try:
+        from pdfminer.high_level import extract_text
+
+        out["pdfminer"] = extract_text(str(pdf_path))
+    except Exception:
+        pass  # pdfminer is optional in the same way
+    return out
+
+
+def _pdf_text(pdf_path: str | Path) -> str:
+    return _pdf_texts(pdf_path).get("pypdf", "")
 
 
 def _pdf_page_count(pdf_path: str | Path) -> int:
@@ -74,20 +118,53 @@ def _pdf_page_count(pdf_path: str | Path) -> int:
 
 
 def check_pdf_text_layer(pdf_path: str, full_name: str, email: str) -> QACheck:
-    """The automated select-and-copy test on the ATS-facing cv.pdf."""
-    text = " ".join(_pdf_text(pdf_path).split()).lower()
-    missing = []
-    if full_name and full_name.lower() not in text:
-        missing.append(f"name ({full_name})")
-    if email and email.lower() not in text:
-        missing.append(f"email ({email})")
-    if not text.strip():
+    """The automated select-and-copy test on the ATS-facing cv.pdf.
+
+    Run against every extraction engine present, because a defect that
+    only one engine survives is still a defect for the parsers that
+    matter. Contact details are graded fail; headings warn, since they
+    degrade retrieval rather than emptying the record entirely.
+    """
+    engines = {k: v for k, v in _pdf_texts(pdf_path).items()
+               if not k.startswith("_")}
+    engines = {k: v for k, v in engines.items() if v is not None}
+    if not any(v.strip() for v in engines.values()):
         return QACheck("pdf_text_layer", "fail",
                        "no extractable text at all; parsers will see a blank page")
-    if missing:
+
+    failures: list[str] = []
+    warnings: list[str] = []
+    for engine, raw in engines.items():
+        if not raw.strip():
+            continue
+        flat = " ".join(raw.split())
+        low = flat.lower()
+        # Daxtra fails outright without a name plus AT LEAST ONE of phone
+        # or email, so that pair is the fail line. A missing second
+        # contact channel only thins the record and warns.
+        has_name = bool(full_name) and full_name.lower() in low
+        has_email = bool(email) and email.lower() in low
+        has_phone = bool(_PHONE_RE.search(flat))
+        if full_name and not has_name:
+            failures.append(f"{engine}: name ({full_name})")
+        if not has_email and not has_phone:
+            failures.append(f"{engine}: neither email nor phone")
+        elif not has_email and email:
+            warnings.append(f"{engine}: email ({email}) not extractable")
+        elif not has_phone:
+            warnings.append(f"{engine}: no phone in the text layer")
+        absent = [h for h in CANONICAL_HEADINGS if h not in flat.upper()]
+        if absent:
+            warnings.append(f"{engine}: headings {', '.join(absent)}")
+
+    if failures:
         return QACheck("pdf_text_layer", "fail",
-                       "not extractable from cv.pdf: " + ", ".join(missing))
-    return QACheck("pdf_text_layer", "pass")
+                       "not extractable from cv.pdf: " + "; ".join(failures))
+    if warnings:
+        return QACheck("pdf_text_layer", "warn",
+                       "canonical headings not detected: " + "; ".join(warnings))
+    return QACheck("pdf_text_layer", "pass",
+                   f"clean in {', '.join(sorted(engines))}")
 
 
 def check_page_budget(pdf_path: str) -> QACheck:

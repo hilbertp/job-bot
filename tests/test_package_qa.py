@@ -118,13 +118,34 @@ def _render_pdf(tmp_path: Path, html: str) -> str:
 
 
 def test_text_layer_check_passes_on_real_render(tmp_path: Path):
+    """A complete contact block plus canonical headings is a clean pass."""
     pdf = _render_pdf(
         tmp_path,
-        "<h1>Philipp Hilbert</h1><p>hilbert@true-north.berlin</p>",
+        "<h1>Philipp Hilbert</h1>"
+        "<p>+357 94101644 &middot; hilbert@true-north.berlin</p>"
+        "<h2>WORK EXPERIENCE</h2><p>Product Manager</p>"
+        "<h2>SKILLS</h2><p>Jira</p>"
+        "<h2>EDUCATION</h2><p>TU Berlin</p>"
+        "<h2>LANGUAGES</h2><p>German, English</p>",
     )
     assert check_pdf_text_layer(
         pdf, "Philipp Hilbert", "hilbert@true-north.berlin",
     ).status == "pass"
+
+
+def test_text_layer_check_warns_on_thin_record(tmp_path: Path):
+    """Name and email alone parse, so this is not a fail. But no phone and
+    no canonical headings leave a thin structured record, which the gate
+    now surfaces as a warning instead of a silent pass."""
+    pdf = _render_pdf(
+        tmp_path,
+        "<h1>Philipp Hilbert</h1><p>hilbert@true-north.berlin</p>",
+    )
+    check = check_pdf_text_layer(
+        pdf, "Philipp Hilbert", "hilbert@true-north.berlin",
+    )
+    assert check.status == "warn"
+    assert "phone" in check.detail or "headings" in check.detail
 
 
 def test_text_layer_check_fails_when_contact_is_missing(tmp_path: Path):
