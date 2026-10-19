@@ -25,9 +25,13 @@ def _secrets(**kw) -> Secrets:
 
 class _FakeIMAP:
     opened: list[tuple] = []
+    timeouts: list = []
 
-    def __init__(self, host, port, ssl_context=None):
+    def __init__(self, host, port, ssl_context=None, timeout=None):
+        # `timeout` mirrors the real imaplib signature. A double that
+        # silently swallowed it would let a timeout-less socket ship.
         self.host, self.port = host, port
+        _FakeIMAP.timeouts.append(timeout)
 
     def login(self, user, password):
         _FakeIMAP.opened.append((self.host, self.port, user, password))
@@ -36,6 +40,7 @@ class _FakeIMAP:
 @pytest.fixture(autouse=True)
 def fake_imap(monkeypatch):
     _FakeIMAP.opened = []
+    _FakeIMAP.timeouts = []
     monkeypatch.setattr(mb.imaplib, "IMAP4_SSL", _FakeIMAP)
     return _FakeIMAP
 
@@ -68,3 +73,11 @@ def test_unconfigured_alerts_mailbox_returns_none_instead_of_connecting(fake_ima
     """Missing credentials must skip quietly, not crash the daily run."""
     assert mb.connect(_secrets(), mailbox="alerts") is None
     assert fake_imap.opened == []
+
+
+def test_alert_mailbox_socket_carries_a_timeout(fake_imap):
+    """A mailbox scan runs inside the pipeline; an untimed socket there
+    wedges the run exactly as the digest send did (run 451)."""
+    mb.connect(_secrets())
+    assert fake_imap.timeouts, "IMAP4_SSL was never constructed"
+    assert all(t for t in fake_imap.timeouts), fake_imap.timeouts

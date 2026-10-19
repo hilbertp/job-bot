@@ -10,6 +10,14 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from ..config import REPO_ROOT, Secrets
 
+#: Every mail socket needs a deadline. Run 451 opened an SMTP connection to
+#: Gmail on 2026-08-30 and sat in ESTABLISHED for 25 hours because the
+#: digest send had no timeout. It held the single-run lock the whole time,
+#: so every scheduled run behind it was skipped until the process was
+#: killed by hand. A hung notification must never outlive the run it
+#: reports on.
+MAIL_TIMEOUT_S = 30
+
 TEMPLATES = REPO_ROOT / "src" / "jobbot" / "notify" / "templates"
 _env = Environment(
     loader=FileSystemLoader(TEMPLATES),
@@ -33,7 +41,7 @@ def _send(secrets: Secrets, subject: str, html: str, attachments: list[Path] | N
         msg.add_attachment(data, maintype="application",
                            subtype=subtype or "octet-stream", filename=path.name)
 
-    with smtplib.SMTP("smtp.gmail.com", 587) as s:
+    with smtplib.SMTP("smtp.gmail.com", 587, timeout=MAIL_TIMEOUT_S) as s:
         s.starttls()
         s.login(secrets.gmail_address, secrets.gmail_app_password.replace(" ", ""))
         s.send_message(msg)

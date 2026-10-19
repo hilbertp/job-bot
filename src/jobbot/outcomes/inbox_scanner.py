@@ -29,6 +29,8 @@ from __future__ import annotations
 
 import email
 import imaplib
+
+from ..notify.email import MAIL_TIMEOUT_S
 import re
 import ssl
 from datetime import datetime, timedelta, timezone
@@ -234,7 +236,7 @@ def _imap_connect(secrets: Secrets) -> imaplib.IMAP4_SSL | None:
     ctx = ssl.create_default_context()
     imap = imaplib.IMAP4_SSL(
         secrets.truenorth_imap_host, secrets.truenorth_imap_port,
-        ssl_context=ctx,
+        ssl_context=ctx, timeout=MAIL_TIMEOUT_S,
     )
     imap.login(secrets.truenorth_smtp_user, secrets.truenorth_smtp_pass)
     return imap
