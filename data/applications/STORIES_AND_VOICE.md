@@ -10,9 +10,46 @@ Last updated: 2026-06-11 (phase 2: transcript mining complete). Quotes verbatim 
 4. **Dates:** English docs "11 June 2026" ("youre 1. Mai 2026 is badly done, why would you enumerate a month looking like first of may?"). German docs: "Berlin, 11. Juni 2026".
 5. **ALL German text uses proper umlauts and ß**, never ae/oe/ue/ss transliteration. The WeasyPrint renderer supports them (the 50hertz package proves it); transliteration reads as broken German to a recruiter. Pre-render check: `grep -nE "fuer|Muenchen|Gruender|Gruessen|Verfuegbarkeit|Universitaet|hoechste|Grossskal|[a-z]bzw\.|Policymakers" <sources>` must be empty, then confirm umlauts present with `grep -c "ü\|ö\|ä\|ß"`. German proper nouns with umlauts; "Rohde & Schwarz" with ampersand; "Diplom-Wirtschaftsingenieur" with hyphen. NEVER "Master of Science" (a packmatic CV mistakenly claimed this). Read every company name char-by-char before render (caught "EMIT" for EMIL Group, 2026-06-16).
 6. AI tools in documents: say just "GPT", never a version number ("remove gpt 4o everywhere... version errelevant, just GPT").
-7. **Design reference:** `opus CV.pdf` in Dropbox `000 True North/Bewerbungen` is "the design king reference"; "use this for all tailored CVs and CLs". Application documents archive lives in that Dropbox folder.
+7. **Design reference:** `opus CV.pdf` in Dropbox `000 True North/Bewerbungen` is "the design king reference"; "use this for all tailored CVs and CLs". Application documents archive lives in that Dropbox folder. **Scope narrowed 2026-08-12: that applies to documents a HUMAN opens.** Anything going into a career portal, an ATS upload or a CV parser uses the ATS track instead, see rule 10.
 8. Verify rendered PDFs by extracting text (whitespace-normalized) and checking key strings.
 9. **Anschreiben/CL render structure (MANDATORY):** `_render_html` is CV-shaped — it styles `h1 + p` as a subtitle and `h1 + p + p` as the UPPERCASE letter-spaced contact/links line. So a CL must use the CV header layout as a letterhead, NOT a `# Title` followed by body: line 1 `# Philipp Hilbert. *Senior Product Owner.*`, line 2 the contact line, line 3 the `Betreff:` line (lands in the uppercase slot, looks right), THEN salutation + body. Never start a CL with a `# Anschreiben ...` label then body — the first body sentence renders uppercased (bug caught 2026-06-29). Post-render check: extract page 1 text, confirm the first body sentence is NOT all-caps.
+
+10. **Two document tracks, never interchangeable (set 2026-08-12).** The editorial
+   renderer is for human readers; machine readers get the ATS track
+   (`data/applications/cv_general_ats.md`, rendered by `jobbot cv-ats`). Proof this
+   is not theoretical: extracting the text layer of the editorial general CV yields
+   `1 0 +   Y E A R S   O F   E X P.` and `R E LO C AT I O N` (CSS letter-spacing),
+   glues the contact line onto the positioning line as
+   `Leadership in Softwarehilbert@true-north.berlin`, and loses both the LinkedIn and
+   the GitHub URL because they are hyperlink labels rather than printed URLs.
+   ATS-track rules: single column, no tables, no text boxes, no colour or background
+   fills, no letter-spacing, no `text-transform`, standard sans faces, printed URLs,
+   DOCX first with a text-based PDF as fallback, and conventional headings only
+   (Profile / Work Experience / Skills / Education / Languages). No `§` markers.
+   Never hand-check this by eye: `jobbot cv-ats` re-reads the rendered file with two
+   independent extractors and fails on the hazards above plus the two-page budget.
+
+## ATS reality (what actually filters, set 2026-08-12)
+
+Most modern systems (Workday, Greenhouse, Lever, SuccessFactors, Taleo, iCIMS) do not
+auto-reject on a keyword score. Three things actually decide the outcome, in order:
+
+1. **Parsing.** The CV is shredded into fields (name, contact, employer, title, dates,
+   skills). Bad parsing loses data silently, and a recruiter never sees what did not
+   parse. This is the failure the editorial CV was walking into.
+2. **Knockout questions on the application form.** Work authorisation, salary
+   expectation, notice period, on-site days, degree certificate. These auto-reject,
+   not the CV. Philipp's real historical blockers (Scalable Capital's Urkunde upload,
+   sub-90k bands) all sat here, never in a keyword scan.
+3. **Recruiter boolean search over the parsed text.** They search their own posting's
+   vocabulary. A term the posting repeats and the CV never uses is a search the CV
+   loses. This is what keyword coverage buys, and it is a ranking effect, not a gate.
+
+So: parse clean, answer the form correctly, and mirror the posting's literal wording
+where it is honest to do so. `keyword_coverage()` in `generators/ats.py` lists the
+posting's own terms the CV does not echo. It is a candidate list for tailoring, never
+an instruction: a term that cannot be backed by PROFILE.md does not go in. Keyword
+stuffing (invisible text, keyword walls) is detected and is an instant reject.
 
 ## Voice & style preferences
 
