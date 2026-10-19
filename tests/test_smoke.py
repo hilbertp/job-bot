@@ -30,6 +30,7 @@ def test_imports():
         "indeed", "stepstone", "xing", "linkedin",
         "remotive", "remoteok", "himalayas",
         "free_work", "braintrust", "brainville", "talentmate",
+        "remoterocketship", "jobgether", "wellfound", "builtin",
     }
 
 

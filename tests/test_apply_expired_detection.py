@@ -21,14 +21,20 @@ from jobbot.applier.runner import _is_expired_listing
 # HTTP-status signals
 # ---------------------------------------------------------------------------
 
-def test_http_403_means_expired():
-    """The WWR Consensys URL returned 403 — listing pulled."""
+def test_http_403_is_not_expiry_evidence():
+    """A 403 from a plain client is a bot wall, not a pulled listing.
+
+    This test used to assert the opposite, from one Consensys anecdote.
+    Measured 2026-09-17: every 403 discard in 30 days was a live We Work
+    Remotely posting scoring 80+, killed by Cloudflare's "Just a moment"
+    page. 404 and 410 stay positive evidence.
+    """
     expired, reason = _is_expired_listing(
         "https://weworkremotely.com/remote-jobs/consensys-senior-product-manager-metamask-engagement",
         403,
     )
-    assert expired is True
-    assert "403" in reason
+    assert expired is False
+    assert reason == ""
 
 
 def test_http_404_means_expired():

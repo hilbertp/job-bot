@@ -139,8 +139,9 @@ def apply_to_job(
 
     # PRE-FLIGHT: is the listing still live? An HTTP HEAD against the
     # apply_url is cheap and saves us launching Chromium / consuming a
-    # supervised slot when the role has been pulled. Detects 403 / 404 /
-    # 410 directly, and redirect-to-generic-careers via the final URL.
+    # supervised slot when the role has been pulled. Detects 404 / 410
+    # directly, and redirect-to-generic-careers via the final URL. A 403 is
+    # a bot wall, not evidence, so the browser still gets its turn.
     try:
         import httpx
         with httpx.Client(follow_redirects=True, timeout=10) as client:

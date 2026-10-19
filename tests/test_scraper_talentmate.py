@@ -169,3 +169,26 @@ def _stub_job(scraper):
     return JobPosting(id=stable_id("talentmate", url), source="talentmate",
                       title="Product Manager", company="(see posting)",
                       location="Dubai", url=url, apply_url=url, description="")
+
+
+def test_country_path_filters_titles_by_keyword(monkeypatch, scraper):
+    """The pinned /jobs/uae page ignores ?search= and serves the generic feed.
+    These are the real titles it returned for "product manager" on
+    2026-09-17. Only the product roles may come back."""
+    feed = _page([
+        _CARD.format(url=f"https://www.talentmate.com/jobs/uae/x/{i}", title=t, loc="Dubai", posted="17-09-2026")
+        for i, t in enumerate([
+            "Senior HR Coordinator", "Design Engineer", "Site Engineer",
+            "Light Vehicle Driver", "Office Boy", "Accountant",
+            "Product Manager - Voice AI", "Senior Product Manager, Payments",
+            "Real Estate Agent Off Plan", "Product Owner",
+        ])
+    ])
+    monkeypatch.setattr("jobbot.scrapers.talentmate.httpx.get",
+                        lambda *a, **kw: _Resp(feed))
+
+    titles = [j.title for j in scraper.fetch({"q": "product manager", "country": "uae"})]
+    assert titles == ["Product Manager - Voice AI", "Senior Product Manager, Payments"]
+
+    owners = [j.title for j in scraper.fetch({"q": "product owner", "country": "uae"})]
+    assert owners == ["Product Owner"]
